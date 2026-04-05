@@ -236,7 +236,7 @@
 
         .status-badge.unsuccessful {
             background: rgba(71, 85, 105, 0.3);
-            color: #cbd5e1;
+            color: #535a62;
         }
 
         .status-badge.abandoned {
@@ -1294,6 +1294,7 @@
                 const data = await response.json();
                 allJobs = data.jobs || [];
                 filterAndRender();
+                updateStats(allJobs);
             } catch (error) {
                 showToast('❌ Could not load jobs from the server.', 'err');
             }
