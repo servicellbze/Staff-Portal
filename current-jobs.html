@@ -150,7 +150,7 @@
 
         .jobs-header {
             display: grid;
-            grid-template-columns: 80px 1.2fr 1.2fr 180px 140px 140px;
+            grid-template-columns: 70px 1.2fr 1.1fr 110px 110px 170px 130px 130px;
             padding: 18px 24px;
             border-bottom: 1px solid var(--glass-border);
             font-size: 0.7rem;
@@ -161,9 +161,23 @@
             background: rgba(255, 255, 255, 0.02);
         }
 
+        .jobs-header,
+        .job-row {
+            grid-template-columns: 70px 1.2fr 1.1fr 110px 110px 170px 130px 130px;
+        }
+
+        .job-notes-cell {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            padding-right: 15px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .job-row {
             display: grid;
-            grid-template-columns: 80px 1.2fr 1.2fr 180px 140px 140px;
+            grid-template-columns: 70px 1.2fr 1.1fr 110px 110px 170px 130px 130px;
             padding: 20px 24px;
             border-bottom: 1px solid var(--glass-border);
             align-items: center;
@@ -177,6 +191,22 @@
         .job-row:hover {
             background: rgba(255, 255, 255, 0.03);
             transform: translateX(5px);
+        }
+
+        @media (max-width: 1100px) {
+            .mobile-notes-wrapper {
+                grid-column: span 2;
+                background: rgba(255, 255, 255, 0.03);
+                padding: 10px;
+                border-radius: 10px;
+                margin-top: 5px;
+                font-size: 0.85rem;
+                border-left: 3px solid var(--primary);
+            }
+
+            .job-row {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         .status-received {
@@ -308,6 +338,12 @@
             max-height: 90vh;
             overflow-y: auto;
             animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .modal-box::-webkit-scrollbar {
+            display: none;
         }
 
         @keyframes modalIn {
@@ -603,7 +639,18 @@
             box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
         }
 
-        /* ── Delete Modal specifics ── */
+        .mf-print {
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        .mf-print:hover {
+            background: #6d28d9;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+        }
+
+        /* Delete Modal specifics */
         .delete-body {
             padding: 28px;
             text-align: center;
@@ -715,7 +762,6 @@
                 padding: calc(56px + var(--space-lg)) var(--space-sm) var(--space-lg);
             }
 
-            /* Search bar: stack filter below search+refresh */
             .search-section {
                 flex-wrap: wrap;
             }
@@ -729,12 +775,10 @@
                 flex: 1 1 160px;
             }
 
-            /* Stats: 3 per row on tablet */
             .stats-row {
                 grid-template-columns: repeat(3, 1fr);
             }
 
-            /* Hide table header, switch rows to cards */
             .jobs-header {
                 display: none;
             }
@@ -760,7 +804,6 @@
                 box-shadow: none !important;
             }
 
-            /* Re-apply status accent as top border on cards */
             .job-row.status-received {
                 border-top: 3px solid #3b82f6 !important;
             }
@@ -791,14 +834,12 @@
                 transform: none;
             }
 
-            /* Status + storage + actions span full width */
             .job-row>div:nth-child(4),
             .job-row>div:nth-child(5),
             .job-row>div:nth-child(6) {
                 grid-column: span 2;
             }
 
-            /* Action buttons: larger tap targets */
             .action-btn {
                 width: 42px;
                 height: 42px;
@@ -814,7 +855,6 @@
                 padding: calc(56px + 1.5rem) 12px 2rem;
             }
 
-            /* Search: full width stack */
             .search-section {
                 gap: 8px;
                 margin-bottom: 20px;
@@ -838,7 +878,6 @@
                 flex-shrink: 0;
             }
 
-            /* Stats: 3-3 grid, compact */
             .stats-row {
                 grid-template-columns: repeat(3, 1fr);
                 gap: 8px;
@@ -859,7 +898,6 @@
                 margin-top: 5px;
             }
 
-            /* Job cards: single column */
             .job-row {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -873,7 +911,6 @@
                 grid-column: span 1;
             }
 
-            /* Action buttons: full width row */
             .action-btns {
                 justify-content: flex-start;
                 gap: 10px;
@@ -885,7 +922,6 @@
                 border-radius: 12px;
             }
 
-            /* Modals: slide up from bottom on mobile */
             .modal-overlay {
                 align-items: flex-end;
                 padding: 0;
@@ -924,7 +960,6 @@
                 gap: 8px;
             }
 
-            /* View modal: single column */
             .view-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
@@ -934,7 +969,6 @@
                 grid-column: span 1;
             }
 
-            /* Edit pills: smaller on mobile */
             .edit-pill label {
                 padding: 7px 12px;
                 font-size: 0.78rem;
@@ -944,7 +978,6 @@
                 gap: 6px;
             }
 
-            /* Delete modal body */
             .delete-body {
                 padding: 20px;
             }
@@ -953,13 +986,16 @@
                 font-size: 2.5rem;
             }
 
-            /* Modal footer buttons: equal size, taller tap target */
             .mf-btn {
                 padding: 16px;
                 font-size: 0.88rem;
             }
 
-            /* Toast: full width on mobile */
+            .mf-print {
+                flex: 1;
+                padding: 16px;
+            }
+
             .toast {
                 width: calc(100% - 32px);
                 text-align: center;
@@ -967,7 +1003,6 @@
                 bottom: 1.5rem;
             }
 
-            /* Sync status */
             #syncStatus {
                 font-size: 0.55rem;
             }
@@ -993,6 +1028,561 @@
                 padding: 6px 10px;
                 font-size: 0.75rem;
             }
+        }
+
+        .repair-id {
+            font-family: monospace;
+            font-weight: 800;
+            background: rgba(var(--primary-rgb), 0.2);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .job-details-box {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .job-notes {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 6px;
+            line-height: 1.4;
+        }
+
+        .customer-contact {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── Job Type Badge ── */
+        .job-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(124, 58, 237, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.25);
+        }
+
+        /* ── Priority Badges ── */
+        .priority-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .priority-badge.high {
+            background: rgba(239, 68, 68, 0.18);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            animation: urgentPulse 1.8s ease-in-out infinite;
+        }
+
+        .priority-badge.low {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+
+        @keyframes urgentPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+
+            50% {
+                box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.2);
+            }
+        }
+
+        /* ── Priority pills inside modals ── */
+        .priority-pills {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .priority-pill input[type="radio"] {
+            display: none;
+        }
+
+        .priority-pill label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 99px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .priority-pill label:hover {
+            border-color: #3b82f6;
+            color: #93c5fd;
+        }
+
+        .priority-pill.pp-low input:checked+label {
+            background: #1d4ed8;
+            border-color: #3b82f6;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .priority-pill.pp-high input:checked+label {
+            background: #b91c1c;
+            border-color: #ef4444;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+        }
+
+        /* ── Invoice / Pricing section inside Edit modal ── */
+        .invoice-items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .invoice-item-row {
+            display: grid;
+            grid-template-columns: 1fr 80px 36px;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .inv-input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            color: #e2e8f0;
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            padding: 9px 12px;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .inv-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        .inv-input.price {
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .inv-remove-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            color: #f87171;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .inv-remove-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .inv-add-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .inv-template-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            border-radius: 10px;
+            color: #a78bfa;
+            font-family: var(--font-family);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .inv-template-btn:hover {
+            background: rgba(124, 58, 237, 0.2);
+        }
+
+        .inv-add-line-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #64748b;
+            font-family: var(--font-family);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .inv-add-line-btn:hover {
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+
+        .inv-total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(37, 99, 235, 0.08);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 0.95rem;
+        }
+
+        .inv-total-label {
+            color: #60a5fa;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .inv-total-amount {
+            color: #fff;
+            font-family: monospace;
+            font-size: 1.05rem;
+        }
+
+        /* Template picker dropdown */
+        .template-picker {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 10px;
+            background: rgba(124, 58, 237, 0.06);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .template-picker.open {
+            display: flex;
+        }
+
+        .tmpl-chip {
+            padding: 5px 12px;
+            border-radius: 99px;
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            color: #a78bfa;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .tmpl-chip:hover {
+            background: rgba(124, 58, 237, 0.28);
+            color: #fff;
+        }
+
+        /* ── View modal total bar ── */
+        .view-total-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.25);
+            border-radius: 12px;
+            margin-top: 12px;
+        }
+
+        .view-total-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #60a5fa;
+            opacity: 0.8;
+        }
+
+        .view-total-amount {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            font-family: monospace;
+        }
+
+        .view-line-items {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .view-line-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: #94a3b8;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .view-line-item:last-child {
+            border-bottom: none;
+        }
+
+        .view-line-item span:last-child {
+            font-family: monospace;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        /* ── Payment badge (View modal) ── */
+        .payment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .payment-badge.paid {
+            background: rgba(5, 150, 105, 0.18);
+            color: #34d399;
+            border: 1px solid rgba(5, 150, 105, 0.35);
+        }
+
+        .payment-badge.unpaid {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* ── Payment pill overrides in Edit modal ── */
+        .priority-pill.pp-method input:checked+label {
+            background: #0f766e;
+            border-color: #14b8a6;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(20, 184, 166, 0.35);
+        }
+
+        #pay-paid:checked+label {
+            background: #059669 !important;
+            border-color: #10b981 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4) !important;
+        }
+
+        #pay-unpaid:checked+label {
+            background: #b91c1c !important;
+            border-color: #ef4444 !important;
+            color: #fff !important;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4) !important;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           PRINT INVOICE STYLES
+        ══════════════════════════════════════════════════════════════ */
+        #printInvoice {
+            display: none;
+        }
+
+        @media print {
+            body>*:not(#printInvoice) {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+                overflow: visible !important;
+            }
+
+            #printInvoice {
+                display: block !important;
+                position: static !important;
+                inset: auto !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                background: white !important;
+                color: black !important;
+            }
+        }
+
+        #printInvoice {
+            display: none;
+        }
+
+        /* ── Paper Size Modal ── */
+        .paper-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .paper-modal-overlay.open {
+            display: flex;
+        }
+
+        .paper-modal-box {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 32px 28px 28px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            animation: fadeInUp 0.3s ease both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .paper-modal-box h3 {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .paper-modal-box p {
+            color: #64748b;
+            font-size: 0.82rem;
+            margin-bottom: 22px;
+        }
+
+        .paper-choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .paper-choice-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 12px;
+            border-radius: 16px;
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #94a3b8;
+            font-family: var(--font-family);
+        }
+
+        .paper-choice-btn:hover {
+            border-color: #7c3aed;
+            background: rgba(124, 58, 237, 0.1);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .paper-choice-btn .choice-icon {
+            font-size: 2rem;
+        }
+
+        .paper-choice-btn .choice-label {
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .paper-choice-btn .choice-sub {
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .paper-cancel-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .paper-cancel-btn:hover {
+            color: #94a3b8;
+        }
+
+        .pi-tbd-notice {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 2px dashed #999;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .pi-tbd-notice strong {
+            font-size: 14px;
+            color: #000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
     </style>
 </head>
@@ -1049,6 +1639,8 @@
                 <div>ID</div>
                 <div>Customer</div>
                 <div>Hardware</div>
+                <div>Job Type</div>
+                <div>Priority</div>
                 <div>Status</div>
                 <div>Storage</div>
                 <div>Actions</div>
@@ -1059,6 +1651,7 @@
 
     <div id="footer-placeholder"></div>
     <div class="toast" id="toast"></div>
+    <div id="printInvoice"></div>
 
     <!-- ══════════════════════════════════════════
          VIEW MODAL
@@ -1081,6 +1674,14 @@
                         <div class="view-field-value" id="view-phone">—</div>
                     </div>
                     <div class="view-field">
+                        <div class="view-field-label">Job Type</div>
+                        <div class="view-field-value" id="view-job-type">—</div>
+                    </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Priority</div>
+                        <div class="view-field-value" id="view-priority">—</div>
+                    </div>
+                    <div class="view-field">
                         <div class="view-field-label">Device</div>
                         <div class="view-field-value" id="view-device">—</div>
                     </div>
@@ -1093,17 +1694,27 @@
                         <div class="view-field-value" id="view-date-received">—</div>
                     </div>
                     <div class="view-field">
-                        <div class="view-field-label">Date Completed</div>
-                        <div class="view-field-value" id="view-date-completed">—</div>
+                        <div class="view-field-label">Est. Completion</div>
+                        <div class="view-field-value" id="view-estimated-completion">—</div>
                     </div>
                     <div class="view-field full">
                         <div class="view-field-label">Notes</div>
                         <div class="view-notes-box" id="view-notes">No notes.</div>
                     </div>
+                    <div class="view-field full" id="view-invoice-section" style="display:none;">
+                        <div class="view-field-label">Invoice</div>
+                        <div class="view-line-items" id="view-line-items"></div>
+                        <div class="view-total-bar">
+                            <span class="view-total-label">Total (BZD)</span>
+                            <span class="view-total-amount" id="view-total">$0.00</span>
+                        </div>
+                        <div id="view-payment-badge" style="margin-top:10px;display:none;"></div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('viewModal')">Close</button>
+                <button class="mf-btn mf-print" onclick="printFromView()">🖨️ Print</button>
                 <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
             </div>
         </div>
@@ -1144,6 +1755,22 @@
                     </div>
                 </div>
 
+                <span class="edit-label">Priority</span>
+                <div class="priority-pills">
+                    <div class="priority-pill pp-low">
+                        <input type="radio" name="editPriority" id="ep-low" value="low" checked>
+                        <label for="ep-low">🔵 Low — Normal</label>
+                    </div>
+                    <div class="priority-pill pp-high">
+                        <input type="radio" name="editPriority" id="ep-high" value="high">
+                        <label for="ep-high">🔴 High — Urgent</label>
+                    </div>
+                </div>
+
+                <span class="edit-label">Estimated Completion Date</span>
+                <input type="datetime-local" id="edit-estimated-completion" class="edit-date-input"
+                    style="margin-bottom:20px;">
+
                 <span class="edit-label">Date Completed <span
                         style="font-weight:400;opacity:0.5;text-transform:none;letter-spacing:0;">— leave blank if still
                         in progress</span></span>
@@ -1151,11 +1778,47 @@
 
                 <span class="edit-label">Notes</span>
                 <textarea id="edit-notes" class="edit-textarea" placeholder="Internal notes…"></textarea>
+
+                <span class="edit-label" style="margin-top:20px;">Invoice / Pricing <span
+                        style="font-weight:400;opacity:0.5;text-transform:none;letter-spacing:0;">— BZD</span></span>
+                <div class="inv-add-row">
+                    <button class="inv-template-btn" onclick="toggleTemplatePicker()">⚡ Quick Templates</button>
+                    <button class="inv-add-line-btn" onclick="addInvoiceLine()">＋ Add Line Item</button>
+                </div>
+                <div class="template-picker" id="templatePicker"></div>
+                <div class="invoice-items" id="invoiceItems"></div>
+                <div class="inv-total-row">
+                    <span class="inv-total-label">Total (BZD)</span>
+                    <span class="inv-total-amount" id="editInvoiceTotal">$0.00</span>
+                </div>
+
+                <span class="edit-label" style="margin-top:20px;">Payment</span>
+                <div class="priority-pills" style="margin-bottom:12px;">
+                    <div class="priority-pill pp-low">
+                        <input type="radio" name="editPayment" id="pay-unpaid" value="unpaid" checked>
+                        <label for="pay-unpaid">🔴 Unpaid</label>
+                    </div>
+                    <div class="priority-pill pp-high" style="--paid-color:#059669;">
+                        <input type="radio" name="editPayment" id="pay-paid" value="paid" onchange="toggleMethodRow()">
+                        <label for="pay-paid" class="pay-paid-label">✅ Paid</label>
+                    </div>
+                </div>
+                <div class="priority-pills" id="payment-method-row" style="display:none;margin-bottom:20px;">
+                    <div class="priority-pill pp-method">
+                        <input type="radio" name="payMethod" id="pay-cash" value="cash" checked>
+                        <label for="pay-cash">💵 Cash</label>
+                    </div>
+                    <div class="priority-pill pp-method">
+                        <input type="radio" name="payMethod" id="pay-card" value="card">
+                        <label for="pay-card">💳 Card</label>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('editModal')">Cancel</button>
+                <button class="mf-btn mf-print" onclick="printFromEdit()">🖨️ Print</button>
                 <button class="mf-btn mf-save" id="saveBtn" onclick="saveEdit()">
-                    <span id="saveBtnText">💾 Save Changes</span>
+                    <span id="saveBtnText">💾 Save</span>
                     <div class="save-spinner" id="saveSpinner"></div>
                 </button>
             </div>
@@ -1191,33 +1854,78 @@
         </div>
     </div>
 
+    <!-- ══════════════════════════════════════════
+         PAPER SIZE MODAL
+    ══════════════════════════════════════════ -->
+    <div class="paper-modal-overlay" id="paperModal">
+        <div class="paper-modal-box">
+            <h3>🖨️ Choose Paper Size</h3>
+            <p>Select the paper size for your printer</p>
+            <div class="paper-choices">
+                <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
+                    <span class="choice-icon">🧾</span>
+                    <span class="choice-label">Receipt Paper</span>
+                    <span class="choice-sub">80mm thermal roll</span>
+                </button>
+                <button class="paper-choice-btn" onclick="printJobInvoice('regular')">
+                    <span class="choice-icon">📄</span>
+                    <span class="choice-label">Regular Paper</span>
+                    <span class="choice-sub">A4 / Letter</span>
+                </button>
+            </div>
+            <button class="paper-cancel-btn"
+                onclick="document.getElementById('paperModal').classList.remove('open')">Cancel</button>
+        </div>
+    </div>
+
     <script src="js/components.js"></script>
     <script>
+        const PRICE_TEMPLATES = [
+            { label: 'Screen Replacement', price: 120 },
+            { label: 'Back-Glass Repair', price: 80 },
+            { label: 'Battery Replacement', price: 60 },
+            { label: 'Charging Port Repair', price: 70 },
+            { label: 'Unlocking Fee', price: 50 },
+            { label: 'Diagnostic Fee', price: 25 },
+            { label: 'Water Damage Treatment', price: 100 },
+            { label: 'Labour', price: 40 },
+        ];
+
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
         let allJobs = [];
         let currentEditId = null;
         let currentViewId = null;
+        let currentJobData = {};
 
-        // ── Status classifier ──────────────────────────────────────────
+        function bzDate(raw) {
+            if (!raw) return '—';
+            const d = new Date(raw);
+            if (isNaN(d)) return String(raw);
+            const bz = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+            return bz.toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric',
+                timeZone: 'UTC'
+            });
+        }
+
         function classifyStatus(job) {
             const s = String(job.status).toLowerCase();
-            if (s.includes("abandoned")) return { class: 'abandoned', label: 'DECLARED ABANDONED' };
+            if (s.includes("abandoned")) return { class: 'abandoned', label: 'Declared Abandoned' };
 
             let res = { class: 'received', label: 'Received' };
             if (["received", "diagnosing", "ordered", "in queue"].some(w => s.includes(w))) res = { class: 'received', label: 'Received' };
-            else if (["fixing", "repairing", "work"].some(w => s.includes(w))) res = { class: 'fixing', label: 'Repairing' };
+            else if (["fixing", "repairing", "work"].some(w => s.includes(w))) res = { class: 'fixing', label: 'Repair In Progress' };
             else if (["testing", "qc", "checking"].some(w => s.includes(w))) res = { class: 'testing', label: 'Testing / QC' };
-            else if (["completed", "ready", "pickup"].some(w => s.includes(w))) res = { class: 'ready', label: 'Ready for Pickup' };
+            else if (["completed", "ready", "pickup"].some(w => s.includes(w))) res = { class: 'ready', label: 'Ready For Pickup' };
             else if (["unsuccessful", "no fix"].some(w => s.includes(w))) res = { class: 'unsuccessful', label: 'Unsuccessful' };
 
             if (['ready', 'unsuccessful'].includes(res.class) && job.dateCompleted) {
                 const diff = Math.floor((new Date() - new Date(job.dateCompleted)) / 86400000);
-                if (90 - diff <= 0) return { class: 'abandoned', label: 'DECLARED ABANDONED' };
+                if (90 - diff <= 0) return { class: 'abandoned', label: 'Declared Abandoned' };
             }
             return res;
         }
 
-        // ── Stats ──────────────────────────────────────────────────────
         function updateStats(jobs) {
             let s = { total: jobs.length, received: 0, fixing: 0, testing: 0, ready: 0, abandoned: 0 };
             jobs.forEach(j => {
@@ -1229,7 +1937,6 @@
             });
         }
 
-        // ── Render ─────────────────────────────────────────────────────
         function renderJobs(jobs) {
             const list = document.getElementById('jobsList');
             if (jobs.length === 0) {
@@ -1240,28 +1947,21 @@
                 const stat = classifyStatus(j);
                 let storage = '—';
                 if (stat.class === 'abandoned') {
-                    // Show the date it was declared abandoned (col I in sheet, stored in dateAbandoned)
                     const abandDate = j.dateAbandoned || j.dateCompleted;
                     if (abandDate) {
-                        const d = new Date(abandDate);
-                        const label = !isNaN(d)
-                            ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : String(abandDate);
-                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">${label}</span>`;
+                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">${bzDate(abandDate)}</span>`;
                     } else {
                         storage = `<span style="color:#fca5a5;font-weight:800;">ABANDONED</span>`;
                     }
                 } else if (stat.class === 'ready' || stat.class === 'unsuccessful') {
-                    // 90-day countdown only for these two statuses
                     if (j.dateCompleted) {
                         const daysLeft = 90 - Math.floor((new Date() - new Date(j.dateCompleted)) / 86400000);
                         const alertStyle = daysLeft <= 7 ? 'color:#f87171;font-weight:800;' : 'opacity:0.8;';
                         storage = `<span style="${alertStyle}">${Math.max(0, daysLeft)}d left</span>`;
                     }
                 }
-                // All other statuses stay as '—'
-                // Escape names for safe use in onclick
-                const safeName = (j.customerName || 'Walk-in').replace(/'/g, "\\'");
+                const priorityClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
+                const priorityLabel = priorityClass === 'high' ? '🔴 Urgent' : '🔵 Normal';
                 return `
                 <div class="job-row status-${stat.class}">
                     <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
@@ -1269,12 +1969,14 @@
                         <div style="font-weight:700;">${j.customerName || 'Walk-in'}</div>
                         <div style="font-size:0.7rem;opacity:0.5;">${j.customerPhone || ''}</div>
                     </div>
-                    <div style="font-size:0.85rem;opacity:0.8;">${j.device || '—'}</div>
+                    <div style="font-size:0.85rem;opacity:0.8;">${j.device || '—'}<br><span style="font-size:0.75rem;opacity:0.6;">${j.issue || ''}</span></div>
+                    <div><span class="job-type-badge">${j.jobType || 'Repair'}</span></div>
+                    <div><span class="priority-badge ${priorityClass}">${priorityLabel}</span></div>
                     <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
                     <div style="font-size:0.85rem;">${storage}</div>
                     <div class="action-btns">
-                        <button class="action-btn"        title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
-                        <button class="action-btn"        title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
+                        <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
+                        <button class="action-btn" title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
                         <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>
                     </div>
                 </div>`;
@@ -1304,15 +2006,13 @@
             }
         }
 
-        // ── Modal helpers ──────────────────────────────────────────────
         function openModal(id) {
             document.getElementById(id).classList.add('open');
-            document.body.classList.add('modal-open'); // Lock background
+            document.body.classList.add('modal-open');
         }
 
         function closeModal(id) {
             document.getElementById(id).classList.remove('open');
-            // Only unlock if no other modals are still open
             if (!document.querySelector('.modal-overlay.open')) {
                 document.body.classList.remove('modal-open');
             }
@@ -1320,20 +2020,60 @@
 
         function getJob(id) { return allJobs.find(j => String(j.id) === String(id)); }
 
-        // ── VIEW MODAL ─────────────────────────────────────────────────
         function openViewModal(id) {
             const j = getJob(id);
             if (!j) return;
             currentViewId = id;
+            currentJobData = j;
 
             document.getElementById('view-id-tag').textContent = '#' + j.id;
             document.getElementById('view-name').textContent = j.customerName || 'Walk-in';
             document.getElementById('view-phone').textContent = j.customerPhone || '—';
+            document.getElementById('view-job-type').textContent = j.jobType || '—';
+
+            const pClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
+            const pLabel = pClass === 'high' ? '🔴 High — Urgent' : '🔵 Low — Normal';
+            document.getElementById('view-priority').innerHTML = `<span class="priority-badge ${pClass}">${pLabel}</span>`;
+
             document.getElementById('view-device').textContent = j.device || '—';
-            document.getElementById('view-status').textContent = j.status || '—';
-            document.getElementById('view-date-received').textContent = j.dateReceived || '—';
-            document.getElementById('view-date-completed').textContent = j.dateCompleted || 'In progress';
+            const stat = classifyStatus(j);
+            document.getElementById('view-status').innerHTML = `<span class="status-badge ${stat.class}">${stat.label}</span>`;
+
+            document.getElementById('view-date-received').textContent = bzDate(j.dateReceived) || '—';
+            document.getElementById('view-estimated-completion').textContent = j.estimatedCompletion || '—';
+
             document.getElementById('view-notes').textContent = j.notes || 'No notes.';
+
+            const invoiceSection = document.getElementById('view-invoice-section');
+            const lineItemsEl = document.getElementById('view-line-items');
+            const totalEl = document.getElementById('view-total');
+            const paymentBadgeEl = document.getElementById('view-payment-badge');
+
+            let items = [];
+            try { items = j.invoiceItems ? JSON.parse(j.invoiceItems) : []; } catch (e) { items = []; }
+
+            const payment = (j.payment || 'unpaid').toLowerCase();
+            const isPaid = payment.startsWith('paid');
+            const method = isPaid ? (payment.includes('card') ? 'Card' : 'Cash') : null;
+
+            if (items.length > 0) {
+                invoiceSection.style.display = '';
+                lineItemsEl.innerHTML = items.map(it =>
+                    `<div class="view-line-item"><span>${it.desc}</span><span>$${parseFloat(it.price || 0).toFixed(2)}</span></div>`
+                ).join('');
+                const total = items.reduce((s, it) => s + parseFloat(it.price || 0), 0);
+                totalEl.textContent = '$' + total.toFixed(2);
+
+                if (isPaid) {
+                    paymentBadgeEl.innerHTML = `<span class="payment-badge paid">✅ Paid · ${method}</span>`;
+                } else {
+                    paymentBadgeEl.innerHTML = `<span class="payment-badge unpaid">🔴 Unpaid</span>`;
+                }
+                paymentBadgeEl.style.display = '';
+            } else {
+                invoiceSection.style.display = 'none';
+                paymentBadgeEl.style.display = 'none';
+            }
 
             openModal('viewModal');
         }
@@ -1343,15 +2083,14 @@
             openEditModal(currentViewId);
         }
 
-        // ── EDIT MODAL ─────────────────────────────────────────────────
         function openEditModal(id) {
             const j = getJob(id);
             if (!j) return;
             currentEditId = id;
+            currentJobData = j;
 
             document.getElementById('edit-id-tag').textContent = '#' + j.id;
 
-            // Pre-select the matching status pill
             const statusVal = String(j.status || '').toLowerCase();
             const radios = document.querySelectorAll('input[name="editStatus"]');
             let matched = false;
@@ -1361,21 +2100,69 @@
             });
             if (!matched) document.getElementById('es-received').checked = true;
 
-            // Date completed
+            const pVal = (j.priority || 'low').toLowerCase();
+            document.getElementById('ep-high').checked = pVal === 'high';
+            document.getElementById('ep-low').checked = pVal !== 'high';
+
+            // Set estimated completion
+            if (j.estimatedCompletion) {
+                const estInput = document.getElementById('edit-estimated-completion');
+
+                // Check if it's a full datetime or just time
+                if (j.estimatedCompletion.includes('@') || j.estimatedCompletion.includes('/')) {
+                    // It's a full date + time, parse it
+                    try {
+                        const parts = j.estimatedCompletion.split('@').map(s => s.trim());
+                        if (parts.length === 2) {
+                            // Has both date and time
+                            const datePart = parts[0]; // "5/15/2025"
+                            const timePart = parts[1]; // "6:00 PM"
+
+                            // Convert to datetime-local format
+                            const [month, day, year] = datePart.split('/');
+                            const [time, period] = timePart.split(' ');
+                            let [hours, minutes] = time.split(':');
+
+                            if (period === 'PM' && hours !== '12') hours = String(parseInt(hours) + 12);
+                            if (period === 'AM' && hours === '12') hours = '00';
+
+                            const datetimeLocal = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours.padStart(2, '0')}:${minutes}`;
+                            estInput.value = datetimeLocal;
+                        }
+                    } catch (e) {
+                        estInput.value = '';
+                    }
+                } else {
+                    // It's just time - can't set a datetime-local with only time
+                    estInput.value = '';
+                }
+            } else {
+                document.getElementById('edit-estimated-completion').value = '';
+            }
+
             if (j.dateCompleted) {
                 const d = new Date(j.dateCompleted);
-                if (!isNaN(d)) {
-                    document.getElementById('edit-date-completed').value = d.toISOString().split('T')[0];
-                } else {
-                    document.getElementById('edit-date-completed').value = '';
-                }
+                document.getElementById('edit-date-completed').value = !isNaN(d) ? d.toISOString().split('T')[0] : '';
             } else {
                 document.getElementById('edit-date-completed').value = '';
             }
 
             document.getElementById('edit-notes').value = j.notes || '';
 
-            // Reset save btn
+            let items = [];
+            try { items = j.invoiceItems ? JSON.parse(j.invoiceItems) : []; } catch (e) { items = []; }
+            document.getElementById('invoiceItems').innerHTML = '';
+            document.getElementById('templatePicker').classList.remove('open');
+            items.forEach(it => addInvoiceLine(it.desc, it.price));
+            recalcTotal();
+
+            const payment = (j.payment || 'unpaid').toLowerCase();
+            document.getElementById('pay-unpaid').checked = !payment.startsWith('paid');
+            document.getElementById('pay-paid').checked = payment.startsWith('paid');
+            document.getElementById('payment-method-row').style.display = payment.startsWith('paid') ? 'flex' : 'none';
+            document.getElementById('pay-cash').checked = !payment.includes('card');
+            document.getElementById('pay-card').checked = payment.includes('card');
+
             const btn = document.getElementById('saveBtn');
             btn.disabled = false;
             document.getElementById('saveBtnText').style.display = 'inline';
@@ -1386,8 +2173,43 @@
 
         async function saveEdit() {
             const status = document.querySelector('input[name="editStatus"]:checked')?.value || 'received';
+            const priority = document.querySelector('input[name="editPriority"]:checked')?.value || 'low';
             const notes = document.getElementById('edit-notes').value.trim();
             const dateCompleted = document.getElementById('edit-date-completed').value;
+
+            // Get estimated completion and format it
+            let estimatedCompletion = '';
+            const estInput = document.getElementById('edit-estimated-completion').value;
+            if (estInput) {
+                const estDate = new Date(estInput);
+
+                const datePart = estDate.toLocaleDateString('en-US', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                const timePart = estDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                estimatedCompletion = `${datePart} @ ${timePart}`;
+            }
+
+            const isPaid = document.getElementById('pay-paid').checked;
+            const method = document.querySelector('input[name="payMethod"]:checked')?.value || 'cash';
+            const payment = isPaid ? `paid-${method}` : 'unpaid';
+
+            const rows = document.querySelectorAll('.invoice-item-row');
+            const invoiceItems = [];
+            rows.forEach(row => {
+                const desc = row.querySelector('.inv-desc')?.value.trim();
+                const price = parseFloat(row.querySelector('.inv-price')?.value) || 0;
+                if (desc) invoiceItems.push({ desc, price });
+            });
+            const invoiceItemsJSON = JSON.stringify(invoiceItems);
 
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
@@ -1399,26 +2221,33 @@
                     action: 'update',
                     id: currentEditId,
                     status,
+                    priority,
                     notes,
-                    dateCompleted
+                    dateCompleted,
+                    estimatedCompletion,
+                    payment,
+                    invoiceItems: invoiceItemsJSON
                 });
 
-                // no-cors: same pattern as delete — response is opaque but the request goes through
                 await fetch(`${SCRIPT_URL}?${params.toString()}`, { mode: 'no-cors' });
 
-                // Optimistically update local data so the list reflects immediately
                 const job = allJobs.find(j => String(j.id) === String(currentEditId));
                 if (job) {
                     job.status = status;
+                    job.priority = priority;
                     job.notes = notes;
                     job.dateCompleted = dateCompleted;
+                    job.estimatedCompletion = estimatedCompletion;
+                    job.payment = payment;
+                    job.invoiceItems = invoiceItemsJSON;
+                    currentJobData = job;
                 }
 
                 closeModal('editModal');
                 showToast('✅ Job updated successfully', 'ok');
                 filterAndRender();
                 updateStats(allJobs);
-                setTimeout(loadJobs, 2000); // background sync to confirm
+                setTimeout(loadJobs, 2000);
 
             } catch (err) {
                 showToast('❌ Could not reach the server.', 'err');
@@ -1430,7 +2259,6 @@
             }
         }
 
-        // ── DELETE MODAL ───────────────────────────────────────────────
         function openDeleteModal(id) {
             const j = getJob(id);
             if (!j) return;
@@ -1454,17 +2282,14 @@
                     id: id
                 });
 
-                // Use no-cors to bypass redirect/CORS issues with Apps Script
                 await fetch(`${SCRIPT_URL}?${params.toString()}`, { mode: 'no-cors' });
 
-                // Optimistically remove from local list immediately
                 allJobs = allJobs.filter(j => String(j.id) !== String(id));
 
                 showToast('🗑️ Job #' + id + ' removed successfully.', 'ok');
                 filterAndRender();
                 updateStats(allJobs);
 
-                // Background sync after a short delay
                 setTimeout(loadJobs, 2000);
 
             } catch (err) {
@@ -1473,22 +2298,296 @@
             }
         }
 
-        // Ensure your delete modal button is wired correctly
-        function openDeleteModal(id) {
-            const j = getJob(id);
-            if (!j) return;
-
-            document.getElementById('del-id').textContent = '#' + j.id;
-            document.getElementById('del-name').textContent = j.customerName || 'Walk-in';
-            document.getElementById('del-device').textContent = j.device || '—';
-            document.getElementById('del-status').textContent = j.status || '—';
-
-            // Update the onclick to pass the ID
-            document.getElementById('confirmDeleteBtn').onclick = () => deleteJob(id);
-            openModal('deleteModal');
+        function addInvoiceLine(desc = '', price = '') {
+            const container = document.getElementById('invoiceItems');
+            const row = document.createElement('div');
+            row.className = 'invoice-item-row';
+            row.innerHTML = `
+                <input class="inv-input inv-desc" type="text" placeholder="Description…" value="${desc}">
+                <input class="inv-input inv-price price" type="number" placeholder="0.00" min="0" step="0.01" value="${price}">
+                <button class="inv-remove-btn" onclick="this.closest('.invoice-item-row').remove(); recalcTotal()">✕</button>
+            `;
+            row.querySelector('.inv-price').addEventListener('input', recalcTotal);
+            container.appendChild(row);
+            recalcTotal();
         }
 
-        // ── Toast ──────────────────────────────────────────────────────
+        function recalcTotal() {
+            const prices = [...document.querySelectorAll('.inv-price')].map(i => parseFloat(i.value) || 0);
+            const total = prices.reduce((s, v) => s + v, 0);
+            document.getElementById('editInvoiceTotal').textContent = '$' + total.toFixed(2);
+        }
+
+        function toggleTemplatePicker() {
+            const picker = document.getElementById('templatePicker');
+            if (!picker.innerHTML.trim()) {
+                picker.innerHTML = PRICE_TEMPLATES.map(t =>
+                    `<span class="tmpl-chip" onclick="addTemplate('${t.label}',${t.price})">${t.label} — $${t.price}</span>`
+                ).join('');
+            }
+            picker.classList.toggle('open');
+        }
+
+        function addTemplate(desc, price) {
+            addInvoiceLine(desc, price);
+            document.getElementById('templatePicker').classList.remove('open');
+        }
+
+        function toggleMethodRow() {
+            const isPaid = document.getElementById('pay-paid').checked;
+            document.getElementById('payment-method-row').style.display = isPaid ? 'flex' : 'none';
+        }
+
+        // ── Real-time print syncing ──
+        function syncCurrentJobData() {
+            if (!currentEditId) return;
+
+            const status = document.querySelector('input[name="editStatus"]:checked')?.value || 'received';
+            const priority = document.querySelector('input[name="editPriority"]:checked')?.value || 'low';
+            const notes = document.getElementById('edit-notes').value.trim();
+            const dateCompleted = document.getElementById('edit-date-completed').value;
+
+            // Sync estimated completion
+            let estimatedCompletion = '';
+            const estInput = document.getElementById('edit-estimated-completion').value;
+            if (estInput) {
+                const estDate = new Date(estInput);
+                const datePart = estDate.toLocaleDateString('en-US', {
+                    month: 'numeric',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                const timePart = estDate.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                estimatedCompletion = `${datePart} @ ${timePart}`;
+            }
+
+            const isPaid = document.getElementById('pay-paid').checked;
+            const method = document.querySelector('input[name="payMethod"]:checked')?.value || 'cash';
+            const payment = isPaid ? `paid-${method}` : 'unpaid';
+
+            const rows = document.querySelectorAll('.invoice-item-row');
+            const invoiceItems = [];
+            rows.forEach(row => {
+                const desc = row.querySelector('.inv-desc')?.value.trim();
+                const price = parseFloat(row.querySelector('.inv-price')?.value) || 0;
+                if (desc) invoiceItems.push({ desc, price });
+            });
+
+            currentJobData = {
+                ...currentJobData,
+                status,
+                priority,
+                notes,
+                dateCompleted,
+                estimatedCompletion,
+                payment,
+                invoiceItems: JSON.stringify(invoiceItems)
+            };
+        }
+
+        function printFromEdit() {
+            syncCurrentJobData();
+            document.getElementById('paperModal').classList.add('open');
+        }
+
+        function printFromView() {
+            document.getElementById('paperModal').classList.add('open');
+        }
+
+        function printJobInvoice(paperSize) {
+            const j = currentJobData;
+            if (!j) {
+                showToast('⚠️ No job data available to print', 'err');
+                return;
+            }
+
+            const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            const isReceipt = paperSize === 'receipt';
+            const priorityLabel = (j.priority || 'low') === 'high' ? 'HIGH — URGENT' : 'LOW — NORMAL';
+
+            let items = [];
+            try { items = j.invoiceItems ? JSON.parse(j.invoiceItems) : []; } catch (e) { items = []; }
+
+            const total = items.reduce((s, it) => s + parseFloat(it.price || 0), 0);
+
+            let paymentStatus;
+            if (items.length === 0 || total === 0) {
+                paymentStatus = 'N/A — Invoice Pending';
+            } else {
+                const payment = (j.payment || 'unpaid').toLowerCase();
+                const isPaid = payment.startsWith('paid');
+                const method = isPaid ? (payment.includes('card') ? 'Card' : 'Cash') : 'Unpaid';
+                paymentStatus = isPaid ? `Paid via ${method}` : 'UNPAID';
+            }
+
+            let costTableHTML = '';
+            if (items.length > 0) {
+                const rows = items.map(it =>
+                    `<tr><td>${it.desc}</td><td>$${parseFloat(it.price || 0).toFixed(2)}</td></tr>`
+                ).join('');
+                costTableHTML = `
+            <table class="pi-cost-table">
+                <tr><th>Service</th><th>BZD</th></tr>
+                ${rows}
+                <tr class="pi-total-row"><td><strong>TOTAL</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr>
+            </table>
+        `;
+            } else {
+                costTableHTML = `
+        <div class="pi-tbd-notice">
+            <strong>Price To Be Determined</strong><br>
+            <span style="font-size: ${isReceipt ? '8px' : '10px'}; opacity: 0.7;">
+                Final cost will be provided after diagnostic assessment.
+            </span>
+        </div>
+    `;
+            }
+
+            const regularStyles = `
+        @media print { @page { size: A4; margin: 15mm 20mm; } }
+        #printInvoice { font-family: 'Courier New', monospace; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
+        .pi-shop { text-align: center; margin-bottom: 8px; }
+        .pi-shop h1 { font-size: 20px; font-weight: 900; letter-spacing: 3px; margin: 0; }
+        .pi-shop p { font-size: 11px; margin: 2px 0; color: #555; }
+        .pi-rule { border: none; border-top: 2px solid #000; margin: 12px 0 8px; }
+        .pi-title { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin: 8px 0 12px; }
+        .pi-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 12px; line-height: 1.8; }
+        .pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 8px 0 12px; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; }
+        .pi-meta-row strong { color: #000; margin-right: 4px; }
+        .pi-section { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #555; margin-bottom: 6px; }
+        .pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 12px; }
+        .pi-field-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #777; }
+        .pi-field-value { font-size: 13px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid #ddd; min-height: 24px; }
+        .pi-notes { border: 1px solid #ccc; padding: 10px; min-height: 70px; font-size: 12px; color: #333; margin-top: 4px; line-height: 1.5; margin-bottom: 12px; }
+        .pi-footer { text-align: center; font-size: 10px; color: #777; margin-top: 18px; border-top: 1px dashed #ccc; padding-top: 8px; line-height: 1.6; }
+        .pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+        .pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; padding: 4px 0; border-bottom: 1px solid #000; }
+        .pi-cost-table th:last-child { text-align: right; }
+        .pi-cost-table td { padding: 5px 0; border-bottom: 1px dashed #ddd; font-size: 12px; }
+        .pi-cost-table td:last-child { text-align: right; font-family: monospace; font-weight: 700; }
+        .pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 13px; padding-top: 8px; }
+        .pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 8px 0 12px 0; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; }
+        .pi-payment-status strong { color: #000; }
+    `;
+
+            const receiptStyles = `
+        @media print { @page { size: 80mm auto; margin: 4mm 3mm; } }
+        #printInvoice { font-family: 'Courier New', monospace; color: #000; background: white; width: 72mm; margin: 0 auto; padding: 4px; font-size: 10px; }
+        .pi-shop { text-align: center; margin-bottom: 5px; }
+        .pi-shop h1 { font-size: 14px; font-weight: 900; letter-spacing: 2px; margin: 0; }
+        .pi-shop p { font-size: 9px; margin: 1px 0; }
+        .pi-rule { border: none; border-top: 1px solid #000; margin: 5px 0 4px; }
+        .pi-title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 6px; }
+        .pi-meta { font-size: 9px; line-height: 1.7; margin-bottom: 6px; }
+        .pi-meta-row { font-size: 9px; margin: 6px 0 8px; padding: 4px 6px; background: #f5f5f5; border-radius: 3px; line-height: 1.6; }
+        .pi-meta-row strong { display: inline-block; width: 48%; color: #000; }
+        .pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; margin-bottom: 3px; }
+        .pi-grid { margin-bottom: 6px; }
+        .pi-field-label { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #777; }
+        .pi-field-value { font-size: 11px; font-weight: 700; padding: 1px 0; border-bottom: 1px dashed #ccc; min-height: 16px; }
+        .pi-notes { border: 1px solid #ccc; padding: 5px; min-height: 40px; font-size: 9px; line-height: 1.4; margin-top: 3px; margin-bottom: 8px; }
+        .pi-footer { text-align: center; font-size: 8px; color: #777; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 5px; line-height: 1.5; }
+        .pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9px; }
+        .pi-cost-table th { text-align: left; font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; padding: 2px 0; border-bottom: 1px solid #000; }
+        .pi-cost-table th:last-child { text-align: right; }
+        .pi-cost-table td { padding: 3px 0; border-bottom: 1px dashed #ddd; }
+        .pi-cost-table td:last-child { text-align: right; font-family: monospace; font-weight: 700; }
+        .pi-cost-table .pi-total-row td { border-top: 1px solid #000; border-bottom: none; font-weight: 900; font-size: 11px; padding-top: 5px; }
+        .pi-payment-status { text-align: center; font-size: 9px; font-weight: 900; margin: 8px 0 10px 0; padding: 4px 6px; background: #f0f0f0; border-radius: 3px; }
+        .pi-payment-status strong { color: #000; }
+    `;
+
+            const bodyHTML = `
+        <div class="pi-shop">
+            <h1>🔧 TECH SHOP</h1>
+            <p>Device Repair &amp; Services &nbsp;·&nbsp; Belize City, Belize</p>
+            <p>Tel: +501 600-0000</p>
+        </div>
+        <hr class="pi-rule">
+        
+        <div class="pi-title">Job Receipt &amp; Intake Form</div>
+        
+        <div class="pi-meta">
+            <div><strong>JOB #:</strong> ${j.id}</div>
+            <div><strong>DATE:</strong> ${bzDate(j.dateReceived) || today}</div>
+        </div>
+        
+        <div class="pi-meta-row">
+            <div><strong>Type:</strong> ${j.jobType || 'Repair'}</div>
+            <div><strong>Priority:</strong> ${priorityLabel}</div>
+        </div>
+        
+        <hr class="pi-dash">
+        
+        <div class="pi-section">Customer Information</div>
+        <div class="pi-grid">
+            <div>
+                <div class="pi-field-label">Name</div>
+                <div class="pi-field-value">${j.customerName || 'Walk-in'}</div>
+            </div>
+            <div>
+                <div class="pi-field-label">Phone</div>
+                <div class="pi-field-value">${j.customerPhone ? '+501 ' + j.customerPhone : '—'}</div>
+            </div>
+        </div>
+        
+        <hr class="pi-dash">
+        
+        <div class="pi-section">Device Information</div>
+        <div class="pi-grid">
+            <div>
+                <div class="pi-field-label">Device</div>
+                <div class="pi-field-value">${j.device || '—'}</div>
+            </div>
+            <div>
+                <div class="pi-field-label">Issue Reported</div>
+                <div class="pi-field-value">${j.issue || '—'}</div>
+            </div>
+        </div>
+        
+        <div class="pi-grid">
+            <div>
+                <div class="pi-field-label">Status</div>
+                <div class="pi-field-value">${(j.status || 'Received').replace(/^\w/, c => c.toUpperCase())}</div>
+            </div>
+            <div>
+                <div class="pi-field-label">Est. Completion</div>
+                <div class="pi-field-value">${j.estimatedCompletion || '—'}</div>
+            </div>
+        </div>
+        
+        <hr class="pi-dash">
+        
+        <div class="pi-section">Work Notes</div>
+        <div class="pi-notes">${j.notes || 'No additional notes.'}</div>
+        
+        <hr class="pi-dash">
+        
+        <div class="pi-section">Cost Breakdown</div>
+        ${costTableHTML}
+        
+        <div class="pi-payment-status">
+            <strong>Payment Status:</strong> ${paymentStatus}
+        </div>
+        
+        <div class="pi-footer">
+            Thank you for choosing Tech Shop!<br>
+            Devices not collected within <strong>90 days</strong> of completion may be abandoned.<br>
+            We are not responsible for data loss. Please back up your device.
+        </div>
+    `;
+
+            document.getElementById('printInvoice').innerHTML =
+                `<style>${isReceipt ? receiptStyles : regularStyles}</style>` + bodyHTML;
+
+            document.getElementById('paperModal').classList.remove('open');
+            setTimeout(() => window.print(), 80);
+        }
+
         function showToast(msg, type = '') {
             const t = document.getElementById('toast');
             t.textContent = msg;
@@ -1497,14 +2596,12 @@
             setTimeout(() => t.classList.remove('show'), 3200);
         }
 
-        // ── Close modals on overlay click ──────────────────────────────
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', e => {
                 if (e.target === overlay) overlay.classList.remove('open');
             });
         });
 
-        // ── Init ───────────────────────────────────────────────────────
         document.getElementById('searchInput').addEventListener('input', filterAndRender);
         document.getElementById('statusFilter').addEventListener('change', filterAndRender);
         loadJobs();
@@ -1514,38 +2611,35 @@
             const splash = document.querySelector('.splash-screen');
             const progressBar = document.querySelector('.splash-progress-bar');
 
-            // The three options
             const options = [1500, 2000, 3000];
             const randomDuration = options[Math.floor(Math.random() * options.length)];
 
-            // Apply the duration to the CSS animation
             if (progressBar) {
                 progressBar.style.animationDuration = `${randomDuration}ms`;
             }
 
-            // Hide the splash screen after the chosen time
             setTimeout(() => {
                 splash.classList.add('exiting');
 
-                // Fully remove from view after the exit transition (0.8s)
                 setTimeout(() => {
                     splash.classList.add('hidden');
                 }, 800);
             }, randomDuration);
+
+            document.getElementById('pay-unpaid')?.addEventListener('change', () => {
+                document.getElementById('payment-method-row').style.display = 'none';
+            });
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            // 1. Look at the URL and see if there is a "?filter=" part
             const urlParams = new URLSearchParams(window.location.search);
             const filterType = urlParams.get('filter');
 
-            // 2. If a filter was found (like "fixing"), update the page
             if (filterType) {
                 const filterDropdown = document.getElementById('statusFilter');
                 if (filterDropdown) {
-                    filterDropdown.value = filterType; // Sets the dropdown to "Repair In Progress"
+                    filterDropdown.value = filterType;
 
-                    // 3. Wait a half-second for the Google Sheet data to load, then filter it
                     setTimeout(() => {
                         filterAndRender();
                     }, 500);

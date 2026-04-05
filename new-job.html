@@ -514,6 +514,133 @@
             border-color: rgba(37, 99, 235, 0.3);
         }
 
+        /* ── Job Type Pills ── */
+        .job-type-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .job-type-pill input[type="radio"] {
+            display: none;
+        }
+
+        .job-type-pill label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid rgba(124, 58, 237, 0.18);
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            user-select: none;
+        }
+
+        .job-type-pill label:hover {
+            border-color: #7c3aed;
+            color: #7c3aed;
+            background: rgba(124, 58, 237, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .job-type-pill input[type="radio"]:checked+label {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* Priority override styles */
+        #pr-low:checked+label {
+            background: #1d4ed8 !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+        }
+
+        #pr-high:checked+label {
+            background: #b91c1c !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important;
+        }
+
+        .other-type-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid rgba(124, 58, 237, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+            font-family: var(--font-family);
+            font-size: 0.92rem;
+            color: var(--text-main);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+            display: none;
+            margin-top: 8px;
+        }
+
+        .other-type-input.visible {
+            display: block;
+        }
+
+        .other-type-input:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
+
+        /* ── Print Invoice ── */
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+
+            #printInvoice,
+            #printInvoice * {
+                visibility: visible !important;
+            }
+
+            #printInvoice {
+                position: fixed !important;
+                inset: 0 !important;
+                display: block !important;
+                background: white !important;
+                color: black !important;
+                padding: 30px 40px !important;
+            }
+        }
+
+        #printInvoice {
+            display: none;
+        }
+
+        .btn-print {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            background: transparent;
+            color: #7c3aed;
+            border: 1.5px solid rgba(124, 58, 237, 0.35);
+            border-radius: var(--radius-full);
+            font-family: var(--font-family);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition-base);
+        }
+
+        .btn-print:hover {
+            background: rgba(124, 58, 237, 0.08);
+            border-color: #7c3aed;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -595,11 +722,175 @@
         /* The Input Field */
         .phone-wrapper .form-input {
             padding-left: 68px !important;
-            /* Increased to give the badge room */
             height: 52px;
-            /* Fixed height makes alignment much easier to control */
             line-height: 52px;
-            /* Matches height to center the cursor/text */
+        }
+
+        /* ── Paper Size Modal ── */
+        .paper-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .paper-modal-overlay.open {
+            display: flex;
+        }
+
+        .paper-modal-box {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 32px 28px 28px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            animation: fadeInUp 0.3s ease both;
+        }
+
+        .paper-modal-box h3 {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .paper-modal-box p {
+            color: #64748b;
+            font-size: 0.82rem;
+            margin-bottom: 22px;
+        }
+
+        .paper-choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .paper-choice-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 12px;
+            border-radius: 16px;
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #94a3b8;
+            font-family: var(--font-family);
+        }
+
+        .paper-choice-btn:hover {
+            border-color: #7c3aed;
+            background: rgba(124, 58, 237, 0.1);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .paper-choice-btn .choice-icon {
+            font-size: 2rem;
+        }
+
+        .paper-choice-btn .choice-label {
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .paper-choice-btn .choice-sub {
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+
+        .paper-cancel-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .paper-cancel-btn:hover {
+            color: #94a3b8;
+        }
+
+        /* ── Completion Date Picker ── */
+        .completion-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .completion-mode-pills {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .completion-mode-pill input[type="radio"] {
+            display: none;
+        }
+
+        .completion-mode-pill label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid rgba(37, 99, 235, 0.15);
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            user-select: none;
+        }
+
+        .completion-mode-pill label:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .completion-mode-pill input[type="radio"]:checked+label {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .completion-input {
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .completion-input::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity var(--transition-fast);
+        }
+
+        .completion-input::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+
+        .completion-hint {
+            font-size: 0.72rem;
+            color: var(--text-light);
+            font-style: italic;
         }
     </style>
 </head>
@@ -619,6 +910,7 @@
             <div class="repair-id-tag" id="repairIdDisplay">—</div>
             <p>Added to the spreadsheet including the Customers sheet.</p>
             <div class="success-actions">
+                <button class="btn-print" onclick="openPaperModal()">🖨️ Print Receipt</button>
                 <button class="btn-new" onclick="resetForm()">+ New Job</button>
                 <a href="index.html" class="btn-dash">← Dashboard</a>
             </div>
@@ -696,6 +988,44 @@
                             autocomplete="off">
                     </div>
                 </div>
+                <div class="form-group" style="margin-bottom:var(--space-sm)">
+                    <label>Job Type</label>
+                    <div class="job-type-pills">
+                        <div class="job-type-pill">
+                            <input type="radio" name="jobType" id="jt-backglass" value="Back-Glass Repair" checked>
+                            <label for="jt-backglass">🔧 Back-Glass Repair</label>
+                        </div>
+                        <div class="job-type-pill">
+                            <input type="radio" name="jobType" id="jt-screen" value="Screen Replacement">
+                            <label for="jt-screen">📱 Screen Replacement</label>
+                        </div>
+                        <div class="job-type-pill">
+                            <input type="radio" name="jobType" id="jt-unlock" value="Unlocking">
+                            <label for="jt-unlock">🔓 Unlocking</label>
+                        </div>
+                        <div class="job-type-pill">
+                            <input type="radio" name="jobType" id="jt-other" value="other">
+                            <label for="jt-other">✏️ Other…</label>
+                        </div>
+                    </div>
+                    <input type="text" id="jobTypeOther" class="other-type-input" placeholder="Describe the job type…"
+                        maxlength="60">
+                </div>
+                <div class="form-group" style="margin-bottom:var(--space-sm)">
+                    <label>Priority</label>
+                    <div class="job-type-pills">
+                        <div class="job-type-pill"
+                            style="--pill-checked-bg:#1d4ed8;--pill-checked-border:#3b82f6;--pill-checked-shadow:rgba(37,99,235,0.35);">
+                            <input type="radio" name="priority" id="pr-low" value="low" checked>
+                            <label for="pr-low" style="border-color:rgba(59,130,246,0.2);">🔵 Low — Normal</label>
+                        </div>
+                        <div class="job-type-pill">
+                            <input type="radio" name="priority" id="pr-high" value="high">
+                            <label for="pr-high" style="border-color:rgba(239,68,68,0.2);"
+                                class="priority-high-label">🔴 High — Urgent</label>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group" style="margin-bottom:0">
                     <label>Initial Status</label>
                     <div class="status-pills">
@@ -716,6 +1046,26 @@
                             <label for="s-ready">🎉 Ready</label>
                         </div>
                     </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label>Estimated Completion Date</label>
+                        <div class="completion-picker">
+                            <div class="completion-mode-pills">
+                                <div class="completion-mode-pill">
+                                    <input type="radio" name="completionMode" id="cm-day" value="day" checked>
+                                    <label for="cm-day">📅 Day</label>
+                                </div>
+                                <div class="completion-mode-pill">
+                                    <input type="radio" name="completionMode" id="cm-hour" value="hour">
+                                    <label for="cm-hour">🕐 Hour</label>
+                                </div>
+                            </div>
+                            <input type="date" id="estimatedCompletion" class="form-input completion-input"
+                                placeholder="Leave Blank if Unknown">
+                            <div class="completion-hint" id="completionHint">
+                                Shows date only on invoice
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -733,7 +1083,31 @@
 
     <div id="footer-placeholder"></div>
     <div class="toast" id="toast"></div>
+    <div id="printInvoice"></div>
 
+    <!-- Paper Size Modal -->
+    <div class="paper-modal-overlay" id="paperModal">
+        <div class="paper-modal-box">
+            <h3>🖨️ Choose Paper Size</h3>
+            <p>Select the paper size for your printer</p>
+            <div class="paper-choices">
+                <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
+                    <span class="choice-icon">🧾</span>
+                    <span class="choice-label">Receipt Paper</span>
+                    <span class="choice-sub">80mm thermal roll</span>
+                </button>
+                <button class="paper-choice-btn" onclick="printJobInvoice('regular')">
+                    <span class="choice-icon">📄</span>
+                    <span class="choice-label">Regular Paper</span>
+                    <span class="choice-sub">A4 / Letter</span>
+                </button>
+            </div>
+            <button class="paper-cancel-btn"
+                onclick="document.getElementById('paperModal').classList.remove('open')">Cancel</button>
+        </div>
+    </div>
+
+    <script src="js/components.js"></script>
     <script src="js/components.js"></script>
     <script src="js/components.js"></script>
     <script>
@@ -743,8 +1117,42 @@
             e.target.value = !x[2] ? x[1] : x[1] + ' - ' + x[2];
         });
 
+        // 1b. Job Type "Other" text box toggle
+        document.querySelectorAll('input[name="jobType"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const otherInput = document.getElementById('jobTypeOther');
+                if (document.getElementById('jt-other').checked) {
+                    otherInput.classList.add('visible');
+                    otherInput.focus();
+                } else {
+                    otherInput.classList.remove('visible');
+                    otherInput.value = '';
+                }
+            });
+        });
+
+        // 1c. Completion Date Mode Toggle
+        document.querySelectorAll('input[name="completionMode"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const input = document.getElementById('estimatedCompletion');
+                const hint = document.getElementById('completionHint');
+
+                if (document.getElementById('cm-day').checked) {
+                    input.type = 'date';
+                    hint.textContent = 'Shows date only on invoice';
+                } else {
+                    input.type = 'datetime-local';
+                    hint.textContent = 'Shows date and time on invoice';
+                }
+
+                input.value = '';
+            });
+        });
+
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
         let isSubmitting = false;
+        let lastJobData = {};
+        let currentJobData = lastJobData;
 
         // 2. Fetch last RepairID on load
         async function fetchLastId() {
@@ -766,12 +1174,10 @@
         async function submitJob() {
             if (isSubmitting) return;
 
-            // Get elements
             const nameInput = document.getElementById('customerName');
             const repairIdInput = document.getElementById('repairId');
             const deviceInput = document.getElementById('device');
 
-            // Get values
             const customerName = nameInput.value.trim();
             const repairId = repairIdInput.value;
             const device = deviceInput.value.trim();
@@ -780,36 +1186,97 @@
             const customerPhone = document.getElementById('customerPhone').value.trim();
             const notes = document.getElementById('notes').value.trim();
 
-            // VALIDATION CHECK
+            const selectedJobType = document.querySelector('input[name="jobType"]:checked')?.value || 'Back-Glass Repair';
+            const jobType = selectedJobType === 'other'
+                ? (document.getElementById('jobTypeOther').value.trim() || 'Other')
+                : selectedJobType;
+
+            const priority = document.querySelector('input[name="priority"]:checked')?.value || 'low';
+
             if (!customerName || !repairId || !device) {
                 showToast('⚠️ Name, ID, and Device are required.', 'error');
-
-                // Highlight the empty fields red
                 if (!customerName) nameInput.style.borderColor = '#ef4444';
                 if (!device) deviceInput.style.borderColor = '#ef4444';
-
                 return;
             }
 
-            // Start Loading State
             const btn = document.getElementById('submitBtn');
             btn.classList.add('loading');
             btn.disabled = true;
             isSubmitting = true;
+
+            const dateReceived = new Date().toLocaleDateString('en-US', {
+                month: 'numeric', day: 'numeric', year: 'numeric'
+            });
+
+            // Get estimated completion date
+            // Get estimated completion date
+            let estimatedCompletion = '';
+            const completionInput = document.getElementById('estimatedCompletion').value;
+            if (completionInput) {
+                const completionMode = document.querySelector('input[name="completionMode"]:checked')?.value || 'day';
+
+                if (completionMode === 'hour') {
+                    // Time only mode - just parse the time
+                    const [hours, minutes] = completionInput.split(':');
+                    const date = new Date();
+                    date.setHours(parseInt(hours), parseInt(minutes));
+
+                    estimatedCompletion = date.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                } else {
+                    // Day mode - full datetime
+                    const completionDate = new Date(completionInput);
+
+                    const datePart = completionDate.toLocaleDateString('en-US', {
+                        month: 'numeric',
+                        day: 'numeric',
+                        year: 'numeric'
+                    });
+
+                    const timePart = completionDate.toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+
+                    estimatedCompletion = `${datePart} @ ${timePart}`;
+                }
+            }
 
             const sheetData = {
                 action: 'create',
                 repairId: Number(repairId),
                 device,
                 issue,
+                jobType,
+                priority,
                 status,
                 customerName,
                 customerPhone,
                 notes,
-                dateReceived: new Date().toLocaleDateString('en-US', {
-                    month: 'numeric', day: 'numeric', year: 'numeric'
-                })
+                dateReceived,
+                estimatedCompletion,
+                payment: 'pending'
             };
+
+            lastJobData = {
+                id: repairId,
+                device,
+                issue,
+                jobType,
+                priority,
+                status,
+                customerName,
+                customerPhone,
+                notes,
+                dateReceived,
+                estimatedCompletion
+            };
+            currentJobData = lastJobData;
 
             try {
                 const params = new URLSearchParams(sheetData).toString();
@@ -830,7 +1297,6 @@
             }
         }
 
-        // ── Success / Reset / Toast functions remain the same as your code ──
         function showSuccess(id) {
             document.getElementById('formWrapper').style.display = 'none';
             document.getElementById('successBanner').classList.add('show');
@@ -841,16 +1307,292 @@
             ['customerName', 'customerPhone', 'notes', 'device', 'issue'].forEach(id => {
                 const el = document.getElementById(id);
                 el.value = '';
-                el.style.borderColor = ''; // Reset error colors
+                el.style.borderColor = '';
             });
             document.getElementById('s-received').checked = true;
+            document.getElementById('jt-backglass').checked = true;
+            document.getElementById('pr-low').checked = true;
+            document.getElementById('jobTypeOther').classList.remove('visible');
+            document.getElementById('jobTypeOther').value = '';
+            document.getElementById('estimatedCompletion').value = '';
+            document.getElementById('cm-day').checked = true;
+            document.getElementById('estimatedCompletion').type = 'datetime-local';
+            document.getElementById('completionHint').textContent = 'Shows date and time on invoice (e.g., 5/15/2025 @ 6:00 PM)';
             const btn = document.getElementById('submitBtn');
             btn.classList.remove('loading');
             btn.disabled = false;
             isSubmitting = false;
             document.getElementById('formWrapper').style.display = 'block';
             document.getElementById('successBanner').classList.remove('show');
+            document.getElementById('paperModal').classList.remove('open');
             fetchLastId();
+        }
+
+        function openPaperModal() {
+            document.getElementById('paperModal').classList.add('open');
+        }
+
+        // Helper functions for print
+        function bzDate(dateStr) {
+            if (!dateStr || dateStr === '—') return '—';
+            try {
+                const d = new Date(dateStr);
+                return d.toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatPhone(phone) {
+            if (!phone) return '—';
+            const cleaned = phone.replace(/\D/g, '');
+            if (cleaned.length === 7) {
+                return `+501 ${cleaned.slice(0, 3)}-${cleaned.slice(3)}`;
+            }
+            return phone;
+        }
+
+        function formatStatus(status) {
+            const map = {
+                'ordered': 'Parts Ordered',
+                'received': 'Received',
+                'inqueue': 'In Queue',
+                'fixing': 'Being Repaired',
+                'testing': 'Testing',
+                'ready': 'Ready for Pickup'
+            };
+            return map[status] || status || '—';
+        }
+
+        function parseInvoiceItems(itemsStr) {
+            if (!itemsStr || itemsStr === '—') return [];
+            try {
+                return JSON.parse(itemsStr);
+            } catch {
+                return [];
+            }
+        }
+
+        function printJobInvoice(paperSize) {
+            const j = currentJobData;
+            if (!j || !j.id) {
+                showToast('⚠️ No job data available to print', 'error');
+                return;
+            }
+
+            const printRoot = document.getElementById('printInvoice');
+            const isReceipt = paperSize === 'receipt';
+
+            const today = new Date().toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+
+            const receivedDate = j.dateReceived ? bzDate(j.dateReceived) : today;
+            const estimatedDate = j.estimatedCompletion ? j.estimatedCompletion : '—';
+            const priorityLabel = (j.priority || 'low').toLowerCase() === 'high'
+                ? 'HIGH — URGENT'
+                : 'LOW — NORMAL';
+
+            const items = parseInvoiceItems(j.invoiceItems);
+            const total = items.reduce((sum, it) => sum + (parseFloat(it.price || 0) || 0), 0);
+
+            let paymentStatus = 'N/A — Invoice Pending';
+            if (items.length > 0 && total > 0) {
+                const payment = String(j.payment || 'unpaid').toLowerCase();
+                const isPaid = payment.startsWith('paid');
+                const method = payment.includes('card') ? 'Card' : 'Cash';
+                paymentStatus = isPaid ? `Paid via ${method}` : 'UNPAID';
+            }
+
+            let costTableHTML = '';
+            if (items.length > 0) {
+                const rows = items.map(it => `
+        <tr>
+            <td>${escapeHtml(it.desc || '')}</td>
+            <td>$${(parseFloat(it.price || 0) || 0).toFixed(2)}</td>
+        </tr>
+    `).join('');
+
+                costTableHTML = `
+        <table class="pi-cost-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>BZD</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows}
+                <tr class="pi-total-row">
+                    <td><strong>TOTAL</strong></td>
+                    <td><strong>$${total.toFixed(2)}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    `;
+            } else {
+                costTableHTML = `
+        <div class="pi-tbd-notice">
+            <strong>Price To Be Determined</strong><br>
+            <span style="font-size:${isReceipt ? '8px' : '10px'};opacity:.75;">
+                Final cost will be provided after diagnostic assessment.
+            </span>
+        </div>
+    `;
+            }
+
+            const regularStyles = `
+    @page { size: A4; margin: 15mm 20mm; }
+    #printInvoice { font-family: "Courier New", monospace; color: #000; background: #fff; max-width: 680px; margin: 0 auto; padding: 20px; }
+    .pi-shop { text-align: center; margin-bottom: 8px; }
+    .pi-shop h1 { font-size: 20px; font-weight: 900; letter-spacing: 3px; margin: 0; }
+    .pi-shop p { font-size: 11px; margin: 2px 0; color: #555; }
+    .pi-rule, .pi-dash { border: none; border-top: 1px solid #000; margin: 10px 0; }
+    .pi-title { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin: 8px 0 12px; }
+    .pi-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 12px; line-height: 1.8; gap: 16px; }
+    .pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 8px 0 12px; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; gap: 16px; }
+    .pi-section { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #555; margin-bottom: 6px; }
+    .pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 12px; }
+    .pi-field-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #777; }
+    .pi-field-value { font-size: 13px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid #ddd; min-height: 24px; }
+    .pi-notes { border: 1px solid #ccc; padding: 10px; min-height: 70px; font-size: 12px; color: #333; margin-top: 4px; line-height: 1.5; margin-bottom: 12px; }
+    .pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+    .pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; padding: 4px 0; border-bottom: 1px solid #000; }
+    .pi-cost-table th:last-child, .pi-cost-table td:last-child { text-align: right; }
+    .pi-cost-table td { padding: 5px 0; border-bottom: 1px dashed #ddd; font-size: 12px; }
+    .pi-cost-table td:last-child { font-family: monospace; font-weight: 700; }
+    .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 13px; padding-top: 8px; }
+    .pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 10px 0 12px; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; }
+    .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+    .pi-sig { border-top: 1px solid #000; padding-top: 4px; font-size: 8px; color: #555; text-align: center; }
+    .pi-footer { text-align: center; font-size: 10px; color: #777; margin-top: 18px; border-top: 1px dashed #ccc; padding-top: 8px; line-height: 1.6; }
+    .pi-tbd-notice { text-align: center; padding: 20px; background: #f9f9f9; border: 2px dashed #999; border-radius: 6px; margin: 10px 0; font-size: 12px; color: #555; }
+    .pi-tbd-notice strong { font-size: 14px; color: #000; text-transform: uppercase; letter-spacing: 1px; }
+`;
+
+            const receiptStyles = `
+    @page { size: 80mm auto; margin: 4mm 3mm; }
+    #printInvoice { font-family: "Courier New", monospace; color: #000; background: #fff; width: 72mm; margin: 0 auto; padding: 4px; font-size: 10px; }
+    .pi-shop { text-align: center; margin-bottom: 5px; }
+    .pi-shop h1 { font-size: 14px; font-weight: 900; letter-spacing: 2px; margin: 0; }
+    .pi-shop p { font-size: 9px; margin: 1px 0; }
+    .pi-rule, .pi-dash { border: none; border-top: 1px solid #000; margin: 5px 0 4px; }
+    .pi-title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 6px; }
+    .pi-meta { font-size: 9px; line-height: 1.7; margin-bottom: 6px; }
+    .pi-meta-row { font-size: 9px; margin: 6px 0 8px; padding: 4px 6px; background: #f5f5f5; border-radius: 3px; line-height: 1.6; }
+    .pi-meta-row div { margin: 2px 0; }
+    .pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; margin-bottom: 3px; }
+    .pi-grid { margin-bottom: 6px; }
+    .pi-grid > div { margin-bottom: 6px; }
+    .pi-field-label { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #777; }
+    .pi-field-value { font-size: 11px; font-weight: 700; padding: 1px 0; border-bottom: 1px dashed #ccc; min-height: 16px; }
+    .pi-notes { border: 1px solid #ccc; padding: 5px; min-height: 40px; font-size: 9px; line-height: 1.4; margin-top: 3px; margin-bottom: 8px; }
+    .pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9px; }
+    .pi-cost-table th { text-align: left; font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; padding: 2px 0; border-bottom: 1px solid #000; }
+    .pi-cost-table th:last-child, .pi-cost-table td:last-child { text-align: right; }
+    .pi-cost-table td { padding: 3px 0; border-bottom: 1px dashed #ddd; }
+    .pi-cost-table td:last-child { font-family: monospace; font-weight: 700; }
+    .pi-total-row td { border-top: 1px solid #000; border-bottom: none; font-weight: 900; font-size: 11px; padding-top: 5px; }
+    .pi-payment-status { text-align: center; font-size: 9px; font-weight: 900; margin: 8px 0 10px 0; padding: 4px 6px; background: #f0f0f0; border-radius: 3px; }
+    .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .pi-sig { border-top: 1px solid #000; padding-top: 3px; font-size: 8px; color: #555; text-align: center; }
+    .pi-footer { text-align: center; font-size: 8px; color: #777; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 5px; line-height: 1.5; }
+    .pi-tbd-notice { text-align: center; padding: 12px 8px; background: #f9f9f9; border: 2px dashed #999; border-radius: 4px; margin: 8px 0; font-size: 9px; color: #555; }
+    .pi-tbd-notice strong { font-size: 10px; color: #000; text-transform: uppercase; letter-spacing: 1px; }
+`;
+
+            const html = `
+    <style>${isReceipt ? receiptStyles : regularStyles}</style>
+    <div class="pi-shop">
+        <h1>TECH SHOP</h1>
+        <p>Device Repair &amp; Services · Belize City, Belize</p>
+        <p>Tel: +501 600-0000</p>
+    </div>
+    <hr class="pi-rule">
+    <div class="pi-title">Job Receipt &amp; Intake Form</div>
+    <div class="pi-meta">
+        <div><strong>JOB #:</strong> ${escapeHtml(j.id)}</div>
+        <div><strong>DATE:</strong> ${escapeHtml(receivedDate)}</div>
+    </div>
+    <div class="pi-meta-row">
+        <div><strong>Type:</strong> ${escapeHtml(j.jobType || 'Repair')}</div>
+        <div><strong>Priority:</strong> ${escapeHtml(priorityLabel)}</div>
+    </div>
+    <hr class="pi-dash">
+    <div class="pi-section">Customer Information</div>
+    <div class="pi-grid">
+        <div>
+            <div class="pi-field-label">Name</div>
+            <div class="pi-field-value">${escapeHtml(j.customerName || 'Walk-in')}</div>
+        </div>
+        <div>
+            <div class="pi-field-label">Phone</div>
+            <div class="pi-field-value">${escapeHtml(formatPhone(j.customerPhone))}</div>
+        </div>
+    </div>
+    <hr class="pi-dash">
+    <div class="pi-section">Device Information</div>
+    <div class="pi-grid">
+        <div>
+            <div class="pi-field-label">Device</div>
+            <div class="pi-field-value">${escapeHtml(j.device || '—')}</div>
+        </div>
+        <div>
+            <div class="pi-field-label">Issue Reported</div>
+            <div class="pi-field-value">${escapeHtml(j.issue || '—')}</div>
+        </div>
+    </div>
+    <div class="pi-grid">
+        <div>
+            <div class="pi-field-label">Status</div>
+            <div class="pi-field-value">${escapeHtml(formatStatus(j.status))}</div>
+        </div>
+        <div>
+            <div class="pi-field-label">Est. Completion</div>
+            <div class="pi-field-value">${escapeHtml(estimatedDate)}</div>
+        </div>
+    </div>
+    <hr class="pi-dash">
+    <div class="pi-section">Work Notes</div>
+    <div class="pi-notes">${escapeHtml(j.notes || 'No additional notes.')}</div>
+    <hr class="pi-dash">
+    <div class="pi-section">Cost Breakdown</div>
+    ${costTableHTML}
+    <div class="pi-payment-status">
+        <strong>Payment Status:</strong> ${escapeHtml(paymentStatus)}
+    </div>
+    <div class="pi-sigs">
+        <div class="pi-sig">Customer Signature &amp; Date</div>
+        <div class="pi-sig">Staff Signature &amp; Date</div>
+    </div>
+    <div class="pi-footer">
+        Thank you for choosing Tech Shop!<br>
+        Devices not collected within <strong>90 days</strong> of completion may be considered abandoned.<br>
+        We are not responsible for data loss. Please back up your device.
+    </div>
+`;
+
+            printRoot.innerHTML = html;
+            document.getElementById('paperModal').classList.remove('open');
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    window.print();
+                });
+            });
         }
 
         function showToast(msg, type = '') {
@@ -861,7 +1603,6 @@
             setTimeout(() => t.classList.remove('show'), 3500);
         }
 
-        // ── Enter key submit (safe) ──
         document.addEventListener('keydown', e => {
             if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
                 e.preventDefault();
@@ -869,12 +1610,11 @@
             }
         });
 
-        // ── Splash Screen (SAFE VERSION) ──
         document.addEventListener("DOMContentLoaded", () => {
             const splash = document.querySelector('.splash-screen');
             const progressBar = document.querySelector('.splash-progress-bar');
 
-            if (!splash) return; // ✅ prevents crash
+            if (!splash) return;
 
             const options = [500, 1000, 2000];
             const randomDuration = options[Math.floor(Math.random() * options.length)];
@@ -885,11 +1625,9 @@
 
             setTimeout(() => {
                 splash.classList.add('exiting');
-
                 setTimeout(() => {
                     splash.classList.add('hidden');
                 }, 800);
-
             }, randomDuration);
         });
     </script>
