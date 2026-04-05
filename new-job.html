@@ -553,17 +553,59 @@
                 font-size: 0.8rem;
             }
         }
+
+        /* Container for the phone input */
+        /* The Container */
+        .phone-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* The +501 Badge - Perfectly Centered */
+        .phone-prefix {
+            position: absolute;
+            left: 10px;
+            /* Space from left edge */
+            top: 50%;
+            transform: translateY(-40%);
+            /* This is the magic for vertical centering */
+
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.82rem;
+            padding: 5px 8px;
+            /* Slightly more vertical padding to look "squarer" */
+            border-radius: 8px;
+            border: 1px solid rgba(37, 99, 235, 0.15);
+
+            pointer-events: none;
+            user-select: none;
+            z-index: 5;
+
+            /* Ensures internal text in badge is also centered */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        /* The Input Field */
+        .phone-wrapper .form-input {
+            padding-left: 68px !important;
+            /* Increased to give the badge room */
+            height: 52px;
+            /* Fixed height makes alignment much easier to control */
+            line-height: 52px;
+            /* Matches height to center the cursor/text */
+        }
     </style>
 </head>
 
 <body>
     <div id="nav-placeholder"></div>
-
-    <div id="updateBar"
-        style="display:none; background:#ff9800; color:white; text-align:center; padding:10px; position:fixed; top:0; width:100%; z-index:9999; font-weight:bold;">
-        🚀 New update available! <span onclick="location.reload(true)"
-            style="text-decoration:underline; cursor:pointer; margin-left:10px;">Click to Refresh</span>
-    </div>
     <main>
         <div class="page-header">
             <h1>🔧 New Repair Job</h1>
@@ -613,12 +655,15 @@
                     <div class="form-group">
                         <label for="customerName">Name</label>
                         <input type="text" id="customerName" class="form-input" placeholder="e.g. John Doe"
-                            autocomplete="off">
+                            autocomplete="off" required>
                     </div>
                     <div class="form-group">
                         <label for="customerPhone">Phone</label>
-                        <input type="tel" id="customerPhone" class="form-input" placeholder="e.g. +501 600-0000"
-                            autocomplete="off">
+                        <div class="phone-wrapper">
+                            <span class="phone-prefix">+501</span>
+                            <input type="tel" id="customerPhone" class="form-input" placeholder="600-0000"
+                                autocomplete="off">
+                        </div>
                     </div>
                 </div>
                 <div class="form-row single">
@@ -692,18 +737,22 @@
     <script src="js/components.js"></script>
     <script src="js/components.js"></script>
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+        // 1. Phone Formatting
+        document.getElementById('customerPhone').addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : x[1] + ' - ' + x[2];
+        });
 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
         let isSubmitting = false;
 
-        // ── Fetch last RepairID on load ──
+        // 2. Fetch last RepairID on load
         async function fetchLastId() {
             const hint = document.getElementById('idHint');
             try {
                 const res = await fetch(SCRIPT_URL + '?action=lastId');
                 const data = await res.json();
                 const next = (Number(data.lastId) || 100) + 1;
-
                 document.getElementById('repairId').value = next;
                 hint.textContent = `Last used: ${data.lastId} — next is ${next}`;
             } catch (e) {
@@ -711,26 +760,38 @@
                 hint.textContent = 'Could not auto-fetch — enter ID manually.';
             }
         }
-
         fetchLastId();
 
-        // ── Submit ──
+        // 3. Submit Logic
         async function submitJob() {
-            if (isSubmitting) return; // 🔒 prevent double submit
+            if (isSubmitting) return;
 
-            const repairId = document.getElementById('repairId').value;
-            const device = document.getElementById('device').value.trim();
+            // Get elements
+            const nameInput = document.getElementById('customerName');
+            const repairIdInput = document.getElementById('repairId');
+            const deviceInput = document.getElementById('device');
+
+            // Get values
+            const customerName = nameInput.value.trim();
+            const repairId = repairIdInput.value;
+            const device = deviceInput.value.trim();
             const issue = document.getElementById('issue').value.trim();
             const status = document.querySelector('input[name="status"]:checked')?.value || 'received';
-            const customerName = document.getElementById('customerName').value.trim();
             const customerPhone = document.getElementById('customerPhone').value.trim();
             const notes = document.getElementById('notes').value.trim();
 
-            if (!repairId || !device) {
-                showToast('⚠️ Repair ID and Device are required.', 'error');
+            // VALIDATION CHECK
+            if (!customerName || !repairId || !device) {
+                showToast('⚠️ Name, ID, and Device are required.', 'error');
+
+                // Highlight the empty fields red
+                if (!customerName) nameInput.style.borderColor = '#ef4444';
+                if (!device) deviceInput.style.borderColor = '#ef4444';
+
                 return;
             }
 
+            // Start Loading State
             const btn = document.getElementById('submitBtn');
             btn.classList.add('loading');
             btn.disabled = true;
@@ -752,63 +813,51 @@
 
             try {
                 const params = new URLSearchParams(sheetData).toString();
-
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // ⚠️ still blind, but stable
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: params
                 });
 
-                // Assume success (Apps Script limitation with no-cors)
                 showSuccess(repairId);
-
             } catch (err) {
                 console.error(err);
-                showToast('❌ Something went wrong. Check the console.', 'error');
-
+                showToast('❌ Something went wrong.', 'error');
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 isSubmitting = false;
             }
         }
 
-        // ── Success ──
+        // ── Success / Reset / Toast functions remain the same as your code ──
         function showSuccess(id) {
             document.getElementById('formWrapper').style.display = 'none';
             document.getElementById('successBanner').classList.add('show');
             document.getElementById('repairIdDisplay').textContent = '#' + id;
         }
 
-        // ── Reset ──
         function resetForm() {
             ['customerName', 'customerPhone', 'notes', 'device', 'issue'].forEach(id => {
-                document.getElementById(id).value = '';
+                const el = document.getElementById(id);
+                el.value = '';
+                el.style.borderColor = ''; // Reset error colors
             });
-
             document.getElementById('s-received').checked = true;
-
             const btn = document.getElementById('submitBtn');
             btn.classList.remove('loading');
             btn.disabled = false;
-
             isSubmitting = false;
-
             document.getElementById('formWrapper').style.display = 'block';
             document.getElementById('successBanner').classList.remove('show');
-
             fetchLastId();
         }
 
-        // ── Toast ──
         function showToast(msg, type = '') {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.className = 'toast ' + type;
             t.classList.add('show');
-
             setTimeout(() => t.classList.remove('show'), 3500);
         }
 
@@ -844,7 +893,7 @@
             }, randomDuration);
         });
     </script>
-    <script src="components/updates.js"></script>
+
 </body>
 
 </html>
