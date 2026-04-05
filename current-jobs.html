@@ -1293,7 +1293,7 @@
 
         async function loadJobs() {
             const st = document.getElementById('syncStatus');
-            st.innerText = "SYNCING...";
+            st.innerText = "";
             try {
                 const res = await fetch(SCRIPT_URL + '?action=list');
                 const data = await res.json();
