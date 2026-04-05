@@ -1,0 +1,132 @@
+/* --- Global Variables (Ensure these are at the top) --- */
+:root {
+    --primary: #2563eb;
+    --accent: #3b82f6;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --glass: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(37, 99, 235, 0.1);
+    --text-main: #0f172a;
+    --text-dim: #64748b;
+}
+
+/* --- Staff Portal Specific Styles --- */
+.staff-container {
+    max-width: 600px;
+    margin: 140px auto 4rem;
+    /* 140px matches your hero padding */
+    padding: 0 1rem;
+}
+
+.form-card {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 3rem 2rem;
+    border-radius: 35px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.03);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 15px;
+    border: 1px solid var(--glass-border);
+    background: white;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.btn-submit {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    padding: 1rem;
+    border: none;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    background: var(--accent);
+}
+
+#feedback-msg {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Centering the Portal */
+.staff-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    /* Keeps it centered vertically */
+    padding: 20px;
+}
+
+/* The Glass Card Effect */
+.form-card {
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 3rem 2rem;
+    border-radius: 35px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+    max-width: 450px;
+    width: 100%;
+}
+
+/* Matching your Brand Inputs */
+.form-input {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    margin-top: 5px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-submit {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 15px;
+    font-weight: 700;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}

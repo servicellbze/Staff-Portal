@@ -1,0 +1,258 @@
+/* ============================================
+   PREMIUM SPLASH SCREEN
+   ============================================ */
+
+.splash-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-gradient, #0f172a);
+    /* Fallback color */
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.splash-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Animated Background Blobs for Splash */
+.splash-blobs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: var(--z-background);
+}
+
+.splash-blob {
+    position: absolute;
+    background: var(--primary);
+    filter: blur(80px);
+    border-radius: 50%;
+    opacity: 0.15;
+    animation: blobFloat 8s infinite alternate ease-in-out;
+}
+
+.splash-blob:nth-child(1) {
+    width: 400px;
+    height: 400px;
+    top: 10%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.splash-blob:nth-child(2) {
+    width: 300px;
+    height: 300px;
+    bottom: 20%;
+    right: 15%;
+    background: var(--accent);
+    animation-delay: -2s;
+}
+
+.splash-blob:nth-child(3) {
+    width: 250px;
+    height: 250px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--primary-light);
+    animation-delay: -4s;
+    opacity: 0.1;
+}
+
+@keyframes blobFloat {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
+}
+
+/* Logo Animation */
+.splash-logo-container {
+    position: relative;
+    z-index: var(--z-base);
+    text-align: center;
+}
+
+.splash-logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: var(--space-md);
+    animation: logoPulse 2s infinite ease-in-out;
+    filter: drop-shadow(0 10px 30px rgba(37, 99, 235, 0.3));
+}
+
+@keyframes logoPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.splash-brand {
+    font-size: 2rem;
+    font-weight: var(--font-bold);
+    color: var(--text-main);
+    letter-spacing: -1px;
+    margin-bottom: var(--space-xs);
+}
+
+.splash-brand span {
+    color: var(--primary);
+}
+
+.splash-tagline {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-style: italic;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease 0.5s forwards;
+}
+
+/* Container for the 2x2 grid */
+.rotating-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 25px);
+    grid-template-rows: repeat(2, 25px);
+    gap: 8px;
+    animation: gridRotate 3s linear infinite;
+    /* Overall grid rotation */
+}
+
+.box {
+    width: 25px;
+    height: 25px;
+    background-color: var(--primary);
+    border-radius: 6px;
+    animation: boxScale 1.5s ease-in-out infinite;
+    /* Individual box pulsing */
+}
+
+/* Stagger the boxes for a "wave" effect */
+.box:nth-child(2) {
+    animation-delay: 0.2s;
+    background-color: var(--accent);
+}
+
+.box:nth-child(3) {
+    animation-delay: 0.4s;
+    background-color: var(--primary-light);
+}
+
+.box:nth-child(4) {
+    animation-delay: 0.6s;
+    background-color: var(--primary-dark);
+}
+
+@keyframes gridRotate {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes boxScale {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(0.6);
+        opacity: 0.5;
+        border-radius: 50%;
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Loading Text */
+.splash-loading-text {
+    margin-top: var(--space-sm);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: var(--font-medium);
+    animation: pulseText 1.5s infinite;
+}
+
+@keyframes pulseText {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Progress Bar */
+.splash-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    animation: progressLoad ease-out forwards;
+    /* Removed the 2.5s */
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+}
+
+@keyframes progressLoad {
+    0% {
+        width: 0%;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Exit Animation */
+.splash-screen.exiting {
+    opacity: 0;
+    transform: scale(1.02);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
