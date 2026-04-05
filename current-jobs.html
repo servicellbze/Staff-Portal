@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="apple-mobile-web-app-title" content="ServiCell Portal">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="apple-touch-icon" href="img/logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal | Current Jobs</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/splash.css">
+    <link rel="stylesheet" href="css/footer.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        main {
+            max-width: 1350px;
+            margin: 0 auto;
+            padding: calc(60px + var(--space-xl)) var(--space-md) var(--space-xl);
+        }
+
+        /* ── Search & Filter ── */
+        .search-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            position: relative;
+            min-width: 280px;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 50px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            padding: 0 15px 0 45px;
+            font-size: 0.95rem;
+            font-family: var(--font-family);
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .filter-dropdown {
+            height: 50px;
+            border-radius: 14px;
+            padding: 0 40px 0 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-weight: 600;
+            cursor: pointer;
+            appearance: none;
+            backdrop-filter: blur(10px);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+
+        .refresh-btn {
+            height: 50px;
+            width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            font-size: 1.2rem;
+        }
+
+        .refresh-btn:hover {
+            border-color: var(--primary);
+            transform: rotate(180deg) scale(1.05);
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+        }
+
+        /* ── Stats ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            font-weight: 800;
+            opacity: 0.5;
+            text-transform: uppercase;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Jobs Table ── */
+        .jobs-container {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .jobs-header {
+            display: grid;
+            grid-template-columns: 80px 1.2fr 1.2fr 180px 140px 140px;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .job-row {
+            display: grid;
+            grid-template-columns: 80px 1.2fr 1.2fr 180px 140px 140px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--glass-border);
+            align-items: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .job-row:last-child {
+            border-bottom: none;
+        }
+
+        .job-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+            transform: translateX(5px);
+        }
+
+        .status-received {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .status-fixing {
+            border-left: 4px solid #f87171;
+        }
+
+        .status-testing {
+            border-left: 4px solid #fbbf24;
+        }
+
+        .status-ready {
+            background: rgba(34, 197, 94, 0.05);
+            box-shadow: inset 4px 0 0 0 #22c55e, 0 0 20px rgba(34, 197, 94, 0.1);
+        }
+
+        .status-unsuccessful {
+            background: rgba(71, 85, 105, 0.1);
+            box-shadow: inset 4px 0 0 0 #475569, 0 0 25px rgba(71, 85, 105, 0.15);
+        }
+
+        .status-abandoned {
+            background: rgba(128, 0, 0, 0.08);
+            box-shadow: inset 4px 0 0 0 #800000, 0 0 35px rgba(128, 0, 0, 0.2);
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-badge.received {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .status-badge.fixing {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .status-badge.testing {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-badge.ready {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .status-badge.unsuccessful {
+            background: rgba(71, 85, 105, 0.3);
+            color: #cbd5e1;
+        }
+
+        .status-badge.abandoned {
+            background: rgba(128, 0, 0, 0.4);
+            color: #fca5a5;
+        }
+
+        /* ── Action Buttons ── */
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+            color: var(--text-main);
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .btn-delete:hover {
+            background: #ef4444 !important;
+            border-color: #ef4444 !important;
+        }
+
+        /* ── Modal Base ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 28px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.07);
+            border: none;
+            color: #888;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 24px 28px;
+        }
+
+        /* ── View Modal ── */
+        .view-id-tag {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.15);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 10px;
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #60a5fa;
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+
+        .view-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .view-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .view-field-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #60a5fa;
+            opacity: 0.7;
+        }
+
+        .view-field-value {
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .view-field.full {
+            grid-column: span 2;
+        }
+
+        .view-notes-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 0.88rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-top: 4px;
+            min-height: 60px;
+        }
+
+        /* ── Edit Modal ── */
+        .edit-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #60a5fa;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .edit-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .edit-pill input[type="radio"] {
+            display: none;
+        }
+
+        .edit-pill label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 15px;
+            border-radius: 99px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .edit-pill label:hover {
+            border-color: #3b82f6;
+            color: #60a5fa;
+        }
+
+        .edit-pill input:checked+label {
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .edit-pill.ep-ordered input:checked+label {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+        }
+
+        .edit-pill.ep-received input:checked+label {
+            background: #2563eb;
+            border-color: #2563eb;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+        }
+
+        .edit-pill.ep-inqueue input:checked+label {
+            background: #0891b2;
+            border-color: #0891b2;
+            box-shadow: 0 4px 14px rgba(8, 145, 178, 0.4);
+        }
+
+        .edit-pill.ep-fixing input:checked+label {
+            background: #d97706;
+            border-color: #d97706;
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4);
+        }
+
+        .edit-pill.ep-testing input:checked+label {
+            background: #059669;
+            border-color: #059669;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4);
+        }
+
+        .edit-pill.ep-ready input:checked+label {
+            background: #10b981;
+            border-color: #10b981;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+
+        .edit-pill.ep-unsuccessful input:checked+label {
+            background: #475569;
+            border-color: #475569;
+            box-shadow: 0 4px 14px rgba(71, 85, 105, 0.4);
+        }
+
+        .edit-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #e2e8f0;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            padding: 14px;
+            resize: vertical;
+            min-height: 90px;
+            transition: border-color 0.2s;
+        }
+
+        .edit-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        /* ── Date Completed field ── */
+        .edit-date-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #e2e8f0;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            padding: 12px 14px;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .edit-date-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        /* ── Modal Footer Buttons ── */
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            padding: 0 28px 24px;
+        }
+
+        .mf-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            font-family: var(--font-family);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mf-cancel {
+            background: rgba(255, 255, 255, 0.06);
+            color: #64748b;
+        }
+
+        .mf-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+        }
+
+        .mf-save {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .mf-save:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .mf-save:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .mf-delete {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .mf-delete:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        /* ── Delete Modal specifics ── */
+        .delete-body {
+            padding: 28px;
+            text-align: center;
+        }
+
+        .delete-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .delete-body h2 {
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .delete-info-card {
+            background: rgba(239, 68, 68, 0.07);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 14px;
+            padding: 16px;
+            margin: 16px 0 24px;
+            text-align: left;
+        }
+
+        .delete-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .delete-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .delete-info-row span:first-child {
+            color: #64748b;
+        }
+
+        .delete-info-row span:last-child {
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .delete-warning {
+            font-size: 0.8rem;
+            color: #f87171;
+            margin-bottom: 20px;
+        }
+
+        /* ── Spinner inside save btn ── */
+        .save-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #0f172a;
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 99px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.ok {
+            background: #059669;
+            border-color: #10b981;
+        }
+
+        .toast.err {
+            background: #dc2626;
+            border-color: #ef4444;
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — TABLET (≤1100px)
+        ══════════════════════════════════════ */
+        @media (max-width: 1100px) {
+            main {
+                padding: calc(56px + var(--space-lg)) var(--space-sm) var(--space-lg);
+            }
+
+            /* Search bar: stack filter below search+refresh */
+            .search-section {
+                flex-wrap: wrap;
+            }
+
+            .search-box {
+                min-width: 0;
+                flex: 1 1 200px;
+            }
+
+            .filter-dropdown {
+                flex: 1 1 160px;
+            }
+
+            /* Stats: 3 per row on tablet */
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            /* Hide table header, switch rows to cards */
+            .jobs-header {
+                display: none;
+            }
+
+            .jobs-container {
+                border-radius: 16px;
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                backdrop-filter: none;
+            }
+
+            .job-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin: 0 0 10px 0;
+                padding: 16px;
+                border: 1px solid var(--glass-border);
+                border-radius: 18px;
+                background: var(--glass);
+                backdrop-filter: blur(10px);
+                border-left: none !important;
+                box-shadow: none !important;
+            }
+
+            /* Re-apply status accent as top border on cards */
+            .job-row.status-received {
+                border-top: 3px solid #3b82f6 !important;
+            }
+
+            .job-row.status-fixing {
+                border-top: 3px solid #f87171 !important;
+            }
+
+            .job-row.status-testing {
+                border-top: 3px solid #fbbf24 !important;
+            }
+
+            .job-row.status-ready {
+                border-top: 3px solid #22c55e !important;
+                background: rgba(34, 197, 94, 0.04) !important;
+            }
+
+            .job-row.status-unsuccessful {
+                border-top: 3px solid #475569 !important;
+            }
+
+            .job-row.status-abandoned {
+                border-top: 3px solid #800000 !important;
+                background: rgba(128, 0, 0, 0.06) !important;
+            }
+
+            .job-row:hover {
+                transform: none;
+            }
+
+            /* Status + storage + actions span full width */
+            .job-row>div:nth-child(4),
+            .job-row>div:nth-child(5),
+            .job-row>div:nth-child(6) {
+                grid-column: span 2;
+            }
+
+            /* Action buttons: larger tap targets */
+            .action-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — MOBILE (≤640px)
+        ══════════════════════════════════════ */
+        @media (max-width: 640px) {
+            main {
+                padding: calc(56px + 1.5rem) 12px 2rem;
+            }
+
+            /* Search: full width stack */
+            .search-section {
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+
+            .search-box {
+                min-width: 0;
+                flex: 1 1 100%;
+                order: 1;
+            }
+
+            .filter-dropdown {
+                flex: 1 1 calc(100% - 58px);
+                order: 2;
+                font-size: 0.85rem;
+                padding: 0 36px 0 12px;
+            }
+
+            .refresh-btn {
+                order: 3;
+                flex-shrink: 0;
+            }
+
+            /* Stats: 3-3 grid, compact */
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+
+            .stat-card {
+                padding: 14px 8px;
+                border-radius: 14px;
+            }
+
+            .stat-value {
+                font-size: 1.4rem;
+            }
+
+            .stat-label {
+                font-size: 0.55rem;
+                margin-top: 5px;
+            }
+
+            /* Job cards: single column */
+            .job-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 14px;
+                border-radius: 16px;
+            }
+
+            .job-row>div:nth-child(4),
+            .job-row>div:nth-child(5),
+            .job-row>div:nth-child(6) {
+                grid-column: span 1;
+            }
+
+            /* Action buttons: full width row */
+            .action-btns {
+                justify-content: flex-start;
+                gap: 10px;
+            }
+
+            .action-btn {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+            }
+
+            /* Modals: slide up from bottom on mobile */
+            .modal-overlay {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .modal-box {
+                border-radius: 28px 28px 0 0;
+                max-width: 100%;
+                max-height: 92vh;
+                width: 100%;
+                animation: modalSlideUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+            }
+
+            @keyframes modalSlideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(60px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .modal-header {
+                padding: 20px 20px 16px;
+            }
+
+            .modal-body {
+                padding: 16px 20px;
+            }
+
+            .modal-footer {
+                padding: 0 20px 32px;
+                gap: 8px;
+            }
+
+            /* View modal: single column */
+            .view-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .view-field.full {
+                grid-column: span 1;
+            }
+
+            /* Edit pills: smaller on mobile */
+            .edit-pill label {
+                padding: 7px 12px;
+                font-size: 0.78rem;
+            }
+
+            .edit-pills {
+                gap: 6px;
+            }
+
+            /* Delete modal body */
+            .delete-body {
+                padding: 20px;
+            }
+
+            .delete-icon {
+                font-size: 2.5rem;
+            }
+
+            /* Modal footer buttons: equal size, taller tap target */
+            .mf-btn {
+                padding: 16px;
+                font-size: 0.88rem;
+            }
+
+            /* Toast: full width on mobile */
+            .toast {
+                width: calc(100% - 32px);
+                text-align: center;
+                white-space: normal;
+                bottom: 1.5rem;
+            }
+
+            /* Sync status */
+            #syncStatus {
+                font-size: 0.55rem;
+            }
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE — SMALL MOBILE (≤380px)
+        ══════════════════════════════════════ */
+        @media (max-width: 380px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-value {
+                font-size: 1.2rem;
+            }
+
+            .filter-dropdown {
+                font-size: 0.8rem;
+            }
+
+            .edit-pill label {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="nav-placeholder"></div>
+
+    <main>
+        <div class="search-section">
+            <div class="search-box">
+                <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, or device...">
+                <div id="syncStatus"
+                    style="position:absolute;right:0;bottom:-20px;font-size:0.6rem;opacity:0.5;font-weight:800;">READY
+                </div>
+            </div>
+            <select id="statusFilter" class="filter-dropdown">
+                <option value="all">All Shop Activity</option>
+                <option value="received">Received / Ordered</option>
+                <option value="fixing">Repair In Progress</option>
+                <option value="testing">Finalizing / Testing</option>
+                <option value="ready">Ready for Pickup</option>
+                <option value="unsuccessful">Unsuccessful</option>
+                <option value="abandoned">Abandoned</option>
+            </select>
+            <button class="refresh-btn" onclick="loadJobs()" title="Sync Spreadsheet">🔄</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal" style="color:var(--primary)">0</div>
+                <div class="stat-label">Total Jobs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statReceived" style="color:#3b82f6">0</div>
+                <div class="stat-label">Received</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statFixing" style="color:#f87171">0</div>
+                <div class="stat-label">Repairing</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statTesting" style="color:#fbbf24">0</div>
+                <div class="stat-label">Testing</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statReady" style="color:#22c55e">0</div>
+                <div class="stat-label">Ready</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAbandoned" style="color:#800000">0</div>
+                <div class="stat-label">Abandoned</div>
+            </div>
+        </div>
+
+        <div class="jobs-container">
+            <div class="jobs-header">
+                <div>ID</div>
+                <div>Customer</div>
+                <div>Hardware</div>
+                <div>Status</div>
+                <div>Storage</div>
+                <div>Actions</div>
+            </div>
+            <div id="jobsList"></div>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div class="toast" id="toast"></div>
+
+    <!-- ══════════════════════════════════════════
+         VIEW MODAL
+    ══════════════════════════════════════════ -->
+    <div class="modal-overlay" id="viewModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>👁️ Job Details</h2>
+                <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="view-id-tag" id="view-id-tag">#—</div>
+                <div class="view-grid">
+                    <div class="view-field">
+                        <div class="view-field-label">Customer Name</div>
+                        <div class="view-field-value" id="view-name">—</div>
+                    </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Phone</div>
+                        <div class="view-field-value" id="view-phone">—</div>
+                    </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Device</div>
+                        <div class="view-field-value" id="view-device">—</div>
+                    </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Status</div>
+                        <div class="view-field-value" id="view-status">—</div>
+                    </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Date Received</div>
+                        <div class="view-field-value" id="view-date-received">—</div>
+                    </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Date Completed</div>
+                        <div class="view-field-value" id="view-date-completed">—</div>
+                    </div>
+                    <div class="view-field full">
+                        <div class="view-field-label">Notes</div>
+                        <div class="view-notes-box" id="view-notes">No notes.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="mf-btn mf-cancel" onclick="closeModal('viewModal')">Close</button>
+                <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         EDIT MODAL
+    ══════════════════════════════════════════ -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>✏️ Edit Job <span id="edit-id-tag"
+                        style="font-family:monospace;color:#60a5fa;font-size:0.9rem;"></span></h2>
+                <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <span class="edit-label">Status</span>
+                <div class="edit-pills">
+                    <div class="edit-pill ep-received">
+                        <input type="radio" name="editStatus" id="es-received" value="received">
+                        <label for="es-received">✅ Received</label>
+                    </div>
+                    <div class="edit-pill ep-fixing">
+                        <input type="radio" name="editStatus" id="es-fixing" value="fixing">
+                        <label for="es-fixing">🔧 Fixing</label>
+                    </div>
+                    <div class="edit-pill ep-testing">
+                        <input type="radio" name="editStatus" id="es-testing" value="testing">
+                        <label for="es-testing">🧪 Testing</label>
+                    </div>
+                    <div class="edit-pill ep-ready">
+                        <input type="radio" name="editStatus" id="es-ready" value="ready">
+                        <label for="es-ready">🎉 Ready</label>
+                    </div>
+                    <div class="edit-pill ep-unsuccessful">
+                        <input type="radio" name="editStatus" id="es-unsuccessful" value="unsuccessful">
+                        <label for="es-unsuccessful">❌ Unsuccessful</label>
+                    </div>
+                </div>
+
+                <span class="edit-label">Date Completed <span
+                        style="font-weight:400;opacity:0.5;text-transform:none;letter-spacing:0;">— leave blank if still
+                        in progress</span></span>
+                <input type="date" id="edit-date-completed" class="edit-date-input">
+
+                <span class="edit-label">Notes</span>
+                <textarea id="edit-notes" class="edit-textarea" placeholder="Internal notes…"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="mf-btn mf-cancel" onclick="closeModal('editModal')">Cancel</button>
+                <button class="mf-btn mf-save" id="saveBtn" onclick="saveEdit()">
+                    <span id="saveBtnText">💾 Save Changes</span>
+                    <div class="save-spinner" id="saveSpinner"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         DELETE MODAL
+    ══════════════════════════════════════════ -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>🗑️ Delete Job</h2>
+                <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+            </div>
+            <div class="delete-body">
+                <div class="delete-icon">⚠️</div>
+                <h2>Are you sure?</h2>
+                <p style="color:#64748b;font-size:0.88rem;">This will permanently remove the record from the
+                    spreadsheet.</p>
+                <div class="delete-info-card">
+                    <div class="delete-info-row"><span>Repair ID</span><span id="del-id">—</span></div>
+                    <div class="delete-info-row"><span>Customer</span><span id="del-name">—</span></div>
+                    <div class="delete-info-row"><span>Device</span><span id="del-device">—</span></div>
+                    <div class="delete-info-row"><span>Status</span><span id="del-status">—</span></div>
+                </div>
+                <p class="delete-warning">⚠️ This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="mf-btn mf-cancel" onclick="closeModal('deleteModal')">Go Back</button>
+                <button class="mf-btn mf-delete" id="confirmDeleteBtn">🗑️ Delete Job</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/components.js"></script>
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+        let allJobs = [];
+        let currentEditId = null;
+        let currentViewId = null;
+
+        // ── Status classifier ──────────────────────────────────────────
+        function classifyStatus(job) {
+            const s = String(job.status).toLowerCase();
+            if (s.includes("abandoned")) return { class: 'abandoned', label: 'DECLARED ABANDONED' };
+
+            let res = { class: 'received', label: 'Received' };
+            if (["received", "diagnosing", "ordered", "in queue"].some(w => s.includes(w))) res = { class: 'received', label: 'Received' };
+            else if (["fixing", "repairing", "work"].some(w => s.includes(w))) res = { class: 'fixing', label: 'Repairing' };
+            else if (["testing", "qc", "checking"].some(w => s.includes(w))) res = { class: 'testing', label: 'Testing / QC' };
+            else if (["completed", "ready", "pickup"].some(w => s.includes(w))) res = { class: 'ready', label: 'Ready for Pickup' };
+            else if (["unsuccessful", "no fix"].some(w => s.includes(w))) res = { class: 'unsuccessful', label: 'Unsuccessful' };
+
+            if (['ready', 'unsuccessful'].includes(res.class) && job.dateCompleted) {
+                const diff = Math.floor((new Date() - new Date(job.dateCompleted)) / 86400000);
+                if (90 - diff <= 0) return { class: 'abandoned', label: 'DECLARED ABANDONED' };
+            }
+            return res;
+        }
+
+        // ── Stats ──────────────────────────────────────────────────────
+        function updateStats(jobs) {
+            let s = { total: jobs.length, received: 0, fixing: 0, testing: 0, ready: 0, abandoned: 0 };
+            jobs.forEach(j => {
+                const c = classifyStatus(j).class;
+                if (s[c] !== undefined) s[c]++;
+            });
+            ['Total', 'Received', 'Fixing', 'Testing', 'Ready', 'Abandoned'].forEach(k => {
+                document.getElementById(`stat${k}`).innerText = s[k.toLowerCase()];
+            });
+        }
+
+        // ── Render ─────────────────────────────────────────────────────
+        function renderJobs(jobs) {
+            const list = document.getElementById('jobsList');
+            if (jobs.length === 0) {
+                list.innerHTML = `<div style="padding:40px;text-align:center;opacity:0.5;">No jobs found matching your criteria.</div>`;
+                return;
+            }
+            list.innerHTML = jobs.map(j => {
+                const stat = classifyStatus(j);
+                let storage = '—';
+                if (stat.class === 'abandoned') {
+                    // Show the date it was declared abandoned (col I in sheet, stored in dateAbandoned)
+                    const abandDate = j.dateAbandoned || j.dateCompleted;
+                    if (abandDate) {
+                        const d = new Date(abandDate);
+                        const label = !isNaN(d)
+                            ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            : String(abandDate);
+                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">${label}</span>`;
+                    } else {
+                        storage = `<span style="color:#fca5a5;font-weight:800;">ABANDONED</span>`;
+                    }
+                } else if (stat.class === 'ready' || stat.class === 'unsuccessful') {
+                    // 90-day countdown only for these two statuses
+                    if (j.dateCompleted) {
+                        const daysLeft = 90 - Math.floor((new Date() - new Date(j.dateCompleted)) / 86400000);
+                        const alertStyle = daysLeft <= 7 ? 'color:#f87171;font-weight:800;' : 'opacity:0.8;';
+                        storage = `<span style="${alertStyle}">${Math.max(0, daysLeft)}d left</span>`;
+                    }
+                }
+                // All other statuses stay as '—'
+                // Escape names for safe use in onclick
+                const safeName = (j.customerName || 'Walk-in').replace(/'/g, "\\'");
+                return `
+                <div class="job-row status-${stat.class}">
+                    <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
+                    <div>
+                        <div style="font-weight:700;">${j.customerName || 'Walk-in'}</div>
+                        <div style="font-size:0.7rem;opacity:0.5;">${j.customerPhone || ''}</div>
+                    </div>
+                    <div style="font-size:0.85rem;opacity:0.8;">${j.device || '—'}</div>
+                    <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
+                    <div style="font-size:0.85rem;">${storage}</div>
+                    <div class="action-btns">
+                        <button class="action-btn"        title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
+                        <button class="action-btn"        title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
+                        <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function filterAndRender() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filter = document.getElementById('statusFilter').value;
+            const filtered = allJobs.filter(j => {
+                const matchSearch = String(j.id).includes(term) || (j.customerName || '').toLowerCase().includes(term) || (j.device || '').toLowerCase().includes(term);
+                const matchFilter = filter === 'all' || classifyStatus(j).class === filter;
+                return matchSearch && matchFilter;
+            });
+            renderJobs(filtered);
+        }
+
+        async function loadJobs() {
+            const st = document.getElementById('syncStatus');
+            st.innerText = "SYNCING...";
+            try {
+                const res = await fetch(SCRIPT_URL + '?action=list');
+                const data = await res.json();
+                allJobs = data.jobs || [];
+                updateStats(allJobs);
+                filterAndRender();
+                st.innerText = "LAST SYNC: " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } catch (err) {
+                st.innerText = "SYNC FAILED";
+                console.error(err);
+            }
+        }
+
+        // ── Modal helpers ──────────────────────────────────────────────
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        function getJob(id) { return allJobs.find(j => String(j.id) === String(id)); }
+
+        // ── VIEW MODAL ─────────────────────────────────────────────────
+        function openViewModal(id) {
+            const j = getJob(id);
+            if (!j) return;
+            currentViewId = id;
+
+            document.getElementById('view-id-tag').textContent = '#' + j.id;
+            document.getElementById('view-name').textContent = j.customerName || 'Walk-in';
+            document.getElementById('view-phone').textContent = j.customerPhone || '—';
+            document.getElementById('view-device').textContent = j.device || '—';
+            document.getElementById('view-status').textContent = j.status || '—';
+            document.getElementById('view-date-received').textContent = j.dateReceived || '—';
+            document.getElementById('view-date-completed').textContent = j.dateCompleted || 'In progress';
+            document.getElementById('view-notes').textContent = j.notes || 'No notes.';
+
+            openModal('viewModal');
+        }
+
+        function switchToEdit() {
+            closeModal('viewModal');
+            openEditModal(currentViewId);
+        }
+
+        // ── EDIT MODAL ─────────────────────────────────────────────────
+        function openEditModal(id) {
+            const j = getJob(id);
+            if (!j) return;
+            currentEditId = id;
+
+            document.getElementById('edit-id-tag').textContent = '#' + j.id;
+
+            // Pre-select the matching status pill
+            const statusVal = String(j.status || '').toLowerCase();
+            const radios = document.querySelectorAll('input[name="editStatus"]');
+            let matched = false;
+            radios.forEach(r => {
+                if (statusVal.includes(r.value)) { r.checked = true; matched = true; }
+                else r.checked = false;
+            });
+            if (!matched) document.getElementById('es-received').checked = true;
+
+            // Date completed
+            if (j.dateCompleted) {
+                const d = new Date(j.dateCompleted);
+                if (!isNaN(d)) {
+                    document.getElementById('edit-date-completed').value = d.toISOString().split('T')[0];
+                } else {
+                    document.getElementById('edit-date-completed').value = '';
+                }
+            } else {
+                document.getElementById('edit-date-completed').value = '';
+            }
+
+            document.getElementById('edit-notes').value = j.notes || '';
+
+            // Reset save btn
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = false;
+            document.getElementById('saveBtnText').style.display = 'inline';
+            document.getElementById('saveSpinner').style.display = 'none';
+
+            openModal('editModal');
+        }
+
+        async function saveEdit() {
+            const status = document.querySelector('input[name="editStatus"]:checked')?.value || 'received';
+            const notes = document.getElementById('edit-notes').value.trim();
+            const dateCompleted = document.getElementById('edit-date-completed').value;
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            document.getElementById('saveBtnText').style.display = 'none';
+            document.getElementById('saveSpinner').style.display = 'block';
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'update',
+                    id: currentEditId,
+                    status,
+                    notes,
+                    dateCompleted
+                });
+
+                // no-cors: same pattern as delete — response is opaque but the request goes through
+                await fetch(`${SCRIPT_URL}?${params.toString()}`, { mode: 'no-cors' });
+
+                // Optimistically update local data so the list reflects immediately
+                const job = allJobs.find(j => String(j.id) === String(currentEditId));
+                if (job) {
+                    job.status = status;
+                    job.notes = notes;
+                    job.dateCompleted = dateCompleted;
+                }
+
+                closeModal('editModal');
+                showToast('✅ Job updated successfully', 'ok');
+                filterAndRender();
+                updateStats(allJobs);
+                setTimeout(loadJobs, 2000); // background sync to confirm
+
+            } catch (err) {
+                showToast('❌ Could not reach the server.', 'err');
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                document.getElementById('saveBtnText').style.display = 'inline';
+                document.getElementById('saveSpinner').style.display = 'none';
+            }
+        }
+
+        // ── DELETE MODAL ───────────────────────────────────────────────
+        function openDeleteModal(id) {
+            const j = getJob(id);
+            if (!j) return;
+
+            document.getElementById('del-id').textContent = '#' + j.id;
+            document.getElementById('del-name').textContent = j.customerName || 'Walk-in';
+            document.getElementById('del-device').textContent = j.device || '—';
+            document.getElementById('del-status').textContent = j.status || '—';
+
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteJob(j.id);
+            openModal('deleteModal');
+        }
+
+        async function deleteJob(id) {
+            const st = document.getElementById('syncStatus');
+            st.innerText = "DELETING...";
+            closeModal('deleteModal');
+
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=delete&id=${id}`);
+                const result = await res.json();
+
+                if (result.success) {
+                    showToast('🗑️ Job #' + id + ' removed.', 'ok');
+                    st.innerText = "REMOVED";
+                    setTimeout(loadJobs, 800);
+                } else {
+                    st.innerText = "SERVER ERROR";
+                    showToast('❌ ' + (result.error || 'Delete failed'), 'err');
+                }
+            } catch (err) {
+                st.innerText = "CONNECTION FAILED";
+                showToast('❌ Could not reach the server.', 'err');
+                console.error(err);
+            }
+        }
+
+        // ── Toast ──────────────────────────────────────────────────────
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        // ── Close modals on overlay click ──────────────────────────────
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', e => {
+                if (e.target === overlay) overlay.classList.remove('open');
+            });
+        });
+
+        // ── Init ───────────────────────────────────────────────────────
+        document.getElementById('searchInput').addEventListener('input', filterAndRender);
+        document.getElementById('statusFilter').addEventListener('change', filterAndRender);
+        loadJobs();
+        setInterval(loadJobs, 60000);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const splash = document.querySelector('.splash-screen');
+            const progressBar = document.querySelector('.splash-progress-bar');
+
+            // The three options
+            const options = [1500, 2000, 3000];
+            const randomDuration = options[Math.floor(Math.random() * options.length)];
+
+            // Apply the duration to the CSS animation
+            if (progressBar) {
+                progressBar.style.animationDuration = `${randomDuration}ms`;
+            }
+
+            // Hide the splash screen after the chosen time
+            setTimeout(() => {
+                splash.classList.add('exiting');
+
+                // Fully remove from view after the exit transition (0.8s)
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                }, 800);
+            }, randomDuration);
+        });
+    </script>
+</body>
+
+</html>

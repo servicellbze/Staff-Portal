@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="apple-mobile-web-app-title" content="ServiCell Portal">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <link rel="apple-touch-icon" href="img/logo.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal | New Job</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/splash.css">
+    <link rel="stylesheet" href="css/footer.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        main {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: calc(56px + var(--space-xl)) var(--space-sm) var(--space-xl);
+        }
+
+        .page-header {
+            margin-bottom: var(--space-lg);
+            animation: fadeInUp 0.45s ease both;
+        }
+
+        .page-header h1 {
+            font-size: 1.8rem;
+            font-weight: var(--font-bold);
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-header p {
+            color: var(--text-dim);
+            font-size: 0.92rem;
+            margin-top: 6px;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: var(--space-sm);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .card:nth-child(1) {
+            animation: fadeInUp 0.45s ease 0.05s both;
+        }
+
+        .card:nth-child(2) {
+            animation: fadeInUp 0.45s ease 0.12s both;
+        }
+
+        .card:nth-child(3) {
+            animation: fadeInUp 0.45s ease 0.19s both;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-xs);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: var(--radius-sm);
+            background: rgba(37, 99, 235, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .card-title {
+            font-size: 0.75rem;
+            font-weight: var(--font-bold);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--primary);
+        }
+
+        .card-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-left: auto;
+            font-style: italic;
+        }
+
+        .local-badge {
+            margin-left: auto;
+            font-size: 0.65rem;
+            background: rgba(245, 158, 11, 0.12);
+            color: #b45309;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 99px;
+            padding: 2px 9px;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-sm);
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: var(--space-sm);
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: var(--font-bold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+        }
+
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid rgba(37, 99, 235, 0.12);
+            background: rgba(255, 255, 255, 0.9);
+            font-family: var(--font-family);
+            font-size: 0.95rem;
+            color: var(--text-main);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-light);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 88px;
+        }
+
+        .id-wrapper {
+            position: relative;
+        }
+
+        .id-prefix {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: var(--font-bold);
+            color: var(--primary);
+            font-size: 1rem;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .id-wrapper .form-input {
+            padding-left: 2rem;
+            font-weight: var(--font-bold);
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+        }
+
+        .id-wrapper .form-input::-webkit-outer-spin-button,
+        .id-wrapper .form-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* 1. Remove arrows for Chrome, Safari, Edge, and Opera */
+        .id-wrapper .form-input::-webkit-outer-spin-button,
+        .id-wrapper .form-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* 2. Remove arrows for Firefox */
+        .id-wrapper .form-input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+            /* Standard property for future-proofing */
+        }
+
+        .id-hint {
+            font-size: 0.72rem;
+            color: var(--text-light);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .status-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .status-pill input[type="radio"] {
+            display: none;
+        }
+
+        .status-pill label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            border: 1.5px solid rgba(37, 99, 235, 0.15);
+            background: rgba(255, 255, 255, 0.7);
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            user-select: none;
+        }
+
+        .status-pill label:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .status-pill input[type="radio"]:checked+label {
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .status-pill.ordered input:checked+label {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+        }
+
+        .status-pill.received input:checked+label {
+            background: #2563eb;
+            border-color: #2563eb;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        }
+
+        .status-pill.inqueue input:checked+label {
+            background: #0891b2;
+            border-color: #0891b2;
+            box-shadow: 0 4px 14px rgba(8, 145, 178, 0.3);
+        }
+
+        .status-pill.fixing input:checked+label {
+            background: #d97706;
+            border-color: #d97706;
+            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+        }
+
+        .status-pill.testing input:checked+label {
+            background: #e1ed8b;
+            border-color: #b2b40e;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+        }
+
+        .status-pill.ready input:checked+label {
+            background: #10b981;
+            border-color: #10b981;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .submit-area {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+            animation: fadeInUp 0.45s ease 0.25s both;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 1.05rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-family);
+            font-weight: var(--font-bold);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition-slow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-submit:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .btn-spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .btn-submit.loading .btn-text {
+            display: none;
+        }
+
+        .btn-submit.loading .btn-spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-back {
+            text-align: center;
+            font-size: 0.88rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .btn-back:hover {
+            color: var(--primary);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: var(--text-main);
+            color: white;
+            padding: 0.85rem 1.5rem;
+            border-radius: var(--radius-full);
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: var(--z-modal);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .success-banner {
+            display: none;
+            background: var(--glass);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl) var(--space-lg);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .success-banner.show {
+            display: block;
+            animation: fadeInUp 0.4s ease both;
+        }
+
+        .success-banner .success-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+
+        .success-banner h2 {
+            font-size: 1.3rem;
+            font-weight: var(--font-bold);
+            margin-bottom: 10px;
+        }
+
+        .repair-id-tag {
+            display: inline-block;
+            background: rgba(37, 99, 235, 0.07);
+            border: 1.5px solid rgba(37, 99, 235, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 10px 24px;
+            font-size: 1.6rem;
+            font-weight: var(--font-bold);
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin: var(--space-sm) 0;
+        }
+
+        .success-banner p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: var(--space-md);
+        }
+
+        .success-actions {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .btn-new {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-family: var(--font-family);
+            font-weight: var(--font-semibold);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition-base);
+            text-decoration: none;
+        }
+
+        .btn-new:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-dash {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 22px;
+            background: transparent;
+            color: var(--text-dim);
+            border: 1.5px solid var(--glass-border);
+            border-radius: var(--radius-full);
+            font-family: var(--font-family);
+            font-weight: var(--font-semibold);
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition-base);
+        }
+
+        .btn-dash:hover {
+            color: var(--primary);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 640px) {
+            main {
+                padding: calc(56px + var(--space-md)) var(--space-xs) var(--space-md);
+            }
+
+            .card {
+                padding: var(--space-md);
+                border-radius: var(--radius-md);
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+
+            .status-pills {
+                gap: 6px;
+            }
+
+            .status-pill label {
+                padding: 7px 13px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="nav-placeholder"></div>
+
+    <main>
+        <div class="page-header">
+            <h1>🔧 New Repair Job</h1>
+            <p>Log a new device repair. Customer info is stored in the Customers sheet.</p>
+        </div>
+
+        <!-- Success Banner -->
+        <div class="success-banner" id="successBanner">
+            <div class="success-icon">✅</div>
+            <h2>Job Logged!</h2>
+            <div class="repair-id-tag" id="repairIdDisplay">—</div>
+            <p>Added to the spreadsheet including the Customers sheet.</p>
+            <div class="success-actions">
+                <button class="btn-new" onclick="resetForm()">+ New Job</button>
+                <a href="staff.html" class="btn-dash">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div id="formWrapper">
+
+            <!-- Card 1: Repair ID -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔖</div>
+                    <span class="card-title">Repair ID</span>
+                    <span class="card-subtitle">Auto-incremented · editable</span>
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label for="repairId">ID Number</label>
+                    <div class="id-wrapper">
+                        <span class="id-prefix">#</span>
+                        <input type="number" id="repairId" class="form-input" min="1" step="1" placeholder="—">
+                    </div>
+                    <div class="id-hint" id="idHint">Fetching last ID from spreadsheet…</div>
+                </div>
+            </div>
+
+            <!-- Card 2: Customer Info -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">👤</div>
+                    <span class="card-title">Customer Info</span>
+                    <span class="card-subtitle">↑ Sent to Customers sheet</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customerName">Name</label>
+                        <input type="text" id="customerName" class="form-input" placeholder="e.g. John Doe"
+                            autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">Phone</label>
+                        <input type="tel" id="customerPhone" class="form-input" placeholder="e.g. +501 600-0000"
+                            autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div class="form-group" style="margin-bottom:0">
+                        <label for="notes">Notes <span
+                                style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-light);font-size:0.75rem;">—
+                                internal use</span></label>
+                        <textarea id="notes" class="form-textarea"
+                            placeholder="e.g. Customer prefers call. Has parts ordered already…"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Device & Status -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📱</div>
+                    <span class="card-title">Device & Status</span>
+                    <span class="card-subtitle">↑ Sent to Database</span>
+                </div>
+                <div class="form-row" style="margin-bottom:var(--space-sm)">
+                    <div class="form-group" style="margin-bottom:0">
+                        <label for="device">Device</label>
+                        <input type="text" id="device" class="form-input" placeholder="e.g. Samsung S24 Ultra"
+                            autocomplete="off" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:0">
+                        <label for="issue">Issue</label>
+                        <input type="text" id="issue" class="form-input" placeholder="e.g. Cracked screen"
+                            autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                    <label>Initial Status</label>
+                    <div class="status-pills">
+                        <div class="status-pill received">
+                            <input type="radio" name="status" id="s-received" value="received" checked>
+                            <label for="s-received">✅ Received</label>
+                        </div>
+                        <div class="status-pill fixing">
+                            <input type="radio" name="status" id="s-fixing" value="fixing">
+                            <label for="s-fixing">🔧 Fixing</label>
+                        </div>
+                        <div class="status-pill testing">
+                            <input type="radio" name="status" id="s-testing" value="testing">
+                            <label for="s-testing">🧪 Testing</label>
+                        </div>
+                        <div class="status-pill ready">
+                            <input type="radio" name="status" id="s-ready" value="ready">
+                            <label for="s-ready">🎉 Ready</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="submit-area">
+                <button class="btn-submit" id="submitBtn" onclick="submitJob()">
+                    <span class="btn-text">✚ &nbsp;Log Repair Job</span>
+                    <div class="btn-spinner"></div>
+                </button>
+                <a href="staff.html" class="btn-back">← Back to Dashboard</a>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div class="toast" id="toast"></div>
+
+    <script src="js/components.js"></script>
+    <script src="js/components.js"></script>
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+
+        let isSubmitting = false;
+
+        // ── Fetch last RepairID on load ──
+        async function fetchLastId() {
+            const hint = document.getElementById('idHint');
+            try {
+                const res = await fetch(SCRIPT_URL + '?action=lastId');
+                const data = await res.json();
+                const next = (Number(data.lastId) || 100) + 1;
+
+                document.getElementById('repairId').value = next;
+                hint.textContent = `Last used: ${data.lastId} — next is ${next}`;
+            } catch (e) {
+                document.getElementById('repairId').placeholder = 'Enter manually';
+                hint.textContent = 'Could not auto-fetch — enter ID manually.';
+            }
+        }
+
+        fetchLastId();
+
+        // ── Submit ──
+        async function submitJob() {
+            if (isSubmitting) return; // 🔒 prevent double submit
+
+            const repairId = document.getElementById('repairId').value;
+            const device = document.getElementById('device').value.trim();
+            const issue = document.getElementById('issue').value.trim();
+            const status = document.querySelector('input[name="status"]:checked')?.value || 'received';
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerPhone = document.getElementById('customerPhone').value.trim();
+            const notes = document.getElementById('notes').value.trim();
+
+            if (!repairId || !device) {
+                showToast('⚠️ Repair ID and Device are required.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            isSubmitting = true;
+
+            const sheetData = {
+                action: 'create',
+                repairId: Number(repairId),
+                device,
+                issue,
+                status,
+                customerName,
+                customerPhone,
+                notes,
+                dateReceived: new Date().toLocaleDateString('en-US', {
+                    month: 'numeric', day: 'numeric', year: 'numeric'
+                })
+            };
+
+            try {
+                const params = new URLSearchParams(sheetData).toString();
+
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // ⚠️ still blind, but stable
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: params
+                });
+
+                // Assume success (Apps Script limitation with no-cors)
+                showSuccess(repairId);
+
+            } catch (err) {
+                console.error(err);
+                showToast('❌ Something went wrong. Check the console.', 'error');
+
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                isSubmitting = false;
+            }
+        }
+
+        // ── Success ──
+        function showSuccess(id) {
+            document.getElementById('formWrapper').style.display = 'none';
+            document.getElementById('successBanner').classList.add('show');
+            document.getElementById('repairIdDisplay').textContent = '#' + id;
+        }
+
+        // ── Reset ──
+        function resetForm() {
+            ['customerName', 'customerPhone', 'notes', 'device', 'issue'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+
+            document.getElementById('s-received').checked = true;
+
+            const btn = document.getElementById('submitBtn');
+            btn.classList.remove('loading');
+            btn.disabled = false;
+
+            isSubmitting = false;
+
+            document.getElementById('formWrapper').style.display = 'block';
+            document.getElementById('successBanner').classList.remove('show');
+
+            fetchLastId();
+        }
+
+        // ── Toast ──
+        function showToast(msg, type = '') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type;
+            t.classList.add('show');
+
+            setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        // ── Enter key submit (safe) ──
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                submitJob();
+            }
+        });
+
+        // ── Splash Screen (SAFE VERSION) ──
+        document.addEventListener("DOMContentLoaded", () => {
+            const splash = document.querySelector('.splash-screen');
+            const progressBar = document.querySelector('.splash-progress-bar');
+
+            if (!splash) return; // ✅ prevents crash
+
+            const options = [500, 1000, 2000];
+            const randomDuration = options[Math.floor(Math.random() * options.length)];
+
+            if (progressBar) {
+                progressBar.style.animationDuration = `${randomDuration}ms`;
+            }
+
+            setTimeout(() => {
+                splash.classList.add('exiting');
+
+                setTimeout(() => {
+                    splash.classList.add('hidden');
+                }, 800);
+
+            }, randomDuration);
+        });
+    </script>
+</body>
+
+</html>
