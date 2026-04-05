@@ -294,6 +294,11 @@
             display: flex;
         }
 
+        body.modal-open {
+            overflow: hidden;
+            height: 100vh;
+        }
+
         .modal-box {
             background: #0f172a;
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1301,8 +1306,18 @@
         }
 
         // ── Modal helpers ──────────────────────────────────────────────
-        function openModal(id) { document.getElementById(id).classList.add('open'); }
-        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+            document.body.classList.add('modal-open'); // Lock background
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+            // Only unlock if no other modals are still open
+            if (!document.querySelector('.modal-overlay.open')) {
+                document.body.classList.remove('modal-open');
+            }
+        }
 
         function getJob(id) { return allJobs.find(j => String(j.id) === String(id)); }
 
@@ -1431,27 +1446,47 @@
         }
 
         async function deleteJob(id) {
-            const st = document.getElementById('syncStatus');
-            st.innerText = "DELETING...";
             closeModal('deleteModal');
+            showToast('⏳ Processing deletion...', '');
 
             try {
-                const res = await fetch(`${SCRIPT_URL}?action=delete&id=${id}`);
-                const result = await res.json();
+                const params = new URLSearchParams({
+                    action: 'delete',
+                    id: id
+                });
 
-                if (result.success) {
-                    showToast('🗑️ Job #' + id + ' removed.', 'ok');
-                    st.innerText = "REMOVED";
-                    setTimeout(loadJobs, 800);
-                } else {
-                    st.innerText = "SERVER ERROR";
-                    showToast('❌ ' + (result.error || 'Delete failed'), 'err');
-                }
+                // Use no-cors to bypass redirect/CORS issues with Apps Script
+                await fetch(`${SCRIPT_URL}?${params.toString()}`, { mode: 'no-cors' });
+
+                // Optimistically remove from local list immediately
+                allJobs = allJobs.filter(j => String(j.id) !== String(id));
+
+                showToast('🗑️ Job #' + id + ' removed successfully.', 'ok');
+                filterAndRender();
+                updateStats(allJobs);
+
+                // Background sync after a short delay
+                setTimeout(loadJobs, 2000);
+
             } catch (err) {
-                st.innerText = "CONNECTION FAILED";
-                showToast('❌ Could not reach the server.', 'err');
+                showToast('❌ Connection failed.', 'err');
                 console.error(err);
             }
+        }
+
+        // Ensure your delete modal button is wired correctly
+        function openDeleteModal(id) {
+            const j = getJob(id);
+            if (!j) return;
+
+            document.getElementById('del-id').textContent = '#' + j.id;
+            document.getElementById('del-name').textContent = j.customerName || 'Walk-in';
+            document.getElementById('del-device').textContent = j.device || '—';
+            document.getElementById('del-status').textContent = j.status || '—';
+
+            // Update the onclick to pass the ID
+            document.getElementById('confirmDeleteBtn').onclick = () => deleteJob(id);
+            openModal('deleteModal');
         }
 
         // ── Toast ──────────────────────────────────────────────────────
