@@ -1000,9 +1000,6 @@
             <div class="search-box">
                 <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
                 <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, or device...">
-                <div id="syncStatus"
-                    style="position:absolute;right:0;bottom:-20px;font-size:0.6rem;opacity:0.5;font-weight:800;">READY
-                </div>
             </div>
             <select id="statusFilter" class="filter-dropdown">
                 <option value="all">All Shop Activity</option>
@@ -1292,18 +1289,13 @@
         }
 
         async function loadJobs() {
-            const st = document.getElementById('syncStatus');
-            st.innerText = "";
             try {
-                const res = await fetch(SCRIPT_URL + '?action=list');
-                const data = await res.json();
+                const response = await fetch(SCRIPT_URL + '?action=list');
+                const data = await response.json();
                 allJobs = data.jobs || [];
-                updateStats(allJobs);
                 filterAndRender();
-                st.innerText = "LAST SYNC: " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } catch (err) {
-                st.innerText = "SYNC FAILED";
-                console.error(err);
+            } catch (error) {
+                showToast('❌ Could not load jobs from the server.', 'err');
             }
         }
 
