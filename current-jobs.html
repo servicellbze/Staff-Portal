@@ -964,25 +964,7 @@
 
             /* Sync status */
             #syncStatus {
-                font-size: 0.65rem;
-                opacity: 0.6;
-                font-weight: 800;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-top: 5px;
-                /* Adds space when it stacks on mobile */
-                text-align: right;
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 640px) {
-            #syncStatus {
-                text-align: center;
-                /* Center it for mobile thumb-reach visibility */
-                margin-bottom: 10px;
-                order: 4;
-                /* Ensures it stays at the bottom of the search section */
+                font-size: 0.55rem;
             }
         }
 
@@ -1015,22 +997,22 @@
 
     <main>
         <div class="search-section">
-        </div>
-        <select id="statusFilter" class="filter-dropdown">
-            <option value="all">All Shop Activity</option>
-            <option value="received">Received / Ordered</option>
-            <option value="fixing">Repair In Progress</option>
-            <option value="testing">Finalizing / Testing</option>
-            <option value="ready">Ready for Pickup</option>
-            <option value="unsuccessful">Unsuccessful</option>
-            <option value="abandoned">Abandoned</option>
-        </select>
-        <div class="search-box">
-            <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, or device...">
-            <div id="syncStatus"
-                style="position:absolute;right:0;bottom:-20px;font-size:0.6rem;opacity:0.5;font-weight:800;">READY
+            <div class="search-box">
+                <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, or device...">
+                <div id="syncStatus"
+                    style="position:absolute;right:0;bottom:-20px;font-size:0.6rem;opacity:0.5;font-weight:800;">READY
+                </div>
             </div>
+            <select id="statusFilter" class="filter-dropdown">
+                <option value="all">All Shop Activity</option>
+                <option value="received">Received / Ordered</option>
+                <option value="fixing">Repair In Progress</option>
+                <option value="testing">Finalizing / Testing</option>
+                <option value="ready">Ready for Pickup</option>
+                <option value="unsuccessful">Unsuccessful</option>
+                <option value="abandoned">Abandoned</option>
+            </select>
             <button class="refresh-btn" onclick="loadJobs()" title="Sync Spreadsheet">🔄</button>
         </div>
 
@@ -1523,6 +1505,25 @@
                     splash.classList.add('hidden');
                 }, 800);
             }, randomDuration);
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1. Look at the URL and see if there is a "?filter=" part
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterType = urlParams.get('filter');
+
+            // 2. If a filter was found (like "fixing"), update the page
+            if (filterType) {
+                const filterDropdown = document.getElementById('statusFilter');
+                if (filterDropdown) {
+                    filterDropdown.value = filterType; // Sets the dropdown to "Repair In Progress"
+
+                    // 3. Wait a half-second for the Google Sheet data to load, then filter it
+                    setTimeout(() => {
+                        filterAndRender();
+                    }, 500);
+                }
+            }
         });
     </script>
 </body>
