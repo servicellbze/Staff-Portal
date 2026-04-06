@@ -1111,13 +1111,12 @@
 
         /* ── Job Type Badge ── */
         .job-type-badge {
-            display: inline-block;
+            display:inline-table;
             padding: 4px 10px;
             border-radius: 8px;
             font-size: 0.68rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             background: rgba(124, 58, 237, 0.15);
             color: #a78bfa;
             border: 1px solid rgba(124, 58, 237, 0.25);
@@ -1745,6 +1744,10 @@
                         <div class="view-field-label">Est. Completion</div>
                         <div class="view-field-value" id="view-estimated-completion">—</div>
                     </div>
+                    <div class="view-field">
+                        <div class="view-field-label">Logged By</div>
+                        <div class="view-field-value" id="view-technician">—</div>
+                    </div>
                     <div class="view-field full">
                         <div class="view-field-label">Completion Date</div>
                         <div class="view-field-value" id="view-completion-info">—</div>
@@ -2121,6 +2124,7 @@
             document.getElementById('view-name').textContent = j.customerName || 'Walk-in';
             document.getElementById('view-phone').textContent = j.customerPhone || '—';
             document.getElementById('view-job-type').textContent = j.jobType || '—';
+            document.getElementById('view-technician').textContent = j.technician || '—';
 
             const pClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
             const pLabel = pClass === 'high' ? '🔴 High — Urgent' : '🔵 Low — Normal';
@@ -2148,12 +2152,12 @@
                 } else {
                     completionInfo.innerHTML = `<span style="color:#fca5a5;font-weight:700;">Abandoned</span>`;
                 }
-
-
             } else if (statusClass === 'ready' || statusClass === 'unsuccessful') {
+                // SHOW ACTUAL DATE (Estimated Date above remains visible)
                 completionInfo.textContent = bzDate(j.dateCompleted) || '—';
             } else {
-                completionInfo.textContent = 'In Progress';
+                // SHOW "NOT YET FINISHED" (Estimated Date above remains visible)
+                completionInfo.textContent = 'Repair in Progress';
             }
 
             document.getElementById('view-notes').textContent = j.notes || 'No notes.';

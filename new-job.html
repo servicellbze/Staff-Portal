@@ -1229,6 +1229,9 @@
                 }
             }
 
+            // Get technician username
+            const technician = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Unknown';
+
             const sheetData = {
                 action: 'create',
                 repairId: Number(repairId),
@@ -1242,7 +1245,8 @@
                 notes,
                 dateReceived,
                 estimatedCompletion,
-                payment: 'pending'
+                payment: 'pending',
+                technician: technician  // ← NOW INSIDE THE OBJECT!
             };
 
             lastJobData = {
@@ -1256,7 +1260,8 @@
                 customerPhone,
                 notes,
                 dateReceived,
-                estimatedCompletion
+                estimatedCompletion,
+                technician  // Also add here for consistency
             };
             currentJobData = lastJobData;
 

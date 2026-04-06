@@ -1,0 +1,129 @@
+/* ============================================
+   SERVICELL DESIGN SYSTEM - CSS VARIABLES
+   Single source of truth for all pages
+   ============================================ */
+
+:root {
+    /* Primary Palette */
+    --primary: #2563eb;
+    --primary-light: #3b82f6;
+    --primary-dark: #1d4ed8;
+
+    --bg: var(--bg-gradient);
+    --surface: var(--glass);
+    --surface-hover: var(--glass-strong);
+    --border: var(--glass-border);
+    --info: var(--primary);
+    --font: var(--font-family);
+
+    /* Accent Colors */
+    --accent: #60a5fa;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    /* Background System */
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --glass: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(37, 99, 235, 0.1);
+    --glass-strong: rgba(255, 255, 255, 0.95);
+    --white-alt: #ffffff;
+
+    /* Text Hierarchy */
+    --text-main: #0f172a;
+    --text-dim: #64748b;
+    --text-light: #94a3b8;
+    --text-white: #ffffff;
+
+    /* Spacing Scale */
+    --space-xs: 0.5rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2.5rem;
+    --space-xl: 4rem;
+
+    /* Shadows */
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 30px rgba(37, 99, 235, 0.1);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.15);
+    --shadow-xl: 0 30px 60px rgba(37, 99, 235, 0.1);
+
+    /* Border Radius */
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 35px;
+    --radius-xl: 40px;
+    --radius-full: 100px;
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
+    --transition-slow: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* Typography */
+    --font-family: 'Inter', sans-serif;
+    --font-bold: 800;
+    --font-semibold: 700;
+    --font-medium: 600;
+    --font-regular: 400;
+
+    /* Z-Index Scale */
+    --z-background: -1;
+    --z-base: 1;
+    --z-nav: 1000;
+    --z-splash: 9999;
+    --z-modal: 10000;
+}
+
+html {
+    /* Critical: Matches background immediately to prevent white flash */
+    background: var(--bg-gradient);
+    /* Universal Fix: Disables rubber-band bounce on all modern browsers */
+    overscroll-behavior: none;
+    height: 100%;
+}
+
+body {
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    /* Prevents horizontal "shake" during vertical scrolling */
+    overflow-x: hidden;
+}
+
+/* ============================================
+   THEME-ADJACENT SCROLLBAR
+   Uses --primary-rgb from theme-init.js
+   ============================================ */
+
+/* Chrome, Edge, Safari, and Opera */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    /* Keeps track transparent to preserve glassmorphism background effects */
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    /* Uses the dynamic RGB variable from theme-init.js with 0.3 opacity */
+    background: rgba(var(--primary-rgb), 0.3);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    /* Full intensity on hover */
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+/* Firefox Support */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--primary-rgb), 0.3) transparent;
+}
