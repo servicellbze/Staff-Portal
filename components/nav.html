@@ -12,6 +12,25 @@
       <a href="index.html" class="nav-btn">Home</a>
       <a href="new-job.html" class="nav-btn">New Job</a>
       <a href="current-jobs.html" class="nav-btn">Current Jobs</a>
+
+      <!-- PROFILE MENU -->
+      <div class="profile-menu">
+        <button class="profile-btn" id="profileBtn">
+          <span class="account-avatar" id="profileAvatar">U</span>
+          <span class="profile-name" id="profileName">User</span>
+          <span class="profile-dropdown-icon">▼</span>
+        </button>
+
+        <div class="profile-dropdown" id="profileDropdown">
+          <div class="profile-header">
+            <span class="profile-username" id="dropdownUsername">username</span>
+            <span class="profile-role" id="dropdownRole">role</span>
+          </div>
+          <hr>
+          <a href="settings.html" class="dropdown-item">⚙️ Settings</a>
+          <a href="#" class="dropdown-item logout-btn" onclick="logout(); return false;">🚪 Logout</a>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
