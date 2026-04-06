@@ -1,223 +1,257 @@
 /**
  * ServiCell Component Loader
- * Handles dynamic loading of navigation, footer, and splash screen
+ * Builds nav dynamically based on logged-in user role.
+ * No external nav.html fetch needed.
  */
 
+// ── Role helpers (global so other scripts can use them) ───────────────────────
+function getLoggedInUser() {
+    return localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+}
+
+function deriveRole(username) {
+    const u = (username || '').toLowerCase();
+    if (u.includes('manager')) return 'manager';
+    if (u.includes('cashier')) return 'cashier';
+    if (u.includes('technician') || u.includes('tech')) return 'technician';
+
+    return 'staff'; // Matches your CSS fallback icon 👤
+}
+
+// ── Nav link definitions ──────────────────────────────────────────────────────
+const NAV_LINKS = [
+    { label: 'Dashboard', href: 'index.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Current Jobs', href: 'current-jobs.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'New Job', href: 'new-job.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Special Orders', href: 'special-orders.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Inventory', href: 'inventory.html', roles: ['cashier', 'manager'] },
+    { label: 'Payouts', href: 'payouts.html', roles: ['cashier', 'manager'] },
+    { label: 'Statistics', href: 'statistics.html', roles: ['manager'] },
+    { label: 'Settings', href: 'settings.html', roles: ['technician', 'cashier', 'manager'] },
+];
+
+// ── Auth helpers (global) ─────────────────────────────────────────────────────
+function logOut() {
+    // 1. Clear all session and local data
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('scUser');
+    localStorage.removeItem('scRole');
+    sessionStorage.clear();
+
+    // 2. Immediate UI Reset (Prevents the 'funny' look)
+    const profileBtn = document.getElementById('profileBtn');
+    const navLinks = document.getElementById('navLinks');
+    
+    if (profileBtn) profileBtn.style.display = 'none';
+    if (navLinks) navLinks.innerHTML = ''; // Clear role-specific links
+
+    // 3. Redirect or Show Login
+    // If you are on index.html, just show the overlay
+    const loginOverlay = document.getElementById('loginOverlay');
+    if (loginOverlay) {
+        loginOverlay.style.display = 'flex';
+        setTimeout(() => loginOverlay.classList.add('show'), 10);
+        document.body.style.overflow = 'hidden';
+    } else {
+        // If on another page (like settings), go back home
+        window.location.href = 'index.html';
+    }
+}
+
+function toggleAccountMenu(e) {
+    e.stopPropagation();
+    document.getElementById('accountDropdown')?.classList.toggle('open');
+}
+
+// ── Component Loader ──────────────────────────────────────────────────────────
 const ComponentLoader = {
-    // Configuration
     config: {
-        navPath: 'components/nav.html',
         footerPath: 'components/footer.html',
-        splashDuration: 1000, // Updated to 3 seconds
-        minSplashTime: 3000,   // Force it to stay for 3s
+        minSplashTime: 3000,
+        refreshNav() {
+            this.loadNav();
+        }
     },
 
-    // State
     state: {
-        componentsLoaded: 0,
-        totalComponents: 2,
         loadStartTime: Date.now(),
         splashHidden: false
     },
 
-    /**
-     * Initialize all components
-     */
     async init() {
         this.state.loadStartTime = Date.now();
-
-        // Show splash immediately
         this.createSplash();
 
-        // Load components in parallel
         await Promise.all([
             this.loadNav(),
             this.loadFooter()
         ]);
 
-        // Calculate remaining splash time for premium feel
         const elapsed = Date.now() - this.state.loadStartTime;
         const remaining = Math.max(0, this.config.minSplashTime - elapsed);
-
-        setTimeout(() => {
-            this.hideSplash();
-        }, remaining);
+        setTimeout(() => this.hideSplash(), remaining);
     },
 
-    /**
-     * Create and inject splash screen
-     */
     createSplash() {
+        // Don't create a second splash if one already exists
+        if (document.getElementById('splash-screen')) return;
         const splash = document.createElement('div');
         splash.id = 'splash-screen';
         splash.className = 'splash-screen';
         splash.innerHTML = `
-<div class="splash-loader">
-  <div class="rotating-grid">
-    <div class="box"></div>
-    <div class="box"></div>
-    <div class="box"></div>
-    <div class="box"></div>
-  </div>
-  </div>
-      <div class="splash-loading-text">ServiCell Belize - Staff Portal</div>
-    </div>
-</div>
-`;
-
+          <div class="splash-loader">
+            <div class="rotating-grid">
+              <div class="box"></div>
+              <div class="box"></div>
+              <div class="box"></div>
+              <div class="box"></div>
+            </div>
+          </div>
+          <div class="splash-loading-text">ServiCell Belize - Staff Portal</div>`;
         document.body.prepend(splash);
     },
 
-    /**
-     * Hide splash with exit animation
-     */
     hideSplash() {
         const splash = document.getElementById('splash-screen');
         if (!splash || this.state.splashHidden) return;
-
         splash.classList.add('exiting');
         this.state.splashHidden = true;
-
         setTimeout(() => {
             splash.classList.add('hidden');
-            // Trigger page entry animation
             document.body.classList.add('page-ready');
         }, 600);
     },
 
-    /**
-     * Load navigation component
-     */
     async loadNav() {
-        try {
-            const response = await fetch(this.config.navPath);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const placeholder = document.getElementById('nav-placeholder');
+        if (!placeholder) return;
 
-            const html = await response.text();
-            const placeholder = document.getElementById('nav-placeholder');
+        const username = getLoggedInUser();
+        const role = deriveRole(username);
+        const current = window.location.pathname.split('/').pop() || 'index.html';
+        const visible = NAV_LINKS.filter(l => l.roles.includes(role));
 
-            if (placeholder) {
-                placeholder.innerHTML = html;
-                this.setActiveNavLink();
-                this.attachNavListeners();
-            }
-        } catch (error) {
-            console.error('Failed to load navigation:', error);
-            this.fallbackNav();
-        }
+        const linksHTML = visible.map(l => {
+            const active = current === l.href ? 'active' : '';
+            return `<a href="${l.href}" class="nav-btn ${active}">${l.label}</a>`;
+        }).join('');
+
+        const accountHTML = username ? `
+  <div class="nav-account" id="navAccount">
+    <button class="account-chip" onclick="toggleAccountMenu(event)" aria-label="Account menu">
+      <span class="account-avatar ${role.toLowerCase()}"></span>
+      <span class="account-name">${username}</span>
+      <span class="account-caret">▾</span>
+    </button>
+    <div class="account-dropdown" id="accountDropdown">
+      <div class="dropdown-header">
+        <span class="dropdown-username">${username}</span>
+        <span class="dropdown-role-badge">${role}</span>
+      </div>
+      <div class="dropdown-divider"></div>
+      <a href="settings.html" class="dropdown-item">⚙️ Settings</a>
+      <button class="dropdown-item danger" onclick="logOut()">🚪 Log out</button>
+    </div>
+  </div>` : '';
+
+        placeholder.innerHTML = `
+          <nav id="mainNav">
+            <div class="nav-wrapper">
+              <span class="logo-text">ServiCell</span>
+              <div class="nav-links" id="navLinks">${linksHTML}</div>
+              ${accountHTML}
+              <div class="hamburger" id="hamburger">
+                <span></span><span></span><span></span>
+              </div>
+            </div>
+          </nav>
+          <div class="mobile-menu-panel" id="mobilePanel">
+            <div class="mobile-menu-links">
+              ${visible.map(l => {
+            const active = current === l.href ? 'active' : '';
+            return `<a href="${l.href}" class="nav-btn ${active}">${l.label}</a>`;
+        }).join('')}
+            </div>
+            ${username ? `
+            <div class="mobile-menu-footer">
+              <div class="mobile-user-info">
+                <span class="mobile-username">${username}</span>
+                <span class="mobile-role-badge">${role}</span>
+              </div>
+              <button class="mobile-logout" onclick="logOut()">🚪 Log out</button>
+            </div>` : ''}
+          </div>`;
+
+        this.attachNavListeners();
     },
 
-    /**
-     * Load footer component
-     */
     async loadFooter() {
         try {
-            const response = await fetch(this.config.footerPath);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-            const html = await response.text();
+            const res = await fetch(this.config.footerPath);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const html = await res.text();
             const placeholder = document.getElementById('footer-placeholder');
-
-            if (placeholder) {
-                placeholder.innerHTML = html;
-            }
-        } catch (error) {
-            console.error('Failed to load footer:', error);
+            if (placeholder) placeholder.innerHTML = html;
+        } catch (e) {
+            console.error('Failed to load footer:', e);
         }
     },
 
-    /**
-     * Set active state on current page link
-     */
-    setActiveNavLink() {
-        const currentPath = window.location.pathname;
-        const currentPage = currentPath.split('/').pop() || 'index.html';
-
-        document.querySelectorAll('.nav-btn').forEach(link => {
-            const href = link.getAttribute('href');
-            if (!href) return;
-
-            // Exact match or index.html for root
-            const isActive = href === currentPage ||
-                (currentPage === '' && href === 'index.html') ||
-                (currentPage === '/' && href === 'index.html');
-
-            if (isActive) {
-                link.classList.add('active');
-            }
-        });
-    },
-
-    /**
-     * Attach nav event listeners
-     */
     attachNavListeners() {
-        // Hamburger toggle
-        const hamburger = document.querySelector('.hamburger');
-        const navLinks = document.getElementById('navLinks');
+        const hamburger = document.getElementById('hamburger');
+        const mobilePanel = document.getElementById('mobilePanel');
 
-        if (hamburger && navLinks) {
+        if (hamburger && mobilePanel) {
             hamburger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 hamburger.classList.toggle('active');
-                navLinks.classList.toggle('active');
+                mobilePanel.classList.toggle('open');
             });
 
-            // Close on outside click
             document.addEventListener('click', (e) => {
-                if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
+                if (!hamburger.contains(e.target) && !mobilePanel.contains(e.target)) {
                     hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
+                    mobilePanel.classList.remove('open');
                 }
             });
 
-            // Close on link click (mobile)
-            navLinks.querySelectorAll('.nav-btn').forEach(link => {
+            mobilePanel.querySelectorAll('.nav-btn').forEach(link => {
                 link.addEventListener('click', () => {
                     hamburger.classList.remove('active');
-                    navLinks.classList.remove('active');
+                    mobilePanel.classList.remove('open');
                 });
             });
         }
 
-        // Navbar scroll effect
-        let lastScroll = 0;
-        const nav = document.querySelector('nav');
-
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-
-            if (currentScroll > 50) {
-                nav?.classList.add('scrolled');
-            } else {
-                nav?.classList.remove('scrolled');
+        // Close account dropdown on outside click
+        document.addEventListener('click', (e) => {
+            const acct = document.getElementById('navAccount');
+            if (acct && !acct.contains(e.target)) {
+                document.getElementById('accountDropdown')?.classList.remove('open');
             }
+        });
 
-            lastScroll = currentScroll;
+        // Scroll shrink effect
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav?.classList.toggle('scrolled', window.pageYOffset > 50);
         }, { passive: true });
     },
 
-    /**
-     * Fallback navigation if fetch fails
-     */
     fallbackNav() {
         const placeholder = document.getElementById('nav-placeholder');
         if (!placeholder) return;
-
         placeholder.innerHTML = `
-      <nav style="position:fixed;top:25px;left:50%;transform:translateX(-50%);background:white;padding:10px 20px;border-radius:100px;z-index:1000;">
-        <div style="font-weight:800;color:#2563eb;">ServiCell Belize</div>
-      </nav>
-    `;
+          <nav style="position:fixed;top:25px;left:50%;transform:translateX(-50%);background:white;padding:10px 20px;border-radius:100px;z-index:1000;">
+            <div style="font-weight:800;color:#2563eb;">ServiCell Belize</div>
+          </nav>`;
     }
-};
+};  
 
-// Auto-initialize on DOM ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => ComponentLoader.init());
 } else {
     ComponentLoader.init();
 }
 
-// Expose for manual use
 window.ComponentLoader = ComponentLoader;
