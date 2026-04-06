@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="js/theme-init.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,7 +56,7 @@
             height: 50px;
             border-radius: 14px;
             border: 1px solid var(--glass-border);
-            background: var(--glass);
+            background: var(--white-alt);
             color: var(--text-main);
             padding: 0 15px 0 45px;
             font-size: 0.95rem;
@@ -69,11 +70,15 @@
             border-color: var(--primary);
         }
 
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
         .filter-dropdown {
             height: 50px;
             border-radius: 14px;
             padding: 0 40px 0 16px;
-            background: var(--glass);
+            background: var(--white-alt);
             border: 1px solid var(--glass-border);
             color: var(--text-main);
             font-family: var(--font-family);
@@ -93,12 +98,13 @@
             align-items: center;
             justify-content: center;
             border-radius: 14px;
-            background: var(--glass);
+            background: var(--white-alt);
             border: 1px solid var(--glass-border);
             cursor: pointer;
             backdrop-filter: blur(12px);
             transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
             font-size: 1.2rem;
+            color: var(--text-main);
         }
 
         .refresh-btn:hover {
@@ -226,6 +232,11 @@
             box-shadow: inset 4px 0 0 0 #22c55e, 0 0 20px rgba(34, 197, 94, 0.1);
         }
 
+        .status-resolved {
+            background: rgba(34, 197, 94, 0.05);
+            box-shadow: inset 4px 0 0 0 #ffffff, 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
         .status-unsuccessful {
             background: rgba(71, 85, 105, 0.1);
             box-shadow: inset 4px 0 0 0 #475569, 0 0 25px rgba(71, 85, 105, 0.15);
@@ -262,6 +273,22 @@
         .status-badge.ready {
             background: rgba(34, 197, 94, 0.2);
             color: #4ade80;
+        }
+
+        .status-badge.resolved {
+            background: rgba(16, 185, 129, 0.1);
+            /* Very light green */
+            color: #d5f8cc;
+            /* Strong green text */
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            /* The Outline */
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .status-badge.unsuccessful {
@@ -330,8 +357,8 @@
         }
 
         .modal-box {
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-border);
             border-radius: 28px;
             width: 100%;
             max-width: 500px;
@@ -363,13 +390,13 @@
             align-items: center;
             justify-content: space-between;
             padding: 24px 28px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .modal-header h2 {
             font-size: 1.1rem;
             font-weight: 800;
-            color: #fff;
+            color: var(--text-main);
         }
 
         .modal-close {
@@ -378,7 +405,7 @@
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.07);
             border: none;
-            color: #888;
+            color: var(--text-dim);
             font-size: 1.1rem;
             cursor: pointer;
             display: flex;
@@ -389,7 +416,7 @@
 
         .modal-close:hover {
             background: rgba(255, 255, 255, 0.15);
-            color: #fff;
+            color: var(--text-main);
         }
 
         .modal-body {
@@ -428,14 +455,14 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #60a5fa;
+            color: var(--primary);
             opacity: 0.7;
         }
 
         .view-field-value {
             font-size: 0.92rem;
             font-weight: 600;
-            color: #e2e8f0;
+            color: var(--text-main);
         }
 
         .view-field.full {
@@ -443,12 +470,12 @@
         }
 
         .view-notes-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: var(--white-alt);
+            border: 1px solid var(--glass-border);
             border-radius: 14px;
             padding: 14px;
             font-size: 0.88rem;
-            color: #94a3b8;
+            color: var(--text-dim);
             line-height: 1.6;
             margin-top: 4px;
             min-height: 60px;
@@ -460,7 +487,7 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #60a5fa;
+            color: var(--primary);
             margin-bottom: 10px;
             display: block;
         }
@@ -482,19 +509,19 @@
             gap: 6px;
             padding: 8px 15px;
             border-radius: 99px;
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid var(--glass-border);
+            background: var(--white-alt);
             font-size: 0.8rem;
             font-weight: 700;
-            color: #64748b;
+            color: var(--text-dim);
             cursor: pointer;
             transition: all 0.2s;
             user-select: none;
         }
 
         .edit-pill label:hover {
-            border-color: #3b82f6;
-            color: #60a5fa;
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .edit-pill input:checked+label {
@@ -538,6 +565,13 @@
             box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
         }
 
+        .edit-pill.ep-resolved input:checked+label {
+            background: #10b981;
+            /* Green */
+            border-color: #10b981;
+            color: white;
+        }
+
         .edit-pill.ep-unsuccessful input:checked+label {
             background: #475569;
             border-color: #475569;
@@ -546,10 +580,10 @@
 
         .edit-textarea {
             width: 100%;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: var(--white-alt);
+            border: 1.5px solid var(--glass-border);
             border-radius: 14px;
-            color: #e2e8f0;
+            color: var(--text-main);
             font-family: var(--font-family);
             font-size: 0.9rem;
             padding: 14px;
@@ -560,16 +594,20 @@
 
         .edit-textarea:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: var(--primary);
+        }
+
+        .edit-textarea::placeholder {
+            color: var(--text-light);
         }
 
         /* ── Date Completed field ── */
         .edit-date-input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: var(--white-alt);
+            border: 1.5px solid var(--glass-border);
             border-radius: 14px;
-            color: #e2e8f0;
+            color: var(--text-main);
             font-family: var(--font-family);
             font-size: 0.9rem;
             padding: 12px 14px;
@@ -579,7 +617,7 @@
 
         .edit-date-input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: var(--primary);
         }
 
         /* ── Modal Footer Buttons ── */
@@ -603,21 +641,21 @@
 
         .mf-cancel {
             background: rgba(255, 255, 255, 0.06);
-            color: #64748b;
+            color: var(--text-dim);
         }
 
         .mf-cancel:hover {
             background: rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
+            color: var(--text-main);
         }
 
         .mf-save {
-            background: #2563eb;
+            background: var(--primary);
             color: #fff;
         }
 
         .mf-save:hover {
-            background: #1d4ed8;
+            background: var(--primary-dark);
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
         }
@@ -662,7 +700,7 @@
         }
 
         .delete-body h2 {
-            color: #fff;
+            color: var(--text-main);
             font-size: 1.2rem;
             margin-bottom: 10px;
         }
@@ -689,11 +727,11 @@
         }
 
         .delete-info-row span:first-child {
-            color: #64748b;
+            color: var(--text-dim);
         }
 
         .delete-info-row span:last-child {
-            color: #e2e8f0;
+            color: var(--text-main);
             font-weight: 600;
         }
 
@@ -727,8 +765,8 @@
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: #0f172a;
-            color: #fff;
+            background: var(--text-main);
+            color: var(--white-alt);
             padding: 12px 22px;
             border-radius: 99px;
             font-size: 0.88rem;
@@ -737,7 +775,7 @@
             z-index: 9999;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             white-space: nowrap;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
         }
 
         .toast.show {
@@ -820,6 +858,12 @@
                 border-top: 3px solid #22c55e !important;
                 background: rgba(34, 197, 94, 0.04) !important;
             }
+
+            .job-row.status-resolved {
+                border-top: 3px solid #ffffff !important;
+                background: rgba(34, 197, 94, 0.04) !important;
+            }
+
 
             .job-row.status-unsuccessful {
                 border-top: 3px solid #475569 !important;
@@ -1033,7 +1077,7 @@
         .repair-id {
             font-family: monospace;
             font-weight: 800;
-            background: rgba(var(--primary-rgb), 0.2);
+            background: rgba(37, 99, 235, 0.2);
             color: var(--primary);
             padding: 2px 8px;
             border-radius: 4px;
@@ -1042,14 +1086,14 @@
         .job-details-box {
             margin-top: 12px;
             padding: 10px;
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--white-alt);
             border-radius: 6px;
             border-left: 3px solid var(--primary);
         }
 
         .job-notes {
             font-size: 0.9rem;
-            color: #ccc;
+            color: var(--text-dim);
             margin-bottom: 6px;
             line-height: 1.4;
         }
@@ -1077,6 +1121,7 @@
             background: rgba(124, 58, 237, 0.15);
             color: #a78bfa;
             border: 1px solid rgba(124, 58, 237, 0.25);
+            margin-right: 12px;
         }
 
         /* ── Priority Badges ── */
@@ -1135,19 +1180,19 @@
             gap: 6px;
             padding: 8px 18px;
             border-radius: 99px;
-            border: 1.5px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid var(--glass-border);
+            background: var(--white-alt);
             font-size: 0.8rem;
             font-weight: 700;
-            color: #64748b;
+            color: var(--text-dim);
             cursor: pointer;
             transition: all 0.2s;
             user-select: none;
         }
 
         .priority-pill label:hover {
-            border-color: #3b82f6;
-            color: #93c5fd;
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .priority-pill.pp-low input:checked+label {
@@ -1180,10 +1225,10 @@
         }
 
         .inv-input {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            background: var(--white-alt);
+            border: 1.5px solid var(--glass-border);
             border-radius: 10px;
-            color: #e2e8f0;
+            color: var(--text-main);
             font-family: var(--font-family);
             font-size: 0.85rem;
             padding: 9px 12px;
@@ -1193,7 +1238,7 @@
 
         .inv-input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: var(--primary);
         }
 
         .inv-input.price {
@@ -1249,10 +1294,10 @@
         .inv-add-line-btn {
             flex: 1;
             padding: 8px 12px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px dashed rgba(255, 255, 255, 0.12);
+            background: var(--white-alt);
+            border: 1px dashed var(--glass-border);
             border-radius: 10px;
-            color: #64748b;
+            color: var(--text-dim);
             font-family: var(--font-family);
             font-size: 0.78rem;
             font-weight: 700;
@@ -1262,8 +1307,8 @@
         }
 
         .inv-add-line-btn:hover {
-            border-color: #3b82f6;
-            color: #60a5fa;
+            border-color: var(--primary);
+            color: var(--primary);
         }
 
         .inv-total-row {
@@ -1279,14 +1324,14 @@
         }
 
         .inv-total-label {
-            color: #60a5fa;
+            color: var(--primary);
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .inv-total-amount {
-            color: #fff;
+            color: var(--text-main);
             font-family: monospace;
             font-size: 1.05rem;
         }
@@ -1341,14 +1386,14 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: #60a5fa;
+            color: var(--primary);
             opacity: 0.8;
         }
 
         .view-total-amount {
             font-size: 1.1rem;
             font-weight: 800;
-            color: #fff;
+            color: var(--text-main);
             font-family: monospace;
         }
 
@@ -1363,9 +1408,9 @@
             display: flex;
             justify-content: space-between;
             font-size: 0.82rem;
-            color: #94a3b8;
+            color: var(--text-dim);
             padding: 3px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .view-line-item:last-child {
@@ -1374,7 +1419,7 @@
 
         .view-line-item span:last-child {
             font-family: monospace;
-            color: #e2e8f0;
+            color: var(--text-main);
             font-weight: 600;
         }
 
@@ -1475,8 +1520,8 @@
         }
 
         .paper-modal-box {
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-border);
             border-radius: 24px;
             padding: 32px 28px 28px;
             width: 100%;
@@ -1498,14 +1543,14 @@
         }
 
         .paper-modal-box h3 {
-            color: #fff;
+            color: var(--text-main);
             font-size: 1rem;
             font-weight: 800;
             margin-bottom: 6px;
         }
 
         .paper-modal-box p {
-            color: #64748b;
+            color: var(--text-dim);
             font-size: 0.82rem;
             margin-bottom: 22px;
         }
@@ -1524,18 +1569,18 @@
             gap: 8px;
             padding: 20px 12px;
             border-radius: 16px;
-            border: 1.5px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.04);
+            border: 1.5px solid var(--glass-border);
+            background: var(--white-alt);
             cursor: pointer;
             transition: all 0.2s;
-            color: #94a3b8;
+            color: var(--text-dim);
             font-family: var(--font-family);
         }
 
         .paper-choice-btn:hover {
-            border-color: #7c3aed;
-            background: rgba(124, 58, 237, 0.1);
-            color: #fff;
+            border-color: var(--primary);
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--primary);
             transform: translateY(-2px);
         }
 
@@ -1556,7 +1601,7 @@
         .paper-cancel-btn {
             background: none;
             border: none;
-            color: #475569;
+            color: var(--text-dim);
             font-family: var(--font-family);
             font-size: 0.85rem;
             cursor: pointer;
@@ -1564,7 +1609,7 @@
         }
 
         .paper-cancel-btn:hover {
-            color: #94a3b8;
+            color: var(--text-main);
         }
 
         .pi-tbd-notice {
@@ -1585,6 +1630,8 @@
             letter-spacing: 1px;
         }
     </style>
+    <script src="js/theme-init.js"></script>
+    <script src="js/auth-guard.js"></script>
 </head>
 
 <body>
@@ -1601,6 +1648,7 @@
                 <option value="fixing">Repair In Progress</option>
                 <option value="testing">Finalizing / Testing</option>
                 <option value="ready">Ready for Pickup</option>
+                <option value="resolved">Picked Up</option>
                 <option value="unsuccessful">Unsuccessful</option>
                 <option value="abandoned">Abandoned</option>
             </select>
@@ -1698,6 +1746,10 @@
                         <div class="view-field-value" id="view-estimated-completion">—</div>
                     </div>
                     <div class="view-field full">
+                        <div class="view-field-label">Completion Date</div>
+                        <div class="view-field-value" id="view-completion-info">—</div>
+                    </div>
+                    <div class="view-field full">
                         <div class="view-field-label">Notes</div>
                         <div class="view-notes-box" id="view-notes">No notes.</div>
                     </div>
@@ -1727,7 +1779,7 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h2>✏️ Edit Job <span id="edit-id-tag"
-                        style="font-family:monospace;color:#60a5fa;font-size:0.9rem;"></span></h2>
+                        style="font-family:monospace;color:var(--primary);font-size:0.9rem;"></span></h2>
                 <button class="modal-close" onclick="closeModal('editModal')">✕</button>
             </div>
             <div class="modal-body">
@@ -1748,6 +1800,10 @@
                     <div class="edit-pill ep-ready">
                         <input type="radio" name="editStatus" id="es-ready" value="ready">
                         <label for="es-ready">🎉 Ready</label>
+                    </div>
+                    <div class="edit-pill ep-resolved">
+                        <input type="radio" name="editStatus" id="es-resolved" value="resolved">
+                        <label for="es-resolved">🤝 Picked Up</label>
                     </div>
                     <div class="edit-pill ep-unsuccessful">
                         <input type="radio" name="editStatus" id="es-unsuccessful" value="unsuccessful">
@@ -1837,7 +1893,7 @@
             <div class="delete-body">
                 <div class="delete-icon">⚠️</div>
                 <h2>Are you sure?</h2>
-                <p style="color:#64748b;font-size:0.88rem;">This will permanently remove the record from the
+                <p style="color:var(--text-dim);font-size:0.88rem;">This will permanently remove the record from the
                     spreadsheet.</p>
                 <div class="delete-info-card">
                     <div class="delete-info-row"><span>Repair ID</span><span id="del-id">—</span></div>
@@ -1910,19 +1966,39 @@
 
         function classifyStatus(job) {
             const s = String(job.status).toLowerCase();
-            if (s.includes("abandoned")) return { class: 'abandoned', label: 'Declared Abandoned' };
 
+            // 1. TOP PRIORITY: If it's Picked Up or Abandoned, return immediately
+            if (s.includes("resolved") || s.includes("picked up")) {
+                return { class: 'resolved', label: 'Picked Up' };
+            }
+            if (s.includes("abandoned")) {
+                return { class: 'abandoned', label: 'Declared Abandoned' };
+            }
+
+            // 2. GENERAL STATUSES
             let res = { class: 'received', label: 'Received' };
-            if (["received", "diagnosing", "ordered", "in queue"].some(w => s.includes(w))) res = { class: 'received', label: 'Received' };
-            else if (["fixing", "repairing", "work"].some(w => s.includes(w))) res = { class: 'fixing', label: 'Repair In Progress' };
-            else if (["testing", "qc", "checking"].some(w => s.includes(w))) res = { class: 'testing', label: 'Testing / QC' };
-            else if (["completed", "ready", "pickup"].some(w => s.includes(w))) res = { class: 'ready', label: 'Ready For Pickup' };
-            else if (["unsuccessful", "no fix"].some(w => s.includes(w))) res = { class: 'unsuccessful', label: 'Unsuccessful' };
+            if (["received", "diagnosing", "ordered", "in queue"].some(w => s.includes(w))) {
+                res = { class: 'received', label: 'Received' };
+            }
+            else if (["fixing", "repairing", "work"].some(w => s.includes(w))) {
+                res = { class: 'fixing', label: 'Repair In Progress' };
+            }
+            else if (["testing", "qc", "checking"].some(w => s.includes(w))) {
+                res = { class: 'testing', label: 'Testing / QC' };
+            }
+            else if (["completed", "ready", "pickup"].some(w => s.includes(w))) {
+                res = { class: 'ready', label: 'Ready For Pickup' };
+            }
+            else if (["unsuccessful", "no fix"].some(w => s.includes(w))) {
+                res = { class: 'unsuccessful', label: 'Unsuccessful' };
+            }
 
+            // 3. DATE CHECK: Only check for abandonment if it's Ready or Unsuccessful
             if (['ready', 'unsuccessful'].includes(res.class) && job.dateCompleted) {
                 const diff = Math.floor((new Date() - new Date(job.dateCompleted)) / 86400000);
                 if (90 - diff <= 0) return { class: 'abandoned', label: 'Declared Abandoned' };
             }
+
             return res;
         }
 
@@ -1947,15 +2023,30 @@
                 const stat = classifyStatus(j);
                 let storage = '—';
                 if (stat.class === 'abandoned') {
-                    const abandDate = j.dateAbandoned || j.dateCompleted;
-                    if (abandDate) {
-                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">${bzDate(abandDate)}</span>`;
+                    // 1. Get the date it was finished/ready (j.dateCompleted)
+                    const compDateStr = j.dateCompleted || j.dateAbandoned;
+
+                    if (compDateStr) {
+                        const compDate = new Date(compDateStr);
+                        // 2. Add 90 days to find the exact date it became "Abandoned"
+                        const deadlineDate = new Date(compDate.getTime() + (90 * 24 * 60 * 60 * 1000));
+
+                        const abandonedStr = deadlineDate.toLocaleDateString('en-US', {
+                            month: 'short', day: 'numeric', year: 'numeric'
+                        });
+
+                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">Abandoned On ${abandonedStr}</span>`;
                     } else {
                         storage = `<span style="color:#fca5a5;font-weight:800;">ABANDONED</span>`;
                     }
+
                 } else if (stat.class === 'ready' || stat.class === 'unsuccessful') {
                     if (j.dateCompleted) {
-                        const daysLeft = 90 - Math.floor((new Date() - new Date(j.dateCompleted)) / 86400000);
+                        // 3. Simple calculation: (Deadline - Now) / Milliseconds in a day
+                        const msElapsed = new Date() - new Date(j.dateCompleted);
+                        const daysPassed = Math.floor(msElapsed / 86400000);
+                        const daysLeft = 90 - daysPassed;
+
                         const alertStyle = daysLeft <= 7 ? 'color:#f87171;font-weight:800;' : 'opacity:0.8;';
                         storage = `<span style="${alertStyle}">${Math.max(0, daysLeft)}d left</span>`;
                     }
@@ -1963,23 +2054,23 @@
                 const priorityClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
                 const priorityLabel = priorityClass === 'high' ? '🔴 Urgent' : '🔵 Normal';
                 return `
-                <div class="job-row status-${stat.class}">
-                    <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
-                    <div>
-                        <div style="font-weight:700;">${j.customerName || 'Walk-in'}</div>
-                        <div style="font-size:0.7rem;opacity:0.5;">${j.customerPhone || ''}</div>
-                    </div>
-                    <div style="font-size:0.85rem;opacity:0.8;">${j.device || '—'}<br><span style="font-size:0.75rem;opacity:0.6;">${j.issue || ''}</span></div>
-                    <div><span class="job-type-badge">${j.jobType || 'Repair'}</span></div>
-                    <div><span class="priority-badge ${priorityClass}">${priorityLabel}</span></div>
-                    <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
-                    <div style="font-size:0.85rem;">${storage}</div>
-                    <div class="action-btns">
-                        <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
-                        <button class="action-btn" title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
-                        <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>
-                    </div>
-                </div>`;
+        <div class="job-row status-${stat.class}">
+            <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
+            <div>
+                <div style="font-weight:700;">${j.customerName || 'Walk-in'}</div>
+                <div style="font-size:0.7rem;opacity:0.5;">${j.customerPhone || ''}</div>
+            </div>
+            <div style="font-size:0.85rem;opacity:0.8;">${j.device || '—'}<br><span style="font-size:0.75rem;opacity:0.6;">${j.issue || ''}</span></div>
+            <div><span class="job-type-badge">${j.jobType || 'Repair'}</span></div>
+            <div><span class="priority-badge ${priorityClass}">${priorityLabel}</span></div>
+            <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
+            <div style="font-size:0.85rem;">${storage}</div>
+            <div class="action-btns">
+                <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
+                <button class="action-btn" title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
+                <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>
+            </div>
+        </div>`;
             }).join('');
         }
 
@@ -2042,6 +2133,29 @@
             document.getElementById('view-date-received').textContent = bzDate(j.dateReceived) || '—';
             document.getElementById('view-estimated-completion').textContent = j.estimatedCompletion || '—';
 
+            // Completion info based on status
+            const statusClass = stat.class;
+            const completionInfo = document.getElementById('view-completion-info');
+
+            if (statusClass === 'abandoned') {
+                if (j.dateCompleted) {
+                    const completedDate = new Date(j.dateCompleted);
+                    const abandonedDate = new Date(completedDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+                    const abandonedStr = abandonedDate.toLocaleDateString('en-US', {
+                        month: 'long', day: 'numeric', year: 'numeric'
+                    });
+                    completionInfo.innerHTML = `<span style="color:#fca5a5;font-weight:700;">Abandoned On: ${abandonedStr}</span>`;
+                } else {
+                    completionInfo.innerHTML = `<span style="color:#fca5a5;font-weight:700;">Abandoned</span>`;
+                }
+
+
+            } else if (statusClass === 'ready' || statusClass === 'unsuccessful') {
+                completionInfo.textContent = bzDate(j.dateCompleted) || '—';
+            } else {
+                completionInfo.textContent = 'In Progress';
+            }
+
             document.getElementById('view-notes').textContent = j.notes || 'No notes.';
 
             const invoiceSection = document.getElementById('view-invoice-section');
@@ -2076,6 +2190,22 @@
             }
 
             openModal('viewModal');
+        }
+
+        // Helper to create date completed field if it doesn't exist
+        function createDateCompletedField() {
+            const grid = document.querySelector('.view-grid');
+            const field = document.createElement('div');
+            field.className = 'view-field';
+            field.id = 'view-date-completed-field';
+            field.innerHTML = `
+        <div class="view-field-label">Completion</div>
+        <div class="view-field-value" id="view-date-completed">—</div>
+    `;
+            // Insert after estimated completion
+            const estField = document.getElementById('view-estimated-completion').closest('.view-field');
+            estField.after(field);
+            return document.getElementById('view-date-completed');
         }
 
         function switchToEdit() {
@@ -2487,7 +2617,7 @@
         .pi-meta-row strong { display: inline-block; width: 48%; color: #000; }
         .pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; margin-bottom: 3px; }
         .pi-grid { margin-bottom: 6px; }
-        .pi-field-label { font-size: 8px; font-weight: 700; text-transform: uppercase; color: #777; }
+        .pi-field-label { font-size: 8px; font-weight: 700; text-transform: upper   ; color: #777; }
         .pi-field-value { font-size: 11px; font-weight: 700; padding: 1px 0; border-bottom: 1px dashed #ccc; min-height: 16px; }
         .pi-notes { border: 1px solid #ccc; padding: 5px; min-height: 40px; font-size: 9px; line-height: 1.4; margin-top: 3px; margin-bottom: 8px; }
         .pi-footer { text-align: center; font-size: 8px; color: #777; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 5px; line-height: 1.5; }
@@ -2503,7 +2633,8 @@
 
             const bodyHTML = `
         <div class="pi-shop">
-            <h1>🔧 TECH SHOP</h1>
+            <img src="img/logo.png" alt="Servicell Belize Logo" style="max-width: 60px; margin-bottom: 4px;">
+            <h1>SERVICELL BELIZE</h1>
             <p>Device Repair &amp; Services &nbsp;·&nbsp; Belize City, Belize</p>
             <p>Tel: +501 600-0000</p>
         </div>
@@ -2550,15 +2681,15 @@
         </div>
         
         <div class="pi-grid">
-            <div>
-                <div class="pi-field-label">Status</div>
-                <div class="pi-field-value">${(j.status || 'Received').replace(/^\w/, c => c.toUpperCase())}</div>
-            </div>
-            <div>
-                <div class="pi-field-label">Est. Completion</div>
-                <div class="pi-field-value">${j.estimatedCompletion || '—'}</div>
-            </div>
-        </div>
+    <div>
+        <div class="pi-field-label">Status</div>
+        <div class="pi-field-value">${(j.status || 'Received').replace(/^\w/, c => c.toUpperCase())}</div>
+    </div>
+    <div>
+        <div class="pi-field-label">${j.dateCompleted ? 'Completed On' : 'Est. Completion'}</div>
+        <div class="pi-field-value">${j.dateCompleted ? bzDate(j.dateCompleted) : (j.estimatedCompletion || '—')}</div>
+    </div>
+</div>
         
         <hr class="pi-dash">
         

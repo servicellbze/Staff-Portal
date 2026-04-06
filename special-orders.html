@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal | Special Orders</title>
+
+    <!-- Preload fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Manifest & Scripts -->
+    <link rel="manifest" href="manifest.json">
+    <script src="js/theme-init.js"></script>
+    <script src="js/auth-guard.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/splash.css">
+
+    <!-- Base Styles + Anti-Overflow Fixes -->
+    <style>
+        /* Reset & Box Model */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Prevent horizontal swipe/overflow on touch/touchpad */
+        html,
+        body {
+            overflow-x: hidden;
+            overscroll-behavior-x: none;
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        /* Body Layout */
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* Main Content Container */
+        main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 140px clamp(1rem, 5vw, var(--space-md)) var(--space-xl);
+        }
+
+        /* Placeholder Card */
+        .placeholder-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .placeholder-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 4rem;
+            height: 3.5rem;
+        }
+
+        .placeholder-card h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 10px;
+        }
+
+        .placeholder-card p {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .coming-badge {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 6px 16px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 540px) {
+            main {
+                padding: 120px var(--space-sm) var(--space-md);
+            }
+
+            .placeholder-card {
+                padding: 40px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="nav-placeholder"></div>
+
+    <main>
+        <div class="placeholder-card">
+            <div class="placeholder-icon">🛒</div>
+            <h1>Special Orders</h1>
+            <p>Log and track customer special orders. Managers can confirm and approve pending orders.</p>
+            <span class="coming-badge">Coming Soon</span>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <script src="js/components.js"></script>
+</body>
+
+</html>

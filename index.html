@@ -266,7 +266,7 @@
         }
 
         .activity-item:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(128, 128, 128, 0.15);
         }
 
         .activity-icon {
@@ -330,6 +330,11 @@
             color: #059669;
         }
 
+        .badge-resolved {
+            background: rgba(149, 231, 101, 0.13);
+            color: #b4ffcf;
+        }
+
         .badge-unsuccessful {
             background: rgba(100, 116, 139, 0.15);
             color: #475569;
@@ -367,7 +372,8 @@
             padding: 14px 16px;
             border-radius: var(--radius-md);
             border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--glass);
+            /* ← Was rgba(255,255,255,0.5) */
             text-decoration: none;
             color: var(--text-main);
             font-weight: 600;
@@ -376,23 +382,27 @@
             cursor: pointer;
         }
 
+
         .action-btn:hover {
             background: var(--primary);
             border-color: var(--primary);
             color: white;
+            /* ← This is OK — primary bg always lightens text */
             transform: translateX(4px);
             box-shadow: var(--shadow-sm);
         }
 
         .action-btn:hover .action-icon {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(var(--primary-rgb), 0.2);
+            /* ← Dynamic tint based on theme */
         }
 
         .action-icon {
             width: 34px;
             height: 34px;
             border-radius: 10px;
-            background: rgba(37, 99, 235, 0.08);
+            background: rgba(var(--primary-rgb), 0.08);
+            /* ← Was rgba(37,99,235,0.08) */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -434,6 +444,7 @@
         .sync-dot.loading {
             background: var(--warning);
         }
+
 
         @keyframes pulse {
 
@@ -569,6 +580,12 @@
             font-size: 14px;
         }
 
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         .input-group input {
             width: 100%;
             padding: 16px;
@@ -619,155 +636,7 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-    </style>
-</head>
 
-<body>
-
-    <div id="loginOverlay" class="login-overlay">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="lock-circle">
-                    <span class="lock-icon">🔒</span>
-                </div>
-                <h2>ServiCell Portal</h2>
-                <p>Authentication Required</p>
-            </div>
-
-            <div class="input-group">
-                <input type="password" id="passInput" placeholder="Enter Shop Password"
-                    onkeydown="if(event.key==='Enter') checkLogin()">
-            </div>
-
-            <label class="remember-me">
-                <input type="checkbox" id="rememberMe">
-                <span>Remember this device</span>
-            </label>
-
-            <button onclick="checkLogin()" id="loginBtn">Unlock System</button>
-        </div>
-    </div>
-
-
-    <div id="nav-placeholder"></div>
-
-    <main>
-
-        <!-- Header -->
-        <div class="dash-header">
-            <h1>👋 ServiCell Dashboard</h1>
-            <p>Welcome back. Here's what's happening in the shop today.</p>
-            <div class="date-chip">📅 <span id="todayDate">—</span></div>
-        </div>
-
-        <!-- Stats -->
-        <div class="stats">
-            <div class="stat-card total">
-                <div class="stat-icon">📋</div>
-                <div class="stat-value" id="statTotal">
-                    <div class="stat-loading"></div>
-                </div>
-                <div class="stat-label">Total Active Jobs</div>
-            </div>
-            <div class="stat-card progress">
-                <div class="stat-icon">🔧</div>
-                <div class="stat-value" id="statProgress">
-                    <div class="stat-loading"></div>
-                </div>
-                <div class="stat-label">In Progress</div>
-            </div>
-            <div class="stat-card ready">
-                <div class="stat-icon">✅</div>
-                <div class="stat-value" id="statReady">
-                    <div class="stat-loading"></div>
-                </div>
-                <div class="stat-label">Ready for Pickup</div>
-            </div>
-            <div class="stat-card urgent">
-                <div class="stat-icon">⚠️</div>
-                <div class="stat-value" id="statUrgent">
-                    <div class="stat-loading"></div>
-                </div>
-                <div class="stat-label">Expiring Soon</div>
-            </div>
-        </div>
-
-        <!-- Main grid -->
-        <div class="dash-grid">
-
-            <!-- Recent Activity -->
-            <div class="section-card">
-                <div class="section-head">
-                    <h2>📋 Recent Jobs</h2>
-                    <a href="current-jobs.html">View all →</a>
-                </div>
-                <div class="activity-list" id="activityList">
-                    <!-- populated by JS -->
-                    <div class="activity-empty">Loading jobs…</div>
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="section-card">
-                <div class="section-head">
-                    <h2>⚡ Quick Actions</h2>
-                </div>
-                <div class="actions-list">
-                    <a href="new-job.html" class="action-btn">
-                        <div class="action-icon">➕</div>
-                        Log New Repair
-                    </a>
-                    <a href="current-jobs.html" class="action-btn">
-                        <div class="action-icon">🗂️</div>
-                        View All Jobs
-                    </a>
-                    <a href="current-jobs.html?filter=ready" class="action-btn">
-                        <div class="action-icon">📦</div>
-                        Devices Ready for Pickup
-                    </a>
-                    <a href="current-jobs.html?filter=fixing" class="action-btn">
-                        <div class="action-icon">🔧</div>
-                        Repairs In Progress
-                    </a>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Sync bar -->
-        <div class="sync-bar">
-            <div style="display:flex;align-items:center;gap:8px;">
-                <div class="sync-dot loading" id="syncDot"></div>
-                <span id="syncText">Connecting to spreadsheet…</span>
-            </div>
-            <button onclick="loadDashboard()"
-                style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);">↻
-                Refresh</button>
-        </div>
-
-    </main>
-
-    <div id="footer-placeholder"></div>
-    <div id="install-hint" class="install-hint">
-        <div class="hint-content">
-            <span class="hint-icon">📲</span>
-            <div class="hint-text">
-                <strong>Install ServiCell Portal</strong>
-                <p id="hint-apple" style="display:none;">
-                    Tap <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/IPhone_Share_Icon.svg"
-                        style="width:16px; vertical-align:middle;">
-                    then <b>'Add to Home Screen'</b>
-                </p>
-                <p id="hint-android" style="display:none;">
-                    Tap <b>(⋮)</b> then <b>'Install app'</b> or <b>'Add to Home'</b>
-                </p>
-            </div>
-            <button onclick="this.parentElement.parentElement.classList.remove('show')"
-                class="hint-close">&times;</button>
-        </div>
-    </div>
-
-    <style>
         .install-hint {
             position: fixed;
             bottom: 25px;
@@ -775,7 +644,7 @@
             transform: translateX(-50%) translateY(250%);
             width: calc(100% - 32px);
             max-width: 400px;
-            background: #ffffff;
+            background: white;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
             z-index: 99999;
@@ -827,17 +696,153 @@
             cursor: pointer;
         }
     </style>
+    <script src="js/theme-init.js"></script>
+    <script src="js/auth-guard.js"></script>
+</head>
+
+<body>
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="lock-circle">
+                    <span class="lock-icon">🔒</span>
+                </div>
+                <h2>ServiCell Portal</h2>
+                <p>Authentication Required</p>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="userInput" placeholder="Username"
+                    onkeydown="if(event.key==='Enter') checkLogin()">
+                <input type="password" id="passInput" placeholder="Password"
+                    onkeydown="if(event.key==='Enter') checkLogin()">
+            </div>
+
+            <label class="remember-me">
+                <input type="checkbox" id="rememberMe">
+                <span>Remember this device</span>
+            </label>
+
+            <button onclick="checkLogin()" id="loginBtn">Unlock System</button>
+        </div>
+    </div>
+
+    <div id="nav-placeholder"></div>
+
+    <main>
+        <div class="dash-header">
+            <h1>👋 ServiCell Dashboard</h1>
+            <p>Welcome back. Here's what's happening in the shop today.</p>
+            <div class="date-chip">📅 <span id="todayDate">—</span></div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card total">
+                <div class="stat-icon">📋</div>
+                <div class="stat-value" id="statTotal">
+                    <div class="stat-loading"></div>
+                </div>
+                <div class="stat-label">Total Active Jobs</div>
+            </div>
+            <div class="stat-card progress">
+                <div class="stat-icon">🔧</div>
+                <div class="stat-value" id="statProgress">
+                    <div class="stat-loading"></div>
+                </div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card ready">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="statReady">
+                    <div class="stat-loading"></div>
+                </div>
+                <div class="stat-label">Ready for Pickup</div>
+            </div>
+            <div class="stat-card urgent">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-value" id="statUrgent">
+                    <div class="stat-loading"></div>
+                </div>
+                <div class="stat-label">Expiring Soon</div>
+            </div>
+        </div>
+
+        <div class="dash-grid">
+            <div class="section-card">
+                <div class="section-head">
+                    <h2>📋 Recent Jobs</h2>
+                    <a href="current-jobs.html">View all →</a>
+                </div>
+                <div class="activity-list" id="activityList">
+                    <div class="activity-empty">Loading jobs…</div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="section-head">
+                    <h2>⚡ Quick Actions</h2>
+                </div>
+                <div class="actions-list">
+                    <a href="new-job.html" class="action-btn">
+                        <div class="action-icon">➕</div>
+                        Log New Repair
+                    </a>
+                    <a href="current-jobs.html" class="action-btn">
+                        <div class="action-icon">🗂️</div>
+                        View All Jobs
+                    </a>
+                    <a href="current-jobs.html?filter=ready" class="action-btn">
+                        <div class="action-icon">📦</div>
+                        Devices Ready for Pickup
+                    </a>
+                    <a href="current-jobs.html?filter=fixing" class="action-btn">
+                        <div class="action-icon">🔧</div>
+                        Repairs In Progress
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="sync-bar">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="sync-dot loading" id="syncDot"></div>
+                <span id="syncText">Connecting to spreadsheet…</span>
+            </div>
+            <button onclick="loadDashboard()"
+                style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);">↻
+                Refresh</button>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <div id="install-hint" class="install-hint">
+        <div class="hint-content">
+            <span class="hint-icon">📲</span>
+            <div class="hint-text">
+                <strong>Install ServiCell Portal</strong>
+                <p id="hint-apple" style="display:none;">
+                    Tap <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/IPhone_Share_Icon.svg"
+                        style="width:16px; vertical-align:middle;">
+                    then <b>'Add to Home Screen'</b>
+                </p>
+                <p id="hint-android" style="display:none;">
+                    Tap <b>(⋮)</b> then <b>'Install app'</b> or <b>'Add to Home'</b>
+                </p>
+            </div>
+            <button onclick="this.parentElement.parentElement.classList.remove('show')"
+                class="hint-close">&times;</button>
+        </div>
+    </div>
+
     <script src="js/components.js"></script>
     <script>
-
+        // JS logic remains the same
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
-        // ── Date chip ──
         document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
             weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
         });
 
-        // ── Status classifier (same logic as current-jobs) ──
         function classifyStatus(job) {
             const s = String(job.status || '').toLowerCase();
             if (s.includes('abandoned')) return 'abandoned';
@@ -845,6 +850,7 @@
             if (['testing', 'qc', 'checking'].some(w => s.includes(w))) return 'testing';
             if (['completed', 'ready', 'pickup'].some(w => s.includes(w))) return 'ready';
             if (['unsuccessful', 'no fix'].some(w => s.includes(w))) return 'unsuccessful';
+            if (['resolved', 'handed over'].some(w => s.includes(w))) return 'resolved';
             return 'received';
         }
 
@@ -854,7 +860,8 @@
             testing: 'Testing',
             ready: 'Ready',
             unsuccessful: 'No Fix',
-            abandoned: 'Abandoned'
+            abandoned: 'Abandoned',
+            resolved: 'Resolved'
         };
 
         const statusIcon = {
@@ -863,10 +870,10 @@
             testing: { icon: '🧪', bg: 'rgba(245,158,11,0.1)' },
             ready: { icon: '✅', bg: 'rgba(16,185,129,0.1)' },
             unsuccessful: { icon: '❌', bg: 'rgba(100,116,139,0.1)' },
-            abandoned: { icon: '⏰', bg: 'rgba(128,0,0,0.1)' }
+            abandoned: { icon: '⏰', bg: 'rgba(128,0,0,0.1)' },
+            resolved: { icon: '🤝', bg: 'rgba(34,197,94,0.05)' }
         };
 
-        // ── Load dashboard ──
         async function loadDashboard() {
             setSyncState('loading', 'Syncing…');
             try {
@@ -876,7 +883,9 @@
 
                 renderStats(jobs);
                 renderActivity(jobs);
-                setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                const syncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                setSyncState('ok', 'Last sync: ' + syncTime);
+                localStorage.setItem('scLastSync', new Date().toLocaleString());
             } catch (err) {
                 setSyncState('error', 'Sync failed — check connection');
                 document.getElementById('activityList').innerHTML =
@@ -888,8 +897,6 @@
         function renderStats(jobs) {
             const inProgress = jobs.filter(j => ['fixing', 'testing', 'received'].includes(classifyStatus(j))).length;
             const ready = jobs.filter(j => classifyStatus(j) === 'ready').length;
-
-            // Urgent = ready/unsuccessful with ≤7 days left on 90-day clock
             const urgent = jobs.filter(j => {
                 const c = classifyStatus(j);
                 if (!['ready', 'unsuccessful'].includes(c)) return false;
@@ -910,10 +917,7 @@
                 list.innerHTML = `<div class="activity-empty">No jobs found in the spreadsheet.</div>`;
                 return;
             }
-
-            // Show last 5, most recent first (assumes sheet is in order)
             const recent = [...jobs].reverse().slice(0, 5);
-
             list.innerHTML = recent.map(j => {
                 const cls = classifyStatus(j);
                 const si = statusIcon[cls] || statusIcon.received;
@@ -947,80 +951,104 @@
         document.addEventListener("DOMContentLoaded", () => {
             const splash = document.querySelector('.splash-screen');
             const loginOverlay = document.getElementById('loginOverlay');
-            const mainContent = document.querySelector('main'); // Or whatever your main wrapper is
-
-            // Check if we already have a session
-            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' ||
-                sessionStorage.getItem('isLoggedIn') === 'true';
-
+            const mainContent = document.querySelector('main');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true';
             const duration = [1000, 1500][Math.floor(Math.random() * 2)];
 
             setTimeout(() => {
-                splash.classList.add('exiting');
-
+                if (splash) splash.classList.add('exiting');
                 setTimeout(() => {
                     if (!isLoggedIn) {
-                        // BLOCK INTERACTION
-                        document.body.style.overflow = 'hidden'; // Stop scrolling
-                        if (mainContent) mainContent.style.pointerEvents = 'none'; // Stop clicks
-
+                        document.body.style.overflow = 'hidden';
+                        if (mainContent) mainContent.style.pointerEvents = 'none';
                         loginOverlay.style.display = 'flex';
                         setTimeout(() => loginOverlay.classList.add('show'), 10);
                     } else {
                         loadDashboard();
                     }
                 }, 400);
-
                 setTimeout(() => {
-                    splash.classList.add('hidden');
+                    if (splash) splash.classList.add('hidden');
                 }, 800);
             }, duration);
         });
 
         async function checkLogin() {
+            const user = document.getElementById('userInput').value.trim();
             const pass = document.getElementById('passInput').value;
             const remember = document.getElementById('rememberMe').checked;
             const btn = document.getElementById('loginBtn');
             const loginOverlay = document.getElementById('loginOverlay');
             const mainContent = document.querySelector('main');
 
-            if (!pass) return;
+            if (!user || !pass) return;
             btn.textContent = "Verifying...";
             btn.disabled = true;
 
             try {
-                const url = `${SCRIPT_URL}?action=login&password=${encodeURIComponent(pass)}`;
+                const url = `${SCRIPT_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`;
                 const res = await fetch(url, { method: 'POST' });
                 const data = await res.json();
 
                 if (data.success) {
-                    // SAVE STATE
-                    if (remember) {
-                        localStorage.setItem('isLoggedIn', 'true');
-                    } else {
-                        sessionStorage.setItem('isLoggedIn', 'true');
+                    const storage = remember ? localStorage : sessionStorage;
+                    storage.setItem('isLoggedIn', 'true');
+                    storage.setItem('scUser', user);
+
+                    // Save the role so the navbar knows whether to show the crown icon
+                    // If your script doesn't return a role yet, it will use the deriveRole helper
+                    const userRole = data.role || (typeof deriveRole === 'function' ? deriveRole(user) : 'staff');
+                    storage.setItem('scRole', userRole);
+
+                    // Trigger the navbar to rebuild itself immediately
+                    if (window.ComponentLoader) {
+                        window.ComponentLoader.loadNav();
                     }
 
-                    // UNBLOCK INTERACTION
                     document.body.style.overflow = 'auto';
                     if (mainContent) mainContent.style.pointerEvents = 'auto';
 
                     loginOverlay.classList.remove('show');
                     setTimeout(() => {
                         loginOverlay.style.display = 'none';
-                        loadDashboard();
-                    }, 800);
+                        if (typeof loadDashboard === 'function') {
+                            loadDashboard();
+                        }
+                    }, 400); // Reduced delay for a snappier feel
                 } else {
-                    alert("❌ Incorrect Password");
+                    alert("❌ Incorrect username or password");
                     btn.textContent = "Unlock System";
                     btn.disabled = false;
                 }
             } catch (e) {
                 alert("Connection Error.");
                 btn.disabled = false;
+                btn.textContent = "Unlock System";
             }
         }
     </script>
+
+    <script>
+        // ── Mobile Install Lock ──────────────────────────────────────────────
+        (function () {
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isAndroid = /android/i.test(navigator.userAgent);
+            const isMobile = isIOS || isAndroid;
+            const isStandalone = window.navigator.standalone === true ||
+                window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isMobile && !isStandalone) {
+                setTimeout(() => {
+                    const hint = document.getElementById('install-hint');
+                    if (!hint) return;
+                    if (isIOS) document.getElementById('hint-apple').style.display = 'block';
+                    if (isAndroid) document.getElementById('hint-android').style.display = 'block';
+                    hint.classList.add('show');
+                }, 2000);
+            }
+        })();
+    </script>
+
 </body>
 
 </html>

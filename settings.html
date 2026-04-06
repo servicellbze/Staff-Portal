@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="js/theme-init.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Portal | Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/nav.css">
+    <link rel="stylesheet" href="css/footer.css">
+    <link rel="stylesheet" href="css/splash.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 140px var(--space-md) var(--space-xl);
+            flex: 1;
+        }
+
+        /* ── Page header ── */
+        .page-header {
+            margin-bottom: var(--space-lg);
+            animation: fadeInUp 0.4s ease both;
+        }
+
+        .page-header h1 {
+            font-size: 1.9rem;
+            font-weight: var(--font-bold);
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .page-header p {
+            color: var(--text-dim);
+            font-size: 0.92rem;
+            margin-top: 4px;
+        }
+
+        /* ── Settings card ── */
+        .settings-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            overflow: hidden;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+            animation: fadeInUp 0.4s ease both;
+        }
+
+        .settings-card:nth-child(1) {
+            animation-delay: 0.00s;
+        }
+
+        .settings-card:nth-child(2) {
+            animation-delay: 0.05s;
+        }
+
+        .settings-card:nth-child(3) {
+            animation-delay: 0.10s;
+        }
+
+        .settings-card:nth-child(4) {
+            animation-delay: 0.15s;
+        }
+
+        .settings-card:nth-child(5) {
+            animation-delay: 0.20s;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-header h2 {
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--primary);
+        }
+
+        .card-body {
+            padding: 20px 22px;
+        }
+
+        /* ── Setting row ── */
+        .setting-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .setting-row:first-child {
+            padding-top: 0;
+        }
+
+        .setting-info {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .setting-desc {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+
+        .setting-status {
+            display: inline-block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            margin-top: 6px;
+        }
+
+        .status-granted {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+        }
+
+        .status-denied {
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+        }
+
+        .status-default {
+            background: rgba(100, 116, 139, 0.12);
+            color: #475569;
+        }
+
+        /* ── Toggle switch ── */
+        .toggle-wrap {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            cursor: pointer;
+            display: block;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: #cbd5e1;
+            border-radius: 99px;
+            transition: background 0.25s;
+        }
+
+        .toggle input:checked+.toggle-track {
+            background: var(--primary);
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .toggle input:checked~.toggle-thumb {
+            transform: translateX(20px);
+        }
+
+        /* ── Theme selector ── */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .theme-card {
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s;
+            position: relative;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .theme-card.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .theme-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: white;
+            background: var(--primary);
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 18px;
+            text-align: center;
+        }
+
+        .theme-preview {
+            height: 70px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Light preview */
+        .preview-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        .preview-light .preview-nav {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .preview-light .preview-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(37, 99, 235, 0.1);
+        }
+
+        .preview-light .preview-dot {
+            background: #2563eb;
+        }
+
+        /* Dark preview */
+        .preview-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .preview-dark .preview-nav {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .preview-dark .preview-card {
+            background: rgba(30, 41, 59, 0.85);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .preview-dark .preview-dot {
+            background: #60a5fa;
+        }
+
+        /* ServiCell Blue preview */
+        .preview-blue {
+            background: linear-gradient(135deg, #0a1628 0%, #0f2044 100%);
+        }
+
+        .preview-blue .preview-nav {
+            background: rgba(10, 22, 40, 0.9);
+            border-color: rgba(37, 99, 235, 0.4);
+        }
+
+        .preview-blue .preview-card {
+            background: rgba(15, 32, 68, 0.9);
+            border-color: rgba(37, 99, 235, 0.35);
+        }
+
+        .preview-blue .preview-dot {
+            background: #3b82f6;
+        }
+
+        .preview-nav {
+            height: 14px;
+            margin: 8px auto;
+            width: 70%;
+            border-radius: 99px;
+            border: 1px solid;
+        }
+
+        .preview-card {
+            height: 28px;
+            margin: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid;
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            gap: 4px;
+        }
+
+        .preview-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .preview-line {
+            height: 4px;
+            border-radius: 2px;
+            background: currentColor;
+            opacity: 0.2;
+            flex: 1;
+        }
+
+        .theme-label {
+            padding: 8px 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: center;
+            background: var(--glass);
+        }
+
+        /* ── Notification button ── */
+        .notif-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+            margin-top: 8px;
+            font-family: var(--font-family);
+        }
+
+        .notif-btn:hover {
+            background: rgba(37, 99, 235, 0.08);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+
+        .notif-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ── About section ── */
+        .about-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.85rem;
+        }
+
+        .about-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .about-row:first-child {
+            padding-top: 0;
+        }
+
+        .about-key {
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .about-val {
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .clear-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-full);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.06);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #dc2626;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 14px;
+            font-family: var(--font-family);
+        }
+
+        .clear-btn:hover {
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .compact-note {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 6px;
+            font-style: italic;
+        }
+
+        /* ── Changelog section ── */
+        .changelog-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .changelog-entry {
+            position: relative;
+            padding-left: 20px;
+            border-left: 2px solid var(--glass-border);
+        }
+
+        .changelog-entry:last-child {
+            border-left-color: transparent;
+        }
+
+        .changelog-entry::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 2px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 2px solid var(--glass);
+        }
+
+        .changelog-version {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .changelog-date {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .changelog-changes {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .changelog-changes li {
+            font-size: 0.8rem;
+            color: var(--text-main);
+            padding: 3px 0;
+            padding-left: 14px;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .changelog-changes li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--text-dim);
+            font-weight: 700;
+        }
+
+        .changelog-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: auto;
+        }
+
+        .badge-current {
+            background: rgba(16, 185, 129, 0.15);
+            color: #059669;
+        }
+
+        .badge-legacy {
+            background: rgba(100, 116, 139, 0.12);
+            color: #64748b;
+        }
+
+        /* ── Animations ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 540px) {
+            main {
+                padding: 120px var(--space-sm) var(--space-md);
+            }
+
+            .card-body {
+                padding: 16px;
+            }
+
+            .card-header {
+                padding: 14px 16px 12px;
+            }
+
+            .theme-grid {
+                gap: 8px;
+            }
+
+            .changelog-entry {
+                padding-left: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="nav-placeholder"></div>
+
+    <main>
+        <div class="page-header">
+            <h1>⚙️ Settings</h1>
+            <p>Manage your preferences. Changes save automatically.</p>
+        </div>
+
+        <!-- ── Appearance ── -->
+        <div class="settings-card">
+            <div class="card-header">
+                <h2>🎨 Appearance</h2>
+            </div>
+            <div class="card-body">
+                <div class="theme-grid" id="themeGrid">
+
+                    <div class="theme-card" data-theme="light" onclick="setTheme('light')">
+                        <div class="theme-preview preview-light">
+                            <div class="preview-nav"></div>
+                            <div class="preview-card">
+                                <div class="preview-dot"></div>
+                                <div class="preview-line"></div>
+                            </div>
+                        </div>
+                        <div class="theme-label">Light</div>
+                    </div>
+
+                    <div class="theme-card" data-theme="dark" onclick="setTheme('dark')">
+                        <div class="theme-preview preview-dark">
+                            <div class="preview-nav"></div>
+                            <div class="preview-card">
+                                <div class="preview-dot"></div>
+                                <div class="preview-line"></div>
+                            </div>
+                        </div>
+                        <div class="theme-label">Dark</div>
+                    </div>
+
+                    <div class="theme-card" data-theme="scblue" onclick="setTheme('scblue')">
+                        <div class="theme-preview preview-blue">
+                            <div class="preview-nav"></div>
+                            <div class="preview-card">
+                                <div class="preview-dot"></div>
+                                <div class="preview-line"></div>
+                            </div>
+                        </div>
+                        <div class="theme-label">ServiCell Blue</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Notifications ── -->
+        <div class="settings-card">
+            <div class="card-header">
+                <h2>🔔 Notifications</h2>
+            </div>
+            <div class="card-body">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Push Notifications</div>
+                        <div class="setting-desc">Get notified about jobs expiring soon, status changes, and shop alerts
+                            — even when the app isn't open.</div>
+                        <span class="setting-status" id="notifStatus">Checking…</span><br>
+                        <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
+                            🔔 Enable Notifications
+                        </button>
+                    </div>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="notifToggle" onchange="saveNotifPref()">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Display ── -->
+        <div class="settings-card">
+            <div class="card-header">
+                <h2>📐 Display</h2>
+            </div>
+            <div class="card-body">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Compact Mode</div>
+                        <div class="setting-desc">Reduces spacing and card padding across the app. Ideal for smaller
+                            screens or a denser layout.</div>
+                        <div class="compact-note" id="compactNote"></div>
+                    </div>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="compactToggle" onchange="saveCompactMode()">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Changelog ── -->
+        <div class="settings-card">
+            <div class="card-header">
+                <h2>📝 Changelog</h2>
+            </div>
+            <div class="card-body">
+                <div class="changelog-list">
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v3.5.1
+                            <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 6, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>MAJOR OVERHAUL:</li>
+                            <li>New 'Settings' tab! Try out the new themes, 'Dark Mode' and 'ServiCell Blue'!</li>
+                            <li>Added Push Notifications options.</li>
+                            <li>Added Compact Mode for a denser layout.</li>
+                            <li>Improved app performance and reduced memory usage.</li>
+                            <li>Added changelog section to keep you informed about updates.</li>
+                            <li>Added clear cache option.</li>
+                            <li>Many under-the-hood improvements and bug fixes.</li>
+                            <li>Login now requires username and password</li>
+                        </ul>
+                    </div>
+
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v2.4.1
+                            <span class="changelog-badge badge-legacy">Legacy</span>
+                        </div>
+                        <div class="changelog-date">April 5, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Invoices now print-able from the app</li>
+                            <li>Added 'Print Invoice' button to job details</li>
+                            <li>Added 'Print Summary' button to current jobs page</li>
+                            <li>Added priority tags</li>
+                            <li>Added 'Quick-Templates' for invoice creation</li>
+
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v1.4.1
+                            <span class="changelog-badge badge-legacy">Legacy</span>
+                        </div>
+                        <div class="changelog-date">April 4, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Mobile Optimization for Better Touch Interaction</li>
+                            <li>Fixed layout issues on small screens</li>
+                            <li>Added Lock Screen</li>
+                            <li>Improved performance of job list rendering</li>
+                            <li>Re-styled footer for better visual consistency</li>
+                            <li>Added Splash Screen</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v1.0.0
+                            <span class="changelog-badge badge-legacy">Legacy</span>
+                        </div>
+                        <div class="changelog-date">April 3, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Initial stable release of ServiCell Staff Portal</li>
+                            <li>Core job tracking and management system</li>
+                            <li>Three pages including: Dashboard, Current Jobs, and New Job</li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ── About ── -->
+        <div class="settings-card">
+            <div class="card-header">
+                <h2>ℹ️ About</h2>
+            </div>
+            <div class="card-body">
+                <div class="about-row">
+                    <span class="about-key">App</span>
+                    <span class="about-val">ServiCell Staff Portal</span>
+                </div>
+                <div class="about-row">
+                    <span class="about-key">Version</span>
+                    <span class="about-val" id="appVersion">Loading...</span>
+                </div>
+                <div class="about-row">
+                    <span class="about-key">Logged in as</span>
+                    <span class="about-val" id="aboutUser">—</span>
+                </div>
+                <div class="about-row">
+                    <span class="about-key">Role</span>
+                    <span class="about-val" id="aboutRole">—</span>
+                </div>
+                <div class="about-row">
+                    <span class="about-key">Last data sync</span>
+                    <span class="about-val" id="aboutSync">—</span>
+                </div>
+                <button class="clear-btn" onclick="clearCache()">
+                    🗑️ Clear cached data
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="footer-placeholder"></div>
+    <script src="js/components.js"></script>
+
+    <script>
+        // ⚠️ REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec";
+
+        // ── Theme definitions (mirrors theme-init.js) ───────────────────────
+        const THEMES = {
+            light: {
+                '--bg-gradient': 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                '--glass': 'rgba(255, 255, 255, 0.85)',
+                '--glass-border': 'rgba(37, 99, 235, 0.1)',
+                '--glass-strong': 'rgba(255, 255, 255, 0.95)',
+                '--text-main': '#0f172a',
+                '--text-dim': '#64748b',
+                '--text-light': '#94a3b8',
+                '--primary': '#2563eb',
+                '--primary-light': '#3b82f6',
+                '--primary-dark': '#1d4ed8',
+                '--accent': '#60a5fa',
+                '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.1)',
+            },
+            dark: {
+                '--bg-gradient': 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                '--glass': 'rgba(15, 23, 42, 0.85)',
+                '--glass-border': 'rgba(255, 255, 255, 0.08)',
+                '--glass-strong': 'rgba(15, 23, 42, 0.97)',
+                '--text-main': '#f1f5f9',
+                '--text-dim': '#94a3b8',
+                '--text-light': '#64748b',
+                '--primary': '#60a5fa',
+                '--primary-light': '#93c5fd',
+                '--primary-dark': '#3b82f6',
+                '--accent': '#93c5fd',
+                '--shadow-md': '0 10px 30px rgba(0, 0, 0, 0.4)',
+            },
+            scblue: {
+                '--bg-gradient': 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)',
+                '--glass': 'rgba(15, 32, 68, 0.85)',
+                '--glass-border': 'rgba(37, 99, 235, 0.35)',
+                '--glass-strong': 'rgba(10, 22, 40, 0.97)',
+                '--text-main': '#e0eeff',
+                '--text-dim': '#7eaee8',
+                '--text-light': '#4d7db8',
+                '--primary': '#3b82f6',
+                '--primary-light': '#60a5fa',
+                '--primary-dark': '#2563eb',
+                '--accent': '#60a5fa',
+                '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
+            }
+        };
+
+        function applyTheme(name) {
+            const vars = THEMES[name] || THEMES.light;
+            const root = document.documentElement;
+            Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+        }
+
+        function setTheme(name) {
+            localStorage.setItem('scTheme', name);
+            applyTheme(name);
+            document.querySelectorAll('.theme-card').forEach(c => {
+                c.classList.toggle('selected', c.dataset.theme === name);
+            });
+        }
+
+        // ── Compact mode ────────────────────────────────────────────────────
+        function applyCompact(on) {
+            const root = document.documentElement;
+            if (on) {
+                root.style.setProperty('--space-xs', '0.3rem');
+                root.style.setProperty('--space-sm', '0.6rem');
+                root.style.setProperty('--space-md', '1rem');
+                root.style.setProperty('--space-lg', '1.6rem');
+                root.style.setProperty('--space-xl', '2.5rem');
+                root.style.setProperty('--radius-lg', '20px');
+                root.style.setProperty('--radius-xl', '24px');
+            } else {
+                ['--space-xs', '--space-sm', '--space-md', '--space-lg',
+                    '--space-xl', '--radius-lg', '--radius-xl']
+                    .forEach(v => root.style.removeProperty(v));
+            }
+        }
+
+        function saveCompactMode() {
+            const on = document.getElementById('compactToggle').checked;
+            localStorage.setItem('scCompact', on ? '1' : '0');
+            applyCompact(on);
+            document.getElementById('compactNote').textContent =
+                on ? 'Compact mode is active across all pages.' : '';
+        }
+
+        // ── Notifications ───────────────────────────────────────────────────
+        function updateNotifUI() {
+            const statusEl = document.getElementById('notifStatus');
+            const btn = document.getElementById('notifBtn');
+            const toggle = document.getElementById('notifToggle');
+
+            if (!('Notification' in window)) {
+                statusEl.textContent = 'Not supported in this browser';
+                statusEl.className = 'setting-status status-denied';
+                btn.style.display = 'none';
+                toggle.disabled = true;
+                return;
+            }
+
+            const perm = Notification.permission;
+
+            if (perm === 'granted') {
+                statusEl.textContent = 'Permission granted';
+                statusEl.className = 'setting-status status-granted';
+                btn.style.display = 'none';
+                toggle.disabled = false;
+                toggle.checked = localStorage.getItem('scNotif') !== '0';
+            } else if (perm === 'denied') {
+                statusEl.textContent = 'Blocked — enable in your browser site settings';
+                statusEl.className = 'setting-status status-denied';
+                btn.disabled = true;
+                btn.textContent = '🚫 Blocked by browser';
+                toggle.disabled = true;
+                toggle.checked = false;
+            } else {
+                statusEl.textContent = 'Permission not yet granted';
+                statusEl.className = 'setting-status status-default';
+                btn.style.display = 'inline-flex';
+                toggle.disabled = true;
+                toggle.checked = false;
+            }
+        }
+
+        async function requestNotifPermission() {
+            const result = await Notification.requestPermission();
+            updateNotifUI();
+            if (result === 'granted') {
+                localStorage.setItem('scNotif', '1');
+                new Notification('ServiCell Portal', {
+                    body: 'Notifications enabled! ✅',
+                    icon: 'icons/icon-192.png'
+                });
+            }
+        }
+
+        function saveNotifPref() {
+            const on = document.getElementById('notifToggle').checked;
+            localStorage.setItem('scNotif', on ? '1' : '0');
+        }
+
+        // ── User-specific role helpers ──────────────────────────────────────
+        function getUserRoleKey(username) {
+            return `scRole_${username}`;
+        }
+
+        async function fetchUserRole(username) {
+            try {
+                const url = `${SCRIPT_URL}?action=checkrole&username=${encodeURIComponent(username)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (data.success && data.role) {
+                    localStorage.setItem(getUserRoleKey(username), data.role);
+                    return data.role;
+                }
+                return 'Unknown';
+            } catch (err) {
+                console.error('Failed to fetch user role:', err);
+                return 'Offline';
+            }
+        }
+
+        // ── About ───────────────────────────────────────────────────────────
+        async function populateAbout(retries = 5) {
+            const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '—';
+            let role = '—';
+
+            if (user !== '—') {
+                const cachedRole = localStorage.getItem(getUserRoleKey(user));
+                role = cachedRole || await fetchUserRole(user);
+            }
+
+            const lastSync = localStorage.getItem('scLastSync') || 'Not yet synced';
+
+            let version = '1.0.0';
+            const footer = document.querySelector('footer .version-tag');
+
+            if (footer) {
+                version = footer.textContent.trim();
+                localStorage.setItem('appVersion', version);
+            } else {
+                version = localStorage.getItem('appVersion') || '1.0.0';
+                // Retry if footer hasn't loaded yet (ComponentLoader loads it async)
+                if (retries > 0 && !document.querySelector('footer')) {
+                    setTimeout(() => populateAbout(retries - 1), 800);
+                    return; // Exit early, will retry
+                }
+                // If no more retries, use cached version and continue to update DOM
+            }
+
+            // Always update DOM, even if we had to use cached version
+            document.getElementById('appVersion').textContent = version;
+            document.getElementById('aboutUser').textContent = user;
+            document.getElementById('aboutRole').textContent = role;
+            document.getElementById('aboutSync').textContent = lastSync;
+        }
+
+        function clearCache() {
+            if (!confirm('Clear all cached data? You will stay logged in.')) return;
+            const keep = ['isLoggedIn', 'scUser', 'scTheme', 'scCompact', 'scNotif', 'appVersion'];
+            const user = localStorage.getItem('scUser');
+            if (user) keep.push(getUserRoleKey(user));
+
+            Object.keys(localStorage)
+                .filter(k => !keep.includes(k))
+                .forEach(k => localStorage.removeItem(k));
+            alert('✅ Cache cleared.');
+            populateAbout();
+        }
+
+        // ── Init ────────────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('scTheme') || 'light';
+            document.querySelectorAll('.theme-card').forEach(c => {
+                c.classList.toggle('selected', c.dataset.theme === savedTheme);
+            });
+
+            const compact = localStorage.getItem('scCompact') === '1';
+            document.getElementById('compactToggle').checked = compact;
+            if (compact) {
+                document.getElementById('compactNote').textContent =
+                    'Compact mode is active across all pages.';
+            }
+
+            updateNotifUI();
+            populateAbout();
+        });
+    </script>
+</body>
+
+</html>
