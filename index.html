@@ -1069,7 +1069,11 @@
             span.textContent = text;
         }
 
+        let _appInitialized = false;
         function initOriginalApp() {
+            if (_appInitialized) return;
+            _appInitialized = true;
+
             // This replaces the original DOMContentLoaded logic
             const splash = document.querySelector('.splash-screen');
             const loginOverlay = document.getElementById('loginOverlay');
@@ -1103,13 +1107,19 @@
             window.matchMedia('(display-mode: standalone)').matches ||
             document.referrer.includes('android-app://');
 
+        // Only auto-init on desktop or already-installed PWA
         if (!isMobile || isStandalone) {
-            // Desktop or already installed - run normally
             document.addEventListener("DOMContentLoaded", initOriginalApp);
         }
 
-        loadDashboard();
-        setInterval(loadDashboard, 60000);
+        // Only pre-load dashboard data if the user is already logged in
+        // (prevents job data appearing in the DOM before authentication)
+        const _alreadyLoggedIn = localStorage.getItem('isLoggedIn') === 'true' ||
+            sessionStorage.getItem('isLoggedIn') === 'true';
+        if (_alreadyLoggedIn) {
+            loadDashboard();
+            setInterval(loadDashboard, 60000);
+        }
 
         async function checkLogin() {
             const user = document.getElementById('userInput').value.trim();
@@ -1133,6 +1143,11 @@
                     storage.setItem('isLoggedIn', 'true');
                     storage.setItem('scUser', user);
 
+                    // Request notification permission now that user is authenticated
+                    if ('Notification' in window && Notification.permission === 'default') {
+                        Notification.requestPermission();
+                    }
+
                     const userRole = data.role || (typeof deriveRole === 'function' ? deriveRole(user) : 'staff');
                     storage.setItem('scRole', userRole);
 
@@ -1148,6 +1163,7 @@
                         loginOverlay.style.display = 'none';
                         if (typeof loadDashboard === 'function') {
                             loadDashboard();
+                            setInterval(loadDashboard, 60000);
                         }
                     }, 400);
                 } else {
@@ -1188,7 +1204,7 @@
         // ── Service Worker Registration ──────────────────────────────────────
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                navigator.serviceWorker.register('/Staff-Portal/sw.js', { scope: '/Staff-Portal/' })
                     .then(reg => {
                         console.log('[SW] Registered, scope:', reg.scope);
                         reg.update();
