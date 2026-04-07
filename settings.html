@@ -410,28 +410,33 @@
             padding: 10px 0;
             border-bottom: 1px solid var(--glass-border);
         }
+
         .notif-type-info {
             display: flex;
             align-items: center;
             gap: 10px;
             flex: 1;
         }
+
         .notif-type-icon {
             font-size: 1.1rem;
             flex-shrink: 0;
             width: 28px;
             text-align: center;
         }
+
         .notif-type-label {
             font-size: 0.85rem;
             font-weight: 700;
             color: var(--text-main);
         }
+
         .notif-type-desc {
             font-size: 0.74rem;
             color: var(--text-dim);
             margin-top: 2px;
         }
+
         .about-row {
             display: flex;
             justify-content: space-between;
@@ -1091,7 +1096,8 @@
                 <div class="setting-row">
                     <div class="setting-info">
                         <div class="setting-label">Push Notifications</div>
-                        <div class="setting-desc">Get notified about jobs, status changes, and shop alerts — even when the app isn't open.</div>
+                        <div class="setting-desc">Get notified about jobs, status changes, and shop alerts — even when
+                            the app isn't open.</div>
                         <span class="setting-status" id="notifStatus">Checking…</span><br>
                         <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
                             🔔 Enable Notifications
@@ -1108,7 +1114,9 @@
 
                 <!-- ── Notification type toggles ── -->
                 <div id="notifTogglesPanel" style="display:none; margin-top: 4px;">
-                    <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:12px;padding-top:14px;border-top:1px solid var(--glass-border);">Notification Types</div>
+                    <div
+                        style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:12px;padding-top:14px;border-top:1px solid var(--glass-border);">
+                        Notification Types</div>
 
                     <div class="notif-type-row">
                         <div class="notif-type-info">
@@ -1118,7 +1126,11 @@
                                 <div class="notif-type-desc">When a new repair job is logged</div>
                             </div>
                         </div>
-                        <label class="toggle"><input type="checkbox" id="nt-received" onchange="saveNotifType('received',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                        <label class="toggle"><input type="checkbox" id="nt-received"
+                                onchange="saveNotifType('received',this.checked)">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
                     </div>
 
                     <div class="notif-type-row">
@@ -1129,7 +1141,11 @@
                                 <div class="notif-type-desc">When a job status changes to Ready</div>
                             </div>
                         </div>
-                        <label class="toggle"><input type="checkbox" id="nt-ready" onchange="saveNotifType('ready',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                        <label class="toggle"><input type="checkbox" id="nt-ready"
+                                onchange="saveNotifType('ready',this.checked)">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
                     </div>
 
                     <div class="notif-type-row">
@@ -1140,7 +1156,11 @@
                                 <div class="notif-type-desc">When a job is marked as abandoned</div>
                             </div>
                         </div>
-                        <label class="toggle"><input type="checkbox" id="nt-abandoned" onchange="saveNotifType('abandoned',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                        <label class="toggle"><input type="checkbox" id="nt-abandoned"
+                                onchange="saveNotifType('abandoned',this.checked)">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
                     </div>
 
                     <div class="notif-type-row">
@@ -1151,7 +1171,11 @@
                                 <div class="notif-type-desc">Status changes on special orders</div>
                             </div>
                         </div>
-                        <label class="toggle"><input type="checkbox" id="nt-specialorder" onchange="saveNotifType('specialorder',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                        <label class="toggle"><input type="checkbox" id="nt-specialorder"
+                                onchange="saveNotifType('specialorder',this.checked)">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
                     </div>
 
                     <div class="notif-type-row">
@@ -1162,7 +1186,11 @@
                                 <div class="notif-type-desc">When a new version is available</div>
                             </div>
                         </div>
-                        <label class="toggle"><input type="checkbox" id="nt-update" onchange="saveNotifType('update',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                        <label class="toggle"><input type="checkbox" id="nt-update"
+                                onchange="saveNotifType('update',this.checked)">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
                     </div>
 
                     <div class="notif-type-row" style="border-bottom:none;">
@@ -1173,7 +1201,11 @@
                                 <div class="notif-type-desc">Any status update on a repair job</div>
                             </div>
                         </div>
-                        <label class="toggle"><input type="checkbox" id="nt-jobstatus" onchange="saveNotifType('jobstatus',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                        <label class="toggle"><input type="checkbox" id="nt-jobstatus"
+                                onchange="saveNotifType('jobstatus',this.checked)">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
                     </div>
                 </div>
 
@@ -1206,7 +1238,8 @@
                 <div class="setting-row" id="hapticsRow" style="display:none;">
                     <div class="setting-info">
                         <div class="setting-label">Haptic Feedback</div>
-                        <div class="setting-desc">Vibration on button taps, confirmations, and errors. Android only.</div>
+                        <div class="setting-desc">Vibration on button taps, confirmations, and errors. Android only.
+                        </div>
                     </div>
                     <div class="toggle-wrap">
                         <label class="toggle">
@@ -1225,25 +1258,25 @@
             <div class="card-header">
                 <h2>📝 Changelog</h2>
             </div>
+            <div class="changelog-entry">
+                <div class="changelog-version">
+                    v3.6.4
+                    <span class="changelog-badge badge-current">Current</span>
+                </div>
+                <div class="changelog-date">April 7, 2026</div>
+                <ul class="changelog-changes">
+                    <li>Added 'Haptic Feedback' option (Android Exclusive)</li>
+                    <li>'Special Orders' fully functional now</li>
+                    <li>Finalized Logins</li>
+                    <li>Fixed Notifications</li>
+                    <li>General Improvements</li>
+                </ul>
+            </div>
+
+
             <div class="card-body">
                 <div class="changelog-list">
 
-                        <div class="changelog-entry">
-                        <div class="changelog-version">
-                            v3.6.4
-                            <span class="changelog-badge badge-current">Current</span>
-                        </div>
-                        <div class="changelog-date">April 7, 2026</div>
-                        <ul class="changelog-changes">
-                            <li>Added 'Haptic Feedback' option (Android Exclusive)</li>
-                            <li>'Special Orders' fully functional now</li>
-                            <li>Finalized Logins</li>
-                            <li>Fixed Notifications</li>
-                            <li>General Improvements</li>
-                        </ul>
-                    </div>
-
-                    
                     <div class="changelog-entry">
                         <div class="changelog-version">
                             v3.5.1
@@ -1543,7 +1576,7 @@
         // ── Notifications ───────────────────────────────────────────────────
         // Per-type keys: scNotif_received, scNotif_ready, scNotif_abandoned,
         //                scNotif_specialorder, scNotif_update, scNotif_jobstatus
-        const NOTIF_TYPES = ['received','ready','abandoned','specialorder','update','jobstatus'];
+        const NOTIF_TYPES = ['received', 'ready', 'abandoned', 'specialorder', 'update', 'jobstatus'];
 
         function notifTypeEnabled(type) {
             // Default all ON if master is on and no explicit preference saved
@@ -1558,15 +1591,15 @@
 
         function updateNotifUI() {
             const statusEl = document.getElementById('notifStatus');
-            const btn      = document.getElementById('notifBtn');
-            const toggle   = document.getElementById('notifToggle');
-            const panel    = document.getElementById('notifTogglesPanel');
+            const btn = document.getElementById('notifBtn');
+            const toggle = document.getElementById('notifToggle');
+            const panel = document.getElementById('notifTogglesPanel');
 
             if (!('Notification' in window)) {
                 statusEl.textContent = 'Not supported in this browser';
-                statusEl.className   = 'setting-status status-denied';
-                btn.style.display    = 'none';
-                toggle.disabled      = true;
+                statusEl.className = 'setting-status status-denied';
+                btn.style.display = 'none';
+                toggle.disabled = true;
                 if (panel) panel.style.display = 'none';
                 return;
             }
@@ -1575,11 +1608,11 @@
 
             if (perm === 'granted') {
                 statusEl.textContent = 'Permission granted';
-                statusEl.className   = 'setting-status status-granted';
-                btn.style.display    = 'none';
-                toggle.disabled      = false;
-                const masterOn       = localStorage.getItem('scNotif') !== '0';
-                toggle.checked       = masterOn;
+                statusEl.className = 'setting-status status-granted';
+                btn.style.display = 'none';
+                toggle.disabled = false;
+                const masterOn = localStorage.getItem('scNotif') !== '0';
+                toggle.checked = masterOn;
                 if (panel) panel.style.display = masterOn ? 'block' : 'none';
                 // Sync per-type checkboxes
                 NOTIF_TYPES.forEach(t => {
@@ -1588,18 +1621,18 @@
                 });
             } else if (perm === 'denied') {
                 statusEl.textContent = 'Blocked — enable in your browser site settings';
-                statusEl.className   = 'setting-status status-denied';
-                btn.disabled         = true;
-                btn.textContent      = '🚫 Blocked by browser';
-                toggle.disabled      = true;
-                toggle.checked       = false;
+                statusEl.className = 'setting-status status-denied';
+                btn.disabled = true;
+                btn.textContent = '🚫 Blocked by browser';
+                toggle.disabled = true;
+                toggle.checked = false;
                 if (panel) panel.style.display = 'none';
             } else {
                 statusEl.textContent = 'Permission not yet granted';
-                statusEl.className   = 'setting-status status-default';
-                btn.style.display    = 'inline-flex';
-                toggle.disabled      = true;
-                toggle.checked       = false;
+                statusEl.className = 'setting-status status-default';
+                btn.style.display = 'inline-flex';
+                toggle.disabled = true;
+                toggle.checked = false;
                 if (panel) panel.style.display = 'none';
             }
         }
@@ -1633,11 +1666,11 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action:   'subscribe',
+                        action: 'subscribe',
                         username: user,
                         endpoint: subJson.endpoint,
-                        p256dh:   subJson.keys.p256dh,
-                        auth:     subJson.keys.auth
+                        p256dh: subJson.keys.p256dh,
+                        auth: subJson.keys.auth
                     })
                 });
                 localStorage.setItem('scPushSubscribed', '1');
@@ -1675,8 +1708,8 @@
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const raw     = atob(base64);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw = atob(base64);
             return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
         }
 
@@ -1765,8 +1798,8 @@
         function clearCache() {
             if (!confirm('Clear all cached data? You will stay logged in.')) return;
             const keep = ['isLoggedIn', 'scUser', 'scTheme', 'scCompact', 'scNotif', 'appVersion',
-                          'scNotif_received','scNotif_ready','scNotif_abandoned',
-                          'scNotif_specialorder','scNotif_update','scNotif_jobstatus'];
+                'scNotif_received', 'scNotif_ready', 'scNotif_abandoned',
+                'scNotif_specialorder', 'scNotif_update', 'scNotif_jobstatus'];
             const user = localStorage.getItem('scUser');
             if (user) keep.push(getUserRoleKey(user));
 
