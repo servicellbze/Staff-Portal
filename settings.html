@@ -226,7 +226,7 @@
         /* ── Theme selector ── */
         .theme-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
         }
 
@@ -328,6 +328,25 @@
 
         .preview-blue .preview-dot {
             background: #3b82f6;
+        }
+
+        /* Merlot preview */
+        .preview-merlot {
+            background: linear-gradient(135deg, #faf6f1 0%, #f0e6d8 100%);
+        }
+
+        .preview-merlot .preview-nav {
+            background: rgba(255, 252, 248, 0.9);
+            border-color: rgba(139, 38, 53, 0.15);
+        }
+
+        .preview-merlot .preview-card {
+            background: rgba(255, 252, 248, 0.9);
+            border-color: rgba(139, 38, 53, 0.12);
+        }
+
+        .preview-merlot .preview-dot {
+            background: #8b2635;
         }
 
         .preview-nav {
@@ -1060,7 +1079,16 @@
                         </div>
                         <div class="theme-label">Light</div>
                     </div>
-
+                    <div class="theme-card" data-theme="merlot" onclick="setTheme('merlot')">
+                        <div class="theme-preview preview-merlot">
+                            <div class="preview-nav"></div>
+                            <div class="preview-card">
+                                <div class="preview-dot"></div>
+                                <div class="preview-line"></div>
+                            </div>
+                        </div>
+                        <div class="theme-label">Merlot</div>
+                    </div>
                     <div class="theme-card" data-theme="dark" onclick="setTheme('dark')">
                         <div class="theme-preview preview-dark">
                             <div class="preview-nav"></div>
@@ -1102,103 +1130,6 @@
                     <div class="toggle-wrap">
                         <label class="toggle">
                             <input type="checkbox" id="notifToggle" onchange="saveNotifPref()" checked>
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- ── Notification type toggles ── -->
-                <div id="notifTogglesPanel" style="display:none; margin-top: 4px;">
-                    <div
-                        style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:12px;padding-top:14px;border-top:1px solid var(--glass-border);">
-                        Notification Types</div>
-
-                    <div class="notif-type-row">
-                        <div class="notif-type-info">
-                            <span class="notif-type-icon">📦</span>
-                            <div>
-                                <div class="notif-type-label">Device Received</div>
-                                <div class="notif-type-desc">When a new repair job is logged</div>
-                            </div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="nt-received"
-                                onchange="saveNotifType('received',this.checked)">
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-
-                    <div class="notif-type-row">
-                        <div class="notif-type-info">
-                            <span class="notif-type-icon">✅</span>
-                            <div>
-                                <div class="notif-type-label">Device Ready for Pickup</div>
-                                <div class="notif-type-desc">When a job status changes to Ready</div>
-                            </div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="nt-ready"
-                                onchange="saveNotifType('ready',this.checked)">
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-
-                    <div class="notif-type-row">
-                        <div class="notif-type-info">
-                            <span class="notif-type-icon">⚠️</span>
-                            <div>
-                                <div class="notif-type-label">Abandoned Device</div>
-                                <div class="notif-type-desc">When a job is marked as abandoned</div>
-                            </div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="nt-abandoned"
-                                onchange="saveNotifType('abandoned',this.checked)">
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-
-                    <div class="notif-type-row">
-                        <div class="notif-type-info">
-                            <span class="notif-type-icon">🛒</span>
-                            <div>
-                                <div class="notif-type-label">Special Order Updates</div>
-                                <div class="notif-type-desc">Status changes on special orders</div>
-                            </div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="nt-specialorder"
-                                onchange="saveNotifType('specialorder',this.checked)">
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-
-                    <div class="notif-type-row">
-                        <div class="notif-type-info">
-                            <span class="notif-type-icon">🚀</span>
-                            <div>
-                                <div class="notif-type-label">App Update Released</div>
-                                <div class="notif-type-desc">When a new version is available</div>
-                            </div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="nt-update"
-                                onchange="saveNotifType('update',this.checked)">
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-
-                    <div class="notif-type-row" style="border-bottom:none;">
-                        <div class="notif-type-info">
-                            <span class="notif-type-icon">🔧</span>
-                            <div>
-                                <div class="notif-type-label">Job Status Changed</div>
-                                <div class="notif-type-desc">Any status update on a repair job</div>
-                            </div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="nt-jobstatus"
-                                onchange="saveNotifType('jobstatus',this.checked)">
                             <div class="toggle-track"></div>
                             <div class="toggle-thumb"></div>
                         </label>
@@ -1261,8 +1192,25 @@
 
                     <div class="changelog-entry">
                         <div class="changelog-version">
-                            v4.0.0
+                            v4.1.0
                             <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 7, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Inventory page fully built — parts, accessories, consumables</li>
+                            <li>Barcode scanner support (USB + camera)</li>
+                            <li>Stock adjustments with full movement history</li>
+                            <li>Low stock and out-of-stock alerts to manager</li>
+                            <li>Cashier edits flagged and routed to manager bell</li>
+                            <li>Role-based notification routing (manageronly type)</li>
+                            <li>Manager-only: add, edit prices, delete items</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v4.0.0
+                            <span class="changelog-badge badge-legacy">Legacy</span>
                         </div>
                         <div class="changelog-date">April 7, 2026</div>
                         <ul class="changelog-changes">
@@ -1525,6 +1473,21 @@
                 '--primary-dark': '#2563eb',
                 '--accent': '#60a5fa',
                 '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
+            },
+            merlot: {
+                '--bg-gradient': 'linear-gradient(135deg, #faf6f1 0%, #f0e6d8 100%)',
+                '--glass': 'rgba(255, 252, 248, 0.9)',
+                '--glass-border': 'rgba(139, 38, 53, 0.12)',
+                '--glass-strong': 'rgba(255, 252, 248, 0.98)',
+                '--white-alt': '#f5ebe0',
+                '--text-main': '#4a1c24',
+                '--text-dim': '#8b5a5a',
+                '--text-light': '#b89090',
+                '--primary': '#8b2635',
+                '--primary-light': '#a63d4d',
+                '--primary-dark': '#6b1e2a',
+                '--accent': '#c9a86c',
+                '--shadow-md': '0 10px 30px rgba(139, 38, 53, 0.15)',
             }
         };
 
@@ -1575,38 +1538,15 @@
         }
 
         // ── Notifications ───────────────────────────────────────────────────
-        // Per-type keys: scNotif_received, scNotif_ready, scNotif_abandoned,
-        //                scNotif_specialorder, scNotif_update, scNotif_jobstatus
-        const NOTIF_TYPES = ['received', 'ready', 'abandoned', 'specialorder', 'update', 'jobstatus'];
-
-        function notifTypeEnabled(type) {
-            // Default all ON if master is on and no explicit preference saved
-            if (localStorage.getItem('scNotif') === '0') return false;
-            const val = localStorage.getItem('scNotif_' + type);
-            return val !== '0'; // default true
-        }
-
-        function saveNotifType(type, on) {
-            localStorage.setItem('scNotif_' + type, on ? '1' : '0');
-        }
-
         function updateNotifUI() {
-            const toggle = document.getElementById('notifToggle');
-            const panel = document.getElementById('notifTogglesPanel');
+            const toggle   = document.getElementById('notifToggle');
             const masterOn = localStorage.getItem('scNotif') !== '0';
             if (toggle) toggle.checked = masterOn;
-            if (panel) panel.style.display = masterOn ? 'block' : 'none';
-            NOTIF_TYPES.forEach(t => {
-                const el = document.getElementById('nt-' + t);
-                if (el) el.checked = notifTypeEnabled(t);
-            });
         }
 
         function saveNotifPref() {
             const on = document.getElementById('notifToggle').checked;
             localStorage.setItem('scNotif', on ? '1' : '0');
-            const panel = document.getElementById('notifTogglesPanel');
-            if (panel) panel.style.display = on ? 'block' : 'none';
         }
 
         // ── User-specific role helpers ──────────────────────────────────────

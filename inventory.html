@@ -15,49 +15,933 @@
     <link rel="stylesheet" href="css/splash.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { overflow-x: hidden; width: 100%; }
         body { font-family: var(--font-family); background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; }
-        main { max-width: 900px; margin: 0 auto; padding: 140px var(--space-md) var(--space-xl); }
-        .placeholder-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            backdrop-filter: blur(10px);
-            padding: 60px 40px;
-            text-align: center;
-            box-shadow: var(--shadow-sm);
-        }
-        .placeholder-icon { font-size: 3.5rem; margin-bottom: 20px; }
-        .placeholder-card h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
-        .placeholder-card p { color: var(--text-dim); font-size: 0.95rem; max-width: 400px; margin: 0 auto; line-height: 1.6; }
-        .coming-badge {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 6px 16px;
-            background: rgba(37,99,235,0.1);
-            color: var(--primary);
-            border-radius: var(--radius-full);
-            font-size: 0.75rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        main { max-width: 1200px; margin: 0 auto; padding: 130px var(--space-md) var(--space-xl); }
+
+        /* ── Page header ── */
+        .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: var(--space-lg); animation: fadeInUp 0.4s ease both; flex-wrap: wrap; }
+        .page-header-left h1 { font-size: 1.9rem; font-weight: var(--font-bold); letter-spacing: -0.5px; }
+        .page-header-left p { color: var(--text-dim); font-size: 0.92rem; margin-top: 4px; }
+        .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* ── Buttons ── */
+        .btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 11px 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius-full); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-md); transition: transform var(--transition-fast), box-shadow var(--transition-fast); white-space: nowrap; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .btn-secondary { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; background: var(--glass); color: var(--text-main); border: 1px solid var(--glass-border); border-radius: var(--radius-full); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); transition: border-color var(--transition-fast), background var(--transition-fast); white-space: nowrap; }
+        .btn-secondary:hover { border-color: var(--primary); background: rgba(37,99,235,0.06); }
+
+        /* ── Stats row ── */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: var(--space-lg); animation: fadeInUp 0.4s ease 0.05s both; }
+        .stat-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 18px 20px; backdrop-filter: blur(10px); }
+        .stat-label { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1; color: var(--text-main); }
+        .stat-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; }
+        .stat-card.danger .stat-value { color: var(--danger); }
+        .stat-card.warning .stat-value { color: var(--warning); }
+        .stat-card.success .stat-value { color: var(--success); }
+
+        /* ── Toolbar ── */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; animation: fadeInUp 0.4s ease 0.08s both; }
+        .search-wrap { flex: 1; position: relative; min-width: 220px; }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; pointer-events: none; opacity: 0.5; }
+        .search-input { width: 100%; height: 46px; padding: 0 14px 0 40px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.9rem; backdrop-filter: blur(10px); transition: border-color var(--transition-fast); outline: none; }
+        .search-input:focus { border-color: var(--primary); }
+        .search-input::placeholder { color: var(--text-light); }
+        .filter-select { height: 46px; padding: 0 36px 0 14px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.88rem; font-weight: 600; cursor: pointer; outline: none; appearance: none; backdrop-filter: blur(10px); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; transition: border-color var(--transition-fast); }
+        .filter-select:focus { border-color: var(--primary); }
+
+        /* ── Scan indicator ── */
+        .scan-indicator { display: none; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; color: #059669; animation: fadeInUp 0.2s ease both; }
+        .scan-indicator.show { display: flex; }
+        .scan-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1s infinite; }
+
+        /* ── Inventory table ── */
+        .inv-section { animation: fadeInUp 0.4s ease 0.1s both; }
+        .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; }
+        .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
+        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; }
+        .inv-row:last-child { border-bottom: none; }
+        .inv-row:hover { background: rgba(255,255,255,0.03); }
+        .inv-row.low-stock { border-left: 3px solid var(--warning); }
+        .inv-row.out-of-stock { border-left: 3px solid var(--danger); background: rgba(239,68,68,0.03); }
+
+        .item-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
+        .item-sku { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; font-family: monospace; }
+        .category-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.68rem; font-weight: 700; background: rgba(37,99,235,0.1); color: var(--primary); }
+        .qty-cell { font-weight: 800; font-size: 1rem; }
+        .qty-cell.low { color: var(--warning); }
+        .qty-cell.out { color: var(--danger); }
+        .qty-cell.ok { color: var(--success); }
+        .price-cell { font-size: 0.88rem; font-weight: 600; color: var(--text-main); }
+        .stock-bar-wrap { display: flex; align-items: center; gap: 8px; }
+        .stock-bar { flex: 1; height: 4px; background: var(--glass-border); border-radius: 2px; overflow: hidden; }
+        .stock-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+        .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .row-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .row-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
+        .row-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
+
+        /* ── Empty / loading ── */
+        .state-box { padding: 48px 24px; text-align: center; }
+        .state-box .state-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .state-box p { color: var(--text-dim); font-size: 0.9rem; }
+
+        /* ── Sync bar ── */
+        .sync-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 700; color: var(--text-dim); backdrop-filter: blur(8px); animation: fadeInUp 0.4s ease 0.15s both; }
+        .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+        .sync-dot.loading { background: var(--warning); }
+        .sync-dot.error { background: var(--danger); animation: none; }
+
+        /* ── Modal base ── */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-card { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(20px); padding: 28px 28px 24px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); transform: translateY(16px) scale(0.98); transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275); scrollbar-width: none; }
+        .modal-card::-webkit-scrollbar { display: none; }
+        .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+        .modal-header h2 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.3px; }
+        .modal-close { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(100,116,139,0.1); color: var(--text-dim); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--transition-fast); font-family: var(--font-family); }
+        .modal-close:hover { background: rgba(100,116,139,0.2); }
+        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+
+        /* ── Form ── */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.9rem; outline: none; transition: border-color var(--transition-fast); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        .form-hint { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; font-style: italic; }
+
+        /* ── SKU scan field ── */
+        .sku-wrap { position: relative; }
+        .sku-scan-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(37,99,235,0.08); color: var(--primary); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .sku-scan-btn:hover { background: var(--primary); color: white; }
+
+        /* ── Adjustment modal ── */
+        .adj-type-pills { display: flex; gap: 8px; margin-bottom: 16px; }
+        .adj-pill input[type="radio"] { display: none; }
+        .adj-pill label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-full); border: 1.5px solid var(--glass-border); background: var(--glass); font-size: 0.82rem; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: all 0.2s; }
+        .adj-pill.add input:checked + label { background: rgba(16,185,129,0.15); border-color: #10b981; color: #059669; }
+        .adj-pill.remove input:checked + label { background: rgba(239,68,68,0.12); border-color: var(--danger); color: var(--danger); }
+        .adj-pill.set input:checked + label { background: rgba(37,99,235,0.12); border-color: var(--primary); color: var(--primary); }
+
+        /* ── View modal ── */
+        .view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+        .view-field { display: flex; flex-direction: column; gap: 4px; }
+        .view-field.full { grid-column: span 2; }
+        .view-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); opacity: 0.7; }
+        .view-value { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
+
+        /* ── Movement history ── */
+        .movement-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
+        .movement-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 10px; font-size: 0.82rem; }
+        .movement-icon { font-size: 1rem; flex-shrink: 0; }
+        .movement-body { flex: 1; min-width: 0; }
+        .movement-desc { font-weight: 600; color: var(--text-main); }
+        .movement-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+        .movement-qty { font-weight: 800; font-size: 0.9rem; flex-shrink: 0; }
+        .movement-qty.in { color: var(--success); }
+        .movement-qty.out { color: var(--danger); }
+
+        /* ── Delete confirm ── */
+        .delete-body { text-align: center; padding: 8px 0 4px; }
+        .delete-icon { font-size: 2.8rem; margin-bottom: 10px; }
+        .delete-info { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.18); border-radius: var(--radius-sm); padding: 14px 16px; margin: 14px 0 6px; text-align: left; font-size: 0.85rem; }
+        .btn-cancel { padding: 11px 20px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: transparent; color: var(--text-dim); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background var(--transition-fast); }
+        .btn-cancel:hover { background: rgba(100,116,139,0.08); }
+        .btn-submit { padding: 11px 24px; border-radius: var(--radius-full); border: none; background: var(--primary); color: white; font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: transform var(--transition-fast); }
+        .btn-submit:hover { transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-danger { padding: 11px 24px; border-radius: var(--radius-full); border: none; background: var(--danger); color: white; font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: transform var(--transition-fast); }
+        .btn-danger:hover { transform: translateY(-1px); background: #dc2626; }
+
+        /* ── Camera scan overlay ── */
+        .camera-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: calc(var(--z-modal) + 10); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .camera-overlay.open { opacity: 1; pointer-events: auto; }
+        #cameraFeed { width: min(90vw, 400px); height: min(60vw, 300px); border-radius: 16px; object-fit: cover; border: 2px solid var(--primary); }
+        .camera-aim { position: absolute; width: 200px; height: 100px; border: 2px solid #10b981; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,0.4); }
+        .camera-hint { color: white; font-size: 0.85rem; font-weight: 600; text-align: center; }
+        .camera-close-btn { padding: 10px 24px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-full); color: white; font-family: var(--font-family); font-weight: 700; cursor: pointer; font-size: 0.88rem; }
+
+        /* ── Animations ── */
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.85); } }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .inv-header { display: none; }
+            .inv-row { grid-template-columns: 1fr auto; gap: 10px; padding: 14px 16px; border-radius: 14px; margin-bottom: 8px; border: 1px solid var(--glass-border) !important; border-left: none !important; }
+            .inv-row.low-stock { border-top: 3px solid var(--warning) !important; }
+            .inv-row.out-of-stock { border-top: 3px solid var(--danger) !important; }
+            .inv-table-wrap { background: transparent; border: none; }
+            .inv-row .category-cell, .inv-row .qty-col, .inv-row .cost-col, .inv-row .price-col, .inv-row .stock-col { display: none; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .view-grid { grid-template-columns: 1fr; }
+            .view-field.full { grid-column: span 1; }
         }
         @media (max-width: 540px) {
-            main { padding: 120px var(--space-sm) var(--space-md); }
-            .placeholder-card { padding: 40px 24px; }
+            main { padding: 110px var(--space-sm) var(--space-md); }
+            .page-header { flex-direction: column; }
+            .header-actions { width: 100%; }
+            .btn-primary, .btn-secondary { flex: 1; justify-content: center; }
         }
     </style>
 </head>
 <body>
     <div id="nav-placeholder"></div>
     <main>
-        <div class="placeholder-card">
-            <div class="placeholder-icon">📦</div>
-            <h1>Inventory</h1>
-            <p>Track parts, accessories, and stock levels. Manage what's in the shop and what needs restocking.</p>
-            <span class="coming-badge">Coming Soon</span>
+        <!-- Header -->
+        <div class="page-header">
+            <div class="page-header-left">
+                <h1>📦 Inventory</h1>
+                <p>Track parts, stock levels, and movements. Scan barcodes to find items instantly.</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="openCameraScanner()" id="cameraScanBtn">📷 Scan</button>
+                <button class="btn-secondary" onclick="openAdjustModal(null)" id="adjustBtn">± Adjust Stock</button>
+                <button class="btn-primary" id="addItemBtn" onclick="openItemModal(null)" style="display:none;">＋ Add Item</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">unique SKUs</div></div>
+            <div class="stat-card warning" id="statLowCard"><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">—</div><div class="stat-sub">below minimum</div></div>
+            <div class="stat-card danger" id="statOutCard"><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">—</div><div class="stat-sub">qty = 0</div></div>
+            <div class="stat-card"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">—</div><div class="stat-sub">at cost price</div></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-wrap">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search name, SKU, or scan barcode…" oninput="renderInventory()">
+            </div>
+            <select class="filter-select" id="filterCategory" onchange="renderInventory()">
+                <option value="">All Categories</option>
+            </select>
+            <select class="filter-select" id="filterStock" onchange="renderInventory()">
+                <option value="">All Stock</option>
+                <option value="low">Low Stock</option>
+                <option value="out">Out of Stock</option>
+                <option value="ok">In Stock</option>
+            </select>
+            <div class="scan-indicator" id="scanIndicator">
+                <div class="scan-pulse"></div>
+                <span id="scanText">Scanning…</span>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="inv-section">
+            <div class="inv-table-wrap" id="invTableWrap">
+                <div class="inv-header">
+                    <div>Item</div>
+                    <div>Category</div>
+                    <div>Qty</div>
+                    <div>Cost</div>
+                    <div>Sale Price</div>
+                    <div>Stock Level</div>
+                    <div></div>
+                </div>
+                <div id="invBody">
+                    <div class="state-box"><div class="state-icon">⏳</div><p>Loading inventory…</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sync bar -->
+        <div class="sync-bar">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="sync-dot loading" id="syncDot"></div>
+                <span id="syncText">Connecting…</span>
+            </div>
+            <button onclick="loadInventory()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">↻ Refresh</button>
         </div>
     </main>
+
+    <!-- ── Add/Edit Item Modal ── -->
+    <div class="modal-overlay" id="itemModal" onclick="handleOverlay(event,'itemModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2 id="itemModalTitle">➕ Add Item</h2>
+                <button class="modal-close" onclick="closeModal('itemModal')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Item Name *</label>
+                <input type="text" id="iName" placeholder="e.g. iPhone 14 Pro Screen (Black)">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>SKU / Barcode *</label>
+                    <div class="sku-wrap">
+                        <input type="text" id="iSku" placeholder="e.g. SCR-IP14P-BLK" style="padding-right:44px;">
+                        <button class="sku-scan-btn" onclick="focusScanToField('iSku')" title="Scan barcode">⌖</button>
+                    </div>
+                    <div class="form-hint">Scan your barcode scanner here or type manually</div>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="iCategory">
+                        <option value="Screens">Screens</option>
+                        <option value="Batteries">Batteries</option>
+                        <option value="Back Glass">Back Glass</option>
+                        <option value="Charging Ports">Charging Ports</option>
+                        <option value="Cameras">Cameras</option>
+                        <option value="Screen Protectors">Screen Protectors</option>
+                        <option value="Cases & Covers">Cases &amp; Covers</option>
+                        <option value="Cables & Chargers">Cables &amp; Chargers</option>
+                        <option value="Earphones & Speakers">Earphones &amp; Speakers</option>
+                        <option value="Buttons & Flex">Buttons &amp; Flex</option>
+                        <option value="Adhesives & Consumables">Adhesives &amp; Consumables</option>
+                        <option value="Tools">Tools</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row-3">
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <input type="number" id="iQty" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label>Min Qty (alert)</label>
+                    <input type="number" id="iMinQty" min="0" value="2">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="iLocation" placeholder="e.g. Shelf A2">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Cost Price (BZD)</label>
+                    <input type="number" id="iCost" min="0" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Sale Price (BZD)</label>
+                    <input type="number" id="iSalePrice" min="0" step="0.01" placeholder="0.00">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Supplier</label>
+                    <input type="text" id="iSupplier" placeholder="e.g. iFixit, Amazon">
+                </div>
+                <div class="form-group">
+                    <label>Compatible With</label>
+                    <input type="text" id="iCompat" placeholder="e.g. iPhone 14 Pro">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" id="iNotes" placeholder="Any extra details…">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('itemModal')">Cancel</button>
+                <button class="btn-submit" id="itemSubmitBtn" onclick="submitItem()">Save Item</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Stock Adjustment Modal ── -->
+    <div class="modal-overlay" id="adjustModal" onclick="handleOverlay(event,'adjustModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>± Adjust Stock</h2>
+                <button class="modal-close" onclick="closeModal('adjustModal')">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Item *</label>
+                <div class="sku-wrap">
+                    <input type="text" id="adjSearch" placeholder="Search name or scan SKU…" oninput="filterAdjItems()" style="padding-right:44px;">
+                    <button class="sku-scan-btn" onclick="focusScanToField('adjSearch')" title="Scan barcode">⌖</button>
+                </div>
+                <div id="adjItemList" style="margin-top:8px;display:none;"></div>
+                <div id="adjSelectedItem" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2); border-radius:10px; font-size:0.85rem; font-weight:700; color:var(--primary);"></div>
+            </div>
+            <div class="adj-type-pills">
+                <div class="adj-pill add"><input type="radio" name="adjType" id="adj-add" value="add" checked><label for="adj-add">➕ Add Stock</label></div>
+                <div class="adj-pill remove"><input type="radio" name="adjType" id="adj-remove" value="remove"><label for="adj-remove">➖ Remove</label></div>
+                <div class="adj-pill set"><input type="radio" name="adjType" id="adj-set" value="set"><label for="adj-set">= Set Exact</label></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quantity *</label>
+                    <input type="number" id="adjQty" min="1" value="1">
+                </div>
+                <div class="form-group">
+                    <label>Linked Job ID</label>
+                    <input type="text" id="adjJobId" placeholder="Optional — e.g. 1042">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Reason / Notes</label>
+                <input type="text" id="adjReason" placeholder="e.g. Delivery from iFixit, Used in repair, Damaged">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('adjustModal')">Cancel</button>
+                <button class="btn-submit" id="adjSubmitBtn" onclick="submitAdjustment()">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── View Item Modal ── -->
+    <div class="modal-overlay" id="viewModal" onclick="handleOverlay(event,'viewModal')">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>📋 Item Details</h2>
+                <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+            </div>
+            <div id="viewBody"></div>
+            <div style="margin-top:16px;">
+                <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:10px;">Recent Movements</div>
+                <div class="movement-list" id="movementList">
+                    <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">Loading…</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
+                <button class="btn-secondary" onclick="openAdjustFromView()" style="padding:11px 18px;">± Adjust</button>
+                <button class="btn-submit" id="viewEditBtn" onclick="openEditFromView()">✏️ Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Delete Confirm Modal ── -->
+    <div class="modal-overlay" id="deleteModal" onclick="handleOverlay(event,'deleteModal')">
+        <div class="modal-card" style="max-width:420px;">
+            <div class="modal-header">
+                <h2>🗑️ Delete Item</h2>
+                <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+            </div>
+            <div class="delete-body">
+                <div class="delete-icon">⚠️</div>
+                <p style="color:var(--text-dim);font-size:0.9rem;">This will permanently remove the item and all its stock movement history.</p>
+                <div class="delete-info" id="deleteInfo"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+                <button class="btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()">Delete Item</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Camera Scanner Overlay ── -->
+    <div class="camera-overlay" id="cameraOverlay">
+        <video id="cameraFeed" autoplay playsinline muted></video>
+        <div class="camera-aim"></div>
+        <div class="camera-hint">Point camera at barcode — hold steady</div>
+        <button class="camera-close-btn" onclick="closeCameraScanner()">✕ Cancel</button>
+    </div>
+
     <div id="footer-placeholder"></div>
     <script src="js/components.js"></script>
+
+    <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+
+    let allItems     = [];
+    let allMovements = [];
+    let currentUser  = '';
+    let isManager    = false;
+    let activeViewSku = null;
+    let pendingDeleteSku = null;
+    let scanTargetField  = null; // field to receive next scan
+    let cameraStream     = null;
+    let barcodeDetector  = null;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+        isManager   = currentUser.toLowerCase().startsWith('manager');
+        loadInventory();
+        initBarcodeScanner();
+        // Show manager-only controls
+        if (isManager) document.getElementById('addItemBtn').style.display = 'inline-flex';
+        // Hide camera scan button if not supported
+        if (!('BarcodeDetector' in window) && !navigator.mediaDevices) {
+            document.getElementById('cameraScanBtn').style.display = 'none';
+        }
+    });
+
+    window.addEventListener('sc-back-online', loadInventory);
+
+    // ── Load ──────────────────────────────────────────────────────────────────
+    async function loadInventory() {
+        setSyncState('loading', 'Syncing…');
+        try {
+            const [invRes, movRes] = await Promise.all([
+                fetch(`${SCRIPT_URL}?action=listinventory`),
+                fetch(`${SCRIPT_URL}?action=listmovements&limit=200`)
+            ]);
+            const invData = await invRes.json();
+            const movData = await movRes.json();
+            allItems     = invData.items     || [];
+            allMovements = movData.movements || [];
+            localStorage.setItem('sc_cache_inventory', JSON.stringify(allItems));
+            localStorage.setItem('sc_cache_movements', JSON.stringify(allMovements));
+            populateCategoryFilter();
+            renderInventory();
+            renderStats();
+            setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
+        } catch (err) {
+            const ci = localStorage.getItem('sc_cache_inventory');
+            const cm = localStorage.getItem('sc_cache_movements');
+            if (ci) { allItems = JSON.parse(ci); allMovements = cm ? JSON.parse(cm) : []; populateCategoryFilter(); renderInventory(); renderStats(); setSyncState('error', 'Offline — cached data'); }
+            else { setSyncState('error', 'Sync failed'); document.getElementById('invBody').innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><p>Could not load inventory.</p></div>`; }
+            console.error(err);
+        }
+    }
+
+    // ── Stats ─────────────────────────────────────────────────────────────────
+    function renderStats() {
+        const total = allItems.length;
+        const low   = allItems.filter(i => i.qty > 0 && i.qty <= i.minQty).length;
+        const out   = allItems.filter(i => i.qty <= 0).length;
+        const value = allItems.reduce((s, i) => s + (parseFloat(i.costPrice) || 0) * (parseInt(i.qty) || 0), 0);
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statLow').textContent   = low;
+        document.getElementById('statOut').textContent   = out;
+        document.getElementById('statValue').textContent = 'BZ$' + value.toFixed(2);
+    }
+
+    // ── Category filter ───────────────────────────────────────────────────────
+    function populateCategoryFilter() {
+        const cats = [...new Set(allItems.map(i => i.category).filter(Boolean))].sort();
+        const sel  = document.getElementById('filterCategory');
+        const cur  = sel.value;
+        sel.innerHTML = '<option value="">All Categories</option>' +
+            cats.map(c => `<option value="${c}" ${c === cur ? 'selected' : ''}>${c}</option>`).join('');
+    }
+
+    // ── Render ────────────────────────────────────────────────────────────────
+    function renderInventory() {
+        const q    = document.getElementById('searchInput').value.trim().toLowerCase();
+        const cat  = document.getElementById('filterCategory').value;
+        const stk  = document.getElementById('filterStock').value;
+
+        const filtered = allItems.filter(i => {
+            const matchCat = !cat || i.category === cat;
+            const qty = parseInt(i.qty) || 0;
+            const min = parseInt(i.minQty) || 0;
+            const matchStk = !stk ||
+                (stk === 'out' && qty <= 0) ||
+                (stk === 'low' && qty > 0 && qty <= min) ||
+                (stk === 'ok'  && qty > min);
+            const matchQ = !q ||
+                (i.name   || '').toLowerCase().includes(q) ||
+                (i.sku    || '').toLowerCase().includes(q) ||
+                (i.compat || '').toLowerCase().includes(q) ||
+                (i.supplier || '').toLowerCase().includes(q);
+            return matchCat && matchStk && matchQ;
+        });
+
+        const body = document.getElementById('invBody');
+        if (!filtered.length) {
+            body.innerHTML = `<div class="state-box"><div class="state-icon">📭</div><p>${allItems.length ? 'No items match your filters.' : 'No inventory yet. Add your first item!'}</p></div>`;
+            return;
+        }
+        body.innerHTML = filtered.map(i => buildRow(i)).join('');
+    }
+
+    function buildRow(i) {
+        const qty    = parseInt(i.qty) || 0;
+        const min    = parseInt(i.minQty) || 0;
+        const isOut  = qty <= 0;
+        const isLow  = !isOut && qty <= min;
+        const rowCls = isOut ? 'out-of-stock' : isLow ? 'low-stock' : '';
+        const qtyCls = isOut ? 'out' : isLow ? 'low' : 'ok';
+        const pct    = min > 0 ? Math.min(100, Math.round((qty / (min * 3)) * 100)) : (qty > 0 ? 100 : 0);
+        const barClr = isOut ? '#ef4444' : isLow ? '#f59e0b' : '#10b981';
+        const cost   = parseFloat(i.costPrice) || 0;
+        const sale   = parseFloat(i.salePrice) || 0;
+
+        return `
+        <div class="inv-row ${rowCls}" onclick="openViewModal('${escH(i.sku)}')">
+            <div>
+                <div class="item-name">${escH(i.name || '—')}</div>
+                <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
+            </div>
+            <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
+            <div class="qty-col"><span class="qty-cell ${qtyCls}">${qty}</span><div style="font-size:0.65rem;color:var(--text-dim);">min ${min}</div></div>
+            <div class="cost-col"><span class="price-cell">BZ$${cost.toFixed(2)}</span></div>
+            <div class="price-col"><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
+            <div class="stock-col">
+                <div class="stock-bar-wrap">
+                    <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${barClr};"></div></div>
+                    <span style="font-size:0.65rem;color:var(--text-dim);white-space:nowrap;">${pct}%</span>
+                </div>
+            </div>
+            <div class="row-actions" onclick="event.stopPropagation()">
+                <button class="row-btn" title="Adjust stock" onclick="openAdjustModal('${escH(i.sku)}')">±</button>
+                ${isManager ? `<button class="row-btn" title="Edit" onclick="openItemModal('${escH(i.sku)}')">✏️</button>` : ''}
+                ${isManager ? `<button class="row-btn danger" title="Delete" onclick="openDeleteModal('${escH(i.sku)}')">🗑️</button>` : ''}
+            </div>
+        </div>`;
+    }
+
+    // ── Add/Edit Item Modal ───────────────────────────────────────────────────
+    let editingSku = null;
+
+    function openItemModal(sku) {
+        editingSku = sku;
+        const item = sku ? allItems.find(i => i.sku === sku) : null;
+        document.getElementById('itemModalTitle').textContent = item ? '✏️ Edit Item' : '➕ Add Item';
+        document.getElementById('iName').value      = item?.name       || '';
+        document.getElementById('iSku').value       = item?.sku        || '';
+        document.getElementById('iSku').readOnly    = !!item;
+        document.getElementById('iCategory').value  = item?.category   || 'Screens';
+        document.getElementById('iQty').value       = item?.qty        ?? 0;
+        document.getElementById('iMinQty').value    = item?.minQty     ?? 2;
+        document.getElementById('iLocation').value  = item?.location   || '';
+        document.getElementById('iCost').value      = item?.costPrice  || '';
+        document.getElementById('iSalePrice').value = item?.salePrice  || '';
+        document.getElementById('iSupplier').value  = item?.supplier   || '';
+        document.getElementById('iCompat').value    = item?.compat     || '';
+        document.getElementById('iNotes').value     = item?.notes      || '';
+
+        // Cashiers can edit everything except delete — remove field restrictions
+        const priceFields = ['iCost', 'iSalePrice', 'iMinQty', 'iSupplier'];
+        priceFields.forEach(id => {
+            document.getElementById(id).readOnly  = false;
+            document.getElementById(id).style.opacity = '1';
+        });
+
+        // Show cashier warning if editing
+        let warn = document.getElementById('cashierEditWarn');
+        if (!warn) {
+            warn = document.createElement('div');
+            warn.id = 'cashierEditWarn';
+            warn.style.cssText = 'padding:10px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:0.78rem;font-weight:700;color:#b45309;margin-bottom:14px;';
+            warn.textContent = '⚠️ Your edit will be flagged and sent to the manager for review.';
+            document.getElementById('itemModal').querySelector('.modal-card').insertBefore(warn, document.getElementById('itemModal').querySelector('.form-group'));
+        }
+        warn.style.display = (!isManager && item) ? 'block' : 'none';
+
+        document.getElementById('itemSubmitBtn').disabled    = false;
+        document.getElementById('itemSubmitBtn').textContent = item ? 'Save Changes' : 'Save Item';
+        openModal('itemModal');
+        setTimeout(() => document.getElementById('iName').focus(), 300);
+    }
+
+    async function submitItem() {
+        const name = document.getElementById('iName').value.trim();
+        const sku  = document.getElementById('iSku').value.trim();
+        if (!name || !sku) {
+            if (!name) highlight('iName');
+            if (!sku)  highlight('iSku');
+            return;
+        }
+        const btn = document.getElementById('itemSubmitBtn');
+        btn.disabled = true; btn.textContent = 'Saving…';
+        const payload = {
+            action:    editingSku ? 'updateitem' : 'createitem',
+            sku, name,
+            category:  document.getElementById('iCategory').value,
+            qty:       document.getElementById('iQty').value,
+            minQty:    document.getElementById('iMinQty').value,
+            location:  document.getElementById('iLocation').value.trim(),
+            costPrice: document.getElementById('iCost').value,
+            salePrice: document.getElementById('iSalePrice').value,
+            supplier:  document.getElementById('iSupplier').value.trim(),
+            compat:    document.getElementById('iCompat').value.trim(),
+            notes:     document.getElementById('iNotes').value.trim(),
+            updatedBy: currentUser,
+            cashierEdit: (!isManager && !!editingSku) ? '1' : '0'
+        };
+        try {
+            const res  = await fetch(`${SCRIPT_URL}?${new URLSearchParams(payload)}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('itemModal');
+                haptic('success');
+                sendNotification('received', '📦 Inventory Updated', `${name} has been ${editingSku ? 'updated' : 'added'}.`);
+                await loadInventory();
+            } else { btn.disabled = false; btn.textContent = editingSku ? 'Save Changes' : 'Save Item'; alert('❌ ' + (data.error || 'Could not save.')); }
+        } catch (e) { btn.disabled = false; btn.textContent = editingSku ? 'Save Changes' : 'Save Item'; alert('Connection error.'); }
+    }
+
+    // ── Stock Adjustment Modal ────────────────────────────────────────────────
+    let adjSelectedSku = null;
+
+    function openAdjustModal(sku) {
+        adjSelectedSku = sku || null;
+        document.getElementById('adjSearch').value = '';
+        document.getElementById('adjItemList').style.display = 'none';
+        document.getElementById('adjQty').value    = '1';
+        document.getElementById('adjJobId').value  = '';
+        document.getElementById('adjReason').value = '';
+        document.getElementById('adj-add').checked = true;
+        document.getElementById('adjSubmitBtn').disabled    = false;
+        document.getElementById('adjSubmitBtn').textContent = 'Apply';
+        const selDiv = document.getElementById('adjSelectedItem');
+        if (sku) {
+            const item = allItems.find(i => i.sku === sku);
+            selDiv.textContent = item ? `${item.name} (${item.sku}) — ${item.qty} in stock` : sku;
+            selDiv.style.display = 'block';
+            document.getElementById('adjSearch').value = item?.name || sku;
+        } else {
+            selDiv.style.display = 'none';
+        }
+        openModal('adjustModal');
+        setTimeout(() => document.getElementById(sku ? 'adjQty' : 'adjSearch').focus(), 300);
+    }
+
+    function filterAdjItems() {
+        const q = document.getElementById('adjSearch').value.trim().toLowerCase();
+        const list = document.getElementById('adjItemList');
+        if (!q) { list.style.display = 'none'; return; }
+        const matches = allItems.filter(i =>
+            (i.name || '').toLowerCase().includes(q) || (i.sku || '').toLowerCase().includes(q)
+        ).slice(0, 8);
+        if (!matches.length) { list.style.display = 'none'; return; }
+        list.style.display = 'block';
+        list.innerHTML = matches.map(i => `
+            <div onclick="selectAdjItem('${escH(i.sku)}')" style="padding:9px 12px;cursor:pointer;border-radius:8px;font-size:0.85rem;border:1px solid var(--glass-border);margin-bottom:4px;background:var(--glass);transition:background 0.15s;"
+                onmouseover="this.style.background='rgba(37,99,235,0.08)'" onmouseout="this.style.background='var(--glass)'">
+                <strong>${escH(i.name)}</strong> <span style="color:var(--text-dim);font-size:0.75rem;">${escH(i.sku)} · ${i.qty} in stock</span>
+            </div>`).join('');
+    }
+
+    function selectAdjItem(sku) {
+        adjSelectedSku = sku;
+        const item = allItems.find(i => i.sku === sku);
+        document.getElementById('adjSearch').value = item?.name || sku;
+        document.getElementById('adjItemList').style.display = 'none';
+        const selDiv = document.getElementById('adjSelectedItem');
+        selDiv.textContent = `${item?.name} (${sku}) — ${item?.qty} in stock`;
+        selDiv.style.display = 'block';
+        document.getElementById('adjQty').focus();
+    }
+
+    async function submitAdjustment() {
+        if (!adjSelectedSku) { highlight('adjSearch'); return; }
+        const qty = parseInt(document.getElementById('adjQty').value) || 0;
+        if (qty <= 0) { highlight('adjQty'); return; }
+        const type   = document.querySelector('input[name="adjType"]:checked').value;
+        const reason = document.getElementById('adjReason').value.trim();
+        const jobId  = document.getElementById('adjJobId').value.trim();
+        const btn    = document.getElementById('adjSubmitBtn');
+        btn.disabled = true; btn.textContent = 'Applying…';
+        try {
+            const params = new URLSearchParams({ action: 'adjuststock', sku: adjSelectedSku, type, qty, reason, jobId, updatedBy: currentUser });
+            const res  = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                closeModal('adjustModal');
+                haptic('success');
+                await loadInventory();
+            } else { btn.disabled = false; btn.textContent = 'Apply'; alert('❌ ' + (data.error || 'Could not adjust.')); }
+        } catch (e) { btn.disabled = false; btn.textContent = 'Apply'; alert('Connection error.'); }
+    }
+
+    // ── View Modal ────────────────────────────────────────────────────────────
+    function openViewModal(sku) {
+        const i = allItems.find(x => x.sku === sku);
+        if (!i) return;
+        activeViewSku = sku;
+        const qty  = parseInt(i.qty) || 0;
+        const min  = parseInt(i.minQty) || 0;
+        const cost = parseFloat(i.costPrice) || 0;
+        const sale = parseFloat(i.salePrice) || 0;
+        const margin = cost > 0 ? (((sale - cost) / cost) * 100).toFixed(1) : '—';
+        const statusLabel = qty <= 0 ? '🔴 Out of Stock' : qty <= min ? '🟡 Low Stock' : '🟢 In Stock';
+
+        document.getElementById('viewBody').innerHTML = `
+            <div class="view-grid">
+                <div class="view-field full"><div class="view-label">Item</div><div class="view-value" style="font-size:1.05rem;">${escH(i.name || '—')}</div></div>
+                <div class="view-field"><div class="view-label">SKU</div><div class="view-value" style="font-family:monospace;">${escH(i.sku)}</div></div>
+                <div class="view-field"><div class="view-label">Category</div><div class="view-value">${escH(i.category || '—')}</div></div>
+                <div class="view-field"><div class="view-label">Stock</div><div class="view-value">${qty} units &nbsp;${statusLabel}</div></div>
+                <div class="view-field"><div class="view-label">Min Qty</div><div class="view-value">${min}</div></div>
+                <div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>
+                <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} <span style="font-size:0.75rem;color:var(--text-dim);">(${margin}% margin)</span></div></div>
+                <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '—')}</div></div>
+                <div class="view-field"><div class="view-label">Supplier</div><div class="view-value">${escH(i.supplier || '—')}</div></div>
+                <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '—')}</div></div>
+                ${i.notes ? `<div class="view-field full"><div class="view-label">Notes</div><div class="view-value">${escH(i.notes)}</div></div>` : ''}
+            </div>`;
+
+        // Load movements for this SKU
+        const moves = allMovements.filter(m => m.sku === sku).slice(0, 15);
+        const mList = document.getElementById('movementList');
+        if (!moves.length) { mList.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-dim);font-size:0.82rem;">No movements recorded yet.</div>`; }
+        else {
+            mList.innerHTML = moves.map(m => {
+                const isIn  = m.type === 'add' || m.type === 'set';
+                const icon  = m.type === 'add' ? '📥' : m.type === 'set' ? '📋' : '📤';
+                const qSign = m.type === 'remove' ? '-' : '+';
+                const ts    = m.timestamp ? new Date(m.timestamp).toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+                return `<div class="movement-item">
+                    <div class="movement-icon">${icon}</div>
+                    <div class="movement-body">
+                        <div class="movement-desc">${escH(m.reason || m.type)}</div>
+                        <div class="movement-meta">${ts} · ${escH(m.updatedBy || '—')}${m.jobId ? ' · Job #' + escH(m.jobId) : ''}</div>
+                    </div>
+                    <div class="movement-qty ${isIn ? 'in' : 'out'}">${qSign}${m.qty}</div>
+                </div>`;
+            }).join('');
+        }
+        document.getElementById('viewEditBtn').style.display = 'inline-flex';
+        openModal('viewModal');
+    }
+
+    function openEditFromView()    { closeModal('viewModal'); setTimeout(() => openItemModal(activeViewSku), 200); }
+    function openAdjustFromView()  { closeModal('viewModal'); setTimeout(() => openAdjustModal(activeViewSku), 200); }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+    function openDeleteModal(sku) {
+        if (!isManager) return;
+        const i = allItems.find(x => x.sku === sku);
+        if (!i) return;
+        pendingDeleteSku = sku;
+        document.getElementById('deleteInfo').innerHTML = `<strong>${escH(i.name)}</strong><br><span style="color:var(--text-dim);">SKU: ${escH(i.sku)} · ${i.qty} units in stock</span>`;
+        document.getElementById('deleteConfirmBtn').disabled    = false;
+        document.getElementById('deleteConfirmBtn').textContent = 'Delete Item';
+        openModal('deleteModal');
+    }
+
+    async function confirmDelete() {
+        if (!pendingDeleteSku || !isManager) return;
+        const btn = document.getElementById('deleteConfirmBtn');
+        btn.disabled = true; btn.textContent = 'Deleting…';
+        try {
+            const res  = await fetch(`${SCRIPT_URL}?action=deleteitem&sku=${encodeURIComponent(pendingDeleteSku)}&deletedBy=${encodeURIComponent(currentUser)}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) { allItems = allItems.filter(i => i.sku !== pendingDeleteSku); closeModal('deleteModal'); haptic('warning'); renderInventory(); renderStats(); }
+            else { btn.disabled = false; btn.textContent = 'Delete Item'; alert('❌ ' + (data.error || 'Could not delete.')); }
+        } catch (e) { btn.disabled = false; btn.textContent = 'Delete Item'; alert('Connection error.'); }
+    }
+
+    // ── Barcode Scanner (USB keyboard wedge) ──────────────────────────────────
+    function initBarcodeScanner() {
+        let buffer = '';
+        let timer  = null;
+        document.addEventListener('keydown', e => {
+            // If a modal input is focused, let it handle input normally
+            const active = document.activeElement;
+            const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+            // If scan target is set, route to that field
+            if (scanTargetField && isInput && active.id === scanTargetField) return;
+            // Ignore modifier keys
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+            if (e.key === 'Enter') {
+                if (buffer.length > 3) handleScan(buffer);
+                buffer = '';
+                if (timer) clearTimeout(timer);
+                return;
+            }
+            if (e.key.length === 1) {
+                buffer += e.key;
+                if (timer) clearTimeout(timer);
+                timer = setTimeout(() => {
+                    if (buffer.length > 3) handleScan(buffer);
+                    buffer = '';
+                }, 80); // scanners type faster than 80ms between chars
+            }
+        });
+    }
+
+    function handleScan(code) {
+        code = code.trim();
+        if (!code) return;
+        // Show scan indicator
+        const ind = document.getElementById('scanIndicator');
+        document.getElementById('scanText').textContent = 'Scanned: ' + code;
+        ind.classList.add('show');
+        setTimeout(() => ind.classList.remove('show'), 2000);
+        haptic('medium');
+        // If a specific field is waiting for a scan
+        if (scanTargetField) {
+            const el = document.getElementById(scanTargetField);
+            if (el) { el.value = code; el.dispatchEvent(new Event('input')); }
+            scanTargetField = null;
+            return;
+        }
+        // Otherwise search the inventory
+        document.getElementById('searchInput').value = code;
+        renderInventory();
+        // If exactly one match, open it
+        const matches = allItems.filter(i => (i.sku || '').toLowerCase() === code.toLowerCase());
+        if (matches.length === 1) openViewModal(matches[0].sku);
+    }
+
+    function focusScanToField(fieldId) {
+        scanTargetField = fieldId;
+        const el = document.getElementById(fieldId);
+        if (el) { el.focus(); el.placeholder = '⌖ Scan now…'; setTimeout(() => { el.placeholder = el.id === 'iSku' ? 'e.g. SCR-IP14P-BLK' : 'Search name or scan SKU…'; }, 5000); }
+    }
+
+    // ── Camera Scanner ────────────────────────────────────────────────────────
+    async function openCameraScanner() {
+        if (!('BarcodeDetector' in window)) {
+            alert('Camera barcode scanning is not supported on this browser. Use your USB scanner instead.');
+            return;
+        }
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            document.getElementById('cameraFeed').srcObject = cameraStream;
+            document.getElementById('cameraOverlay').classList.add('open');
+            barcodeDetector = new BarcodeDetector({ formats: ['ean_13','ean_8','code_128','code_39','qr_code','upc_a','upc_e'] });
+            scanCameraFrame();
+        } catch (e) {
+            alert('Could not access camera. Check permissions.');
+        }
+    }
+
+    async function scanCameraFrame() {
+        if (!cameraStream) return;
+        const video = document.getElementById('cameraFeed');
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            try {
+                const barcodes = await barcodeDetector.detect(video);
+                if (barcodes.length > 0) {
+                    closeCameraScanner();
+                    handleScan(barcodes[0].rawValue);
+                    return;
+                }
+            } catch (_) {}
+        }
+        requestAnimationFrame(scanCameraFrame);
+    }
+
+    function closeCameraScanner() {
+        document.getElementById('cameraOverlay').classList.remove('open');
+        if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+    }
+
+    // ── Modal helpers ─────────────────────────────────────────────────────────
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+    function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
+
+    function setSyncState(state, text) {
+        const dot  = document.getElementById('syncDot');
+        const span = document.getElementById('syncText');
+        dot.className    = 'sync-dot' + (state === 'ok' ? '' : ` ${state}`);
+        span.textContent = text;
+    }
+
+    function highlight(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.borderColor = 'var(--danger)';
+        el.focus();
+        setTimeout(() => el.style.borderColor = '', 1500);
+    }
+
+    function escH(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') ['itemModal','adjustModal','viewModal','deleteModal'].forEach(closeModal);
+    });
+    </script>
 </body>
 </html>
