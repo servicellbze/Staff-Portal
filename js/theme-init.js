@@ -52,6 +52,22 @@
             '--primary-dark': '#2563eb',
             '--accent': '#60a5fa',
             '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
+        },
+        merlot: {
+            '--bg-gradient': 'linear-gradient(135deg, #faf6f1 0%, #f0e6d8 100%)',
+            '--glass': 'rgba(255, 252, 248, 0.9)',
+            '--glass-border': 'rgba(139, 38, 53, 0.12)',
+            '--glass-strong': 'rgba(255, 252, 248, 0.98)',
+            '--white-alt': '#f5ebe0',
+            '--text-main': '#4a1c24',
+            '--text-dim': '#8b5a5a',
+            '--text-light': '#b89090',
+            '--primary': '#8b2635',
+            '--primary-rgb': '139, 38, 53',
+            '--primary-light': '#a63d4d',
+            '--primary-dark': '#6b1e2a',
+            '--accent': '#c9a86c',
+            '--shadow-md': '0 10px 30px rgba(139, 38, 53, 0.15)',
         }
     };
 
@@ -65,6 +81,22 @@
     Object.entries(THEMES[theme]).forEach(([key, value]) => {
         root.style.setProperty(key, value);
     });
+
+    // Update browser/OS status bar color to match theme
+    const THEME_COLORS = {
+        light:   '#f8fafc',
+        dark:    '#0f172a',
+        scblue:  '#0a1628',
+        merlot:  '#faf6f1'
+    };
+    const themeColor = THEME_COLORS[theme] || '#0f172a';
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (!metaTheme) {
+        metaTheme = document.createElement('meta');
+        metaTheme.name = 'theme-color';
+        document.head.appendChild(metaTheme);
+    }
+    metaTheme.content = themeColor;
 
     // Apply compact mode if enabled
     if (localStorage.getItem('scCompact') === '1') {
