@@ -344,6 +344,15 @@ if (document.readyState === 'loading') {
     }, 800);
 }
 
+// Poll every 30 seconds for new notifications from other devices
+setInterval(() => InAppNotif.syncFromServer(), 30000);
+
+// Also sync when coming back online or tab becomes visible
+window.addEventListener('sc-back-online', () => InAppNotif.syncFromServer());
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') InAppNotif.syncFromServer();
+});
+
 // ── In-App Notification Store ─────────────────────────────────────────────────
 // Stores up to 50 notifications in localStorage. No server needed.
 const InAppNotif = {
