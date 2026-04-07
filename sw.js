@@ -1,9 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // ServiCell Staff Portal — Service Worker
-// Bump CACHE_NAME when you deploy a new version to force clients to update.
+// Update CACHE_DATE to today's date on every deploy — no manual versioning needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'servicell-v5';
+const CACHE_DATE = '2026-04-06'; // ← change this to today's date on each deploy
+const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
