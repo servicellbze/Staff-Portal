@@ -3,28 +3,30 @@
 // Bump CACHE_NAME when you deploy a new version to force clients to update.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'servicell-v2';
+const CACHE_NAME = 'servicell-v4';
+const BASE = '/Staff-Portal';
 
 // Files to pre-cache on install (shell only — keeps it lean)
 const PRECACHE_URLS = [
-    '/index.html',
-    '/current-jobs.html',
-    '/new-job.html',
-    '/special-orders.html',
-    '/settings.html',
-    '/inventory.html',
-    '/payouts.html',
-    '/statistics.html',
-    '/css/variables.css',
-    '/css/nav.css',
-    '/css/main.css',
-    '/css/footer.css',
-    '/css/splash.css',
-    '/js/components.js',
-    '/js/auth-guard.js',
-    '/js/theme-init.js',
-    '/img/logo.png',
-    '/manifest.json'
+    BASE + '/',
+    BASE + '/index.html',
+    BASE + '/current-jobs.html',
+    BASE + '/new-job.html',
+    BASE + '/special-orders.html',
+    BASE + '/settings.html',
+    BASE + '/inventory.html',
+    BASE + '/payouts.html',
+    BASE + '/statistics.html',
+    BASE + '/css/variables.css',
+    BASE + '/css/nav.css',
+    BASE + '/css/main.css',
+    BASE + '/css/footer.css',
+    BASE + '/css/splash.css',
+    BASE + '/js/components.js',
+    BASE + '/js/auth-guard.js',
+    BASE + '/js/theme-init.js',
+    BASE + '/img/logo.png',
+    BASE + '/manifest.json'
 ];
 
 // ── Install: pre-cache the app shell ─────────────────────────────────────────
@@ -76,7 +78,7 @@ self.addEventListener('fetch', event => {
             .catch(() => {
                 // Offline fallback for navigation requests
                 if (event.request.mode === 'navigate') {
-                    return caches.match('/index.html');
+                    return caches.match(BASE + '/index.html');
                 }
             })
     );
@@ -104,8 +106,8 @@ self.addEventListener('push', event => {
     event.waitUntil(
         self.registration.showNotification(data.title, {
             body:     data.body,
-            icon:     icons[data.type] || '/img/logo.png',
-            badge:    '/img/logo.png',
+            icon:     icons[data.type] || BASE + '/img/logo.png',
+            badge:    BASE + '/img/logo.png',
             tag:      data.type || 'servicell-notif',
             renotify: true,
             data:     { url: data.url || '/index.html', type: data.type }
