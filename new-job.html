@@ -1184,6 +1184,7 @@
 
             if (!customerName || !repairId || !device) {
                 showToast('⚠️ Name, ID, and Device are required.', 'error');
+                haptic('error');
                 if (!customerName) nameInput.style.borderColor = '#ef4444';
                 if (!device) deviceInput.style.borderColor = '#ef4444';
                 return;

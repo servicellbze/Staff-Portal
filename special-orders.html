@@ -705,6 +705,7 @@
 
         async function submitNewOrder() {
             if (window.isOffline && window.isOffline()) {
+                haptic('error');
                 alert('📡 You\'re offline — orders cannot be submitted without a connection.');
                 return;
             }
