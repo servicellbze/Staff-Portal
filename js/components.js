@@ -11,12 +11,12 @@ function getLoggedInUser() {
 
 function deriveRole(username) {
     const u = (username || '').toLowerCase();
-    if (u.includes('manager')) return 'manager';
-    if (u.includes('cashier')) return 'cashier';
-    if (u.includes('technician') || u.includes('tech')) return 'technician';
-
-    return 'staff'; // Matches your CSS fallback icon 👤
+    if (u.startsWith('manager')) return 'manager';
+    if (u.startsWith('cashier')) return 'cashier';
+    if (u.startsWith('technician')) return 'technician';
+    return 'technician';
 }
+
 
 // ── Nav link definitions ──────────────────────────────────────────────────────
 const NAV_LINKS = [
@@ -32,30 +32,11 @@ const NAV_LINKS = [
 
 // ── Auth helpers (global) ─────────────────────────────────────────────────────
 function logOut() {
-    // 1. Clear all session and local data
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('scUser');
-    localStorage.removeItem('scRole');
-    sessionStorage.clear();
-
-    // 2. Immediate UI Reset (Prevents the 'funny' look)
-    const profileBtn = document.getElementById('profileBtn');
-    const navLinks = document.getElementById('navLinks');
-    
-    if (profileBtn) profileBtn.style.display = 'none';
-    if (navLinks) navLinks.innerHTML = ''; // Clear role-specific links
-
-    // 3. Redirect or Show Login
-    // If you are on index.html, just show the overlay
-    const loginOverlay = document.getElementById('loginOverlay');
-    if (loginOverlay) {
-        loginOverlay.style.display = 'flex';
-        setTimeout(() => loginOverlay.classList.add('show'), 10);
-        document.body.style.overflow = 'hidden';
-    } else {
-        // If on another page (like settings), go back home
-        window.location.href = 'index.html';
-    }
+    sessionStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem('scUser');
+    window.location.href = 'index.html';
 }
 
 function toggleAccountMenu(e) {
@@ -68,9 +49,6 @@ const ComponentLoader = {
     config: {
         footerPath: 'components/footer.html',
         minSplashTime: 3000,
-        refreshNav() {
-            this.loadNav();
-        }
     },
 
     state: {
@@ -136,17 +114,28 @@ const ComponentLoader = {
             return `<a href="${l.href}" class="nav-btn ${active}">${l.label}</a>`;
         }).join('');
 
+        // Add this role icon map near the top with your other constants
+        const ROLE_ICONS = {
+            manager: '👑',
+            cashier: '💵',
+            technician: '🔧'
+        };
+
+        // Then in your loadNav() function, get the icon:
+        const roleIcon = ROLE_ICONS[role] || '🔧';
+
+        // Updated accountHTML with icons:
         const accountHTML = username ? `
   <div class="nav-account" id="navAccount">
     <button class="account-chip" onclick="toggleAccountMenu(event)" aria-label="Account menu">
-      <span class="account-avatar ${role.toLowerCase()}"></span>
+      <span class="account-avatar" title="${role}">${roleIcon}</span>
       <span class="account-name">${username}</span>
       <span class="account-caret">▾</span>
     </button>
     <div class="account-dropdown" id="accountDropdown">
       <div class="dropdown-header">
         <span class="dropdown-username">${username}</span>
-        <span class="dropdown-role-badge">${role}</span>
+        <span class="dropdown-role-badge">${roleIcon} ${role}</span>
       </div>
       <div class="dropdown-divider"></div>
       <a href="settings.html" class="dropdown-item">⚙️ Settings</a>
@@ -176,7 +165,7 @@ const ComponentLoader = {
             <div class="mobile-menu-footer">
               <div class="mobile-user-info">
                 <span class="mobile-username">${username}</span>
-                <span class="mobile-role-badge">${role}</span>
+                <span class="mobile-role-badge">● ${role}</span>
               </div>
               <button class="mobile-logout" onclick="logOut()">🚪 Log out</button>
             </div>` : ''}
@@ -246,7 +235,7 @@ const ComponentLoader = {
             <div style="font-weight:800;color:#2563eb;">ServiCell Belize</div>
           </nav>`;
     }
-};  
+};
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => ComponentLoader.init());
@@ -255,3 +244,19 @@ if (document.readyState === 'loading') {
 }
 
 window.ComponentLoader = ComponentLoader;
+
+// ── Global notification helper ────────────────────────────────────────────────
+// Usage: sendNotification('type', 'Title', 'Body text')
+// Types: 'received' | 'ready' | 'abandoned' | 'specialorder' | 'update' | 'jobstatus'
+function sendNotification(type, title, body) {
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    if (localStorage.getItem('scNotif') === '0') return;
+    if (localStorage.getItem('scNotif_' + type) === '0') return;
+    try {
+        new Notification(title, { body, icon: 'img/logo.png', badge: 'img/logo.png' });
+    } catch (e) {
+        console.warn('Notification failed:', e);
+    }
+}
+window.sendNotification = sendNotification;
