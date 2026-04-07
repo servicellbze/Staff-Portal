@@ -5,6 +5,7 @@
 
 const CACHE_NAME = 'servicell-v5';
 const BASE = '/Staff-Portal';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
 // Files to pre-cache on install (shell only — keeps it lean)
 const PRECACHE_URLS = [
@@ -34,7 +35,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => cache.addAll(PRECACHE_URLS))
-            .then(() => self.skipWaiting()) // activate immediately
+            .then(() => self.skipWaiting())
     );
 });
 
@@ -45,7 +46,7 @@ self.addEventListener('activate', event => {
             .then(keys => Promise.all(
                 keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
             ))
-            .then(() => self.clients.claim()) // take control of open tabs immediately
+            .then(() => self.clients.claim())
     );
 });
 
@@ -67,7 +68,6 @@ self.addEventListener('fetch', event => {
             .then(cached => {
                 if (cached) return cached;
                 return fetch(event.request).then(response => {
-                    // Cache valid GET responses
                     if (event.request.method === 'GET' && response.status === 200) {
                         const clone = response.clone();
                         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
@@ -76,7 +76,6 @@ self.addEventListener('fetch', event => {
                 });
             })
             .catch(() => {
-                // Offline fallback for navigation requests
                 if (event.request.mode === 'navigate') {
                     return caches.match(BASE + '/index.html');
                 }
@@ -84,34 +83,57 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// ── Push: handle incoming push messages ──────────────────────────────────────
+// ── Push: fetch pending notifications from GAS for full context ──────────────
 self.addEventListener('push', event => {
-    let data = { title: 'ServiCell Portal', body: 'You have a new notification.', type: 'general' };
-    try {
-        if (event.data) data = event.data.json();
-    } catch (e) {
-        if (event.data) data.body = event.data.text();
-    }
-
-    // Map type to icon/badge colour via tag
-    const icons = {
-        received:     BASE + '/img/logo.png',
-        ready:        BASE + '/img/logo.png',
-        abandoned:    BASE + '/img/logo.png',
-        specialorder: BASE + '/img/logo.png',
-        update:       BASE + '/img/logo.png',
-        jobstatus:    BASE + '/img/logo.png'
-    };
-
     event.waitUntil(
-        self.registration.showNotification(data.title, {
-            body:     data.body,
-            icon:     icons[data.type] || BASE + '/img/logo.png',
-            badge:    BASE + '/img/logo.png',
-            tag:      data.type || 'servicell-notif',
-            renotify: true,
-            data:     { url: data.url || '/index.html', type: data.type }
-        })
+        fetch(GAS_URL + '?action=getpending')
+            .then(r => r.json())
+            .then(data => {
+                const notifs = data.notifications || [];
+
+                // Nothing pending — show generic fallback so push isn't silent
+                if (!notifs.length) {
+                    return self.registration.showNotification('ServiCell', {
+                        body:  'You have a new update. Open the app to see details.',
+                        icon:  BASE + '/img/logo.png',
+                        badge: BASE + '/img/logo.png',
+                        tag:   'servicell-notif',
+                        data:  { url: BASE + '/index.html' }
+                    });
+                }
+
+                // Mark all fetched notifications as delivered — fire and forget
+                fetch(GAS_URL, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({
+                        action: 'markdelivered',
+                        ids:    notifs.map(n => n.id)
+                    })
+                }).catch(() => {});
+
+                // Show each notification with full context
+                return Promise.all(notifs.map(n =>
+                    self.registration.showNotification(n.title, {
+                        body:     n.body,
+                        icon:     BASE + '/img/logo.png',
+                        badge:    BASE + '/img/logo.png',
+                        tag:      n.type || 'servicell-notif',
+                        renotify: true,
+                        data:     { url: BASE + '/index.html', type: n.type }
+                    })
+                ));
+            })
+            .catch(() => {
+                // Network unavailable — generic fallback so push isn't silent
+                return self.registration.showNotification('ServiCell', {
+                    body:  'You have a new update. Open the app to see details.',
+                    icon:  BASE + '/img/logo.png',
+                    badge: BASE + '/img/logo.png',
+                    tag:   'servicell-notif',
+                    data:  { url: BASE + '/index.html' }
+                });
+            })
     );
 });
 
@@ -122,13 +144,11 @@ self.addEventListener('notificationclick', event => {
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(windowClients => {
-                // If app is already open, focus it
                 for (const client of windowClients) {
                     if (client.url.includes(self.location.origin) && 'focus' in client) {
                         return client.focus();
                     }
                 }
-                // Otherwise open a new window
                 if (clients.openWindow) return clients.openWindow(target);
             })
     );
