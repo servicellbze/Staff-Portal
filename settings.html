@@ -1570,6 +1570,10 @@
             document.querySelectorAll('.theme-card').forEach(c => {
                 c.classList.toggle('selected', c.dataset.theme === name);
             });
+            // Update status bar color
+            const THEME_COLORS = { light:'#f8fafc', dark:'#0f172a', scblue:'#0a1628', merlot:'#faf6f1' };
+            const meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.content = THEME_COLORS[name] || '#0f172a';
         }
 
         // ── Compact mode ────────────────────────────────────────────────────
