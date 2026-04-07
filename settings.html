@@ -1606,11 +1606,15 @@
                 }
                 const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
                 const s = sub.toJSON();
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'subscribe', username: user, endpoint: s.endpoint, p256dh: s.keys.p256dh, auth: s.keys.auth })
+                // Use URLSearchParams — GAS accepts form-encoded without CORS preflight
+                const params = new URLSearchParams({
+                    action: 'subscribe',
+                    username: user,
+                    endpoint: s.endpoint,
+                    p256dh: s.keys.p256dh,
+                    auth: s.keys.auth
                 });
+                await fetch(SCRIPT_URL + '?' + params.toString(), { method: 'POST' });
                 localStorage.setItem('scPushSubscribed', '1');
                 console.log('[Push] Subscribed');
             } catch (err) {
@@ -1624,11 +1628,8 @@
                 const reg = await navigator.serviceWorker.ready;
                 const sub = await reg.pushManager.getSubscription();
                 if (sub) {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'unsubscribe', endpoint: sub.endpoint })
-                    });
+                    const params = new URLSearchParams({ action: 'unsubscribe', endpoint: sub.endpoint });
+                    await fetch(SCRIPT_URL + '?' + params.toString(), { method: 'POST' });
                     await sub.unsubscribe();
                 }
                 localStorage.removeItem('scPushSubscribed');
