@@ -619,9 +619,10 @@ if (IS_ANDROID) {
         pop: (ctx) => {
             const g = ctx.createGain();
             g.connect(ctx.destination);
-            g.gain.setValueAtTime(0.2, ctx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-            playTone(220, 'sine', ctx.currentTime, 0.15, 0.2, ctx, g);
+            g.gain.setValueAtTime(0.25, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+            playTone(440, 'sine', ctx.currentTime, 0.08, 0.25, ctx, g);
+            playTone(880, 'sine', ctx.currentTime + 0.04, 0.14, 0.15, ctx, g);
         },
         double: (ctx) => {
             const g = ctx.createGain();
