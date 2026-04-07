@@ -92,6 +92,12 @@ body {
     overflow-x: hidden;
 }
 
+/* ── Remove tap highlight on all interactive elements ── */
+* {
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+}
+
 /* ============================================
    THEME-ADJACENT SCROLLBAR
    Uses --primary-rgb from theme-init.js
