@@ -390,12 +390,15 @@ const InAppNotif = {
 
     // Sync pending notifications from GAS — makes bell cross-device
     async syncFromServer() {
-        const url = typeof window.SCRIPT_URL !== 'undefined' ? window.SCRIPT_URL : null;
-        if (!url || !navigator.onLine) return;
+        // Use page-level SCRIPT_URL if available, otherwise fall back to hardcoded
+        const url = (typeof window.SCRIPT_URL !== 'undefined' && window.SCRIPT_URL)
+            || 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+        if (!navigator.onLine) return;
         if (localStorage.getItem('scNotif') === '0') return;
         const role = deriveRole(getLoggedInUser());
+        const username = getLoggedInUser();
         try {
-            const res   = await fetch(`${url}?action=getpending&role=${encodeURIComponent(role)}`);
+            const res   = await fetch(`${url}?action=getpending&role=${encodeURIComponent(role)}&username=${encodeURIComponent(username)}`);
             const data  = await res.json();
             const notifs = data.notifications || [];
             if (!notifs.length) return;
@@ -423,12 +426,13 @@ const InAppNotif = {
                 this._animateBell();
             }
 
-            // Mark all as delivered so they don't re-appear next sync
-            await fetch(url + '?action=markdelivered', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ ids: notifs.map(n => n.id) })
+            // Mark delivered for THIS user only — use GET params to avoid CORS preflight
+            const deliverParams = new URLSearchParams({
+                action: 'markdelivered',
+                username,
+                ids: notifs.map(n => n.id).join(',')
             });
+            await fetch(url + '?' + deliverParams.toString(), { method: 'POST' });
         } catch (_) {
             // Silent fail — offline or GAS unavailable
         }
