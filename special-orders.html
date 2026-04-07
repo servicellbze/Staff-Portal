@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <script src="js/theme-init.js"></script>
     <script src="js/auth-guard.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Staff Portal | Special Orders</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,172 +14,676 @@
     <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="css/splash.css">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { overflow-x: hidden; overscroll-behavior-x: none; width: 100%; }
-        body { font-family: var(--font-family); background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; }
-        main { max-width: 1100px; margin: 0 auto; padding: 140px var(--space-md) var(--space-xl); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            overflow-x: hidden;
+            overscroll-behavior-x: none;
+            width: 100%;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 140px var(--space-md) var(--space-xl);
+        }
 
         /* ── Page header ── */
-        .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: var(--space-lg); animation: fadeInUp 0.4s ease both; flex-wrap: wrap; }
-        .page-header-left h1 { font-size: 1.9rem; font-weight: var(--font-bold); letter-spacing: -0.5px; }
-        .page-header-left p { color: var(--text-dim); font-size: 0.92rem; margin-top: 4px; }
-        .btn-new-order { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; background: var(--primary); color: white; border: none; border-radius: var(--radius-full); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-md); transition: transform var(--transition-fast), box-shadow var(--transition-fast); white-space: nowrap; flex-shrink: 0; }
-        .btn-new-order:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
-        .btn-new-order:active { transform: scale(0.97); }
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: var(--space-lg);
+            animation: fadeInUp 0.4s ease both;
+            flex-wrap: wrap;
+        }
 
-        /* ── Toolbar ── */
-        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; animation: fadeInUp 0.4s ease 0.05s both; }
-        .search-wrap { flex: 1; position: relative; min-width: 200px; }
-        .search-wrap .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; pointer-events: none; opacity: 0.5; }
-        .search-input { width: 100%; height: 46px; padding: 0 14px 0 40px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.9rem; backdrop-filter: blur(10px); transition: border-color var(--transition-fast); outline: none; }
-        .search-input:focus { border-color: var(--primary); }
-        .search-input::placeholder { color: var(--text-light); }
-        .filter-select { height: 46px; padding: 0 36px 0 14px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.88rem; font-weight: 600; cursor: pointer; outline: none; appearance: none; backdrop-filter: blur(10px); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; transition: border-color var(--transition-fast); }
-        .filter-select:focus { border-color: var(--primary); }
+        .page-header-left h1 {
+            font-size: 1.9rem;
+            font-weight: var(--font-bold);
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .page-header-left p {
+            color: var(--text-dim);
+            font-size: 0.92rem;
+            margin-top: 4px;
+        }
+
+        .btn-new-order {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-new-order:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-new-order:active {
+            transform: scale(0.97);
+        }
+
+        /* ── Search & filter bar ── */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.4s ease 0.05s both;
+        }
+
+        .search-wrap {
+            flex: 1;
+            position: relative;
+            min-width: 200px;
+        }
+
+        .search-wrap .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 46px;
+            padding: 0 14px 0 40px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            transition: border-color var(--transition-fast);
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .filter-select {
+            height: 46px;
+            padding: 0 36px 0 14px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            backdrop-filter: blur(10px);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            transition: border-color var(--transition-fast);
+        }
+
+        .filter-select:focus {
+            border-color: var(--primary);
+        }
+
+        /* ── Orders list ── */
+        .orders-section {
+            animation: fadeInUp 0.4s ease 0.1s both;
+        }
+
+        .orders-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
         /* ── Order card ── */
-        .orders-section { animation: fadeInUp 0.4s ease 0.1s both; }
-        .orders-grid { display: flex; flex-direction: column; gap: 10px; }
-        .order-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); padding: 18px 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: start; transition: transform var(--transition-fast), box-shadow var(--transition-fast); position: relative; cursor: pointer; }
-        .order-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: var(--radius-md) 0 0 var(--radius-md); }
-        .order-card.status-pending::before { background: var(--text-dim); }
-        .order-card.status-acknowledged::before { background: var(--primary); }
-        .order-card.status-ordered::before { background: var(--warning); }
-        .order-card.status-arrived::before { background: var(--success); }
-        .order-card.status-closed::before { background: rgba(100,116,139,0.4); }
-        .order-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
-        .order-num { font-size: 0.78rem; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; letter-spacing: 0.3px; white-space: nowrap; padding-top: 2px; }
-        .order-body { min-width: 0; }
-        .order-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 6px; line-height: 1.3; }
-        .order-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
-        .meta-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-full); }
-        .tag-user { background: rgba(37,99,235,0.1); color: var(--primary); }
-        .tag-qty { background: rgba(245,158,11,0.1); color: #d97706; }
-        .tag-date { background: rgba(100,116,139,0.1); color: var(--text-dim); }
-        .tag-phone { background: rgba(16,185,129,0.1); color: #059669; }
-        .order-notes { font-size: 0.8rem; color: var(--text-dim); line-height: 1.4; padding: 6px 10px; background: rgba(100,116,139,0.06); border-radius: 8px; border-left: 2px solid var(--glass-border); margin-top: 6px; }
-        .order-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; }
+        .order-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            padding: 18px 20px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 14px;
+            align-items: start;
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
 
-        /* ── Status badges ── */
-        .status-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
-        .badge-pending { background: rgba(100,116,139,0.12); color: #475569; }
-        .badge-acknowledged { background: rgba(37,99,235,0.12); color: #2563eb; }
-        .badge-ordered { background: rgba(245,158,11,0.12); color: #d97706; }
-        .badge-arrived { background: rgba(16,185,129,0.12); color: #059669; }
-        .badge-closed { background: rgba(100,116,139,0.08); color: #94a3b8; }
+        .order-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+        }
 
-        /* ── Manager status dropdown ── */
-        .status-select { font-family: var(--font-family); font-size: 0.75rem; font-weight: 700; padding: 5px 28px 5px 10px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); cursor: pointer; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; transition: border-color var(--transition-fast); }
-        .status-select:focus { border-color: var(--primary); }
+        .order-card.status-pending::before {
+            background: var(--text-dim);
+        }
 
-        /* ── Card action buttons ── */
-        .card-actions { display: flex; gap: 6px; }
-        .card-btn { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .card-btn:hover { background: var(--primary); border-color: var(--primary); color: white; transform: translateY(-1px); }
-        .card-btn.btn-delete:hover { background: #ef4444; border-color: #ef4444; }
+        .order-card.status-acknowledged::before {
+            background: var(--primary);
+        }
 
-        /* ── Show-closed toggle chip ── */
-        .toggle-chip { display: inline-flex; align-items: center; gap: 7px; height: 46px; padding: 0 16px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-dim); font-family: var(--font-family); font-size: 0.82rem; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast); user-select: none; white-space: nowrap; }
-        .toggle-chip.active { border-color: rgba(100,116,139,0.5); color: var(--text-main); background: rgba(100,116,139,0.12); }
-        .toggle-chip .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+        .order-card.status-ordered::before {
+            background: var(--warning);
+        }
 
-        /* ── Delete confirm modal ── */
-        .delete-body { text-align: center; padding: 8px 0 4px; }
-        .delete-icon { font-size: 2.8rem; margin-bottom: 10px; }
-        .delete-info { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.18); border-radius: var(--radius-sm); padding: 14px 16px; margin: 14px 0 6px; text-align: left; font-size: 0.85rem; }
-        .delete-info strong { color: var(--text-main); }
-        .delete-info span { color: var(--text-dim); }
-        .delete-warn { font-size: 0.78rem; color: #f87171; margin-top: 10px; }
-        .btn-danger { padding: 11px 24px; border-radius: var(--radius-full); border: none; background: #ef4444; color: white; font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: transform var(--transition-fast), opacity var(--transition-fast); }
-        .btn-danger:hover { transform: translateY(-1px); background: #dc2626; }
-        .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .order-card.status-arrived::before {
+            background: var(--success);
+        }
 
-        /* ── Empty / loading states ── */
-        .state-box { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 48px 24px; text-align: center; backdrop-filter: blur(10px); }
-        .state-box .state-icon { font-size: 2.5rem; margin-bottom: 12px; }
-        .state-box p { color: var(--text-dim); font-size: 0.9rem; }
+        .order-card.status-closed::before {
+            background: rgba(100, 116, 139, 0.4);
+        }
+
+        .order-card:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Order number column */
+        .order-num {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            padding-top: 2px;
+        }
+
+        /* Main content column */
+        .order-body {
+            min-width: 0;
+        }
+
+        .order-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+
+        .order-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .meta-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+        }
+
+        .tag-user {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        .tag-qty {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        .tag-date {
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-dim);
+        }
+
+        .order-notes {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.4;
+            padding: 6px 10px;
+            background: rgba(100, 116, 139, 0.06);
+            border-radius: 8px;
+            border-left: 2px solid var(--glass-border);
+            margin-top: 6px;
+        }
+
+        /* Right column */
+        .order-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            white-space: nowrap;
+        }
+
+        .badge-pending {
+            background: rgba(100, 116, 139, 0.12);
+            color: #475569;
+        }
+
+        .badge-acknowledged {
+            background: rgba(37, 99, 235, 0.12);
+            color: #2563eb;
+        }
+
+        .badge-ordered {
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+        }
+
+        .badge-arrived {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+        }
+
+        .badge-closed {
+            background: rgba(100, 116, 139, 0.08);
+            color: #94a3b8;
+        }
+
+        /* Manager status dropdown */
+        .status-select {
+            font-family: var(--font-family);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 5px 28px 5px 10px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            transition: border-color var(--transition-fast), opacity var(--transition-fast);
+        }
+
+        .status-select:focus {
+            border-color: var(--primary);
+        }
+
+        .status-select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Empty / loading states */
+        .state-box {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 48px 24px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .state-box .state-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .state-box p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
 
         /* ── Sync bar ── */
-        .sync-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 700; color: var(--text-dim); backdrop-filter: blur(8px); animation: fadeInUp 0.4s ease 0.15s both; }
-        .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
-        .sync-dot.loading { background: var(--warning); }
-        .sync-dot.error { background: var(--danger); animation: none; }
-        @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.85); } }
+        .sync-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding: 10px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            backdrop-filter: blur(8px);
+            animation: fadeInUp 0.4s ease 0.15s both;
+        }
 
-        /* ── Modal base ── */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-        .modal-overlay.open { opacity: 1; pointer-events: auto; }
-        .modal-card { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 28px 28px 24px; width: 100%; max-width: 500px; box-shadow: var(--shadow-lg); transform: translateY(16px) scale(0.98); transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275); }
-        .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
-        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-        .modal-header h2 { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.3px; color: var(--text-main); }
-        .modal-close { width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(100,116,139,0.1); color: var(--text-dim); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--transition-fast); font-family: var(--font-family); }
-        .modal-close:hover { background: rgba(100,116,139,0.2); }
-        .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+        .sync-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
 
-        /* ── Form elements ── */
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); margin-bottom: 6px; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.9rem; outline: none; transition: border-color var(--transition-fast); resize: none; }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .sync-dot.loading {
+            background: var(--warning);
+        }
 
-        /* ── Phone input ── */
-        .phone-wrap { position: relative; display: flex; align-items: center; }
-        .phone-prefix { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: rgba(37,99,235,0.1); color: var(--primary); font-weight: 700; font-size: 0.78rem; padding: 4px 7px; border-radius: 6px; border: 1px solid rgba(37,99,235,0.15); pointer-events: none; user-select: none; z-index: 5; line-height: 1; }
-        .phone-wrap input { padding-left: 62px !important; }
+        .sync-dot.error {
+            background: var(--danger);
+            animation: none;
+        }
 
-        /* ── Buttons ── */
-        .btn-cancel { padding: 11px 20px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: transparent; color: var(--text-dim); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: background var(--transition-fast); }
-        .btn-cancel:hover { background: rgba(100,116,139,0.08); }
-        .btn-submit { padding: 11px 24px; border-radius: var(--radius-full); border: none; background: var(--primary); color: white; font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-md); transition: transform var(--transition-fast), opacity var(--transition-fast); }
-        .btn-submit:hover { transform: translateY(-1px); }
-        .btn-submit:active { transform: scale(0.97); }
-        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        @keyframes pulse {
 
-        /* ── View modal specifics ── */
-        .view-order-num { display: inline-block; background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.25); border-radius: 8px; padding: 3px 12px; font-size: 0.8rem; font-weight: 800; color: var(--primary); font-family: monospace; margin-bottom: 18px; }
-        .view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
-        .view-field { display: flex; flex-direction: column; gap: 4px; }
-        .view-field.full { grid-column: span 2; }
-        .view-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); opacity: 0.7; }
-        .view-value { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
-        .view-notes { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 10px; padding: 12px; font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; min-height: 50px; margin-top: 4px; }
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: var(--z-modal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 28px 28px 24px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(16px) scale(0.98);
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: var(--text-main);
+        }
+
+        .modal-close {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(100, 116, 139, 0.1);
+            color: var(--text-dim);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background var(--transition-fast);
+            font-family: var(--font-family);
+        }
+
+        .modal-close:hover {
+            background: rgba(100, 116, 139, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color var(--transition-fast);
+            resize: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 22px;
+        }
+
+        .btn-cancel {
+            padding: 11px 20px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-dim);
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(100, 116, 139, 0.08);
+        }
+
+        .btn-submit {
+            padding: 11px 24px;
+            border-radius: var(--radius-full);
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition-fast), opacity var(--transition-fast);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.97);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
 
         /* ── Animations ── */
-        @keyframes fadeInUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
         /* ── Responsive ── */
         @media (max-width: 640px) {
-            main { padding: 120px var(--space-sm) var(--space-md); }
-            .order-card { grid-template-columns: 1fr; gap: 10px; }
-            .order-right { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-            .form-row { grid-template-columns: 1fr; }
-            .modal-card { padding: 22px 18px 18px; }
-            .view-grid { grid-template-columns: 1fr; }
-            .view-field.full { grid-column: span 1; }
-            .page-header { flex-direction: column; align-items: stretch; }
-            .btn-new-order { justify-content: center; }
+            main {
+                padding: 120px var(--space-sm) var(--space-md);
+            }
+
+            .order-card {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .order-right {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .order-num {
+                font-size: 0.7rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-card {
+                padding: 22px 18px 18px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-new-order {
+                justify-content: center;
+            }
         }
     </style>
 </head>
+
 <body>
     <div id="nav-placeholder"></div>
 
     <main>
+        <!-- Header -->
         <div class="page-header">
             <div class="page-header-left">
                 <h1>🛒 Special Orders</h1>
                 <p>Track customer special order requests. Managers can update order status.</p>
             </div>
-            <button class="btn-new-order" onclick="openNewOrderModal()">＋ New Order</button>
+            <button class="btn-new-order" onclick="openNewOrderModal()">
+                ＋ New Order
+            </button>
         </div>
 
+        <!-- Toolbar -->
         <div class="toolbar">
             <div class="search-wrap">
                 <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search by item, order #, or requester…" oninput="renderOrders()">
+                <input type="text" class="search-input" id="searchInput"
+                    placeholder="Search by item, order #, or requester…" oninput="renderOrders()">
             </div>
             <select class="filter-select" id="filterStatus" onchange="renderOrders()">
                 <option value="">All Statuses</option>
@@ -191,142 +696,63 @@
             <select class="filter-select" id="filterUser" onchange="renderOrders()">
                 <option value="">All Staff</option>
             </select>
-            <button class="toggle-chip" id="showClosedChip" onclick="toggleShowClosed()">
-                <span class="chip-dot"></span> Show Closed
-            </button>
         </div>
 
+        <!-- Orders list -->
         <div class="orders-section">
             <div class="orders-grid" id="ordersGrid">
-                <div class="state-box"><div class="state-icon">⏳</div><p>Loading special orders…</p></div>
+                <div class="state-box">
+                    <div class="state-icon">⏳</div>
+                    <p>Loading special orders…</p>
+                </div>
             </div>
         </div>
 
+        <!-- Sync bar -->
         <div class="sync-bar">
             <div style="display:flex;align-items:center;gap:8px;">
                 <div class="sync-dot loading" id="syncDot"></div>
                 <span id="syncText">Connecting…</span>
             </div>
-            <button onclick="loadOrders()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">↻ Refresh</button>
+            <button onclick="loadOrders()"
+                style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">
+                ↻ Refresh
+            </button>
         </div>
     </main>
 
-    <!-- ── New Order Modal ── -->
-    <div class="modal-overlay" id="newOrderModal" onclick="handleOverlayClick(event,'newOrderModal')">
+    <!-- New Order Modal -->
+    <div class="modal-overlay" id="newOrderModal" onclick="handleModalClick(event)">
         <div class="modal-card">
             <div class="modal-header">
                 <h2>🛒 New Special Order</h2>
-                <button class="modal-close" onclick="closeModal('newOrderModal')">✕</button>
+                <button class="modal-close" onclick="closeNewOrderModal()">✕</button>
             </div>
+
             <div class="form-group">
                 <label>Item Description *</label>
                 <input type="text" id="soItem" placeholder="e.g. iPhone 14 Pro screen (black)" maxlength="200">
             </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label>Quantity *</label>
                     <input type="number" id="soQty" placeholder="1" min="1" value="1">
                 </div>
                 <div class="form-group">
-                    <label>Notes</label>
-                    <input type="text" id="soNotes" placeholder="Colour, urgency, specs…">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
                     <label>Customer Name</label>
                     <input type="text" id="soCustomer" placeholder="Optional">
                 </div>
-                <div class="form-group">
-                    <label>Customer Phone</label>
-                    <div class="phone-wrap">
-                        <span class="phone-prefix">+501</span>
-                        <input type="tel" id="soPhone" placeholder="600-0000">
-                    </div>
-                </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal('newOrderModal')">Cancel</button>
-                <button class="btn-submit" id="soSubmitBtn" onclick="submitNewOrder()">Submit Order</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- ── View Order Modal ── -->
-    <div class="modal-overlay" id="viewOrderModal" onclick="handleOverlayClick(event,'viewOrderModal')">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>📋 Order Details</h2>
-                <button class="modal-close" onclick="closeModal('viewOrderModal')">✕</button>
-            </div>
-            <div id="viewOrderBody"><!-- filled by JS --></div>
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal('viewOrderModal')">Close</button>
-                <button class="btn-submit" onclick="openEditFromView()" id="viewEditBtn">✏️ Edit</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── Edit Order Modal ── -->
-    <div class="modal-overlay" id="editOrderModal" onclick="handleOverlayClick(event,'editOrderModal')">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>✏️ Edit Order</h2>
-                <button class="modal-close" onclick="closeModal('editOrderModal')">✕</button>
-            </div>
             <div class="form-group">
-                <label>Item Description *</label>
-                <input type="text" id="editItem" maxlength="200">
+                <label>Notes</label>
+                <textarea id="soNotes" rows="3" placeholder="Any extra details, specs, colour, urgency…"></textarea>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Quantity</label>
-                    <input type="number" id="editQty" min="1">
-                </div>
-                <div class="form-group">
-                    <label>Notes</label>
-                    <input type="text" id="editNotes">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Customer Name</label>
-                    <input type="text" id="editCustomer">
-                </div>
-                <div class="form-group">
-                    <label>Customer Phone</label>
-                    <div class="phone-wrap">
-                        <span class="phone-prefix">+501</span>
-                        <input type="tel" id="editPhone" placeholder="600-0000">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer" style="justify-content: space-between;">
-                <button class="btn-danger" id="editDeleteBtn" onclick="openDeleteFromEdit()" style="display:none;">🗑️ Delete</button>
-                <div style="display:flex;gap:10px;">
-                    <button class="btn-cancel" onclick="closeModal('editOrderModal')">Cancel</button>
-                    <button class="btn-submit" id="editSubmitBtn" onclick="submitEdit()">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- ── Delete Confirm Modal (manager only) ── -->
-    <div class="modal-overlay" id="deleteOrderModal" onclick="handleOverlayClick(event,'deleteOrderModal')">
-        <div class="modal-card" style="max-width:420px;">
-            <div class="modal-header">
-                <h2>🗑️ Delete Order</h2>
-                <button class="modal-close" onclick="closeModal('deleteOrderModal')">✕</button>
-            </div>
-            <div class="delete-body">
-                <div class="delete-icon">⚠️</div>
-                <p style="color:var(--text-dim);font-size:0.9rem;">This will permanently remove the order from the spreadsheet. This cannot be undone.</p>
-                <div class="delete-info" id="deleteOrderInfo"></div>
-                <p class="delete-warn">Are you sure you want to delete this order?</p>
-            </div>
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal('deleteOrderModal')">Cancel</button>
-                <button class="btn-danger" id="deleteConfirmBtn" onclick="confirmDeleteOrder()">Delete Order</button>
+                <button class="btn-cancel" onclick="closeNewOrderModal()">Cancel</button>
+                <button class="btn-submit" id="soSubmitBtn" onclick="submitNewOrder()">Submit Order</button>
             </div>
         </div>
     </div>
@@ -338,352 +764,149 @@
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
         const STATUS_CONFIG = {
-            'Pending':      { badge: 'badge-pending',      label: 'Pending' },
-            'Acknowledged': { badge: 'badge-acknowledged',  label: 'Acknowledged' },
-            'Ordered':      { badge: 'badge-ordered',       label: 'Ordered' },
-            'Arrived':      { badge: 'badge-arrived',       label: 'Arrived' },
-            'Closed':       { badge: 'badge-closed',        label: 'Closed' },
+            'Pending': { badge: 'badge-pending', dot: '⬤', label: 'Pending' },
+            'Acknowledged': { badge: 'badge-acknowledged', dot: '⬤', label: 'Acknowledged' },
+            'Ordered': { badge: 'badge-ordered', dot: '⬤', label: 'Ordered' },
+            'Arrived': { badge: 'badge-arrived', dot: '⬤', label: 'Arrived' },
+            'Closed': { badge: 'badge-closed', dot: '⬤', label: 'Closed' },
         };
+
         const STATUSES = Object.keys(STATUS_CONFIG);
 
-        let allOrders   = [];
-        let isManager   = false;
+        let allOrders = [];
+        let isManager = false;
         let currentUser = '';
-        let activeViewOrder = null;
-        let showClosed  = false;        // hidden by default
-        let pendingDeleteNum = null;    // order number queued for deletion
 
         // ── Init ──────────────────────────────────────────────────────────────
-        // components.js loads AFTER this inline script, so getLoggedInUser/deriveRole
-        // aren't available at DOMContentLoaded. Read localStorage directly instead.
-        function resolveRole() {
-            currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            isManager   = currentUser.toLowerCase().startsWith('manager');
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            resolveRole();
+            currentUser = getLoggedInUser();
+            isManager = deriveRole(currentUser) === 'manager';
             loadOrders();
-            document.getElementById('soPhone').addEventListener('input', formatPhoneInput);
-            document.getElementById('editPhone').addEventListener('input', formatPhoneInput);
         });
 
         // ── Load ──────────────────────────────────────────────────────────────
         async function loadOrders() {
-            // Re-evaluate role here — components.js is guaranteed loaded by now
             setSyncState('loading', 'Syncing…');
             try {
-                const res  = await fetch(`${SCRIPT_URL}?action=listorders`);
+                const res = await fetch(`${SCRIPT_URL}?action=listorders`);
                 const data = await res.json();
-                allOrders  = data.orders || [];
-                localStorage.setItem('sc_cache_orders', JSON.stringify(allOrders));
+                allOrders = data.orders || [];
                 populateUserFilter();
                 renderOrders();
-                setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
+                setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
             } catch (err) {
-                const cached = localStorage.getItem('sc_cache_orders');
-                if (cached) {
-                    allOrders = JSON.parse(cached);
-                    populateUserFilter();
-                    renderOrders();
-                    setSyncState('error', 'Offline — showing cached data');
-                } else {
-                    setSyncState('error', 'Sync failed — check connection');
-                    document.getElementById('ordersGrid').innerHTML =
-                        `<div class="state-box"><div class="state-icon">⚠️</div><p>Could not load orders.</p></div>`;
-                }
+                setSyncState('error', 'Sync failed — check connection');
+                document.getElementById('ordersGrid').innerHTML =
+                    `<div class="state-box"><div class="state-icon">⚠️</div><p>Could not load orders.</p></div>`;
                 console.error(err);
             }
         }
 
-        // Auto-reload when connection is restored
-        window.addEventListener('sc-back-online', loadOrders);
-
-        // ── Populate user filter ───────────────────────────────────────────────
+        // ── Populate user filter dropdown ─────────────────────────────────────
         function populateUserFilter() {
-            const users  = [...new Set(allOrders.map(o => o.requestedBy).filter(Boolean))].sort();
+            const users = [...new Set(allOrders.map(o => o.requestedBy).filter(Boolean))].sort();
             const select = document.getElementById('filterUser');
-            const cur    = select.value;
+            const current = select.value;
             select.innerHTML = '<option value="">All Staff</option>' +
-                users.map(u => `<option value="${u}" ${u === cur ? 'selected' : ''}>${u}</option>`).join('');
+                users.map(u => `<option value="${u}" ${u === current ? 'selected' : ''}>${u}</option>`).join('');
         }
 
         // ── Render ────────────────────────────────────────────────────────────
         function renderOrders() {
-            const query      = document.getElementById('searchInput').value.trim().toLowerCase();
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const filterStat = document.getElementById('filterStatus').value;
             const filterUser = document.getElementById('filterUser').value;
 
-            const filtered = allOrders.filter(o => {
-                // Hide closed orders unless showClosed is on OR the status filter explicitly selects Closed
-                if (o.status === 'Closed' && !showClosed && filterStat !== 'Closed') return false;
+            let filtered = allOrders.filter(o => {
                 const matchStat = !filterStat || o.status === filterStat;
                 const matchUser = !filterUser || o.requestedBy === filterUser;
-                const matchQ    = !query ||
+                const matchQ = !query ||
                     (o.orderNumber || '').toLowerCase().includes(query) ||
-                    (o.item        || '').toLowerCase().includes(query) ||
+                    (o.item || '').toLowerCase().includes(query) ||
                     (o.requestedBy || '').toLowerCase().includes(query) ||
-                    (o.notes       || '').toLowerCase().includes(query) ||
-                    (o.customer    || '').toLowerCase().includes(query);
+                    (o.notes || '').toLowerCase().includes(query) ||
+                    (o.customer || '').toLowerCase().includes(query);
                 return matchStat && matchUser && matchQ;
             });
 
-            const closedCount = allOrders.filter(o => o.status === 'Closed').length;
-            const chip = document.getElementById('showClosedChip');
-            if (chip) {
-                chip.innerHTML = `<span class="chip-dot"></span> ${showClosed ? 'Hide' : 'Show'} Closed${closedCount ? ` (${closedCount})` : ''}`;
-                chip.classList.toggle('active', showClosed);
-            }
-
             const grid = document.getElementById('ordersGrid');
+
             if (!filtered.length) {
-                const hint = allOrders.length && !showClosed && allOrders.some(o => o.status === 'Closed')
-                    ? 'No active orders. <button onclick="toggleShowClosed()" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-family:var(--font-family);">Show closed orders?</button>'
-                    : (allOrders.length ? 'No orders match your filters.' : 'No special orders yet. Be the first to log one!');
-                grid.innerHTML = `<div class="state-box"><div class="state-icon">📭</div><p>${hint}</p></div>`;
+                grid.innerHTML = `<div class="state-box">
+                    <div class="state-icon">📭</div>
+                    <p>${allOrders.length ? 'No orders match your filters.' : 'No special orders yet. Be the first to log one!'}</p>
+                </div>`;
                 return;
             }
+
             grid.innerHTML = filtered.map(o => buildOrderCard(o)).join('');
         }
 
-        function toggleShowClosed() {
-            showClosed = !showClosed;
-            renderOrders();
-        }
-
         function buildOrderCard(o) {
-            const status    = String(o.status || 'Pending');
-            const cfg       = STATUS_CONFIG[status] || STATUS_CONFIG['Pending'];
+            // Defensive: ensure all fields are strings
+            const status = String(o.status || 'Pending');
+            const cfg = STATUS_CONFIG[status] || STATUS_CONFIG['Pending'];
             const statusKey = status.toLowerCase().replace(/\s+/g, '');
-            const dateStr   = o.dateRequested ? new Date(o.dateRequested).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '—';
-            const updatedStr= o.dateUpdated   ? `Updated ${new Date(o.dateUpdated).toLocaleDateString('en-US', { month:'short', day:'numeric' })}` : '';
-            const orderNum  = String(o.orderNumber || '—');
-            const item      = String(o.item || 'Unnamed item');
-            const requestedBy = String(o.requestedBy || 'Unknown');
-            const qty       = String(o.quantity || 1);
-            const phoneTag  = o.phone ? `<span class="meta-tag tag-phone">📞 +501 ${escHtml(String(o.phone))}</span>` : '';
-            const custTag   = o.customer ? `<span class="meta-tag tag-qty">👤 ${escHtml(String(o.customer))}</span>` : '';
+
+            const dateStr = o.dateRequested ? new Date(o.dateRequested).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+            const updatedStr = o.dateUpdated ? `Updated ${new Date(o.dateUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
+
             const notesHTML = o.notes ? `<div class="order-notes">📝 ${escHtml(String(o.notes))}</div>` : '';
+            const customerTag = o.customer ? `<span class="meta-tag tag-qty">👤 ${escHtml(String(o.customer))}</span>` : '';
+
+            const itemName = String(o.item || o.part || 'Unnamed item');
+            const orderNum = String(o.orderNumber || o.id || '—');
+            const requestedBy = String(o.requestedBy || 'Unknown');
+            const quantity = String(o.quantity || 1);
 
             const statusControl = isManager
-                ? `<select class="status-select" onclick="event.stopPropagation()" onchange="updateStatus('${escHtml(orderNum)}', this.value)" title="Change status">
-                    ${STATUSES.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}
-                   </select>`
+                ? `<select class="status-select" onchange="updateStatus('${escHtml(orderNum)}', this.value)" title="Change status">
+            ${STATUSES.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}
+           </select>`
                 : `<span class="status-badge ${cfg.badge}">${cfg.label}</span>`;
 
             return `
-            <div class="order-card status-${statusKey}" onclick="openViewModal('${escHtml(orderNum)}')">
-                <div class="order-num">${escHtml(orderNum)}</div>
-                <div class="order-body">
-                    <div class="order-title">${escHtml(item)}</div>
-                    <div class="order-meta">
-                        <span class="meta-tag tag-user">🧑‍💼 ${escHtml(requestedBy)}</span>
-                        <span class="meta-tag tag-qty">✕${escHtml(qty)}</span>
-                        <span class="meta-tag tag-date">📅 ${dateStr}</span>
-                        ${custTag}${phoneTag}
-                        ${updatedStr ? `<span class="meta-tag tag-date">🔄 ${updatedStr}</span>` : ''}
-                    </div>
-                    ${notesHTML}
-                </div>
-                <div class="order-right">
-                    ${statusControl}
-                    <div class="card-actions" onclick="event.stopPropagation()">
-                        <button class="card-btn" title="View" onclick="openViewModal('${escHtml(orderNum)}')">👁</button>
-                        ${(isManager || String(o.requestedBy || '') === currentUser) ? `<button class="card-btn" title="Edit" onclick="openEditModal('${escHtml(orderNum)}')">✏️</button>` : ''}
-                        ${isManager ? `<button class="card-btn btn-delete" title="Delete" onclick="openDeleteModal('${escHtml(orderNum)}')">🗑️</button>` : ''}
-                    </div>
-                </div>
-            </div>`;
-        }
-
-        // ── View Modal ────────────────────────────────────────────────────────
-        function openViewModal(orderNum) {
-            const o = allOrders.find(x => x.orderNumber === orderNum);
-            if (!o) return;
-            activeViewOrder = o;
-
-            const status    = String(o.status || 'Pending');
-            const cfg       = STATUS_CONFIG[status] || STATUS_CONFIG['Pending'];
-            const dateReq   = o.dateRequested ? new Date(o.dateRequested).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }) : '—';
-            const dateUpd   = o.dateUpdated   ? new Date(o.dateUpdated).toLocaleDateString('en-US', { month:'long', day:'numeric' }) : '—';
-            const phoneDisp = o.phone ? `+501 ${o.phone}` : '—';
-
-            document.getElementById('viewOrderBody').innerHTML = `
-                <div class="view-order-num">${escHtml(o.orderNumber)}</div>
-                <div class="view-grid">
-                    <div class="view-field full">
-                        <div class="view-label">Item</div>
-                        <div class="view-value">${escHtml(String(o.item || '—'))}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Status</div>
-                        <div class="view-value"><span class="status-badge ${cfg.badge}">${cfg.label}</span></div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Quantity</div>
-                        <div class="view-value">${escHtml(String(o.quantity || 1))}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Customer</div>
-                        <div class="view-value">${escHtml(String(o.customer || '—'))}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Phone</div>
-                        <div class="view-value">${escHtml(phoneDisp)}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Requested By</div>
-                        <div class="view-value">${escHtml(String(o.requestedBy || '—'))}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Date Requested</div>
-                        <div class="view-value">${dateReq}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Last Updated</div>
-                        <div class="view-value">${dateUpd}</div>
-                    </div>
-                    <div class="view-field">
-                        <div class="view-label">Updated By</div>
-                        <div class="view-value">${escHtml(String(o.updatedBy || '—'))}</div>
-                    </div>
-                    <div class="view-field full">
-                        <div class="view-label">Notes</div>
-                        <div class="view-notes">${o.notes ? escHtml(String(o.notes)) : '<span style="opacity:0.4">No notes</span>'}</div>
-                    </div>
-                </div>`;
-
-            // Only show Edit button for managers or the person who created it
-            document.getElementById('viewEditBtn').style.display =
-                (isManager || o.requestedBy === currentUser) ? 'inline-flex' : 'none';
-
-            openModal('viewOrderModal');
-        }
-
-        function openEditFromView() {
-            if (!activeViewOrder) return;
-            closeModal('viewOrderModal');
-            setTimeout(() => openEditModal(activeViewOrder.orderNumber), 200);
-        }
-
-        // ── Edit Modal ────────────────────────────────────────────────────────
-        let editingOrderNum = null;
-
-        function openEditModal(orderNum) {
-            const o = allOrders.find(x => x.orderNumber === orderNum);
-            if (!o) return;
-            if (!isManager && o.requestedBy !== currentUser) return;
-            editingOrderNum = orderNum;
-
-            document.getElementById('editItem').value     = o.item     || '';
-            document.getElementById('editQty').value      = o.quantity || 1;
-            document.getElementById('editNotes').value    = o.notes    || '';
-            document.getElementById('editCustomer').value = o.customer || '';
-            document.getElementById('editPhone').value    = o.phone    || '';
-            document.getElementById('editSubmitBtn').disabled    = false;
-            document.getElementById('editSubmitBtn').textContent = 'Save Changes';
-
-            // Show delete button only for managers
-            document.getElementById('editDeleteBtn').style.display = isManager ? 'inline-flex' : 'none';
-
-            openModal('editOrderModal');
-        }
-
-        function openDeleteFromEdit() {
-            closeModal('editOrderModal');
-            setTimeout(() => openDeleteModal(editingOrderNum), 200);
-        }
-
-        async function submitEdit() {
-            if (window.isOffline && window.isOffline()) {
-                alert('📡 You\'re offline — changes cannot be saved without a connection.');
-                return;
-            }
-            const item = document.getElementById('editItem').value.trim();
-            if (!item) {
-                document.getElementById('editItem').style.borderColor = 'var(--danger)';
-                setTimeout(() => document.getElementById('editItem').style.borderColor = '', 1500);
-                return;
-            }
-
-            const btn = document.getElementById('editSubmitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Saving…';
-
-            try {
-                const params = new URLSearchParams({
-                    action:      'updateorder',
-                    orderNumber: editingOrderNum,
-                    item,
-                    quantity:    document.getElementById('editQty').value || 1,
-                    notes:       document.getElementById('editNotes').value.trim(),
-                    customer:    document.getElementById('editCustomer').value.trim(),
-                    phone:       document.getElementById('editPhone').value.trim(),
-                    updatedBy:   currentUser
-                });
-                const res  = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
-                const data = await res.json();
-
-                if (data.success) {
-                    // Update local cache
-                    const o = allOrders.find(x => x.orderNumber === editingOrderNum);
-                    if (o) {
-                        o.item      = item;
-                        o.quantity  = document.getElementById('editQty').value;
-                        o.notes     = document.getElementById('editNotes').value.trim();
-                        o.customer  = document.getElementById('editCustomer').value.trim();
-                        o.phone     = document.getElementById('editPhone').value.trim();
-                        o.updatedBy = currentUser;
-                        o.dateUpdated = new Date().toISOString();
-                    }
-                    closeModal('editOrderModal');
-                    renderOrders();
-                    haptic('success');
-                    setSyncState('ok', 'Saved ✓');
-                    setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })), 1500);
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = 'Save Changes';
-                    alert('❌ Could not save. Please try again.');
-                }
-            } catch (err) {
-                btn.disabled = false;
-                btn.textContent = 'Save Changes';
-                alert('Connection error. Please try again.');
-                console.error(err);
-            }
+    <div class="order-card status-${statusKey}">
+        <div class="order-num">${escHtml(orderNum)}</div>
+        <div class="order-body">
+            <div class="order-title">${escHtml(itemName)}</div>
+            <div class="order-meta">
+                <span class="meta-tag tag-user">👤 ${escHtml(requestedBy)}</span>
+                <span class="meta-tag tag-qty">✕${escHtml(quantity)}</span>
+                <span class="meta-tag tag-date">📅 ${dateStr}</span>
+                ${customerTag}
+                ${updatedStr ? `<span class="meta-tag tag-date">🔄 ${updatedStr}</span>` : ''}
+            </div>
+            ${notesHTML}
+        </div>
+        <div class="order-right">
+            ${statusControl}
+        </div>
+    </div>`;
         }
 
         // ── Update status (manager only) ──────────────────────────────────────
         async function updateStatus(orderNumber, newStatus) {
             if (!isManager) return;
-            const prevOrder = allOrders.find(o => o.orderNumber === orderNumber);
-            const prevStatus = prevOrder ? prevOrder.status : null;
             setSyncState('loading', 'Saving…');
             try {
                 const url = `${SCRIPT_URL}?action=updateorder&orderNumber=${encodeURIComponent(orderNumber)}&status=${encodeURIComponent(newStatus)}&updatedBy=${encodeURIComponent(currentUser)}`;
-                const res  = await fetch(url, { method: 'POST' });
+                const res = await fetch(url, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    if (prevOrder) {
-                        prevOrder.status      = newStatus;
-                        prevOrder.dateUpdated = new Date().toISOString();
-                        prevOrder.updatedBy   = currentUser;
+                    // Update locally without full reload
+                    const order = allOrders.find(o => o.orderNumber === orderNumber);
+                    if (order) {
+                        order.status = newStatus;
+                        order.dateUpdated = new Date().toISOString();
+                        order.updatedBy = currentUser;
                     }
                     renderOrders();
                     setSyncState('ok', 'Saved ✓');
-                    setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })), 1500);
-                    // Notify technicians when status changes to Acknowledged or Arrived
-                    if (newStatus === 'Acknowledged' || newStatus === 'Arrived' || newStatus === 'Ordered') {
-                        sendNotification(
-                            'specialorder',
-                            `Special Order ${orderNumber} — ${newStatus}`,
-                            `${prevOrder ? prevOrder.item : 'Order'} has been marked as ${newStatus}.`
-                        );
-                    }
+                    setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })), 1500);
                 } else {
                     setSyncState('error', 'Save failed');
-                    loadOrders();
+                    loadOrders(); // Reload to get true state
                 }
             } catch (err) {
                 setSyncState('error', 'Connection error');
@@ -694,54 +917,57 @@
 
         // ── New Order Modal ───────────────────────────────────────────────────
         function openNewOrderModal() {
-            ['soItem','soNotes','soCustomer'].forEach(id => document.getElementById(id).value = '');
-            document.getElementById('soQty').value   = '1';
-            document.getElementById('soPhone').value = '';
-            document.getElementById('soSubmitBtn').disabled    = false;
+            document.getElementById('soItem').value = '';
+            document.getElementById('soQty').value = '1';
+            document.getElementById('soCustomer').value = '';
+            document.getElementById('soNotes').value = '';
+            document.getElementById('soSubmitBtn').disabled = false;
             document.getElementById('soSubmitBtn').textContent = 'Submit Order';
-            openModal('newOrderModal');
+            document.getElementById('newOrderModal').classList.add('open');
             setTimeout(() => document.getElementById('soItem').focus(), 300);
         }
 
+        function closeNewOrderModal() {
+            document.getElementById('newOrderModal').classList.remove('open');
+        }
+
+        function handleModalClick(e) {
+            if (e.target === document.getElementById('newOrderModal')) closeNewOrderModal();
+        }
+
         async function submitNewOrder() {
-            if (window.isOffline && window.isOffline()) {
-                haptic('error');
-                alert('📡 You\'re offline — orders cannot be submitted without a connection.');
-                return;
-            }
             const item = document.getElementById('soItem').value.trim();
+            const qty = document.getElementById('soQty').value.trim() || '1';
+            const customer = document.getElementById('soCustomer').value.trim();
+            const notes = document.getElementById('soNotes').value.trim();
+
             if (!item) {
+                document.getElementById('soItem').focus();
                 document.getElementById('soItem').style.borderColor = 'var(--danger)';
                 setTimeout(() => document.getElementById('soItem').style.borderColor = '', 1500);
                 return;
             }
+
             const btn = document.getElementById('soSubmitBtn');
             btn.disabled = true;
             btn.textContent = 'Submitting…';
 
             try {
                 const params = new URLSearchParams({
-                    action:      'createorder',
+                    action: 'createorder',
                     item,
-                    quantity:    document.getElementById('soQty').value.trim() || '1',
-                    customer:    document.getElementById('soCustomer').value.trim(),
-                    phone:       document.getElementById('soPhone').value.trim(),
-                    notes:       document.getElementById('soNotes').value.trim(),
+                    quantity: qty,
+                    customer,
+                    notes,
                     requestedBy: currentUser
                 });
-                const res  = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
+
+                const res = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
                 const data = await res.json();
 
                 if (data.success) {
-                    closeModal('newOrderModal');
+                    closeNewOrderModal();
                     await loadOrders();
-                    haptic('success');
-                    // Notify manager that a new order was placed
-                    sendNotification(
-                        'specialorder',
-                        '🛒 New Special Order',
-                        `${currentUser} requested: ${item}`
-                    );
                 } else {
                     btn.disabled = false;
                     btn.textContent = 'Submit Order';
@@ -755,99 +981,27 @@
             }
         }
 
-        // ── Notifications ─────────────────────────────────────────────────────
-        // Uses the global sendNotification() from components.js
-        // Type keys: 'specialorder'
-
-        // ── Modal helpers ─────────────────────────────────────────────────────
-        function openModal(id) {
-            document.getElementById(id).classList.add('open');
-        }
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('open');
-        }
-        function handleOverlayClick(e, id) {
-            if (e.target === document.getElementById(id)) closeModal(id);
-        }
-
-        // ── Phone formatting ──────────────────────────────────────────────────
-        function formatPhoneInput(e) {
-            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,4})/);
-            e.target.value = !x[2] ? x[1] : x[1] + '-' + x[2];
-        }
-
-        // ── Sync state ────────────────────────────────────────────────────────
+        // ── Helpers ───────────────────────────────────────────────────────────
         function setSyncState(state, text) {
-            const dot  = document.getElementById('syncDot');
+            const dot = document.getElementById('syncDot');
             const span = document.getElementById('syncText');
-            dot.className  = 'sync-dot' + (state === 'ok' ? '' : ` ${state}`);
+            dot.className = 'sync-dot' + (state === 'ok' ? '' : ` ${state}`);
             span.textContent = text;
         }
 
-        // ── Escape HTML ───────────────────────────────────────────────────────
         function escHtml(str) {
             return String(str)
-                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
 
-        // ── Delete Order (manager only) ───────────────────────────────────────
-        function openDeleteModal(orderNum) {
-            if (!isManager) return;
-            const o = allOrders.find(x => x.orderNumber === orderNum);
-            if (!o) return;
-            pendingDeleteNum = orderNum;
-
-            document.getElementById('deleteOrderInfo').innerHTML =
-                `<strong>${escHtml(String(o.orderNumber))}</strong> — ${escHtml(String(o.item || '—'))}<br>
-                 <span>Requested by ${escHtml(String(o.requestedBy || '—'))} · Status: ${escHtml(String(o.status || '—'))}</span>`;
-
-            document.getElementById('deleteConfirmBtn').disabled    = false;
-            document.getElementById('deleteConfirmBtn').textContent = 'Delete Order';
-            openModal('deleteOrderModal');
-        }
-
-        async function confirmDeleteOrder() {
-            if (!pendingDeleteNum || !isManager) return;
-            const btn = document.getElementById('deleteConfirmBtn');
-            btn.disabled = true;
-            btn.textContent = 'Deleting…';
-
-            try {
-                const params = new URLSearchParams({
-                    action:      'deleteorder',
-                    orderNumber: pendingDeleteNum,
-                    deletedBy:   currentUser
-                });
-                const res  = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
-                const data = await res.json();
-
-                if (data.success) {
-                    allOrders = allOrders.filter(o => o.orderNumber !== pendingDeleteNum);
-                    closeModal('deleteOrderModal');
-                    renderOrders();
-                    haptic('warning');
-                    setSyncState('ok', 'Deleted ✓');
-                    setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })), 1500);
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = 'Delete Order';
-                    alert('❌ Could not delete. Please try again.');
-                }
-            } catch (err) {
-                btn.disabled = false;
-                btn.textContent = 'Delete Order';
-                alert('Connection error. Please try again.');
-                console.error(err);
-            }
-        }
-
-        // ── Keyboard close ────────────────────────────────────────────────────
+        // Close modal on Escape key
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                ['newOrderModal','viewOrderModal','editOrderModal','deleteOrderModal'].forEach(closeModal);
-            }
+            if (e.key === 'Escape') closeNewOrderModal();
         });
     </script>
 </body>
+
 </html>

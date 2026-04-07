@@ -5,7 +5,7 @@
     <script src="js/theme-init.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Staff Portal | Current Jobs</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2096,6 +2096,7 @@
                 localStorage.setItem('sc_cache_jobs', JSON.stringify(allJobs));
                 filterAndRender();
                 updateStats(allJobs);
+                checkStaleJobs(allJobs);
             } catch (error) {
                 const cached = localStorage.getItem('sc_cache_jobs');
                 if (cached) {
@@ -2107,6 +2108,35 @@
                     showToast('❌ Could not load jobs from the server.', 'err');
                 }
             }
+        }
+
+        function checkStaleJobs(jobs) {
+            const STALE_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
+            const SKIP_STATUSES = ['abandoned', 'unsuccessful', 'resolved', 'ready'];
+            const now = Date.now();
+            const todayKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+            let checked = {};
+            try { checked = JSON.parse(localStorage.getItem('sc_stale_checked') || '{}'); } catch (_) {}
+
+            jobs.forEach(j => {
+                if (SKIP_STATUSES.includes((j.status || '').toLowerCase())) return;
+
+                // Use whichever date is more recent
+                const d1 = j.dateReceived ? new Date(j.dateReceived).getTime() : 0;
+                const d2 = j.dateCompleted ? new Date(j.dateCompleted).getTime() : 0;
+                const lastUpdated = Math.max(d1, d2);
+                if (!lastUpdated || (now - lastUpdated) < STALE_MS) return;
+
+                const key = String(j.id);
+                if (checked[key] === todayKey) return; // already fired today
+
+                sendNotification('jobstatus', '⏰ Job #' + j.id + ' needs attention',
+                    j.device + ' for ' + j.customerName + ' hasn\'t been updated in 3 days.');
+                checked[key] = todayKey;
+            });
+
+            localStorage.setItem('sc_stale_checked', JSON.stringify(checked));
         }
 
         // Auto-reload when connection is restored

@@ -5,7 +5,7 @@
     <script src="js/auth-guard.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Staff Portal | Inventory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,9 +58,12 @@
 
         /* ── Inventory table ── */
         .inv-section { animation: fadeInUp 0.4s ease 0.1s both; }
-        .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; }
+        #invBody {
+            contain: layout style;
+        }
+        .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; will-change: transform; transform: translateZ(0); }
         .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
-        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; }
+        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; will-change: transform; }
         .inv-row:last-child { border-bottom: none; }
         .inv-row:hover { background: rgba(255,255,255,0.03); }
         .inv-row.low-stock { border-left: 3px solid var(--warning); }
@@ -504,7 +507,7 @@
         loadInventory();
         initBarcodeScanner();
         // Show manager-only controls
-        if (isManager) document.getElementById('addItemBtn').style.display = 'inline-flex';
+        if (isManager || currentUser.toLowerCase().startsWith('cashier')) document.getElementById('addItemBtn').style.display = 'inline-flex';
         // Hide camera scan button if not supported
         if (!('BarcodeDetector' in window) && !navigator.mediaDevices) {
             document.getElementById('cameraScanBtn').style.display = 'none';
