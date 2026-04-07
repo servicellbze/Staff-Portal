@@ -401,7 +401,37 @@
             cursor: not-allowed;
         }
 
-        /* ── About section ── */
+        /* ── Notification type rows ── */
+        .notif-type-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .notif-type-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        .notif-type-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            width: 28px;
+            text-align: center;
+        }
+        .notif-type-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .notif-type-desc {
+            font-size: 0.74rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
         .about-row {
             display: flex;
             justify-content: space-between;
@@ -1061,8 +1091,7 @@
                 <div class="setting-row">
                     <div class="setting-info">
                         <div class="setting-label">Push Notifications</div>
-                        <div class="setting-desc">Get notified about jobs expiring soon, status changes, and shop alerts
-                            — even when the app isn't open.</div>
+                        <div class="setting-desc">Get notified about jobs, status changes, and shop alerts — even when the app isn't open.</div>
                         <span class="setting-status" id="notifStatus">Checking…</span><br>
                         <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
                             🔔 Enable Notifications
@@ -1076,6 +1105,78 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- ── Notification type toggles ── -->
+                <div id="notifTogglesPanel" style="display:none; margin-top: 4px;">
+                    <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:12px;padding-top:14px;border-top:1px solid var(--glass-border);">Notification Types</div>
+
+                    <div class="notif-type-row">
+                        <div class="notif-type-info">
+                            <span class="notif-type-icon">📦</span>
+                            <div>
+                                <div class="notif-type-label">Device Received</div>
+                                <div class="notif-type-desc">When a new repair job is logged</div>
+                            </div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="nt-received" onchange="saveNotifType('received',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                    </div>
+
+                    <div class="notif-type-row">
+                        <div class="notif-type-info">
+                            <span class="notif-type-icon">✅</span>
+                            <div>
+                                <div class="notif-type-label">Device Ready for Pickup</div>
+                                <div class="notif-type-desc">When a job status changes to Ready</div>
+                            </div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="nt-ready" onchange="saveNotifType('ready',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                    </div>
+
+                    <div class="notif-type-row">
+                        <div class="notif-type-info">
+                            <span class="notif-type-icon">⚠️</span>
+                            <div>
+                                <div class="notif-type-label">Abandoned Device</div>
+                                <div class="notif-type-desc">When a job is marked as abandoned</div>
+                            </div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="nt-abandoned" onchange="saveNotifType('abandoned',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                    </div>
+
+                    <div class="notif-type-row">
+                        <div class="notif-type-info">
+                            <span class="notif-type-icon">🛒</span>
+                            <div>
+                                <div class="notif-type-label">Special Order Updates</div>
+                                <div class="notif-type-desc">Status changes on special orders</div>
+                            </div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="nt-specialorder" onchange="saveNotifType('specialorder',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                    </div>
+
+                    <div class="notif-type-row">
+                        <div class="notif-type-info">
+                            <span class="notif-type-icon">🚀</span>
+                            <div>
+                                <div class="notif-type-label">App Update Released</div>
+                                <div class="notif-type-desc">When a new version is available</div>
+                            </div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="nt-update" onchange="saveNotifType('update',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                    </div>
+
+                    <div class="notif-type-row" style="border-bottom:none;">
+                        <div class="notif-type-info">
+                            <span class="notif-type-icon">🔧</span>
+                            <div>
+                                <div class="notif-type-label">Job Status Changed</div>
+                                <div class="notif-type-desc">Any status update on a repair job</div>
+                            </div>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="nt-jobstatus" onchange="saveNotifType('jobstatus',this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1402,16 +1503,33 @@
         }
 
         // ── Notifications ───────────────────────────────────────────────────
+        // Per-type keys: scNotif_received, scNotif_ready, scNotif_abandoned,
+        //                scNotif_specialorder, scNotif_update, scNotif_jobstatus
+        const NOTIF_TYPES = ['received','ready','abandoned','specialorder','update','jobstatus'];
+
+        function notifTypeEnabled(type) {
+            // Default all ON if master is on and no explicit preference saved
+            if (localStorage.getItem('scNotif') === '0') return false;
+            const val = localStorage.getItem('scNotif_' + type);
+            return val !== '0'; // default true
+        }
+
+        function saveNotifType(type, on) {
+            localStorage.setItem('scNotif_' + type, on ? '1' : '0');
+        }
+
         function updateNotifUI() {
             const statusEl = document.getElementById('notifStatus');
-            const btn = document.getElementById('notifBtn');
-            const toggle = document.getElementById('notifToggle');
+            const btn      = document.getElementById('notifBtn');
+            const toggle   = document.getElementById('notifToggle');
+            const panel    = document.getElementById('notifTogglesPanel');
 
             if (!('Notification' in window)) {
                 statusEl.textContent = 'Not supported in this browser';
-                statusEl.className = 'setting-status status-denied';
-                btn.style.display = 'none';
-                toggle.disabled = true;
+                statusEl.className   = 'setting-status status-denied';
+                btn.style.display    = 'none';
+                toggle.disabled      = true;
+                if (panel) panel.style.display = 'none';
                 return;
             }
 
@@ -1419,41 +1537,111 @@
 
             if (perm === 'granted') {
                 statusEl.textContent = 'Permission granted';
-                statusEl.className = 'setting-status status-granted';
-                btn.style.display = 'none';
-                toggle.disabled = false;
-                toggle.checked = localStorage.getItem('scNotif') !== '0';
+                statusEl.className   = 'setting-status status-granted';
+                btn.style.display    = 'none';
+                toggle.disabled      = false;
+                const masterOn       = localStorage.getItem('scNotif') !== '0';
+                toggle.checked       = masterOn;
+                if (panel) panel.style.display = masterOn ? 'block' : 'none';
+                // Sync per-type checkboxes
+                NOTIF_TYPES.forEach(t => {
+                    const el = document.getElementById('nt-' + t);
+                    if (el) el.checked = notifTypeEnabled(t);
+                });
             } else if (perm === 'denied') {
                 statusEl.textContent = 'Blocked — enable in your browser site settings';
-                statusEl.className = 'setting-status status-denied';
-                btn.disabled = true;
-                btn.textContent = '🚫 Blocked by browser';
-                toggle.disabled = true;
-                toggle.checked = false;
+                statusEl.className   = 'setting-status status-denied';
+                btn.disabled         = true;
+                btn.textContent      = '🚫 Blocked by browser';
+                toggle.disabled      = true;
+                toggle.checked       = false;
+                if (panel) panel.style.display = 'none';
             } else {
                 statusEl.textContent = 'Permission not yet granted';
-                statusEl.className = 'setting-status status-default';
-                btn.style.display = 'inline-flex';
-                toggle.disabled = true;
-                toggle.checked = false;
+                statusEl.className   = 'setting-status status-default';
+                btn.style.display    = 'inline-flex';
+                toggle.disabled      = true;
+                toggle.checked       = false;
+                if (panel) panel.style.display = 'none';
             }
         }
 
+        const VAPID_PUBLIC_KEY = 'BPa9nHctgTQ9WEtkMv5ObXVebnVdREIxPxql_H60ajQ2XI9byUzZR8EHGvvCbaStC0jYPCAfo8zEoe4r85lo8pc';
+
         async function requestNotifPermission() {
             const result = await Notification.requestPermission();
+            if (result !== 'granted') { updateNotifUI(); return; }
+            localStorage.setItem('scNotif', '1');
+            await subscribeToPush();
             updateNotifUI();
-            if (result === 'granted') {
-                localStorage.setItem('scNotif', '1');
-                new Notification('ServiCell Portal', {
-                    body: 'Notifications enabled! ✅',
-                    icon: 'icons/icon-192.png'
+        }
+
+        async function subscribeToPush() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                // Check if already subscribed
+                let sub = await reg.pushManager.getSubscription();
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+                // Save subscription to GAS
+                const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+                const subJson = sub.toJSON();
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action:   'subscribe',
+                        username: user,
+                        endpoint: subJson.endpoint,
+                        p256dh:   subJson.keys.p256dh,
+                        auth:     subJson.keys.auth
+                    })
                 });
+                localStorage.setItem('scPushSubscribed', '1');
+                console.log('[Push] Subscribed successfully');
+            } catch (err) {
+                console.warn('[Push] Subscription failed:', err);
             }
+        }
+
+        async function unsubscribeFromPush() {
+            if (!('serviceWorker' in navigator)) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'unsubscribe', endpoint: sub.endpoint })
+                    });
+                    await sub.unsubscribe();
+                }
+                localStorage.removeItem('scPushSubscribed');
+            } catch (err) {
+                console.warn('[Push] Unsubscribe failed:', err);
+            }
+        }
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const raw     = atob(base64);
+            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
         }
 
         function saveNotifPref() {
             const on = document.getElementById('notifToggle').checked;
             localStorage.setItem('scNotif', on ? '1' : '0');
+            const panel = document.getElementById('notifTogglesPanel');
+            if (panel) panel.style.display = on ? 'block' : 'none';
+            if (!on) unsubscribeFromPush();
+            else subscribeToPush();
         }
 
         // ── User-specific role helpers ──────────────────────────────────────
@@ -1495,6 +1683,12 @@
 
             if (footer) {
                 version = footer.textContent.trim();
+                const prev = localStorage.getItem('appVersion');
+                if (prev && prev !== version) {
+                    // Version changed — fire update notification
+                    sendNotification('update', '🚀 App Updated to ' + version,
+                        'ServiCell Staff Portal has been updated. Check the changelog for what\'s new.');
+                }
                 localStorage.setItem('appVersion', version);
             } else {
                 version = localStorage.getItem('appVersion') || '1.0.0';
@@ -1512,7 +1706,9 @@
 
         function clearCache() {
             if (!confirm('Clear all cached data? You will stay logged in.')) return;
-            const keep = ['isLoggedIn', 'scUser', 'scTheme', 'scCompact', 'scNotif', 'appVersion'];
+            const keep = ['isLoggedIn', 'scUser', 'scTheme', 'scCompact', 'scNotif', 'appVersion',
+                          'scNotif_received','scNotif_ready','scNotif_abandoned',
+                          'scNotif_specialorder','scNotif_update','scNotif_jobstatus'];
             const user = localStorage.getItem('scUser');
             if (user) keep.push(getUserRoleKey(user));
 

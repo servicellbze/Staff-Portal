@@ -836,7 +836,120 @@
 
     <script src="js/components.js"></script>
     <script>
-        // JS logic remains the same
+        // ── HARD PWA WALL ENFORCEMENT ──────────────────────────────────────
+        (function enforcePWA() {
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isAndroid = /android/i.test(navigator.userAgent);
+            const isMobile = isIOS || isAndroid;
+
+            function isStandalone() {
+                return window.navigator.standalone === true ||
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    document.referrer.includes('android-app://');
+            }
+
+            // Create the wall HTML if it doesn't exist
+            if (!document.getElementById('pwa-wall')) {
+                const wall = document.createElement('div');
+                wall.id = 'pwa-wall';
+                wall.innerHTML = `
+                <div style="position:fixed;inset:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:Inter,sans-serif;">
+                    <div style="position:absolute;inset:0;background:url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');opacity:0.3;"></div>
+                    <div style="position:relative;z-index:1;max-width:400px;animation:slideUp 0.6s cubic-bezier(0.175,0.885,0.32,1.275);">
+                        <div style="width:120px;height:120px;background:white;border-radius:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-size:60px;">📱</div>
+                        <h1 style="color:white;font-size:1.8rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px;">Install Required</h1>
+                        <p style="color:rgba(255,255,255,0.9);font-size:1rem;margin-bottom:32px;line-height:1.6;">ServiCell Portal must be installed on your home screen to ensure secure access and optimal performance.</p>
+                        
+                        <div id="ios-steps" style="display:none;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:20px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.2);text-align:left;">
+                            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;color:white;">
+                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;">1</div>
+                                <div style="font-size:0.95rem;font-weight:500;"><strong style="display:block;font-weight:700;margin-bottom:2px;">Tap the Share button</strong>at the bottom of Safari</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:16px;color:white;">
+                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;">2</div>
+                                <div style="font-size:0.95rem;font-weight:500;"><strong style="display:block;font-weight:700;margin-bottom:2px;">Scroll and tap "Add to Home Screen"</strong>Then tap "Add" to install</div>
+                            </div>
+                        </div>
+
+                        <div id="android-steps" style="display:none;background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:20px;padding:24px;margin-bottom:24px;border:1px solid rgba(255,255,255,0.2);text-align:left;">
+                            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;color:white;">
+                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;">1</div>
+                                <div style="font-size:0.95rem;font-weight:500;"><strong style="display:block;font-weight:700;margin-bottom:2px;">Tap the menu (⋮)</strong>in the top right corner</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:16px;color:white;">
+                                <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0;">2</div>
+                                <div style="font-size:0.95rem;font-weight:500;"><strong style="display:block;font-weight:700;margin-bottom:2px;">Tap "Install app" or "Add to Home screen"</strong>Then confirm to install</div>
+                            </div>
+                        </div>
+
+                        <button id="checkInstallBtn" style="background:white;color:#764ba2;border:none;padding:16px 32px;border-radius:14px;font-weight:700;font-size:1rem;cursor:pointer;box-shadow:0 10px 30px rgba(0,0,0,0.2);width:100%;max-width:280px;">I've Installed It</button>
+                        <div id="checkingMsg" style="display:none;color:rgba(255,255,255,0.8);font-size:0.9rem;margin-top:16px;"><span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle;"></span>Checking installation...</div>
+                    </div>
+                </div>
+                <style>@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}</style>
+            `;
+                document.body.appendChild(wall);
+
+                // Add click handler
+                document.getElementById('checkInstallBtn').addEventListener('click', function () {
+                    const btn = this;
+                    const checking = document.getElementById('checkingMsg');
+
+                    btn.disabled = true;
+                    btn.textContent = 'Checking...';
+                    checking.style.display = 'block';
+
+                    let checks = 0;
+                    const maxChecks = 5;
+
+                    const interval = setInterval(function () {
+                        checks++;
+
+                        if (isStandalone()) {
+                            clearInterval(interval);
+                            document.getElementById('pwa-wall').style.display = 'none';
+                            document.body.style.overflow = '';
+                            document.body.style.touchAction = '';
+                            // Trigger original DOMContentLoaded logic
+                            initOriginalApp();
+                            return;
+                        }
+
+                        if (checks >= maxChecks) {
+                            clearInterval(interval);
+                            btn.disabled = false;
+                            btn.textContent = 'Try Again';
+                            checking.style.display = 'none';
+
+                            if (isIOS) {
+                                alert('App not detected. Please make sure you:\n1. Tapped the Share button\n2. Selected "Add to Home Screen"\n3. Tapped "Add" in the top right\n\nThen open the app from your home screen icon.');
+                            } else {
+                                alert('App not detected. Please install it from your browser menu, then open it from your home screen.');
+                            }
+                        }
+                    }, 1000);
+                });
+            }
+
+            // Show appropriate steps
+            if (isMobile && !isStandalone()) {
+                document.body.style.overflow = 'hidden';
+                document.body.style.touchAction = 'none';
+                if (isIOS) document.getElementById('ios-steps').style.display = 'block';
+                if (isAndroid) document.getElementById('android-steps').style.display = 'block';
+            } else {
+                document.getElementById('pwa-wall').style.display = 'none';
+            }
+
+            // Periodic check
+            if (isMobile && !isStandalone()) {
+                setInterval(function () {
+                    if (isStandalone()) location.reload();
+                }, 2000);
+            }
+        })();
+
+        // ── ORIGINAL APP LOGIC (unchanged) ─────────────────────────────────
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
         document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
@@ -927,14 +1040,14 @@
                 const name = j.customerName || 'Walk-in';
 
                 return `
-                <div class="activity-item">
-                    <div class="activity-icon" style="background:${si.bg}">${si.icon}</div>
-                    <div class="activity-content">
-                        <div class="activity-title">${device}</div>
-                        <div class="activity-meta">${name} &nbsp;·&nbsp; #${j.id}</div>
-                    </div>
-                    <span class="activity-badge ${badgeCls}">${label}</span>
-                </div>`;
+            <div class="activity-item">
+                <div class="activity-icon" style="background:${si.bg}">${si.icon}</div>
+                <div class="activity-content">
+                    <div class="activity-title">${device}</div>
+                    <div class="activity-meta">${name} &nbsp;·&nbsp; #${j.id}</div>
+                </div>
+                <span class="activity-badge ${badgeCls}">${label}</span>
+            </div>`;
             }).join('');
         }
 
@@ -945,10 +1058,8 @@
             span.textContent = text;
         }
 
-        loadDashboard();
-        setInterval(loadDashboard, 60000);
-
-        document.addEventListener("DOMContentLoaded", () => {
+        function initOriginalApp() {
+            // This replaces the original DOMContentLoaded logic
             const splash = document.querySelector('.splash-screen');
             const loginOverlay = document.getElementById('loginOverlay');
             const mainContent = document.querySelector('main');
@@ -971,7 +1082,23 @@
                     if (splash) splash.classList.add('hidden');
                 }, 800);
             }, duration);
-        });
+        }
+
+        // Only run original DOMContentLoaded if not blocked by PWA wall
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const isMobile = isIOS || isAndroid;
+        const isStandalone = window.navigator.standalone === true ||
+            window.matchMedia('(display-mode: standalone)').matches ||
+            document.referrer.includes('android-app://');
+
+        if (!isMobile || isStandalone) {
+            // Desktop or already installed - run normally
+            document.addEventListener("DOMContentLoaded", initOriginalApp);
+        }
+
+        loadDashboard();
+        setInterval(loadDashboard, 60000);
 
         async function checkLogin() {
             const user = document.getElementById('userInput').value.trim();
@@ -995,12 +1122,9 @@
                     storage.setItem('isLoggedIn', 'true');
                     storage.setItem('scUser', user);
 
-                    // Save the role so the navbar knows whether to show the crown icon
-                    // If your script doesn't return a role yet, it will use the deriveRole helper
                     const userRole = data.role || (typeof deriveRole === 'function' ? deriveRole(user) : 'staff');
                     storage.setItem('scRole', userRole);
 
-                    // Trigger the navbar to rebuild itself immediately
                     if (window.ComponentLoader) {
                         window.ComponentLoader.loadNav();
                     }
@@ -1014,7 +1138,7 @@
                         if (typeof loadDashboard === 'function') {
                             loadDashboard();
                         }
-                    }, 400); // Reduced delay for a snappier feel
+                    }, 400);
                 } else {
                     alert("❌ Incorrect username or password");
                     btn.textContent = "Unlock System";
@@ -1047,6 +1171,33 @@
                 }, 2000);
             }
         })();
+    </script>
+
+    <script>
+        // ── Service Worker Registration ──────────────────────────────────────
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                        console.log('[SW] Registered, scope:', reg.scope);
+                        reg.update();
+
+                        // Notify when a new version is waiting to activate
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    if (typeof sendNotification === 'function') {
+                                        sendNotification('update', '🚀 Update Available',
+                                            'A new version of ServiCell Portal is ready. Refresh to update.');
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
     </script>
 
 </body>

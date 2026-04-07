@@ -2377,6 +2377,21 @@
                     currentJobData = job;
                 }
 
+                // ── Push notifications on key status changes ──
+                if (status === 'ready') {
+                    const j = allJobs.find(j => String(j.id) === String(currentEditId));
+                    sendNotification('ready', '✅ Device Ready for Pickup',
+                        `#${currentEditId} — ${j?.device || 'Device'} (${j?.customerName || 'Customer'}) is ready.`);
+                } else if (status === 'abandoned') {
+                    const j = allJobs.find(j => String(j.id) === String(currentEditId));
+                    sendNotification('abandoned', '⚠️ Abandoned Device',
+                        `#${currentEditId} — ${j?.device || 'Device'} has been marked as abandoned.`);
+                } else {
+                    const j = allJobs.find(j => String(j.id) === String(currentEditId));
+                    sendNotification('jobstatus', '🔧 Job Status Updated',
+                        `#${currentEditId} — ${j?.device || 'Device'} is now: ${status}.`);
+                }
+
                 closeModal('editModal');
                 showToast('✅ Job updated successfully', 'ok');
                 filterAndRender();

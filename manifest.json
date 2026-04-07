@@ -1,15 +1,25 @@
 {
-  "name": "ServiCell Portal",
+  "name": "ServiCell Staff Portal",
   "short_name": "ServiCell",
-  "start_url": "index.html",
+  "description": "ServiCell Belize internal staff portal for repair job tracking and management.",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2196F3",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
   "icons": [
     {
       "src": "img/logo.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
