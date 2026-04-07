@@ -939,6 +939,8 @@
                 if (isAndroid) document.getElementById('android-steps').style.display = 'block';
             } else {
                 document.getElementById('pwa-wall').style.display = 'none';
+                document.body.style.overflow = '';
+                document.body.style.touchAction = '';
             }
 
             // Periodic check
@@ -1099,6 +1101,7 @@
             }, duration);
         }
 
+        // Only run original DOMContentLoaded if not blocked by PWA wall
         const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
         const isAndroid = /android/i.test(navigator.userAgent);
         const isMobile = isIOS || isAndroid;
@@ -1106,8 +1109,8 @@
             window.matchMedia('(display-mode: standalone)').matches ||
             document.referrer.includes('android-app://');
 
-        // Always init — the PWA wall overlays visually if install is needed,
-        // so the login is ready the moment the wall is dismissed.
+        // Always init — PWA wall overlays visually if needed.
+        // The login is ready underneath and appears the moment the wall is dismissed.
         document.addEventListener("DOMContentLoaded", initOriginalApp);
 
         // Only pre-load dashboard data if the user is already logged in
