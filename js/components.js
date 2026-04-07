@@ -260,3 +260,73 @@ function sendNotification(type, title, body) {
     }
 }
 window.sendNotification = sendNotification;
+
+// ── Offline banner ────────────────────────────────────────────────────────────
+(function () {
+    function createBanner() {
+        if (document.getElementById('sc-offline-banner')) return;
+        const b = document.createElement('div');
+        b.id = 'sc-offline-banner';
+        b.innerHTML = '📡 You\'re offline — showing cached data. Changes will not save.';
+        b.style.cssText = [
+            'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:99999',
+            'background:#b45309', 'color:#fff', 'text-align:center',
+            'font-size:0.78rem', 'font-weight:700', 'padding:8px 16px',
+            'font-family:var(--font-family,sans-serif)',
+            'transform:translateY(-100%)', 'transition:transform 0.3s ease'
+        ].join(';');
+        document.body.prepend(b);
+        // small delay so transition plays
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            b.style.transform = 'translateY(0)';
+        }));
+    }
+
+    function removeBanner() {
+        const b = document.getElementById('sc-offline-banner');
+        if (!b) return;
+        b.style.transform = 'translateY(-100%)';
+        setTimeout(() => b.remove(), 350);
+    }
+
+    function syncBanner() {
+        if (!navigator.onLine) createBanner();
+        else removeBanner();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncBanner);
+    } else {
+        syncBanner();
+    }
+
+    window.addEventListener('offline', createBanner);
+    window.addEventListener('online', () => {
+        removeBanner();
+        // Dispatch a custom event so pages can auto-reload data
+        window.dispatchEvent(new Event('sc-back-online'));
+    });
+})();
+window.isOffline = () => !navigator.onLine;
+
+// ── Haptic feedback ───────────────────────────────────────────────────────────
+// Android-only — iOS blocks the Vibration API entirely
+// Patterns: 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning'
+const IS_ANDROID = /android/i.test(navigator.userAgent);
+
+function haptic(type = 'light') {
+    if (!IS_ANDROID) return;
+    if (!navigator.vibrate) return;
+    if (localStorage.getItem('scHaptics') === '0') return;
+    const patterns = {
+        light:   [10],
+        medium:  [20],
+        heavy:   [40],
+        success: [10, 50, 10],
+        error:   [50, 30, 50],
+        warning: [30, 20, 30]
+    };
+    navigator.vibrate(patterns[type] || patterns.light);
+}
+window.haptic = haptic;
+window.IS_ANDROID = IS_ANDROID;
