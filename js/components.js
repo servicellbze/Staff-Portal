@@ -20,14 +20,14 @@ function deriveRole(username) {
 
 // ── Nav link definitions ──────────────────────────────────────────────────────
 const NAV_LINKS = [
-    { label: 'Dashboard', href: 'index.html', roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Current Jobs', href: 'current-jobs.html', roles: ['technician', 'cashier', 'manager'] },
-    { label: 'New Job', href: 'new-job.html', roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Special Orders', href: 'special-orders.html', roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Inventory', href: 'inventory.html', roles: ['cashier', 'manager'] },
-    { label: 'Payouts', href: 'payouts.html', roles: ['cashier', 'manager'] },
-    { label: 'Statistics', href: 'statistics.html', roles: ['manager'] },
-    { label: 'Settings', href: 'settings.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Dashboard',      icon: '🏠', href: 'index.html',          roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Current Jobs',   icon: '🔧', href: 'current-jobs.html',   roles: ['technician', 'cashier', 'manager'] },
+    { label: 'New Job',        icon: '➕', href: 'new-job.html',         roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Special Orders', icon: '🛒', href: 'special-orders.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Inventory',      icon: '📦', href: 'inventory.html',       roles: ['cashier', 'manager'] },
+    { label: 'Payouts',        icon: '💳', href: 'payouts.html',         roles: ['cashier', 'manager'] },
+    { label: 'Statistics',     icon: '📊', href: 'statistics.html',      roles: ['manager'] },
+    { label: 'Settings',       icon: '⚙️', href: 'settings.html',        roles: ['technician', 'cashier', 'manager'] },
 ];
 
 // ── Auth helpers (global) ─────────────────────────────────────────────────────
@@ -149,16 +149,37 @@ const ComponentLoader = {
               <span class="logo-text">ServiCell</span>
               <div class="nav-links" id="navLinks">${linksHTML}</div>
               ${accountHTML}
-              <div class="hamburger" id="hamburger">
-                <span></span><span></span><span></span>
+              <div class="nav-right-group">
+                <div class="nav-bell" id="navBell">
+                  <button class="bell-btn" id="notif-bell-btn" onclick="toggleNotifPanel(event)" aria-label="Notifications">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+                  </button>
+                  <div class="notif-panel" id="notifPanel">
+                    <div class="notif-panel-header">
+                      <span class="notif-panel-title">Notifications</span>
+                      <button class="notif-clear-btn" onclick="InAppNotif.clear();renderNotifPanel()">Clear all</button>
+                    </div>
+                    <div class="notif-list" id="notifList"></div>
+                  </div>
+                </div>
+                <div class="hamburger" id="hamburger">
+                  <span></span><span></span><span></span>
+                </div>
               </div>
             </div>
           </nav>
           <div class="mobile-menu-panel" id="mobilePanel">
-            <div class="mobile-menu-links">
+            <div class="mobile-menu-links" id="mobileMenuLinks">
               ${visible.map(l => {
             const active = current === l.href ? 'active' : '';
-            return `<a href="${l.href}" class="nav-btn ${active}">${l.label}</a>`;
+            return `<a href="${l.href}" class="nav-btn mobile-nav-btn ${active}">
+                <span class="mobile-nav-icon">${l.icon}</span>
+                <span class="mobile-nav-label">${l.label}</span>
+              </a>`;
         }).join('')}
             </div>
             ${username ? `
@@ -221,6 +242,11 @@ const ComponentLoader = {
             if (acct && !acct.contains(e.target)) {
                 document.getElementById('accountDropdown')?.classList.remove('open');
             }
+            // Close notif panel on outside click
+            const bell = document.getElementById('navBell');
+            if (bell && !bell.contains(e.target)) {
+                document.getElementById('notifPanel')?.classList.remove('open');
+            }
         });
 
         // Scroll shrink effect
@@ -228,6 +254,13 @@ const ComponentLoader = {
         window.addEventListener('scroll', () => {
             nav?.classList.toggle('scrolled', window.pageYOffset > 50);
         }, { passive: true });
+
+        // Dynamic grid columns based on item count
+        const menuLinks = document.getElementById('mobileMenuLinks');
+        if (menuLinks) {
+            const count = menuLinks.children.length;
+            menuLinks.style.gridTemplateColumns = count >= 8 ? 'repeat(4,1fr)' : 'repeat(2,1fr)';
+        }
     },
 
     fallbackNav() {
@@ -248,21 +281,190 @@ if (document.readyState === 'loading') {
 
 window.ComponentLoader = ComponentLoader;
 
-// ── Global notification helper ────────────────────────────────────────────────
-// Usage: sendNotification('type', 'Title', 'Body text')
-// Types: 'received' | 'ready' | 'abandoned' | 'specialorder' | 'update' | 'jobstatus'
-function sendNotification(type, title, body) {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') return;
-    if (localStorage.getItem('scNotif') === '0') return;
-    if (localStorage.getItem('scNotif_' + type) === '0') return;
-    try {
-        new Notification(title, { body, icon: 'img/logo.png', badge: 'img/logo.png' });
-    } catch (e) {
-        console.warn('Notification failed:', e);
+// ── Notification panel helpers ────────────────────────────────────────────────
+function toggleNotifPanel(e) {
+    e.stopPropagation();
+    const panel = document.getElementById('notifPanel');
+    if (!panel) return;
+    const opening = !panel.classList.contains('open');
+    // Close account dropdown if open
+    document.getElementById('accountDropdown')?.classList.remove('open');
+    panel.classList.toggle('open', opening);
+    if (opening) {
+        renderNotifPanel();
+        InAppNotif.markAllRead();
     }
 }
-window.sendNotification = sendNotification;
+
+function renderNotifPanel() {
+    const list = document.getElementById('notifList');
+    if (!list) return;
+    const notifs = InAppNotif.get();
+    if (!notifs.length) {
+        list.innerHTML = `<div class="notif-empty">
+            <span style="font-size:1.8rem;">🔔</span>
+            <p>No notifications yet</p>
+        </div>`;
+        return;
+    }
+    list.innerHTML = notifs.map(n => `
+        <div class="notif-item ${n.read ? '' : 'unread'}">
+            <div class="notif-icon">${InAppNotif.typeIcon(n.type)}</div>
+            <div class="notif-content">
+                <div class="notif-title">${n.title}</div>
+                <div class="notif-body">${n.body}</div>
+                <div class="notif-time">${InAppNotif.timeAgo(n.time)}</div>
+            </div>
+        </div>`).join('');
+}
+window.toggleNotifPanel = toggleNotifPanel;
+window.renderNotifPanel = renderNotifPanel;
+
+// Init badge, purge old notifications, and sync from GAS on every page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(() => {
+        InAppNotif.purgeOld();
+        InAppNotif._updateBadge();
+        InAppNotif.syncFromServer();
+    }, 800));
+} else {
+    setTimeout(() => {
+        InAppNotif.purgeOld();
+        InAppNotif._updateBadge();
+        InAppNotif.syncFromServer();
+    }, 800);
+}
+
+// ── In-App Notification Store ─────────────────────────────────────────────────
+// Stores up to 50 notifications in localStorage. No server needed.
+const InAppNotif = {
+    MAX: 50,
+    KEY: 'sc_inapp_notifs',
+
+    get() {
+        try { return JSON.parse(localStorage.getItem(this.KEY) || '[]'); }
+        catch (_) { return []; }
+    },
+
+    add(type, title, body) {
+        const list = this.get();
+        list.unshift({
+            id:    Date.now() + Math.random().toString(36).slice(2),
+            type, title, body,
+            time:  Date.now(),
+            read:  false
+        });
+        localStorage.setItem(this.KEY, JSON.stringify(list.slice(0, this.MAX)));
+        this._updateBadge();
+        this._animateBell();
+    },
+
+    markAllRead() {
+        const list = this.get().map(n => ({ ...n, read: true }));
+        localStorage.setItem(this.KEY, JSON.stringify(list));
+        this._updateBadge();
+    },
+
+    clear() {
+        localStorage.removeItem(this.KEY);
+        this._updateBadge();
+    },
+
+    // Remove notifications older than 7 days
+    purgeOld() {
+        const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const list   = this.get().filter(n => n.time > cutoff);
+        localStorage.setItem(this.KEY, JSON.stringify(list));
+        this._updateBadge();
+    },
+
+    // Sync pending notifications from GAS — makes bell cross-device
+    async syncFromServer() {
+        const url = typeof window.SCRIPT_URL !== 'undefined' ? window.SCRIPT_URL : null;
+        if (!url || !navigator.onLine) return;
+        if (localStorage.getItem('scNotif') === '0') return;
+        try {
+            const res   = await fetch(url + '?action=getpending');
+            const data  = await res.json();
+            const notifs = data.notifications || [];
+            if (!notifs.length) return;
+
+            // Merge into local store — skip duplicates by server ID
+            const existing = this.get();
+            const existingIds = new Set(existing.map(n => n.serverId).filter(Boolean));
+            const toAdd = notifs.filter(n => !existingIds.has(n.id));
+
+            toAdd.forEach(n => {
+                existing.unshift({
+                    id:       Date.now() + Math.random().toString(36).slice(2),
+                    serverId: n.id,   // track server ID to avoid re-adding
+                    type:     n.type,
+                    title:    n.title,
+                    body:     n.body,
+                    time:     Date.now(),
+                    read:     false
+                });
+            });
+
+            if (toAdd.length) {
+                localStorage.setItem(this.KEY, JSON.stringify(existing.slice(0, this.MAX)));
+                this._updateBadge();
+                this._animateBell();
+            }
+
+            // Mark all as delivered so they don't re-appear next sync
+            await fetch(url + '?action=markdelivered', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ ids: notifs.map(n => n.id) })
+            });
+        } catch (_) {
+            // Silent fail — offline or GAS unavailable
+        }
+    },
+
+    unreadCount() {
+        return this.get().filter(n => !n.read).length;
+    },
+
+    _updateBadge() {
+        const badge = document.getElementById('notif-badge');
+        const count = this.unreadCount();
+        if (!badge) return;
+        badge.textContent = count > 9 ? '9+' : count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+    },
+
+    _animateBell() {
+        const bell = document.getElementById('notif-bell-btn');
+        if (!bell) return;
+        bell.classList.remove('bell-ring');
+        void bell.offsetWidth; // reflow to restart animation
+        bell.classList.add('bell-ring');
+    },
+
+    timeAgo(ts) {
+        const s = Math.floor((Date.now() - ts) / 1000);
+        if (s < 60)  return 'just now';
+        if (s < 3600) return Math.floor(s / 60) + 'm ago';
+        if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+        return Math.floor(s / 86400) + 'd ago';
+    },
+
+    typeIcon(type) {
+        const icons = {
+            received:     '📦',
+            ready:        '✅',
+            abandoned:    '⚠️',
+            specialorder: '🛒',
+            update:       '🚀',
+            jobstatus:    '🔧',
+            general:      '🔔'
+        };
+        return icons[type] || '🔔';
+    }
+};
+window.InAppNotif = InAppNotif;
 
 // ── Offline banner ────────────────────────────────────────────────────────────
 (function () {
@@ -312,52 +514,12 @@ window.sendNotification = sendNotification;
 })();
 window.isOffline = () => !navigator.onLine;
 
-// ── Pending notification polling ──────────────────────────────────────────────
-// Polls GAS for queued notifications and fires them locally
-// Runs on page load and every 60s — catches anything missed while app was closed
-(function () {
-    const SCRIPT_URL = (() => {
-        // Grab from any page that has it defined, or skip
-        return window.SCRIPT_URL || null;
-    });
-
-    async function pollPending() {
-        const url = typeof window.SCRIPT_URL !== 'undefined' ? window.SCRIPT_URL : null;
-        if (!url || !navigator.onLine) return;
-        if (localStorage.getItem('scNotif') === '0') return;
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        try {
-            const res  = await fetch(url + '?action=getpending');
-            const data = await res.json();
-            const notifs = data.notifications || [];
-            if (!notifs.length) return;
-            // Fire each one
-            notifs.forEach(n => {
-                if (localStorage.getItem('scNotif_' + n.type) === '0') return;
-                new Notification(n.title, { body: n.body, icon: './img/logo.png', badge: './img/logo.png', tag: n.type });
-            });
-            // Mark all as delivered
-            await fetch(url + '?action=markdelivered', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids: notifs.map(n => n.id) })
-            });
-        } catch (e) {
-            // Silent fail — polling is best-effort
-        }
-    }
-
-    // Poll on load (after a short delay so page settles) and every 60s
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setTimeout(pollPending, 3000));
-    } else {
-        setTimeout(pollPending, 3000);
-    }
-    setInterval(pollPending, 60000);
-
-    // Also poll when coming back online
-    window.addEventListener('sc-back-online', pollPending);
-})();
+// ── sendNotification — feeds in-app bell ─────────────────────────────────────
+function sendNotification(type, title, body) {
+    if (localStorage.getItem('scNotif_' + type) === '0') return;
+    InAppNotif.add(type, title, body);
+}
+window.sendNotification = sendNotification;
 
 // ── Haptic feedback ───────────────────────────────────────────────────────────
 // Android-only — iOS blocks the Vibration API entirely
