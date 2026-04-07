@@ -3,10 +3,9 @@
 // Update CACHE_DATE to today's date on every deploy — no manual versioning needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-06'; // ← change this to today's date on each deploy
+const CACHE_DATE = '2026-04-07b'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
 // Files to pre-cache on install (shell only — keeps it lean)
 const PRECACHE_URLS = [
@@ -55,6 +54,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
+    // Ignore non-http requests (chrome-extension, data, etc.)
+    if (!url.protocol.startsWith('http')) return;
+
     // Always go network-first for Google Apps Script API calls
     if (url.hostname === 'script.google.com' || url.hostname === 'fonts.googleapis.com') {
         event.respondWith(
@@ -84,73 +86,4 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// ── Push: fetch pending notifications from GAS for full context ──────────────
-self.addEventListener('push', event => {
-    event.waitUntil(
-        fetch(GAS_URL + '?action=getpending')
-            .then(r => r.json())
-            .then(data => {
-                const notifs = data.notifications || [];
-
-                // Nothing pending — show generic fallback so push isn't silent
-                if (!notifs.length) {
-                    return self.registration.showNotification('ServiCell', {
-                        body:  'You have a new update. Open the app to see details.',
-                        icon:  BASE + '/img/logo.png',
-                        badge: BASE + '/img/logo.png',
-                        tag:   'servicell-notif',
-                        data:  { url: BASE + '/index.html' }
-                    });
-                }
-
-                // Mark all fetched notifications as delivered — fire and forget
-                fetch(GAS_URL, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({
-                        action: 'markdelivered',
-                        ids:    notifs.map(n => n.id)
-                    })
-                }).catch(() => {});
-
-                // Show each notification with full context
-                return Promise.all(notifs.map(n =>
-                    self.registration.showNotification(n.title, {
-                        body:     n.body,
-                        icon:     BASE + '/img/logo.png',
-                        badge:    BASE + '/img/logo.png',
-                        tag:      n.type || 'servicell-notif',
-                        renotify: true,
-                        data:     { url: BASE + '/index.html', type: n.type }
-                    })
-                ));
-            })
-            .catch(() => {
-                // Network unavailable — generic fallback so push isn't silent
-                return self.registration.showNotification('ServiCell', {
-                    body:  'You have a new update. Open the app to see details.',
-                    icon:  BASE + '/img/logo.png',
-                    badge: BASE + '/img/logo.png',
-                    tag:   'servicell-notif',
-                    data:  { url: BASE + '/index.html' }
-                });
-            })
-    );
-});
-
-// ── Notification click: focus or open the app ────────────────────────────────
-self.addEventListener('notificationclick', event => {
-    event.notification.close();
-    const target = event.notification.data?.url || (BASE + '/index.html');
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true })
-            .then(windowClients => {
-                for (const client of windowClients) {
-                    if (client.url.includes(self.location.origin) && 'focus' in client) {
-                        return client.focus();
-                    }
-                }
-                if (clients.openWindow) return clients.openWindow(target);
-            })
-    );
-});
+// Push and notificationclick handlers removed — using in-app bell instead.

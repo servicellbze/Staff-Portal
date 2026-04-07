@@ -1095,17 +1095,13 @@
             <div class="card-body">
                 <div class="setting-row">
                     <div class="setting-info">
-                        <div class="setting-label">Push Notifications</div>
-                        <div class="setting-desc">Get notified about jobs, status changes, and shop alerts — even when
-                            the app isn't open.</div>
-                        <span class="setting-status" id="notifStatus">Checking…</span><br>
-                        <button class="notif-btn" id="notifBtn" onclick="requestNotifPermission()">
-                            🔔 Enable Notifications
-                        </button>
+                        <div class="setting-label">In-App Notifications</div>
+                        <div class="setting-desc">Bell icon in the nav shows alerts for job updates, special orders, and
+                            status changes.</div>
                     </div>
                     <div class="toggle-wrap">
                         <label class="toggle">
-                            <input type="checkbox" id="notifToggle" onchange="saveNotifPref()">
+                            <input type="checkbox" id="notifToggle" onchange="saveNotifPref()" checked>
                             <div class="toggle-track"></div>
                             <div class="toggle-thumb"></div>
                         </label>
@@ -1258,20 +1254,6 @@
             <div class="card-header">
                 <h2>📝 Changelog</h2>
             </div>
-            <div class="changelog-entry">
-                <div class="changelog-version">
-                    v3.6.4
-                    <span class="changelog-badge badge-current">Current</span>
-                </div>
-                <div class="changelog-date">April 7, 2026</div>
-                <ul class="changelog-changes">
-                    <li>Added 'Haptic Feedback' option (Android Exclusive)</li>
-                    <li>'Special Orders' fully functional now</li>
-                    <li>Finalized Logins</li>
-                    <li>Fixed Notifications</li>
-                    <li>General Improvements</li>
-                </ul>
-            </div>
 
 
             <div class="card-body">
@@ -1279,8 +1261,27 @@
 
                     <div class="changelog-entry">
                         <div class="changelog-version">
+                            v4.0.0
+                            <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 7, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>In-app notification bell with unread badge and 7-day auto-cleanup</li>
+                            <li>Mobile nav redesigned with icon grid layout</li>
+                            <li>Special Orders: view, edit, delete modals — manager-only delete</li>
+                            <li>Special Orders: Show/Hide Closed filter</li>
+                            <li>Haptic feedback on Android (Settings toggle)</li>
+                            <li>Offline mode with cached data fallback and auto-reload on reconnect</li>
+                            <li>PWA service worker with auto cache-busting</li>
+                            <li>Password change from Settings</li>
+                            <li>Fixed login (e.parameter bug in GAS)</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
                             v3.5.1
-                            <span class="changelog-badge badge-legacy">Current</span>
+                            <span class="changelog-badge badge-legacy">Legacy</span>
                         </div>
                         <div class="changelog-date">April 6, 2026</div>
                         <ul class="changelog-changes">
@@ -1590,127 +1591,15 @@
         }
 
         function updateNotifUI() {
-            const statusEl = document.getElementById('notifStatus');
-            const btn = document.getElementById('notifBtn');
             const toggle = document.getElementById('notifToggle');
             const panel = document.getElementById('notifTogglesPanel');
-
-            if (!('Notification' in window)) {
-                statusEl.textContent = 'Not supported in this browser';
-                statusEl.className = 'setting-status status-denied';
-                btn.style.display = 'none';
-                toggle.disabled = true;
-                if (panel) panel.style.display = 'none';
-                return;
-            }
-
-            const perm = Notification.permission;
-
-            if (perm === 'granted') {
-                statusEl.textContent = 'Permission granted';
-                statusEl.className = 'setting-status status-granted';
-                btn.style.display = 'none';
-                toggle.disabled = false;
-                const masterOn = localStorage.getItem('scNotif') !== '0';
-                toggle.checked = masterOn;
-                if (panel) panel.style.display = masterOn ? 'block' : 'none';
-                // Sync per-type checkboxes
-                NOTIF_TYPES.forEach(t => {
-                    const el = document.getElementById('nt-' + t);
-                    if (el) el.checked = notifTypeEnabled(t);
-                });
-            } else if (perm === 'denied') {
-                statusEl.textContent = 'Blocked — enable in your browser site settings';
-                statusEl.className = 'setting-status status-denied';
-                btn.disabled = true;
-                btn.textContent = '🚫 Blocked by browser';
-                toggle.disabled = true;
-                toggle.checked = false;
-                if (panel) panel.style.display = 'none';
-            } else {
-                statusEl.textContent = 'Permission not yet granted';
-                statusEl.className = 'setting-status status-default';
-                btn.style.display = 'inline-flex';
-                toggle.disabled = true;
-                toggle.checked = false;
-                if (panel) panel.style.display = 'none';
-            }
-        }
-
-        const VAPID_PUBLIC_KEY = 'BPa9nHctgTQ9WEtkMv5ObXVebnVdREIxPxql_H60ajQ2XI9byUzZR8EHGvvCbaStC0jYPCAfo8zEoe4r85lo8pc';
-
-        async function requestNotifPermission() {
-            const result = await Notification.requestPermission();
-            if (result !== 'granted') { updateNotifUI(); return; }
-            localStorage.setItem('scNotif', '1');
-            await subscribeToPush();
-            updateNotifUI();
-        }
-
-        async function subscribeToPush() {
-            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-            try {
-                const reg = await navigator.serviceWorker.ready;
-                // Check if already subscribed
-                let sub = await reg.pushManager.getSubscription();
-                if (!sub) {
-                    sub = await reg.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-                    });
-                }
-                // Save subscription to GAS
-                const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-                const subJson = sub.toJSON();
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'subscribe',
-                        username: user,
-                        endpoint: subJson.endpoint,
-                        p256dh: subJson.keys.p256dh,
-                        auth: subJson.keys.auth
-                    })
-                });
-                localStorage.setItem('scPushSubscribed', '1');
-                console.log('[Push] Subscribed successfully');
-
-                // Show a test notification so the user knows it's working
-                new Notification('🔔 Notifications enabled!', {
-                    body: 'ServiCell will now alert you even when the app is closed.',
-                    icon: '/Staff-Portal/img/logo.png',
-                    badge: '/Staff-Portal/img/logo.png'
-                });
-            } catch (err) {
-                console.warn('[Push] Subscription failed:', err);
-            }
-        }
-
-        async function unsubscribeFromPush() {
-            if (!('serviceWorker' in navigator)) return;
-            try {
-                const reg = await navigator.serviceWorker.ready;
-                const sub = await reg.pushManager.getSubscription();
-                if (sub) {
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'unsubscribe', endpoint: sub.endpoint })
-                    });
-                    await sub.unsubscribe();
-                }
-                localStorage.removeItem('scPushSubscribed');
-            } catch (err) {
-                console.warn('[Push] Unsubscribe failed:', err);
-            }
-        }
-
-        function urlBase64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const raw = atob(base64);
-            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+            const masterOn = localStorage.getItem('scNotif') !== '0';
+            if (toggle) toggle.checked = masterOn;
+            if (panel) panel.style.display = masterOn ? 'block' : 'none';
+            NOTIF_TYPES.forEach(t => {
+                const el = document.getElementById('nt-' + t);
+                if (el) el.checked = notifTypeEnabled(t);
+            });
         }
 
         function saveNotifPref() {
@@ -1718,21 +1607,6 @@
             localStorage.setItem('scNotif', on ? '1' : '0');
             const panel = document.getElementById('notifTogglesPanel');
             if (panel) panel.style.display = on ? 'block' : 'none';
-            if (!on) {
-                unsubscribeFromPush();
-            } else {
-                // Only subscribe if permission is already granted.
-                // If not, they need to hit the "Enable Notifications" button first.
-                if (Notification.permission === 'granted') {
-                    subscribeToPush();
-                } else {
-                    // Revert toggle — can't enable without permission
-                    document.getElementById('notifToggle').checked = false;
-                    localStorage.setItem('scNotif', '0');
-                    if (panel) panel.style.display = 'none';
-                    updateNotifUI();
-                }
-            }
         }
 
         // ── User-specific role helpers ──────────────────────────────────────
