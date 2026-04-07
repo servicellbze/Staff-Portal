@@ -3,7 +3,7 @@
 // Bump CACHE_NAME when you deploy a new version to force clients to update.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'servicell-v4';
+const CACHE_NAME = 'servicell-v5';
 const BASE = '/Staff-Portal';
 
 // Files to pre-cache on install (shell only — keeps it lean)
