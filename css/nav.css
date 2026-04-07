@@ -6,26 +6,24 @@
 
 nav {
   position: fixed;
-  top: 25px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--glass);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  padding: 10px 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 10px 16px;
   border-radius: var(--radius-full);
   border: 1px solid var(--glass-border);
   z-index: var(--z-nav);
   width: fit-content;
   max-width: 95%;
   box-shadow: var(--shadow-md);
-  transition: background var(--transition-base),
-    box-shadow var(--transition-base),
-    top var(--transition-base);
+  transition: background var(--transition-base), box-shadow var(--transition-base), top var(--transition-base);
 }
 
 nav.scrolled {
-  top: 12px;
+  top: 10px;
   background: var(--glass-strong);
   box-shadow: var(--shadow-lg);
 }
@@ -35,7 +33,7 @@ nav.scrolled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
 }
 
 .logo-text {
@@ -44,23 +42,24 @@ nav.scrolled {
   font-size: 1rem;
   white-space: nowrap;
   text-decoration: none;
+  letter-spacing: -0.3px;
 }
 
 /* ── Nav links ── */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .nav-btn {
   text-decoration: none;
   color: var(--text-dim);
   font-weight: var(--font-medium);
-  padding: 10px 18px;
+  padding: 8px 14px;
   border-radius: var(--radius-full);
   transition: color var(--transition-base), background var(--transition-base);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   display: inline-block;
   position: relative;
   overflow: hidden;
@@ -75,7 +74,6 @@ nav.scrolled {
   width: 0;
   height: 0;
   background: rgba(var(--primary-rgb), 0.1);
-  /* Dynamic based on theme */
   border-radius: 50%;
   transform: translate(-50%, -50%);
   transition: width 0.4s ease, height 0.4s ease;
@@ -123,19 +121,15 @@ nav.scrolled {
   border-radius: 50%;
   background: var(--primary);
   color: white;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   line-height: 1;
-  letter-spacing: 0;
-  text-transform: uppercase;
   user-select: none;
 }
-
-
 
 .account-name {
   font-size: 0.82rem;
@@ -158,7 +152,7 @@ nav.scrolled {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  min-width: 180px;
+  min-width: 190px;
   background: var(--glass-strong);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -232,17 +226,10 @@ nav.scrolled {
 
 .dropdown-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  /* Neutral light overlay — works in dark & light */
 }
 
-.dropdown-item.danger {
-  color: #dc2626;
-  /* Keep red for logout — semantic color */
-}
-
-.dropdown-item.danger:hover {
-  background: rgba(220, 38, 38, 0.08);
-}
+.dropdown-item.danger { color: #dc2626; }
+.dropdown-item.danger:hover { background: rgba(220, 38, 38, 0.08); }
 
 /* ── Hamburger ── */
 .hamburger {
@@ -250,101 +237,145 @@ nav.scrolled {
   flex-direction: column;
   gap: 5px;
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
+  border-radius: 10px;
+  transition: background 0.2s;
   z-index: calc(var(--z-nav) + 1);
 }
 
+.hamburger:hover { background: rgba(255,255,255,0.06); }
+
 .hamburger span {
-  width: 24px;
-  height: 2.5px;
+  width: 22px;
+  height: 2px;
   background: var(--text-main);
   border-radius: 2px;
   transition: var(--transition-base);
+  display: block;
 }
 
-.hamburger.active span:nth-child(1) {
-  transform: rotate(45deg) translateY(8px);
-}
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translateY(7px); }
+.hamburger.active span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translateY(-7px); }
 
-.hamburger.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.hamburger.active span:nth-child(3) {
-  transform: rotate(-45deg) translateY(-8px);
-}
-
-/* ── Mobile dropdown panel ── */
+/* ── Mobile menu panel ── */
 .mobile-menu-panel {
   display: none;
   position: fixed;
-  top: 72px;
+  top: 70px;
   left: 50%;
-  transform: translateX(-50%) scaleY(0);
-  transform-origin: top;
-  width: 90%;
-  max-width: 400px;
+  transform: translateX(-50%) translateY(-8px);
+  width: min(88vw, 360px);
   background: var(--glass-strong);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--transition-base), transform var(--transition-base);
+  transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.175,0.885,0.32,1.1);
   z-index: calc(var(--z-nav) - 1);
   overflow: hidden;
 }
 
 .mobile-menu-panel.open {
   opacity: 1;
-  transform: translateX(-50%) scaleY(1);
+  transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
 
+/* Grid layout for nav links on mobile — 4 columns, icon + label */
 .mobile-menu-links {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 14px 14px 10px;
+}
+
+.mobile-nav-btn {
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 12px 4px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.mobile-menu-links .nav-btn {
-  width: 100%;
+.mobile-nav-btn:hover,
+.mobile-nav-btn.active {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-color: rgba(var(--primary-rgb), 0.3);
+  color: var(--primary);
+}
+
+.mobile-nav-btn::before { display: none !important; }
+
+.mobile-nav-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.mobile-nav-label {
+  font-size: 0.6rem;
+  font-weight: 700;
   text-align: center;
-  padding: 14px 16px;
-  border-radius: 0;
-  font-size: 0.9rem;
-  border-bottom: 1px solid var(--glass-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.mobile-menu-links .nav-btn:last-child {
-  border-bottom: none;
-}
-
-.mobile-menu-links .nav-btn::before {
-  border-radius: 0;
-}
-
+/* ── Mobile menu footer ── */
 .mobile-menu-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 10px 14px 14px;
   border-top: 1px solid var(--glass-border);
-  background: rgba(var(--primary-rgb), 0.03);
+  gap: 10px;
 }
 
 .mobile-user-info {
   display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mobile-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mobile-user-text {
+  display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .mobile-username {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .mobile-role-badge {
@@ -361,102 +392,299 @@ nav.scrolled {
   background: rgba(220, 38, 38, 0.08);
   color: #dc2626;
   border-radius: var(--radius-full);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
   font-family: var(--font-family);
+  flex-shrink: 0;
 }
 
-.mobile-logout:hover {
-  background: rgba(220, 38, 38, 0.15);
-}
+.mobile-logout:hover { background: rgba(220, 38, 38, 0.15); }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
   nav {
-    width: 90%;
-    padding: 12px 15px;
+    width: 92%;
+    padding: 10px 14px;
     top: 12px;
   }
 
-  nav.scrolled {
-    top: 8px;
-  }
+  nav.scrolled { top: 8px; }
 
-  .logo-text {
-    font-size: 1rem;
-  }
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
 
-  .nav-links {
-    display: none;
-  }
+  .account-name,
+  .account-caret { display: none; }
 
-  .hamburger {
-    display: flex;
-  }
-
-  .account-name {
-    display: none;
-  }
-
-  .account-caret {
-    display: none;
-  }
-
-  /* Slightly larger avatar when shown alone on mobile */
   .account-avatar {
     width: 32px;
     height: 32px;
-    font-size: 0.85rem;
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.25);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
   }
 
-  /* Tighten chip padding since name is hidden */
   .account-chip {
-    padding: 4px 4px;
+    padding: 4px;
     gap: 0;
+    background: transparent;
+    border-color: transparent;
   }
 
-  .mobile-menu-panel {
-    display: block;
+  .account-chip:hover {
+    background: rgba(var(--primary-rgb), 0.08);
+    border-color: rgba(var(--primary-rgb), 0.2);
   }
 
-  .mobile-menu-panel.open {
-    top: 62px;
+  /* Tighten the right-side controls */
+  .nav-wrapper {
+    gap: 8px;
   }
+
+  .mobile-menu-panel { display: block; }
 }
 
-@media (max-width: 480px) {
-  nav {
-    width: 92%;
-    padding: 10px 12px;
-  }
+@media (max-width: 400px) {
+  nav { width: 94%; padding: 9px 12px; }
 
-  .logo-text {
-    font-size: 0.9rem;
-  }
+  .mobile-menu-panel { width: 92vw; }
 
-  .hamburger span {
-    width: 20px;
-    height: 2px;
-  }
+  .mobile-menu-links { grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px 10px 8px; }
 
-  .mobile-menu-panel {
-    width: 94%;
-    top: 58px;
-  }
-
-  .mobile-menu-links .nav-btn {
-    padding: 12px 14px;
-    font-size: 0.85rem;
-  }
+  .mobile-nav-label { font-size: 0.55rem; }
 }
 
 a {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
+}
+
+/* ── Right group (bell + hamburger) ── */
+.nav-right-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* On desktop, bell sits next to account chip — no auto margin needed */
+@media (min-width: 769px) {
+  .nav-right-group { margin-left: 0; }
+  .nav-account { margin-left: auto; }
+}
+
+/* ── Bell button ── */
+.nav-bell {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.bell-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.bell-btn:hover {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-color: rgba(var(--primary-rgb), 0.3);
+  color: var(--primary);
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 2px solid var(--glass-strong, #0f172a);
+  pointer-events: none;
+}
+
+@keyframes bell-ring {
+  0%,100% { transform: rotate(0); }
+  15%      { transform: rotate(14deg); }
+  30%      { transform: rotate(-12deg); }
+  45%      { transform: rotate(10deg); }
+  60%      { transform: rotate(-8deg); }
+  75%      { transform: rotate(5deg); }
+}
+
+.bell-btn.bell-ring svg {
+  animation: bell-ring 0.6s ease;
+}
+
+/* ── Notification panel ── */
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: -8px;
+  width: 320px;
+  max-height: 420px;
+  background: var(--glass-strong);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(-6px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: calc(var(--z-nav) + 10);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notif-panel.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+.notif-panel-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.notif-clear-btn {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family);
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.notif-clear-btn:hover {
+  color: #dc2626;
+  background: rgba(220,38,38,0.08);
+}
+
+.notif-list {
+  overflow-y: auto;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 36px 20px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notif-item:last-child { border-bottom: none; }
+
+.notif-item:hover { background: rgba(255,255,255,0.03); }
+
+.notif-item.unread {
+  background: rgba(var(--primary-rgb), 0.04);
+}
+
+.notif-item.unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+}
+
+.notif-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notif-content { flex: 1; min-width: 0; }
+
+.notif-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-body {
+  font-size: 0.76rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.notif-time {
+  font-size: 0.68rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+/* Mobile — panel goes full width */
+@media (max-width: 480px) {
+  .notif-panel {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px) scale(0.97);
+    right: auto;
+    width: min(92vw, 360px);
+  }
+
+  .notif-panel.open {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
