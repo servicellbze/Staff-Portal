@@ -357,6 +357,7 @@ const InAppNotif = {
         localStorage.setItem(this.KEY, JSON.stringify(list.slice(0, this.MAX)));
         this._updateBadge();
         this._animateBell();
+        if (typeof playNotifSound === 'function') playNotifSound();
     },
 
     markAllRead() {
@@ -383,8 +384,9 @@ const InAppNotif = {
         const url = typeof window.SCRIPT_URL !== 'undefined' ? window.SCRIPT_URL : null;
         if (!url || !navigator.onLine) return;
         if (localStorage.getItem('scNotif') === '0') return;
+        const role = deriveRole(getLoggedInUser());
         try {
-            const res   = await fetch(url + '?action=getpending');
+            const res   = await fetch(`${url}?action=getpending&role=${encodeURIComponent(role)}`);
             const data  = await res.json();
             const notifs = data.notifications || [];
             if (!notifs.length) return;
@@ -514,9 +516,23 @@ window.InAppNotif = InAppNotif;
 })();
 window.isOffline = () => !navigator.onLine;
 
-// ── sendNotification — feeds in-app bell ─────────────────────────────────────
+// ── sendNotification — role-aware in-app bell ────────────────────────────────
+// type: 'received'|'ready'|'abandoned'|'jobstatus'|'specialorder'|'update'
+const NOTIF_ROLES = {
+    received:     ['technician', 'cashier', 'manager'],
+    ready:        ['technician', 'cashier', 'manager'],
+    abandoned:    ['technician', 'cashier', 'manager'],
+    jobstatus:    ['cashier', 'manager'],
+    specialorder: ['technician', 'cashier', 'manager'],
+    update:       ['technician', 'cashier', 'manager'],
+    manageronly:  ['manager']   // inventory edits, sensitive alerts
+};
+
 function sendNotification(type, title, body) {
-    if (localStorage.getItem('scNotif_' + type) === '0') return;
+    if (localStorage.getItem('scNotif') === '0') return;
+    const role    = deriveRole(getLoggedInUser());
+    const allowed = NOTIF_ROLES[type] || ['technician', 'cashier', 'manager'];
+    if (!allowed.includes(role)) return;
     InAppNotif.add(type, title, body);
 }
 window.sendNotification = sendNotification;
@@ -550,3 +566,109 @@ if (IS_ANDROID) {
         if (el) haptic('light');
     }, { passive: true });
 }
+
+// ── Notification Sound Engine ─────────────────────────────────────────────────
+// Pure Web Audio API — no sound files needed.
+// Sound options: 'chime' | 'ping' | 'pop' | 'double' | 'marimba'
+(function () {
+    let _ctx = null;
+
+    function getCtx() {
+        if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (_ctx.state === 'suspended') _ctx.resume();
+        return _ctx;
+    }
+
+    // Unlock audio on iOS — call this on any user gesture (e.g. login tap)
+    function unlockAudio() {
+        try {
+            const ctx = getCtx();
+            const buf = ctx.createBuffer(1, 1, 22050);
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            src.connect(ctx.destination);
+            src.start(0);
+        } catch (_) {}
+    }
+
+    function playTone(freq, type, startTime, duration, gainVal, ctx, gainNode) {
+        const osc = ctx.createOscillator();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, startTime);
+        osc.connect(gainNode);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+    }
+
+    const SOUNDS = {
+        chime: (ctx) => {
+            const g = ctx.createGain();
+            g.connect(ctx.destination);
+            g.gain.setValueAtTime(0.25, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+            playTone(880,  'sine', ctx.currentTime,       0.6, 0.25, ctx, g);
+            playTone(1320, 'sine', ctx.currentTime + 0.12, 0.5, 0.2,  ctx, g);
+        },
+        ping: (ctx) => {
+            const g = ctx.createGain();
+            g.connect(ctx.destination);
+            g.gain.setValueAtTime(0.3, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+            playTone(1480, 'sine', ctx.currentTime, 0.25, 0.3, ctx, g);
+        },
+        pop: (ctx) => {
+            const g = ctx.createGain();
+            g.connect(ctx.destination);
+            g.gain.setValueAtTime(0.2, ctx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+            playTone(220, 'sine', ctx.currentTime, 0.15, 0.2, ctx, g);
+        },
+        double: (ctx) => {
+            const g = ctx.createGain();
+            g.connect(ctx.destination);
+            [0, 0.15].forEach(offset => {
+                const o = ctx.createOscillator();
+                o.type = 'sine';
+                o.frequency.setValueAtTime(1100, ctx.currentTime + offset);
+                const gn = ctx.createGain();
+                gn.gain.setValueAtTime(0.25, ctx.currentTime + offset);
+                gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.12);
+                o.connect(gn);
+                gn.connect(ctx.destination);
+                o.start(ctx.currentTime + offset);
+                o.stop(ctx.currentTime + offset + 0.12);
+            });
+        },
+        marimba: (ctx) => {
+            [0, 0.13, 0.26].forEach((offset, i) => {
+                const freqs = [880, 740, 587];
+                const o = ctx.createOscillator();
+                o.type = 'triangle';
+                o.frequency.setValueAtTime(freqs[i], ctx.currentTime + offset);
+                const gn = ctx.createGain();
+                gn.gain.setValueAtTime(0.28, ctx.currentTime + offset);
+                gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.3);
+                o.connect(gn);
+                gn.connect(ctx.destination);
+                o.start(ctx.currentTime + offset);
+                o.stop(ctx.currentTime + offset + 0.3);
+            });
+        }
+    };
+
+    function playNotifSound() {
+        if (localStorage.getItem('scNotifSound') === '0') return;
+        const sound = localStorage.getItem('scNotifSoundType') || 'chime';
+        try {
+            const ctx = getCtx();
+            const fn  = SOUNDS[sound] || SOUNDS.chime;
+            fn(ctx);
+        } catch (e) {
+            console.warn('Sound failed:', e);
+        }
+    }
+
+    window.unlockAudio    = unlockAudio;
+    window.playNotifSound = playNotifSound;
+    window.NOTIF_SOUNDS   = Object.keys(SOUNDS);
+})();
