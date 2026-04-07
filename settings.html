@@ -1136,6 +1136,27 @@
                     </div>
                 </div>
 
+                <!-- ── Notification sound ── -->
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Notification Sound</div>
+                        <div class="setting-desc">Play a sound when a new notification arrives.</div>
+                    </div>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="notifSoundToggle" onchange="saveNotifSoundPref()">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sound picker — shown when sound is on -->
+                <div id="soundPickerPanel" style="display:none; padding-top:12px; border-top:1px solid var(--glass-border); margin-top:4px;">
+                    <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:10px;">Sound Style</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="soundPills"></div>
+                </div>
+
             </div>
         </div>
 
@@ -1549,6 +1570,34 @@
             localStorage.setItem('scNotif', on ? '1' : '0');
         }
 
+        function saveNotifSoundPref() {
+            const on = document.getElementById('notifSoundToggle').checked;
+            localStorage.setItem('scNotifSound', on ? '1' : '0');
+            document.getElementById('soundPickerPanel').style.display = on ? 'block' : 'none';
+            if (on && typeof playNotifSound === 'function') playNotifSound();
+        }
+
+        function buildSoundPills() {
+            const sounds = ['chime','ping','pop','double','marimba'];
+            const labels = { chime:'🔔 Chime', ping:'📍 Ping', pop:'💬 Pop', double:'✌️ Double', marimba:'🎵 Marimba' };
+            const current = localStorage.getItem('scNotifSoundType') || 'chime';
+            const container = document.getElementById('soundPills');
+            if (!container) return;
+            container.innerHTML = sounds.map(s => `
+                <button onclick="selectSound('${s}')" id="sp-${s}"
+                    style="padding:7px 14px;border-radius:var(--radius-full);border:1.5px solid ${s===current?'var(--primary)':'var(--glass-border)'};
+                    background:${s===current?'rgba(37,99,235,0.1)':'var(--glass)'};color:${s===current?'var(--primary)':'var(--text-dim)'};
+                    font-family:var(--font-family);font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                    ${labels[s]}
+                </button>`).join('');
+        }
+
+        function selectSound(sound) {
+            localStorage.setItem('scNotifSoundType', sound);
+            buildSoundPills();
+            if (typeof playNotifSound === 'function') playNotifSound();
+        }
+
         // ── User-specific role helpers ──────────────────────────────────────
         function getUserRoleKey(username) {
             return `scRole_${username}`;
@@ -1908,6 +1957,11 @@
 
             updateNotifUI();
             populateAbout();
+            // Sound settings
+            const soundOn = localStorage.getItem('scNotifSound') === '1';
+            document.getElementById('notifSoundToggle').checked = soundOn;
+            document.getElementById('soundPickerPanel').style.display = soundOn ? 'block' : 'none';
+            buildSoundPills();
         });
     </script>
 </body>

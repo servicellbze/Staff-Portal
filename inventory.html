@@ -172,21 +172,63 @@
         /* ── Responsive ── */
         @media (max-width: 900px) {
             .inv-header { display: none; }
-            .inv-row { grid-template-columns: 1fr auto; gap: 10px; padding: 14px 16px; border-radius: 14px; margin-bottom: 8px; border: 1px solid var(--glass-border) !important; border-left: none !important; }
-            .inv-row.low-stock { border-top: 3px solid var(--warning) !important; }
+            .inv-table-wrap { background: transparent; border: none; box-shadow: none; }
+
+            /* Card layout — each row becomes a self-contained card */
+            .inv-row {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 14px 16px;
+                border-radius: 16px;
+                margin-bottom: 8px;
+                border: 1px solid var(--glass-border) !important;
+                border-left: none !important;
+                background: var(--glass);
+                backdrop-filter: blur(10px);
+            }
+            .inv-row.low-stock  { border-top: 3px solid var(--warning) !important; }
             .inv-row.out-of-stock { border-top: 3px solid var(--danger) !important; }
-            .inv-table-wrap { background: transparent; border: none; }
-            .inv-row .category-cell, .inv-row .qty-col, .inv-row .cost-col, .inv-row .price-col, .inv-row .stock-col { display: none; }
+            .inv-row:hover { transform: none; }
+
+            /* Show all columns stacked */
+            .inv-row .category-cell,
+            .inv-row .qty-col,
+            .inv-row .cost-col,
+            .inv-row .price-col,
+            .inv-row .stock-col { display: block; }
+
+            /* Top row: name + actions side by side */
+            .inv-row > div:first-child { flex: 1; }
+            .inv-row .row-actions { flex-direction: row; justify-content: flex-start; }
+
+            /* Inline meta row below name */
+            .inv-row-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: center;
+            }
+
+            /* Stock bar full width */
+            .inv-row .stock-col { width: 100%; }
+            .stock-bar-wrap { gap: 10px; }
+
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .form-row, .form-row-3 { grid-template-columns: 1fr; }
             .view-grid { grid-template-columns: 1fr; }
             .view-field.full { grid-column: span 1; }
         }
+
         @media (max-width: 540px) {
             main { padding: 110px var(--space-sm) var(--space-md); }
             .page-header { flex-direction: column; }
             .header-actions { width: 100%; }
             .btn-primary, .btn-secondary { flex: 1; justify-content: center; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .stat-value { font-size: 1.4rem; }
+            .toolbar { gap: 8px; }
+            .modal-card { padding: 20px 16px 18px; }
         }
     </style>
 </head>
@@ -567,10 +609,12 @@
                 <div class="item-name">${escH(i.name || '—')}</div>
                 <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
             </div>
-            <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
-            <div class="qty-col"><span class="qty-cell ${qtyCls}">${qty}</span><div style="font-size:0.65rem;color:var(--text-dim);">min ${min}</div></div>
-            <div class="cost-col"><span class="price-cell">BZ$${cost.toFixed(2)}</span></div>
-            <div class="price-col"><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
+            <div class="inv-row-meta">
+                <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
+                <div class="qty-col"><span class="qty-cell ${qtyCls}">${qty}</span><span style="font-size:0.65rem;color:var(--text-dim);margin-left:4px;">/ min ${min}</span></div>
+                <div class="cost-col"><span class="price-cell" style="font-size:0.78rem;color:var(--text-dim);">Cost: BZ$${cost.toFixed(2)}</span></div>
+                <div class="price-col"><span class="price-cell" style="font-size:0.78rem;">Sale: BZ$${sale.toFixed(2)}</span></div>
+            </div>
             <div class="stock-col">
                 <div class="stock-bar-wrap">
                     <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${barClr};"></div></div>

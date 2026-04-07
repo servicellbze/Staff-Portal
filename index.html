@@ -1144,6 +1144,9 @@
                     storage.setItem('isLoggedIn', 'true');
                     storage.setItem('scUser', user);
 
+                    // Unlock audio context on iOS — must happen on user gesture
+                    if (typeof unlockAudio === 'function') unlockAudio();
+
                     // Request notification permission now that user is authenticated
                     if ('Notification' in window && Notification.permission === 'default') {
                         Notification.requestPermission();
