@@ -3,7 +3,7 @@
 // Update CACHE_DATE to today's date on every deploy — no manual versioning needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-08'; // ← change this to today's date on each deploy
+const CACHE_DATE = '2026-04-08b'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
@@ -86,4 +86,32 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// Push and notificationclick handlers removed — using in-app bell instead.
+// ── Push: show notification from Cloudflare Worker delivery ──────────────────
+self.addEventListener('push', event => {
+    let data = { title: 'ServiCell Portal', body: 'You have a new notification.', type: 'general' };
+    try { if (event.data) data = event.data.json(); } catch (_) {}
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body:     data.body,
+            icon:     BASE + '/img/logo.png',
+            badge:    BASE + '/img/logo.png',
+            tag:      data.type || 'servicell',
+            renotify: true,
+            data:     { url: BASE + '/index.html' }
+        })
+    );
+});
+
+// ── Notification click: focus or open the app ────────────────────────────────
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    const target = (event.notification.data && event.notification.data.url) || (BASE + '/index.html');
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+            for (const c of list) {
+                if (c.url.includes(self.location.origin) && 'focus' in c) return c.focus();
+            }
+            if (clients.openWindow) return clients.openWindow(target);
+        })
+    );
+});

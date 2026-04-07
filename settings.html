@@ -1129,7 +1129,7 @@
                     </div>
                     <div class="toggle-wrap">
                         <label class="toggle">
-                            <input type="checkbox" id="notifToggle" onchange="saveNotifPref()" checked>
+                            <input type="checkbox" id="notifToggle" onchange="saveNotifPref()">
                             <div class="toggle-track"></div>
                             <div class="toggle-thumb"></div>
                         </label>
@@ -1561,13 +1561,67 @@
         // ── Notifications ───────────────────────────────────────────────────
         function updateNotifUI() {
             const toggle   = document.getElementById('notifToggle');
-            const masterOn = localStorage.getItem('scNotif') !== '0';
+            const masterOn = localStorage.getItem('scNotif') === '1'; // default OFF
             if (toggle) toggle.checked = masterOn;
+        }
+
+        const VAPID_PUBLIC_KEY = 'BPa9nHctgTQ9WEtkMv5ObXVebnVdREIxPxql_H60ajQ2XI9byUzZR8EHGvvCbaStC0jYPCAfo8zEoe4r85lo8pc';
+
+        function urlBase64ToUint8Array(b64) {
+            const pad = '='.repeat((4 - b64.length % 4) % 4);
+            const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+        }
+
+        async function subscribeToPush() {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                let sub = await reg.pushManager.getSubscription();
+                if (!sub) {
+                    sub = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+                const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+                const s = sub.toJSON();
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'subscribe', username: user, endpoint: s.endpoint, p256dh: s.keys.p256dh, auth: s.keys.auth })
+                });
+                localStorage.setItem('scPushSubscribed', '1');
+                console.log('[Push] Subscribed');
+            } catch (err) {
+                console.warn('[Push] Subscribe failed:', err);
+            }
+        }
+
+        async function unsubscribeFromPush() {
+            if (!('serviceWorker' in navigator)) return;
+            try {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.getSubscription();
+                if (sub) {
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'unsubscribe', endpoint: sub.endpoint })
+                    });
+                    await sub.unsubscribe();
+                }
+                localStorage.removeItem('scPushSubscribed');
+            } catch (err) {
+                console.warn('[Push] Unsubscribe failed:', err);
+            }
         }
 
         function saveNotifPref() {
             const on = document.getElementById('notifToggle').checked;
             localStorage.setItem('scNotif', on ? '1' : '0');
+            if (on) subscribeToPush();
+            else unsubscribeFromPush();
         }
 
         function saveNotifSoundPref() {
