@@ -2410,6 +2410,7 @@
 
                 closeModal('editModal');
                 showToast('✅ Job updated successfully', 'ok');
+                haptic('success');
                 filterAndRender();
                 updateStats(allJobs);
                 setTimeout(loadJobs, 2000);
@@ -2452,6 +2453,7 @@
                 allJobs = allJobs.filter(j => String(j.id) !== String(id));
 
                 showToast('🗑️ Job #' + id + ' removed successfully.', 'ok');
+                haptic('warning');
                 filterAndRender();
                 updateStats(allJobs);
 

@@ -1201,6 +1201,22 @@
                         </label>
                     </div>
                 </div>
+
+                <!-- Haptics — Android only, hidden on other platforms -->
+                <div class="setting-row" id="hapticsRow" style="display:none;">
+                    <div class="setting-info">
+                        <div class="setting-label">Haptic Feedback</div>
+                        <div class="setting-desc">Vibration on button taps, confirmations, and errors. Android only.</div>
+                    </div>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="hapticsToggle" onchange="saveHapticsPref()">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -1500,6 +1516,12 @@
             applyCompact(on);
             document.getElementById('compactNote').textContent =
                 on ? 'Compact mode is active across all pages.' : '';
+        }
+
+        function saveHapticsPref() {
+            const on = document.getElementById('hapticsToggle').checked;
+            localStorage.setItem('scHaptics', on ? '1' : '0');
+            if (on && typeof haptic === 'function') haptic('medium');
         }
 
         // ── Notifications ───────────────────────────────────────────────────
@@ -2012,6 +2034,13 @@
             if (compact) {
                 document.getElementById('compactNote').textContent =
                     'Compact mode is active across all pages.';
+            }
+
+            // Haptics — show row and restore pref on Android only
+            if (/android/i.test(navigator.userAgent) && navigator.vibrate) {
+                document.getElementById('hapticsRow').style.display = 'flex';
+                document.getElementById('hapticsToggle').checked =
+                    localStorage.getItem('scHaptics') !== '0'; // default on
             }
 
             updateNotifUI();

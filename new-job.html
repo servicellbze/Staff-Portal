@@ -1292,6 +1292,7 @@
             document.getElementById('formWrapper').style.display = 'none';
             document.getElementById('successBanner').classList.add('show');
             document.getElementById('repairIdDisplay').textContent = '#' + id;
+            haptic('success');
             // Notify: device received
             const device = lastJobData.device || 'Device';
             const customer = lastJobData.customerName || 'Customer';

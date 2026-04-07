@@ -638,6 +638,7 @@
                     }
                     closeModal('editOrderModal');
                     renderOrders();
+                    haptic('success');
                     setSyncState('ok', 'Saved ✓');
                     setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })), 1500);
                 } else {
@@ -733,6 +734,7 @@
                 if (data.success) {
                     closeModal('newOrderModal');
                     await loadOrders();
+                    haptic('success');
                     // Notify manager that a new order was placed
                     sendNotification(
                         'specialorder',
@@ -823,6 +825,7 @@
                     allOrders = allOrders.filter(o => o.orderNumber !== pendingDeleteNum);
                     closeModal('deleteOrderModal');
                     renderOrders();
+                    haptic('warning');
                     setSyncState('ok', 'Deleted ✓');
                     setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })), 1500);
                 } else {
