@@ -714,8 +714,14 @@
             <div class="input-group">
                 <input type="text" id="userInput" placeholder="Username"
                     onkeydown="if(event.key==='Enter') checkLogin()">
-                <input type="password" id="passInput" placeholder="Password"
-                    onkeydown="if(event.key==='Enter') checkLogin()">
+                <div style="position:relative;">
+                    <input type="password" id="passInput" placeholder="Password"
+                        onkeydown="if(event.key==='Enter') checkLogin()"
+                        style="width:100%;padding-right:44px;">
+                    <button type="button" onclick="togglePassVis()" id="passVisBtn"
+                        style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:1rem;padding:4px;line-height:1;"
+                        aria-label="Toggle password visibility">👁</button>
+                </div>
             </div>
 
             <label class="remember-me">
@@ -1120,6 +1126,14 @@
         if (_alreadyLoggedIn) {
             loadDashboard();
             setInterval(loadDashboard, 60000);
+        }
+
+        function togglePassVis() {
+            const input = document.getElementById('passInput');
+            const btn   = document.getElementById('passVisBtn');
+            const show  = input.type === 'password';
+            input.type  = show ? 'text' : 'password';
+            btn.textContent = show ? '🙈' : '👁';
         }
 
         async function checkLogin() {
