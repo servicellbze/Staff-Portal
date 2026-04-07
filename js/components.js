@@ -41,6 +41,10 @@ function logOut() {
 
 function toggleAccountMenu(e) {
     e.stopPropagation();
+    // Close other panels first
+    document.getElementById('notifPanel')?.classList.remove('open');
+    document.getElementById('mobilePanel')?.classList.remove('open');
+    document.getElementById('hamburger')?.classList.remove('active');
     document.getElementById('accountDropdown')?.classList.toggle('open');
 }
 
@@ -217,6 +221,9 @@ const ComponentLoader = {
         if (hamburger && mobilePanel) {
             hamburger.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // Close other panels
+                document.getElementById('accountDropdown')?.classList.remove('open');
+                document.getElementById('notifPanel')?.classList.remove('open');
                 hamburger.classList.toggle('active');
                 mobilePanel.classList.toggle('open');
             });
@@ -287,8 +294,10 @@ function toggleNotifPanel(e) {
     const panel = document.getElementById('notifPanel');
     if (!panel) return;
     const opening = !panel.classList.contains('open');
-    // Close account dropdown if open
+    // Close other panels
     document.getElementById('accountDropdown')?.classList.remove('open');
+    document.getElementById('mobilePanel')?.classList.remove('open');
+    document.getElementById('hamburger')?.classList.remove('active');
     panel.classList.toggle('open', opening);
     if (opening) {
         renderNotifPanel();
@@ -522,7 +531,7 @@ const NOTIF_ROLES = {
     received:     ['technician', 'cashier', 'manager'],
     ready:        ['technician', 'cashier', 'manager'],
     abandoned:    ['technician', 'cashier', 'manager'],
-    jobstatus:    ['cashier', 'manager'],
+    jobstatus:    ['technician', 'cashier', 'manager'],
     specialorder: ['technician', 'cashier', 'manager'],
     update:       ['technician', 'cashier', 'manager'],
     manageronly:  ['manager']   // inventory edits, sensitive alerts
