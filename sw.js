@@ -95,12 +95,12 @@ self.addEventListener('push', event => {
 
     // Map type to icon/badge colour via tag
     const icons = {
-        received:     '/img/logo.png',
-        ready:        '/img/logo.png',
-        abandoned:    '/img/logo.png',
-        specialorder: '/img/logo.png',
-        update:       '/img/logo.png',
-        jobstatus:    '/img/logo.png'
+        received:     BASE + '/img/logo.png',
+        ready:        BASE + '/img/logo.png',
+        abandoned:    BASE + '/img/logo.png',
+        specialorder: BASE + '/img/logo.png',
+        update:       BASE + '/img/logo.png',
+        jobstatus:    BASE + '/img/logo.png'
     };
 
     event.waitUntil(
@@ -118,7 +118,7 @@ self.addEventListener('push', event => {
 // ── Notification click: focus or open the app ────────────────────────────────
 self.addEventListener('notificationclick', event => {
     event.notification.close();
-    const target = event.notification.data?.url || '/index.html';
+    const target = event.notification.data?.url || (BASE + '/index.html');
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true })
             .then(windowClients => {

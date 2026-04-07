@@ -1604,6 +1604,13 @@
                 });
                 localStorage.setItem('scPushSubscribed', '1');
                 console.log('[Push] Subscribed successfully');
+
+                // Show a test notification so the user knows it's working
+                new Notification('🔔 Notifications enabled!', {
+                    body: 'ServiCell will now alert you even when the app is closed.',
+                    icon: '/Staff-Portal/img/logo.png',
+                    badge: '/Staff-Portal/img/logo.png'
+                });
             } catch (err) {
                 console.warn('[Push] Subscription failed:', err);
             }
@@ -1640,8 +1647,21 @@
             localStorage.setItem('scNotif', on ? '1' : '0');
             const panel = document.getElementById('notifTogglesPanel');
             if (panel) panel.style.display = on ? 'block' : 'none';
-            if (!on) unsubscribeFromPush();
-            else subscribeToPush();
+            if (!on) {
+                unsubscribeFromPush();
+            } else {
+                // Only subscribe if permission is already granted.
+                // If not, they need to hit the "Enable Notifications" button first.
+                if (Notification.permission === 'granted') {
+                    subscribeToPush();
+                } else {
+                    // Revert toggle — can't enable without permission
+                    document.getElementById('notifToggle').checked = false;
+                    localStorage.setItem('scNotif', '0');
+                    if (panel) panel.style.display = 'none';
+                    updateNotifUI();
+                }
+            }
         }
 
         // ── User-specific role helpers ──────────────────────────────────────
