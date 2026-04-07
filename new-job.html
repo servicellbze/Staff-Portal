@@ -1158,6 +1158,10 @@
         // Submit Logic
         async function submitJob() {
             if (isSubmitting) return;
+            if (window.isOffline && window.isOffline()) {
+                showToast('📡 You\'re offline — jobs cannot be submitted without a connection.', 'error');
+                return;
+            }
 
             const nameInput = document.getElementById('customerName');
             const repairIdInput = document.getElementById('repairId');

@@ -993,19 +993,30 @@
                 const res = await fetch(SCRIPT_URL + '?action=list');
                 const data = await res.json();
                 const jobs = data.jobs || [];
-
+                localStorage.setItem('sc_cache_jobs', JSON.stringify(jobs));
                 renderStats(jobs);
                 renderActivity(jobs);
                 const syncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 setSyncState('ok', 'Last sync: ' + syncTime);
                 localStorage.setItem('scLastSync', new Date().toLocaleString());
             } catch (err) {
-                setSyncState('error', 'Sync failed — check connection');
-                document.getElementById('activityList').innerHTML =
-                    `<div class="activity-empty">Could not load jobs. Check your script URL.</div>`;
+                const cached = localStorage.getItem('sc_cache_jobs');
+                if (cached) {
+                    const jobs = JSON.parse(cached);
+                    renderStats(jobs);
+                    renderActivity(jobs);
+                    setSyncState('error', 'Offline — showing cached data');
+                } else {
+                    setSyncState('error', 'Sync failed — check connection');
+                    document.getElementById('activityList').innerHTML =
+                        `<div class="activity-empty">Could not load jobs. Check your connection.</div>`;
+                }
                 console.error(err);
             }
         }
+
+        // Auto-reload when connection is restored
+        window.addEventListener('sc-back-online', loadDashboard);
 
         function renderStats(jobs) {
             const inProgress = jobs.filter(j => ['fixing', 'testing', 'received'].includes(classifyStatus(j))).length;
@@ -1177,7 +1188,7 @@
         // ── Service Worker Registration ──────────────────────────────────────
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(reg => {
                         console.log('[SW] Registered, scope:', reg.scope);
                         reg.update();

@@ -370,21 +370,34 @@
 
         // ── Load ──────────────────────────────────────────────────────────────
         async function loadOrders() {
+            // Re-evaluate role here — components.js is guaranteed loaded by now
             setSyncState('loading', 'Syncing…');
             try {
                 const res  = await fetch(`${SCRIPT_URL}?action=listorders`);
                 const data = await res.json();
                 allOrders  = data.orders || [];
+                localStorage.setItem('sc_cache_orders', JSON.stringify(allOrders));
                 populateUserFilter();
                 renderOrders();
                 setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
             } catch (err) {
-                setSyncState('error', 'Sync failed — check connection');
-                document.getElementById('ordersGrid').innerHTML =
-                    `<div class="state-box"><div class="state-icon">⚠️</div><p>Could not load orders.</p></div>`;
+                const cached = localStorage.getItem('sc_cache_orders');
+                if (cached) {
+                    allOrders = JSON.parse(cached);
+                    populateUserFilter();
+                    renderOrders();
+                    setSyncState('error', 'Offline — showing cached data');
+                } else {
+                    setSyncState('error', 'Sync failed — check connection');
+                    document.getElementById('ordersGrid').innerHTML =
+                        `<div class="state-box"><div class="state-icon">⚠️</div><p>Could not load orders.</p></div>`;
+                }
                 console.error(err);
             }
         }
+
+        // Auto-reload when connection is restored
+        window.addEventListener('sc-back-online', loadOrders);
 
         // ── Populate user filter ───────────────────────────────────────────────
         function populateUserFilter() {
@@ -582,6 +595,10 @@
         }
 
         async function submitEdit() {
+            if (window.isOffline && window.isOffline()) {
+                alert('📡 You\'re offline — changes cannot be saved without a connection.');
+                return;
+            }
             const item = document.getElementById('editItem').value.trim();
             if (!item) {
                 document.getElementById('editItem').style.borderColor = 'var(--danger)';
@@ -686,6 +703,10 @@
         }
 
         async function submitNewOrder() {
+            if (window.isOffline && window.isOffline()) {
+                alert('📡 You\'re offline — orders cannot be submitted without a connection.');
+                return;
+            }
             const item = document.getElementById('soItem').value.trim();
             if (!item) {
                 document.getElementById('soItem').style.borderColor = 'var(--danger)';

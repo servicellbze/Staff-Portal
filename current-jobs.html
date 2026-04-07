@@ -2093,12 +2093,24 @@
                 const response = await fetch(SCRIPT_URL + '?action=list');
                 const data = await response.json();
                 allJobs = data.jobs || [];
+                localStorage.setItem('sc_cache_jobs', JSON.stringify(allJobs));
                 filterAndRender();
                 updateStats(allJobs);
             } catch (error) {
-                showToast('❌ Could not load jobs from the server.', 'err');
+                const cached = localStorage.getItem('sc_cache_jobs');
+                if (cached) {
+                    allJobs = JSON.parse(cached);
+                    filterAndRender();
+                    updateStats(allJobs);
+                    showToast('📡 Offline — showing cached data', '');
+                } else {
+                    showToast('❌ Could not load jobs from the server.', 'err');
+                }
             }
         }
+
+        // Auto-reload when connection is restored
+        window.addEventListener('sc-back-online', loadJobs);
 
         function openModal(id) {
             document.getElementById(id).classList.add('open');
@@ -2306,6 +2318,10 @@
         }
 
         async function saveEdit() {
+            if (window.isOffline && window.isOffline()) {
+                showToast('📡 You\'re offline — changes cannot be saved.', 'err');
+                return;
+            }
             const status = document.querySelector('input[name="editStatus"]:checked')?.value || 'received';
             const priority = document.querySelector('input[name="editPriority"]:checked')?.value || 'low';
             const notes = document.getElementById('edit-notes').value.trim();
