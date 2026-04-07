@@ -164,8 +164,11 @@ const ComponentLoader = {
             ${username ? `
             <div class="mobile-menu-footer">
               <div class="mobile-user-info">
-                <span class="mobile-username">${username}</span>
-                <span class="mobile-role-badge">● ${role}</span>
+                <div class="mobile-avatar">${roleIcon}</div>
+                <div class="mobile-user-text">
+                  <span class="mobile-username">${username}</span>
+                  <span class="mobile-role-badge">${role}</span>
+                </div>
               </div>
               <button class="mobile-logout" onclick="logOut()">🚪 Log out</button>
             </div>` : ''}
@@ -309,6 +312,53 @@ window.sendNotification = sendNotification;
 })();
 window.isOffline = () => !navigator.onLine;
 
+// ── Pending notification polling ──────────────────────────────────────────────
+// Polls GAS for queued notifications and fires them locally
+// Runs on page load and every 60s — catches anything missed while app was closed
+(function () {
+    const SCRIPT_URL = (() => {
+        // Grab from any page that has it defined, or skip
+        return window.SCRIPT_URL || null;
+    });
+
+    async function pollPending() {
+        const url = typeof window.SCRIPT_URL !== 'undefined' ? window.SCRIPT_URL : null;
+        if (!url || !navigator.onLine) return;
+        if (localStorage.getItem('scNotif') === '0') return;
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        try {
+            const res  = await fetch(url + '?action=getpending');
+            const data = await res.json();
+            const notifs = data.notifications || [];
+            if (!notifs.length) return;
+            // Fire each one
+            notifs.forEach(n => {
+                if (localStorage.getItem('scNotif_' + n.type) === '0') return;
+                new Notification(n.title, { body: n.body, icon: './img/logo.png', badge: './img/logo.png', tag: n.type });
+            });
+            // Mark all as delivered
+            await fetch(url + '?action=markdelivered', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: notifs.map(n => n.id) })
+            });
+        } catch (e) {
+            // Silent fail — polling is best-effort
+        }
+    }
+
+    // Poll on load (after a short delay so page settles) and every 60s
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(pollPending, 3000));
+    } else {
+        setTimeout(pollPending, 3000);
+    }
+    setInterval(pollPending, 60000);
+
+    // Also poll when coming back online
+    window.addEventListener('sc-back-online', pollPending);
+})();
+
 // ── Haptic feedback ───────────────────────────────────────────────────────────
 // Android-only — iOS blocks the Vibration API entirely
 // Patterns: 'light' | 'medium' | 'heavy' | 'success' | 'error' | 'warning'
@@ -330,3 +380,11 @@ function haptic(type = 'light') {
 }
 window.haptic = haptic;
 window.IS_ANDROID = IS_ANDROID;
+
+// Global light tap feedback on all buttons, links, and interactive elements
+if (IS_ANDROID) {
+    document.addEventListener('pointerdown', e => {
+        const el = e.target.closest('button, a, select, .order-card, .job-row, .nav-btn, .card-btn, .theme-card, .toggle, .status-pill label, .edit-pill label, .job-type-pill label');
+        if (el) haptic('light');
+    }, { passive: true });
+}
