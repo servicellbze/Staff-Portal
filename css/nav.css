@@ -118,59 +118,24 @@ nav.scrolled {
 }
 
 .account-avatar {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--primary);
   color: white;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  position: relative;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  user-select: none;
 }
 
-/* Role-based icons */
-span.account-avatar.cashier::before {
-  content: "💰";
-  font-size: 0.8rem;
-}
 
-span.account-avatar.technician::before {
-  content: "🔧";
-  font-size: 0.8rem;
-}
-
-span.account-avatar.manager::before {
-  content: "👑";
-  font-size: 0.75rem;
-}
-
-/* Fallback for unknown roles */
-.account-avatar:not([class*="role"])::before,
-.account-avatar.staff::before {
-  content: "👤";
-  font-size: 0.8rem;
-}
-
-.mobile-role-icon {
-  font-size: 1rem;
-  margin-right: 4px;
-}
-
-.mobile-role-icon.cashier::before {
-  content: "💰";
-}
-
-.mobile-role-icon.technician::before {
-  content: "🔧";
-}
-
-.mobile-role-icon.manager::before {
-  content: "👑";
-}
 
 .account-name {
   font-size: 0.82rem;
@@ -439,6 +404,20 @@ span.account-avatar.manager::before {
     display: none;
   }
 
+  /* Slightly larger avatar when shown alone on mobile */
+  .account-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.25);
+  }
+
+  /* Tighten chip padding since name is hidden */
+  .account-chip {
+    padding: 4px 4px;
+    gap: 0;
+  }
+
   .mobile-menu-panel {
     display: block;
   }
@@ -472,4 +451,12 @@ span.account-avatar.manager::before {
     padding: 12px 14px;
     font-size: 0.85rem;
   }
+}
+
+a {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }

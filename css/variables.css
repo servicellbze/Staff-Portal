@@ -74,3 +74,56 @@
     --z-splash: 9999;
     --z-modal: 10000;
 }
+
+html {
+    /* Critical: Matches background immediately to prevent white flash */
+    background: var(--bg-gradient);
+    /* Universal Fix: Disables rubber-band bounce on all modern browsers */
+    overscroll-behavior: none;
+    height: 100%;
+}
+
+body {
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    /* Prevents horizontal "shake" during vertical scrolling */
+    overflow-x: hidden;
+}
+
+/* ============================================
+   THEME-ADJACENT SCROLLBAR
+   Uses --primary-rgb from theme-init.js
+   ============================================ */
+
+/* Chrome, Edge, Safari, and Opera */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    /* Keeps track transparent to preserve glassmorphism background effects */
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    /* Uses the dynamic RGB variable from theme-init.js with 0.3 opacity */
+    background: rgba(var(--primary-rgb), 0.3);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    /* Full intensity on hover */
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+/* Firefox Support */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--primary-rgb), 0.3) transparent;
+}
