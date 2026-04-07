@@ -64,6 +64,8 @@ nav.scrolled {
   position: relative;
   overflow: hidden;
   white-space: nowrap;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .nav-btn::before {
@@ -306,6 +308,8 @@ nav.scrolled {
   color: var(--text-dim);
   text-decoration: none;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .mobile-nav-btn:hover,
@@ -458,6 +462,7 @@ a {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  touch-action: manipulation;
 }
 
 /* ── Right group (bell + hamburger) ── */
@@ -686,5 +691,16 @@ a {
 
   .notif-panel.open {
     transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .account-dropdown {
+    position: fixed;
+    top: 70px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    min-width: unset;
   }
 }
