@@ -1099,7 +1099,6 @@
             }, duration);
         }
 
-        // Only run original DOMContentLoaded if not blocked by PWA wall
         const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
         const isAndroid = /android/i.test(navigator.userAgent);
         const isMobile = isIOS || isAndroid;
@@ -1107,10 +1106,9 @@
             window.matchMedia('(display-mode: standalone)').matches ||
             document.referrer.includes('android-app://');
 
-        // Only auto-init on desktop or already-installed PWA
-        if (!isMobile || isStandalone) {
-            document.addEventListener("DOMContentLoaded", initOriginalApp);
-        }
+        // Always init — the PWA wall overlays visually if install is needed,
+        // so the login is ready the moment the wall is dismissed.
+        document.addEventListener("DOMContentLoaded", initOriginalApp);
 
         // Only pre-load dashboard data if the user is already logged in
         // (prevents job data appearing in the DOM before authentication)
