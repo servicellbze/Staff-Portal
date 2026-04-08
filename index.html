@@ -753,7 +753,7 @@
     <main>
         <div class="dash-header">
             <h1>👋 ServiCell Dashboard</h1>
-            <p>Welcome back. Here's what's happening in the shop today.</p>
+            <p id="dashGreeting">Welcome back. Here's what's happening in the shop today.</p>
             <div class="date-chip">📅 <span id="todayDate">—</span></div>
         </div>
 
@@ -979,6 +979,17 @@
             weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
         });
 
+        // ── Personalised greeting ─────────────────────────────────────────────
+        (function () {
+            const user = (localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '');
+            const name = localStorage.getItem('scDisplayName') || sessionStorage.getItem('scDisplayName') || '';
+            if (name) {
+                const h = new Date().getHours();
+                const tod = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+                document.getElementById('dashGreeting').textContent = tod + ', ' + name + '. Here\'s what\'s happening in the shop today.';
+            }
+        })();
+
         function classifyStatus(job) {
             const s = String(job.status || '').toLowerCase();
             if (s.includes('abandoned')) return 'abandoned';
@@ -1174,6 +1185,8 @@
                     const storage = remember ? localStorage : sessionStorage;
                     storage.setItem('isLoggedIn', 'true');
                     storage.setItem('scUser', user);
+                    // Store display name from GAS Users sheet (col D) if provided
+                    if (data.displayName) storage.setItem('scDisplayName', data.displayName);
 
                     // Unlock audio context on iOS — must happen on user gesture
                     if (typeof unlockAudio === 'function') unlockAudio();
@@ -1188,6 +1201,15 @@
 
                     if (window.ComponentLoader) {
                         window.ComponentLoader.loadNav();
+                    }
+
+                    // Show personalised greeting immediately after login
+                    const displayName = data.displayName || '';
+                    if (displayName) {
+                        const h = new Date().getHours();
+                        const tod = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+                        const el = document.getElementById('dashGreeting');
+                        if (el) el.textContent = tod + ', ' + displayName + '. Here\'s what\'s happening in the shop today.';
                     }
 
                     document.body.style.overflow = 'auto';

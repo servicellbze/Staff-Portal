@@ -541,6 +541,23 @@
             border: 2px solid var(--glass);
         }
 
+        /* Collapsible legacy entries */
+        .changelog-entry.collapsed .changelog-changes,
+        .changelog-entry.collapsed .changelog-date { display: none; }
+
+        .changelog-entry.collapsed .changelog-version { cursor: pointer; }
+        .changelog-entry.collapsed .changelog-version:hover { opacity: 0.8; }
+
+        .changelog-toggle {
+            margin-left: 6px;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            font-weight: 700;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+        .changelog-entry:not(.collapsed) .changelog-toggle { transform: rotate(90deg); }
+
         .changelog-version {
             font-size: 0.85rem;
             font-weight: 800;
@@ -1213,8 +1230,41 @@
 
                     <div class="changelog-entry">
                         <div class="changelog-version">
-                            v4.3.2
+                            v4.5.0
                             <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 8, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Statistics page — revenue, jobs, staff performance, inventory health</li>
+                            <li>Customer lookup with job and sales history</li>
+                            <li>Export CSV and Print Report from statistics</li>
+                            <li>Reversal rate KPI added to statistics</li>
+                            <li>Date range filtering on statistics (today/week/month/custom)</li>
+                            <li>Sales search and bills search on sales page</li>
+                            <li>Reverse sale now requires a reason (audit logged)</li>
+                            <li>Show settled bills toggle on bills tab</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v4.4.0
+                            <span class="changelog-badge badge-legacy">Legacy</span>
+                        </div>
+                        <div class="changelog-date">April 8, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Sales page (payouts.html) — full cashier workspace: sales, payouts, bills, end of day</li>
+                            <li>GAS backend: DailySales, Payouts, ActiveBills, DayClose sheets + all CRUD functions</li>
+                            <li>Job pickup payment flow — links current-jobs to sales</li>
+                            <li>Shift-aware EOD with drawer variance, short-cashier manager alert, and print report</li>
+                            <li>Bill/tab system with partial settlement routed as normal sales</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v4.3.2
+                            <span class="changelog-badge badge-legacy">Legacy</span>
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
@@ -1362,7 +1412,42 @@
             </div>
         </div>
 
-        <!-- ── About ── -->
+        <!-- ── Sales Settings ── -->
+        <div class="settings-card" id="salesSettingsCard" style="display:none;">
+            <div class="card-header">
+                <h2>&#x1F4B0; Sales</h2>
+            </div>
+            <div class="card-body">
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-print receipt</div>
+                        <div class="setting-desc">Automatically opens a print dialog after every completed sale.</div>
+                    </div>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="autoPrintToggle" onchange="saveAutoPrintPref()">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-info">
+                        <div class="setting-label">Cash drawer (PC only)</div>
+                        <div class="setting-desc">Sends an ESC/POS kick signal to a receipt printer's cash drawer port via USB. Requires Chrome or Edge on a PC.</div>
+                        <span id="drawerSupportStatus" class="setting-status status-default">Checking...</span>
+                    </div>
+                    <div class="toggle-wrap">
+                        <label class="toggle">
+                            <input type="checkbox" id="cashDrawerToggle" onchange="saveCashDrawerPref()">
+                            <div class="toggle-track"></div>
+                            <div class="toggle-thumb"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="settings-card">
             <div class="card-header">
                 <h2>ℹ️ About</h2>
@@ -1399,7 +1484,7 @@
 
     </main>
 
-    <div id="changePasswordModal" class="modal-overlay" style="display: none;">
+    <div id="changePasswordModal" class="modal-overlay" style="display: none; opacity: 0;">
         <div class="modal-container">
             <div class="modal-header">
                 <h3>🔐 Change Password</h3>
@@ -1439,7 +1524,16 @@
                             <input type="password" id="newPassword" placeholder="Enter your new password" required
                                 minlength="8" oninput="validatePasswordStrength(this.value)">
                             <button type="button" class="toggle-password"
-                                onclick="togglePasswordVisibility('newPassword', this)">...</button>
+                                onclick="togglePasswordVisibility('newPassword', this)">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
                         </div>
                         <div class="strength-meter">
                             <div class="strength-bar" id="strengthBar"></div>
@@ -1464,7 +1558,16 @@
                             <input type="password" id="confirmPassword" placeholder="Re-enter your new password"
                                 required oninput="checkPasswordMatch()">
                             <button type="button" class="toggle-password"
-                                onclick="togglePasswordVisibility('confirmPassword', this)">...</button>
+                                onclick="togglePasswordVisibility('confirmPassword', this)">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
                         </div>
                         <div class="match-text" id="matchText"></div>
                     </div>
@@ -1606,6 +1709,14 @@
             const on = document.getElementById('hapticsToggle').checked;
             localStorage.setItem('scHaptics', on ? '1' : '0');
             if (on && typeof haptic === 'function') haptic('medium');
+        }
+
+        function saveAutoPrintPref() {
+            localStorage.setItem('scAutoPrintReceipt', document.getElementById('autoPrintToggle').checked ? '1' : '0');
+        }
+
+        function saveCashDrawerPref() {
+            localStorage.setItem('scCashDrawer', document.getElementById('cashDrawerToggle').checked ? '1' : '0');
         }
 
         // ── Notifications ───────────────────────────────────────────────────
@@ -1816,7 +1927,6 @@
             const modal = document.getElementById('changePasswordModal');
             if (!modal) return;
 
-            // Check if we can get username before opening
             const username = getCurrentUsername();
             if (!username) {
                 alert('Error: Could not determine your username. Please log out and log back in.');
@@ -1824,6 +1934,14 @@
             }
 
             modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            // Allow display:flex to take effect before animating opacity
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    modal.style.transition = 'opacity 0.25s ease';
+                    modal.style.opacity = '1';
+                });
+            });
             document.body.style.overflow = 'hidden';
             setTimeout(() => document.getElementById('currentPassword')?.focus(), 100);
         }
@@ -1832,10 +1950,12 @@
             const modal = document.getElementById('changePasswordModal');
             if (!modal) return;
 
+            modal.style.transition = 'opacity 0.25s ease';
             modal.style.opacity = '0';
             setTimeout(() => {
                 modal.style.display = 'none';
                 modal.style.opacity = '';
+                modal.style.transition = '';
                 document.body.style.overflow = '';
                 document.getElementById('changePasswordForm')?.reset();
                 resetValidation();
@@ -2067,6 +2187,45 @@
             document.getElementById('notifSoundToggle').checked = soundOn;
             document.getElementById('soundPickerPanel').style.display = soundOn ? 'block' : 'none';
             buildSoundPills();
+
+            // Sales settings — only show for cashier/manager
+            const _role = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '');
+            if (_role === 'cashier' || _role === 'manager') {
+                document.getElementById('salesSettingsCard').style.display = 'block';
+                document.getElementById('autoPrintToggle').checked = localStorage.getItem('scAutoPrintReceipt') === '1';
+                const drawerSupported = 'serial' in navigator;
+                const drawerStatus = document.getElementById('drawerSupportStatus');
+                if (drawerSupported) {
+                    drawerStatus.textContent = 'Supported on this device';
+                    drawerStatus.className = 'setting-status status-granted';
+                    document.getElementById('cashDrawerToggle').checked = localStorage.getItem('scCashDrawer') === '1';
+                } else {
+                    drawerStatus.textContent = 'Not supported — requires Chrome/Edge on PC';
+                    drawerStatus.className = 'setting-status status-denied';
+                    document.getElementById('cashDrawerToggle').disabled = true;
+                }
+            }
+
+            // ── Collapsible changelog ─────────────────────────────────────────
+            document.querySelectorAll('.changelog-entry').forEach(function(entry) {
+                const badge = entry.querySelector('.changelog-badge');
+                const isLegacy = badge && badge.classList.contains('badge-legacy');
+                if (!isLegacy) return;
+                // Collapse by default
+                entry.classList.add('collapsed');
+                // Add toggle arrow to version header
+                const ver = entry.querySelector('.changelog-version');
+                if (ver) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'changelog-toggle';
+                    arrow.textContent = '▶';
+                    ver.appendChild(arrow);
+                    ver.style.cursor = 'pointer';
+                    ver.addEventListener('click', function() {
+                        entry.classList.toggle('collapsed');
+                    });
+                }
+            });
         });
     </script>
 </body>

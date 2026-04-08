@@ -14,50 +14,292 @@
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="css/splash.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--font-family); background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; }
-        main { max-width: 900px; margin: 0 auto; padding: 140px var(--space-md) var(--space-xl); }
-        .placeholder-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            backdrop-filter: blur(10px);
-            padding: 60px 40px;
-            text-align: center;
-            box-shadow: var(--shadow-sm);
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:var(--font-family);background:var(--bg-gradient);color:var(--text-main);min-height:100vh;}
+        main{max-width:1100px;margin:0 auto;padding:130px var(--space-md) var(--space-xl);}
+
+        /* ── Page Header ── */
+        .page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;animation:fadeInUp 0.4s ease both;}
+        .page-header h1{font-size:1.9rem;font-weight:800;letter-spacing:-0.5px;}
+        .page-header p{color:var(--text-dim);font-size:0.88rem;margin-top:4px;}
+
+        /* ── Date Range Bar ── */
+        .date-bar{display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;animation:fadeInUp 0.4s ease 0.05s both;}
+        .range-btn{padding:8px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:var(--font-family);font-size:0.8rem;font-weight:700;cursor:pointer;transition:all 0.2s;backdrop-filter:blur(10px);}
+        .range-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+        .range-btn:hover:not(.active){border-color:var(--primary);color:var(--primary);}
+        .date-custom{display:flex;align-items:center;gap:6px;margin-left:auto;}
+        .date-custom input{padding:8px 12px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.8rem;outline:none;cursor:pointer;}
+        .date-custom input:focus{border-color:var(--primary);}
+
+        /* ── KPI Grid ── */
+        .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;animation:fadeInUp 0.4s ease 0.08s both;}
+        .kpi-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:18px 20px;backdrop-filter:blur(10px);position:relative;overflow:hidden;}
+        .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--primary);opacity:0.4;}
+        .kpi-card.green::before{background:var(--success);}
+        .kpi-card.red::before{background:var(--danger);}
+        .kpi-card.yellow::before{background:var(--warning);}
+        .kpi-card.purple::before{background:#7c3aed;}
+        .kpi-label{font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;}
+        .kpi-value{font-size:1.8rem;font-weight:800;color:var(--text-main);line-height:1;}
+        .kpi-card.green .kpi-value{color:var(--success);}
+        .kpi-card.red .kpi-value{color:var(--danger);}
+        .kpi-card.yellow .kpi-value{color:var(--warning);}
+        .kpi-card.purple .kpi-value{color:#7c3aed;}
+        .kpi-sub{font-size:0.72rem;color:var(--text-dim);margin-top:4px;}
+
+        /* ── Section Cards ── */
+        .stat-section{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-md);backdrop-filter:blur(10px);overflow:hidden;margin-bottom:16px;animation:fadeInUp 0.4s ease 0.1s both;}
+        .stat-section-head{padding:16px 20px;border-bottom:1px solid var(--glass-border);font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);}
+        .stat-section-body{padding:16px 20px;}
+
+        /* ── Bar Chart ── */
+        .bar-chart{display:flex;align-items:flex-end;gap:6px;height:120px;padding-bottom:24px;position:relative;}
+        .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;}
+        .bar{width:100%;border-radius:6px 6px 0 0;background:var(--primary);opacity:0.7;transition:opacity 0.2s;min-height:2px;margin-top:auto;}
+        .bar:hover{opacity:1;}
+        .bar-label{font-size:0.6rem;color:var(--text-dim);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;}
+        .bar-val{font-size:0.6rem;color:var(--text-dim);font-weight:700;position:absolute;top:0;}
+
+        /* ── Two-col layout ── */
+        .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+
+        /* ── Stat Table ── */
+        .stat-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--glass-border);font-size:0.85rem;}
+        .stat-row:last-child{border-bottom:none;padding-bottom:0;}
+        .stat-row:first-child{padding-top:0;}
+        .stat-row-label{color:var(--text-dim);font-weight:600;}
+        .stat-row-val{font-weight:800;color:var(--text-main);}
+        .stat-row-val.green{color:var(--success);}
+        .stat-row-val.red{color:var(--danger);}
+        .stat-row-val.yellow{color:var(--warning);}
+
+        /* ── Person rows (staff performance) ── */
+        .person-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--glass-border);}
+        .person-row:last-child{border-bottom:none;}
+        .person-avatar{width:32px;height:32px;border-radius:50%;background:rgba(37,99,235,0.1);display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;}
+        .person-name{font-size:0.85rem;font-weight:700;color:var(--text-main);}
+        .person-meta{font-size:0.72rem;color:var(--text-dim);margin-top:2px;}
+        .person-stats{margin-left:auto;text-align:right;}
+        .person-stat-main{font-size:0.88rem;font-weight:800;color:var(--text-main);}
+        .person-stat-sub{font-size:0.7rem;color:var(--text-dim);}
+
+        /* ── Progress bar ── */
+        .progress-row{margin-bottom:10px;}
+        .progress-label{display:flex;justify-content:space-between;font-size:0.78rem;font-weight:700;margin-bottom:4px;}
+        .progress-track{height:6px;background:var(--glass-border);border-radius:99px;overflow:hidden;}
+        .progress-fill{height:100%;border-radius:99px;background:var(--primary);transition:width 0.6s ease;}
+        .progress-fill.green{background:var(--success);}
+        .progress-fill.yellow{background:var(--warning);}
+        .progress-fill.red{background:var(--danger);}
+
+        /* ── Inventory health ── */
+        .inv-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--glass-border);font-size:0.82rem;}
+        .inv-item:last-child{border-bottom:none;}
+        .inv-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+        .inv-dot.red{background:var(--danger);}
+        .inv-dot.yellow{background:var(--warning);}
+        .inv-dot.green{background:var(--success);}
+        .inv-name{flex:1;font-weight:700;color:var(--text-main);}
+        .inv-qty{font-weight:800;font-size:0.8rem;}
+
+        /* ── Sync Bar ── */
+        .sync-bar{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:10px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-full);font-size:0.7rem;font-weight:700;color:var(--text-dim);backdrop-filter:blur(8px);}
+        .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;}
+        .sync-dot.loading{background:var(--warning);}
+        .sync-dot.error{background:var(--danger);animation:none;}
+
+        /* ── Empty ── */
+        .empty-state{padding:30px 20px;text-align:center;color:var(--text-dim);font-size:0.85rem;}
+
+        /* ── Loading shimmer ── */
+        .shimmer{height:14px;border-radius:6px;background:var(--glass-border);animation:shimmer 1.4s infinite;}
+        @keyframes shimmer{0%,100%{opacity:0.4;}50%{opacity:1;}}
+
+        /* ── Animations ── */
+        @keyframes fadeInUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(0.85);}}
+
+        /* ── Responsive ── */
+        @media(max-width:768px){
+            .kpi-grid{grid-template-columns:repeat(2,1fr);}
+            .two-col{grid-template-columns:1fr;}
         }
-        .placeholder-icon { font-size: 3.5rem; margin-bottom: 20px; }
-        .placeholder-card h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 10px; }
-        .placeholder-card p { color: var(--text-dim); font-size: 0.95rem; max-width: 400px; margin: 0 auto; line-height: 1.6; }
-        .coming-badge {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 6px 16px;
-            background: rgba(37,99,235,0.1);
-            color: var(--primary);
-            border-radius: var(--radius-full);
-            font-size: 0.75rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        @media (max-width: 540px) {
-            main { padding: 120px var(--space-sm) var(--space-md); }
-            .placeholder-card { padding: 40px 24px; }
+        @media(max-width:480px){
+            main{padding:110px var(--space-sm) var(--space-md);}
+            .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+            .kpi-value{font-size:1.4rem;}
         }
     </style>
 </head>
 <body>
-    <div id="nav-placeholder"></div>
-    <main>
-        <div class="placeholder-card">
-            <div class="placeholder-icon">📊</div>
-            <h1>Statistics</h1>
-            <p>View repair trends, revenue reports, and shop performance metrics over time.</p>
-            <span class="coming-badge">Coming Soon</span>
+<div id="nav-placeholder"></div>
+<main>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1>&#x1F4CA; Statistics</h1>
+            <p>Shop performance, revenue, and staff metrics.</p>
         </div>
-    </main>
-    <div id="footer-placeholder"></div>
-    <script src="js/components.js"></script>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button onclick="exportCSV()" style="padding:10px 18px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);">&#x1F4C4; Export CSV</button>
+            <button onclick="exportPDF()" style="padding:10px 18px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);">&#x1F5A8;&#xFE0F; Print Report</button>
+        </div>
+    </div>
+
+    <!-- Date Range Bar -->
+    <div class="date-bar">
+        <button class="range-btn" onclick="setRange('today')">Today</button>
+        <button class="range-btn" onclick="setRange('week')">This Week</button>
+        <button class="range-btn active" id="btn-month" onclick="setRange('month')">This Month</button>
+        <button class="range-btn" onclick="setRange('custom')">Custom</button>
+        <div class="date-custom" id="customRange" style="display:none;">
+            <input type="date" id="dateFrom" onchange="loadStats()">
+            <span style="color:var(--text-dim);font-size:0.8rem;">to</span>
+            <input type="date" id="dateTo" onchange="loadStats()">
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card green">
+            <div class="kpi-label">Gross Revenue</div>
+            <div class="kpi-value" id="kpiRevenue"><div class="shimmer" style="width:80px;"></div></div>
+            <div class="kpi-sub" id="kpiRevenueSub">&nbsp;</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-label">Total Payouts</div>
+            <div class="kpi-value" id="kpiPayouts"><div class="shimmer" style="width:60px;"></div></div>
+            <div class="kpi-sub" id="kpiPayoutsSub">&nbsp;</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Net</div>
+            <div class="kpi-value" id="kpiNet"><div class="shimmer" style="width:70px;"></div></div>
+            <div class="kpi-sub" id="kpiNetSub">&nbsp;</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Jobs Completed</div>
+            <div class="kpi-value" id="kpiJobs"><div class="shimmer" style="width:40px;"></div></div>
+            <div class="kpi-sub" id="kpiJobsSub">&nbsp;</div>
+        </div>
+        <div class="kpi-card yellow">
+            <div class="kpi-label">Avg Repair Value</div>
+            <div class="kpi-value" id="kpiAvgRepair"><div class="shimmer" style="width:60px;"></div></div>
+            <div class="kpi-sub">per completed job</div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="kpi-label">Outstanding Bills</div>
+            <div class="kpi-value" id="kpiBills"><div class="shimmer" style="width:60px;"></div></div>
+            <div class="kpi-sub" id="kpiBillsSub">&nbsp;</div>
+        </div>
+        <div class="kpi-card red">
+            <div class="kpi-label">Reversal Rate</div>
+            <div class="kpi-value" id="kpiReversals"><div class="shimmer" style="width:50px;"></div></div>
+            <div class="kpi-sub" id="kpiReversalsSub">&nbsp;</div>
+        </div>
+    </div>
+
+    <!-- Revenue by Day -->
+    <div class="stat-section">
+        <div class="stat-section-head">&#x1F4C5; Revenue by Day</div>
+        <div class="stat-section-body">
+            <div class="bar-chart" id="revenueChart">
+                <div class="empty-state" style="width:100%;">Loading&hellip;</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Breakdown + Job Status -->
+    <div class="two-col">
+        <div class="stat-section" style="margin-bottom:0;">
+            <div class="stat-section-head">&#x1F4B3; Payment Methods</div>
+            <div class="stat-section-body" id="paymentMethods">
+                <div class="shimmer" style="margin-bottom:8px;"></div>
+                <div class="shimmer" style="margin-bottom:8px;width:70%;"></div>
+                <div class="shimmer" style="width:50%;"></div>
+            </div>
+        </div>
+        <div class="stat-section" style="margin-bottom:0;">
+            <div class="stat-section-head">&#x1F527; Job Status Breakdown</div>
+            <div class="stat-section-body" id="jobStatus">
+                <div class="shimmer" style="margin-bottom:8px;"></div>
+                <div class="shimmer" style="margin-bottom:8px;width:70%;"></div>
+                <div class="shimmer" style="width:50%;"></div>
+            </div>
+        </div>
+    </div>
+    <div style="margin-bottom:16px;"></div>
+
+    <!-- Top Selling Items + Inventory Health -->
+    <div class="two-col">
+        <div class="stat-section" style="margin-bottom:0;">
+            <div class="stat-section-head">&#x1F525; Top Selling Items</div>
+            <div class="stat-section-body" id="topItems">
+                <div class="shimmer" style="margin-bottom:8px;"></div>
+                <div class="shimmer" style="margin-bottom:8px;width:80%;"></div>
+                <div class="shimmer" style="width:60%;"></div>
+            </div>
+        </div>
+        <div class="stat-section" style="margin-bottom:0;">
+            <div class="stat-section-head">&#x1F4E6; Inventory Health</div>
+            <div class="stat-section-body" id="invHealth">
+                <div class="shimmer" style="margin-bottom:8px;"></div>
+                <div class="shimmer" style="margin-bottom:8px;width:70%;"></div>
+                <div class="shimmer" style="width:50%;"></div>
+            </div>
+        </div>
+    </div>
+    <div style="margin-bottom:16px;"></div>
+
+    <!-- Staff Performance -->
+    <div class="stat-section">
+        <div class="stat-section-head">&#x1F451; Cashier Performance</div>
+        <div class="stat-section-body" id="cashierPerf">
+            <div class="shimmer" style="margin-bottom:8px;"></div>
+            <div class="shimmer" style="width:70%;"></div>
+        </div>
+    </div>
+
+    <div class="stat-section">
+        <div class="stat-section-head">&#x1F527; Technician Performance</div>
+        <div class="stat-section-body" id="techPerf">
+            <div class="shimmer" style="margin-bottom:8px;"></div>
+            <div class="shimmer" style="width:70%;"></div>
+        </div>
+    </div>
+
+    <!-- Short Cashier History -->
+    <div class="stat-section">
+        <div class="stat-section-head">&#x26A0;&#xFE0F; Short Cashier History</div>
+        <div class="stat-section-body" id="shortHistory">
+            <div class="shimmer" style="margin-bottom:8px;"></div>
+            <div class="shimmer" style="width:60%;"></div>
+        </div>
+    </div>
+
+    <!-- Customer Lookup -->
+    <div class="stat-section">
+        <div class="stat-section-head">&#x1F464; Customer Lookup</div>
+        <div class="stat-section-body">
+            <input type="text" id="customerSearch" placeholder="Search by name or phone..." oninput="searchCustomers()"
+                style="width:100%;padding:10px 14px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;margin-bottom:12px;">
+            <div id="customerResults"></div>
+        </div>
+    </div>
+
+    <!-- Sync Bar -->
+    <div class="sync-bar">
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div class="sync-dot loading" id="syncDot"></div>
+            <span id="syncText">Loading&hellip;</span>
+        </div>
+        <button onclick="loadStats()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">&#x21BB; Refresh</button>
+    </div>
+
+</main>
+<div id="footer-placeholder"></div>
+<script src="js/components.js"></script>
+<script src="js/statistics.js"></script>
 </body>
 </html>
