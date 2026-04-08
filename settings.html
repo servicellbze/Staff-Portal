@@ -1230,8 +1230,22 @@
 
                     <div class="changelog-entry">
                         <div class="changelog-version">
-                            v4.5.0
+                            v4.5.1
                             <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 8, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Settings Sales card now visible for cashier/manager without requiring re-login</li>
+                            <li>Technicians added to inventory read-only access</li>
+                            <li>Cashiers temporarily granted delete access for inventory cleanup</li>
+                            <li>Changelog entries now collapsible — legacy versions collapsed by default</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v4.5.0
+                            <span class="changelog-badge badge-legacy">Legacy</span>
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
@@ -2186,7 +2200,10 @@
             buildSoundPills();
 
             // Sales settings — only show for cashier/manager
-            const _role = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '');
+            // Derive role from username directly (same as every other page) — no scRole dependency
+            const _user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+            const _role = _user.toLowerCase().startsWith('manager') ? 'manager'
+                        : _user.toLowerCase().startsWith('cashier') ? 'cashier' : 'technician';
             if (_role === 'cashier' || _role === 'manager') {
                 document.getElementById('salesSettingsCard').style.display = 'block';
                 document.getElementById('autoPrintToggle').checked = localStorage.getItem('scAutoPrintReceipt') === '1';
