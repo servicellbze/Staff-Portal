@@ -3,7 +3,7 @@
 // Update CACHE_DATE to today's date on every deploy — no manual versioning needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-08h'; // ← change this to today's date on each deploy
+const CACHE_DATE = '2026-04-08k'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
@@ -16,7 +16,7 @@ const PRECACHE_URLS = [
     BASE + '/special-orders.html',
     BASE + '/settings.html',
     BASE + '/inventory.html',
-    BASE + '/payouts.html',
+    BASE + '/sales.html',
     BASE + '/statistics.html',
     BASE + '/css/variables.css',
     BASE + '/css/nav.css',
@@ -26,6 +26,8 @@ const PRECACHE_URLS = [
     BASE + '/js/components.js',
     BASE + '/js/auth-guard.js',
     BASE + '/js/theme-init.js',
+    BASE + '/js/sales.js',
+    BASE + '/js/statistics.js',
     BASE + '/img/logo.png',
     BASE + '/manifest.json'
 ];
