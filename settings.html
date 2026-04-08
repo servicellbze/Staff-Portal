@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -1230,8 +1230,23 @@
 
                     <div class="changelog-entry">
                         <div class="changelog-version">
-                            v4.5.1
+                            v4.5.3
                             <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 8, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Fixed missing closing brace in updateAbandonedJobs — GAS now deploys correctly</li>
+                            <li>Fixed isRev undefined in renderSales — sale rows now render correctly</li>
+                            <li>Removed cash drawer integration — receipt printing still works</li>
+                            <li>72mm receipt and EOD print layout fixed for thermal printers</li>
+                            <li>Settings Sales card now visible without requiring re-login</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v4.5.1
+                            <span class="changelog-badge badge-legacy">Legacy</span>
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
@@ -1437,20 +1452,6 @@
                     <div class="toggle-wrap">
                         <label class="toggle">
                             <input type="checkbox" id="autoPrintToggle" onchange="saveAutoPrintPref()">
-                            <div class="toggle-track"></div>
-                            <div class="toggle-thumb"></div>
-                        </label>
-                    </div>
-                </div>
-                <div class="setting-row">
-                    <div class="setting-info">
-                        <div class="setting-label">Cash drawer (PC only)</div>
-                        <div class="setting-desc">Sends an ESC/POS kick signal to a receipt printer's cash drawer port via USB. Requires Chrome or Edge on a PC.</div>
-                        <span id="drawerSupportStatus" class="setting-status status-default">Checking...</span>
-                    </div>
-                    <div class="toggle-wrap">
-                        <label class="toggle">
-                            <input type="checkbox" id="cashDrawerToggle" onchange="saveCashDrawerPref()">
                             <div class="toggle-track"></div>
                             <div class="toggle-thumb"></div>
                         </label>
@@ -1724,10 +1725,6 @@
 
         function saveAutoPrintPref() {
             localStorage.setItem('scAutoPrintReceipt', document.getElementById('autoPrintToggle').checked ? '1' : '0');
-        }
-
-        function saveCashDrawerPref() {
-            localStorage.setItem('scCashDrawer', document.getElementById('cashDrawerToggle').checked ? '1' : '0');
         }
 
         // ── Notifications ───────────────────────────────────────────────────
@@ -2207,17 +2204,6 @@
             if (_role === 'cashier' || _role === 'manager') {
                 document.getElementById('salesSettingsCard').style.display = 'block';
                 document.getElementById('autoPrintToggle').checked = localStorage.getItem('scAutoPrintReceipt') === '1';
-                const drawerSupported = 'serial' in navigator;
-                const drawerStatus = document.getElementById('drawerSupportStatus');
-                if (drawerSupported) {
-                    drawerStatus.textContent = 'Supported on this device';
-                    drawerStatus.className = 'setting-status status-granted';
-                    document.getElementById('cashDrawerToggle').checked = localStorage.getItem('scCashDrawer') === '1';
-                } else {
-                    drawerStatus.textContent = 'Not supported — requires Chrome/Edge on PC';
-                    drawerStatus.className = 'setting-status status-denied';
-                    document.getElementById('cashDrawerToggle').disabled = true;
-                }
             }
 
             // ── Collapsible changelog ─────────────────────────────────────────
