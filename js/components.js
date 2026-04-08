@@ -24,9 +24,9 @@ const NAV_LINKS = [
     { label: 'Current Jobs',   icon: '🔧', href: 'current-jobs.html',   roles: ['technician', 'cashier', 'manager'] },
     { label: 'New Job',        icon: '➕', href: 'new-job.html',         roles: ['technician', 'cashier', 'manager'] },
     { label: 'Special Orders', icon: '🛒', href: 'special-orders.html', roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Inventory',      icon: '📦', href: 'inventory.html',       roles: ['cashier', 'manager'] },
-    { label: 'Payouts',        icon: '💳', href: 'payouts.html',         roles: ['cashier', 'manager'] },
-    { label: 'Statistics',     icon: '📊', href: 'statistics.html',      roles: ['manager'] },
+    { label: 'Inventory',      icon: '📦', href: 'inventory.html',       roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Sales',          icon: '💰', href: 'sales.html',          roles: ['cashier', 'manager'] },
+    { label: 'Statistics',     icon: '📊', href: 'statistics.html',       roles: ['manager'] },
     { label: 'Settings',       icon: '⚙️', href: 'settings.html',        roles: ['technician', 'cashier', 'manager'] },
 ];
 
@@ -415,7 +415,14 @@ const InAppNotif = {
             // Merge into local store — skip duplicates by server ID
             const existing = this.get();
             const existingIds = new Set(existing.map(n => n.serverId).filter(Boolean));
-            const toAdd = notifs.filter(n => !existingIds.has(n.id));
+            // Filter by role before adding — manageronly must not reach non-managers
+            const ROLE_TYPES = {
+                manager:    ['received','ready','abandoned','jobstatus','specialorder','update','manageronly'],
+                cashier:    ['received','ready','abandoned','specialorder','update','jobstatus'],
+                technician: ['received','ready','abandoned','specialorder','update','jobstatus']
+            };
+            const allowed = ROLE_TYPES[role] || ROLE_TYPES.technician;
+            const toAdd = notifs.filter(n => !existingIds.has(n.id) && allowed.includes(n.type));
 
             toAdd.forEach(n => {
                 existing.unshift({
@@ -547,7 +554,7 @@ const NOTIF_ROLES = {
     jobstatus:    ['technician', 'cashier', 'manager'],
     specialorder: ['technician', 'cashier', 'manager'],
     update:       ['technician', 'cashier', 'manager'],
-    manageronly:  ['manager']   // inventory edits, sensitive alerts
+    manageronly:  ['manager']
 };
 
 function sendNotification(type, title, body) {
@@ -694,4 +701,36 @@ if (IS_ANDROID) {
     window.unlockAudio    = unlockAudio;
     window.playNotifSound = playNotifSound;
     window.NOTIF_SOUNDS   = Object.keys(SOUNDS);
+})();
+
+// ── Session Timeout ───────────────────────────────────────────────────────────
+// Auto-logout after 8 hours of inactivity (one full shift).
+// Resets on any user interaction. Only applies to sessionStorage sessions
+// (localStorage "remember me" sessions are intentionally persistent).
+(function () {
+    const TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 hours
+    let _timer = null;
+
+    function resetTimer() {
+        clearTimeout(_timer);
+        // Only auto-logout if NOT using "remember me" (i.e. stored in sessionStorage)
+        const inSession = sessionStorage.getItem('isLoggedIn') === 'true';
+        if (!inSession) return;
+        _timer = setTimeout(function () {
+            // Warn 5 minutes before
+        }, TIMEOUT_MS - 5 * 60 * 1000);
+        // Hard logout at timeout
+        _timer = setTimeout(function () {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            }
+        }, TIMEOUT_MS);
+    }
+
+    ['click', 'keydown', 'touchstart', 'scroll'].forEach(function(evt) {
+        document.addEventListener(evt, resetTimer, { passive: true });
+    });
+
+    resetTimer();
 })();

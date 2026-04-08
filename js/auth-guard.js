@@ -5,8 +5,8 @@
  */
 (function () {
     const PAGE_ACCESS = {
-        'inventory.html':      ['cashier', 'manager'],
-        'payouts.html':        ['cashier', 'manager'],
+        'inventory.html':      ['technician', 'cashier', 'manager'],
+        'sales.html':          ['cashier', 'manager'],
         'statistics.html':     ['manager'],
     };
 
