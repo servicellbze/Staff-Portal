@@ -105,31 +105,29 @@ body {
 
 /* Chrome, Edge, Safari, and Opera */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    /* Keeps track transparent to preserve glassmorphism background effects */
     background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    /* Uses the dynamic RGB variable from theme-init.js with 0.3 opacity */
-    background: rgba(var(--primary-rgb), 0.3);
-    border-radius: 10px;
-    border: 2px solid transparent;
-    background-clip: content-box;
+    background: rgba(var(--primary-rgb), 0.25);
+    border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    /* Full intensity on hover */
-    background: var(--primary);
-    border-radius: 10px;
+    background: rgba(var(--primary-rgb), 0.5);
 }
 
-/* Firefox Support */
+/* Hide the scrollbar on the main page — scroll still works, just invisible */
+html::-webkit-scrollbar { display: none; }
+html { scrollbar-width: none; }
+
+/* Firefox — keep thin scrollbar inside components (modals, lists) */
 * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(var(--primary-rgb), 0.3) transparent;
+    scrollbar-color: rgba(var(--primary-rgb), 0.25) transparent;
 }
