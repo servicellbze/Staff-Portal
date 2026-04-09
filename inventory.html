@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="js/theme-init.js"></script>
@@ -258,7 +258,7 @@
             <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">unique SKUs</div></div>
             <div class="stat-card warning" id="statLowCard"><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">—</div><div class="stat-sub">below minimum</div></div>
             <div class="stat-card danger" id="statOutCard"><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">—</div><div class="stat-sub">qty = 0</div></div>
-            <div class="stat-card"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">—</div><div class="stat-sub">at cost price</div></div>
+            <div class="stat-card" id="statValueCard"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">—</div><div class="stat-sub">at cost price</div></div>
         </div>
 
         <!-- Toolbar -->
@@ -357,7 +357,7 @@
                 </div>
                 <div class="form-group">
                     <label>Min Qty (alert)</label>
-                    <input type="number" id="iMinQty" min="0" value="2">
+                    <input type="number" id="iMinQty" min="0" value="1">
                 </div>
                 <div class="form-group">
                     <label>Location</label>
@@ -546,6 +546,11 @@
         loadInventory();
         initBarcodeScanner();
         if (isManager || isCashier) document.getElementById('addItemBtn').style.display = 'inline-flex';
+        // Hide cost price and stock value from non-managers
+        if (!isManager) {
+            const card = document.getElementById('statValueCard');
+            if (card) card.style.display = 'none';
+        }
         // Hide camera scan button if not supported
         if (!('BarcodeDetector' in window) && !navigator.mediaDevices) {
             document.getElementById('cameraScanBtn').style.display = 'none';
@@ -682,7 +687,7 @@
         document.getElementById('iSku').readOnly    = !!item;
         document.getElementById('iCategory').value  = item?.category   || 'Screens';
         document.getElementById('iQty').value       = item?.qty        ?? 0;
-        document.getElementById('iMinQty').value    = item?.minQty     ?? 2;
+        document.getElementById('iMinQty').value    = item?.minQty     ?? 1;
         document.getElementById('iLocation').value  = item?.location   || '';
         document.getElementById('iCost').value      = item?.costPrice  || '';
         document.getElementById('iSalePrice').value = item?.salePrice  || '';
@@ -845,7 +850,7 @@
                 <div class="view-field"><div class="view-label">Stock</div><div class="view-value">${qty} units &nbsp;${statusLabel}</div></div>
                 <div class="view-field"><div class="view-label">Min Qty</div><div class="view-value">${min}</div></div>
                 <div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>
-                <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} <span style="font-size:0.75rem;color:var(--text-dim);">(${margin}% margin)</span></div></div>
+                <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} <span style="font-size:0.75rem;color:var(--text-dim);">${isManager ? "(" + margin + "% margin)" : ""}</span></div></div>
                 <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '—')}</div></div>
                 <div class="view-field"><div class="view-label">Supplier</div><div class="view-value">${escH(i.supplier || '—')}</div></div>
                 <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '—')}</div></div>
