@@ -376,14 +376,12 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Supplier</label>
-                    <input type="text" id="iSupplier" placeholder="e.g. iFixit, Amazon">
-                </div>
-                <div class="form-group">
                     <label>Compatible With</label>
                     <input type="text" id="iCompat" placeholder="e.g. iPhone 14 Pro">
                 </div>
             </div>
+            <!-- hidden supplier field — value preserved for GAS but not shown -->
+            <input type="hidden" id="iSupplier" value="">
             <div class="form-group">
                 <label>Notes</label>
                 <input type="text" id="iNotes" placeholder="Any extra details…">
@@ -852,7 +850,7 @@
                 <div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>
                 <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} <span style="font-size:0.75rem;color:var(--text-dim);">${isManager ? "(" + margin + "% margin)" : ""}</span></div></div>
                 <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '—')}</div></div>
-                <div class="view-field"><div class="view-label">Supplier</div><div class="view-value">${escH(i.supplier || '—')}</div></div>
+                
                 <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '—')}</div></div>
                 ${i.notes ? `<div class="view-field full"><div class="view-label">Notes</div><div class="view-value">${escH(i.notes)}</div></div>` : ''}
             </div>`;
