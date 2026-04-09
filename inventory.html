@@ -62,10 +62,8 @@
             contain: layout style;
         }
         .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; will-change: transform; transform: translateZ(0); }
-        .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 90px 100px 120px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
-        .inv-header.show-cost { grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; }
-        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 90px 100px 120px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; will-change: transform; }
-        .inv-row.show-cost { grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; }
+        .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 110px 160px 80px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
+        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 110px 160px 80px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; will-change: transform; }
         .inv-row:last-child { border-bottom: none; }
         .inv-row:hover { background: rgba(255,255,255,0.03); }
         .inv-row.low-stock { border-left: 3px solid var(--warning); }
@@ -180,7 +178,6 @@
             .inv-header { display: none; }
             .inv-table-wrap { background: transparent; border: none; box-shadow: none; }
 
-            /* Card layout — each row becomes a self-contained card */
             .inv-row {
                 display: flex;
                 flex-direction: column;
@@ -197,29 +194,7 @@
             .inv-row.out-of-stock { border-top: 3px solid var(--danger) !important; }
             .inv-row:hover { transform: none; }
 
-            /* Show all columns stacked */
-            .inv-row .category-cell,
-            .inv-row .qty-col,
-            .inv-row .cost-col,
-            .inv-row .price-col,
-            .inv-row .stock-col { display: block; }
-
-            /* Top row: name + actions side by side */
-            .inv-row > div:first-child { flex: 1; }
             .inv-row .row-actions { flex-direction: row; justify-content: flex-start; }
-
-            /* Inline meta row below name */
-            .inv-row-meta {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                align-items: center;
-            }
-
-            /* Stock bar full width */
-            .inv-row .stock-col { width: 100%; }
-            .stock-bar-wrap { gap: 10px; }
-
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .form-row, .form-row-3 { grid-template-columns: 1fr; }
             .view-grid { grid-template-columns: 1fr; }
@@ -292,8 +267,7 @@
                     <div>Item</div>
                     <div>Category</div>
                     <div>Qty</div>
-                    <div class="cost-header-col">Cost</div>
-                    <div>Sale Price</div>
+                    <div>Price</div>
                     <div>Stock Level</div>
                     <div></div>
                 </div>
@@ -546,7 +520,6 @@
         // Only managers can add, edit, delete items and see cost/value data
         if (isManager) {
             document.getElementById('addItemBtn').style.display = 'inline-flex';
-            document.getElementById('invHeader').classList.add('show-cost');
         }
         if (!isManager) {
             const card = document.getElementById('statValueCard');
@@ -645,32 +618,26 @@
         const isLow  = !isOut && qty <= min;
         const rowCls = isOut ? 'out-of-stock' : isLow ? 'low-stock' : '';
         const qtyCls = isOut ? 'out' : isLow ? 'low' : 'ok';
-        // Stock bar: 0–min = red/yellow zone, min–min*3 = green zone, cap at 100%
-        const pct    = min > 0 ? Math.min(100, Math.round((qty / (min * 3)) * 100)) : (qty > 0 ? 100 : 0);
-        const barClr = isOut ? '#ef4444' : isLow ? '#f59e0b' : '#10b981';
         const sale   = parseFloat(i.salePrice) || 0;
-        const costCol = isManager
-            ? `<div class="cost-col"><span class="price-cell" style="font-size:0.78rem;color:var(--text-dim);">BZ$${(parseFloat(i.costPrice)||0).toFixed(2)}</span></div>`
-            : '';
-        const showCostCls = isManager ? 'show-cost' : '';
+
+        // Stock status badge
+        const statusLabel = isOut ? '🔴 Out of Stock' : isLow ? '🟡 Low Stock' : '🟢 In Stock';
+        const statusColor = isOut ? 'var(--danger)' : isLow ? 'var(--warning)' : 'var(--success)';
+        const statusBg    = isOut ? 'rgba(239,68,68,0.1)' : isLow ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)';
 
         return `
-        <div class="inv-row ${rowCls} ${showCostCls}" onclick="openViewModal('${escH(i.sku)}')">
+        <div class="inv-row ${rowCls}" onclick="openViewModal('${escH(i.sku)}')">
             <div>
                 <div class="item-name">${escH(i.name || '—')}</div>
                 <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
             </div>
-            <div class="inv-row-meta">
-                <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
-                <div class="qty-col"><span class="qty-cell ${qtyCls}">${qty}</span><span style="font-size:0.65rem;color:var(--text-dim);margin-left:4px;">/ min ${min}</span></div>
-                ${costCol}
-                <div class="price-col"><span class="price-cell" style="font-size:0.78rem;">BZ$${sale.toFixed(2)}</span></div>
-            </div>
-            <div class="stock-col">
-                <div class="stock-bar-wrap">
-                    <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${barClr};"></div></div>
-                    <span style="font-size:0.65rem;color:var(--text-dim);white-space:nowrap;">${pct}%</span>
-                </div>
+            <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
+            <div><span class="qty-cell ${qtyCls}">${qty}</span><span style="font-size:0.65rem;color:var(--text-dim);margin-left:4px;">/ ${min}</span></div>
+            <div><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
+            <div>
+                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-full);font-size:0.72rem;font-weight:700;color:${statusColor};background:${statusBg};border:1px solid ${statusColor}33;">
+                    ${statusLabel}
+                </span>
             </div>
             <div class="row-actions" onclick="event.stopPropagation()">
                 <button class="row-btn" title="Adjust stock" onclick="openAdjustModal('${escH(i.sku)}')">±</button>
