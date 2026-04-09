@@ -1628,6 +1628,18 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
+        /* ── Pagination ── */
+        .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); backdrop-filter: blur(10px); flex-wrap: wrap; }
+        .pagination-info { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
+        .pagination-controls { display: flex; align-items: center; gap: 6px; }
+        .page-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-family: var(--font-family); }
+        .page-btn:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: white; }
+        .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .page-jump { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--text-dim); }
+        .page-jump input { width: 44px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.8rem; font-weight: 700; text-align: center; outline: none; }
+        .page-jump input:focus { border-color: var(--primary); }
+        .per-page-select { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.75rem; font-weight: 700; outline: none; cursor: pointer; }
     </style>
     <script src="js/theme-init.js"></script>
     <script src="js/auth-guard.js"></script>
@@ -1693,6 +1705,7 @@
                 <div>Actions</div>
             </div>
             <div id="jobsList"></div>
+            <div id="jobsPagination"></div>
         </div>
     </main>
 
@@ -2020,9 +2033,15 @@
             const list = document.getElementById('jobsList');
             if (jobs.length === 0) {
                 list.innerHTML = `<div style="padding:40px;text-align:center;opacity:0.5;">No jobs found matching your criteria.</div>`;
+                const pg = document.getElementById('jobsPagination');
+                if (pg) pg.style.display = 'none';
                 return;
             }
-            list.innerHTML = jobs.map(j => {
+            const totalPages = Math.max(1, Math.ceil(jobs.length / _jobsPerPage));
+            if (_jobsPage > totalPages) _jobsPage = 1;
+            const start = (_jobsPage - 1) * _jobsPerPage;
+            const paged = jobs.slice(start, start + _jobsPerPage);
+            list.innerHTML = paged.map(j => {
                 const stat = classifyStatus(j);
                 let storage = '—';
                 if (stat.class === 'abandoned') {
@@ -2075,17 +2094,46 @@
             </div>
         </div>`;
             }).join('');
+            renderJobsPagination(jobs.length);
+        }
+
+        let _jobsPage    = 1;
+        let _jobsPerPage = 20;
+        let _filteredJobs = [];
+
+        function renderJobsPagination(total) {
+            const container  = document.getElementById('jobsPagination');
+            if (!container) return;
+            const totalPages = Math.max(1, Math.ceil(total / _jobsPerPage));
+            const start      = (_jobsPage - 1) * _jobsPerPage + 1;
+            const end        = Math.min(_jobsPage * _jobsPerPage, total);
+            container.style.display = total > _jobsPerPage ? 'flex' : 'none';
+            container.className = 'pagination';
+            container.innerHTML =
+                '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
+                + '<div class="pagination-controls">'
+                + '<button class="page-btn" id="jobsPrev" ' + (_jobsPage <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
+                + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + _jobsPage + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;_jobsPage=p;renderJobs(_filteredJobs);" style="width:44px;"></div><span>of ' + totalPages + '</span>'
+                + '</div>'
+                + '<button class="page-btn" id="jobsNext" ' + (_jobsPage >= totalPages ? 'disabled' : '') + '>&#x203A;</button>'
+                + '</div>'
+                + '<select class="per-page-select" onchange="_jobsPerPage=parseInt(this.value);_jobsPage=1;renderJobs(_filteredJobs);">'
+                + [10,20,50,100].map(n => '<option value="' + n + '"' + (n === _jobsPerPage ? ' selected' : '') + '>' + n + ' per page</option>').join('')
+                + '</select>';
+            document.getElementById('jobsPrev').onclick = () => { if (_jobsPage > 1) { _jobsPage--; renderJobs(_filteredJobs); } };
+            document.getElementById('jobsNext').onclick = () => { if (_jobsPage < totalPages) { _jobsPage++; renderJobs(_filteredJobs); } };
         }
 
         function filterAndRender() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filter = document.getElementById('statusFilter').value;
-            const filtered = allJobs.filter(j => {
+            _filteredJobs = allJobs.filter(j => {
                 const matchSearch = String(j.id).includes(term) || (j.customerName || '').toLowerCase().includes(term) || (j.device || '').toLowerCase().includes(term);
                 const matchFilter = filter === 'all' || classifyStatus(j).class === filter;
                 return matchSearch && matchFilter;
             });
-            renderJobs(filtered);
+            _jobsPage = 1;
+            renderJobs(_filteredJobs);
         }
 
         async function loadJobs() {

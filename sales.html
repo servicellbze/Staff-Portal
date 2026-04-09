@@ -678,6 +678,18 @@
         .receipt-badge.paid { background: rgba(16,185,129,0.12); color: #059669; }
         .receipt-badge.partial { background: rgba(245,158,11,0.12); color: #d97706; }
         .receipt-badge.reversed { background: rgba(100,116,139,0.12); color: #64748b; }
+
+        /* ── Pagination ── */
+        .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); backdrop-filter: blur(10px); flex-wrap: wrap; }
+        .pagination-info { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
+        .pagination-controls { display: flex; align-items: center; gap: 6px; }
+        .page-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-family: var(--font-family); }
+        .page-btn:hover:not(:disabled) { background: var(--primary); border-color: var(--primary); color: white; }
+        .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .page-jump { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--text-dim); }
+        .page-jump input { width: 44px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.8rem; font-weight: 700; text-align: center; outline: none; }
+        .page-jump input:focus { border-color: var(--primary); }
+        .per-page-select { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.75rem; font-weight: 700; outline: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -751,6 +763,7 @@
                 <p>No sales yet today.</p>
             </div>
         </div>
+        <div id="salesPagination"></div>
     </div>
 
     <!-- -- TAB: PAYOUTS -------------------------------------------------- -->
