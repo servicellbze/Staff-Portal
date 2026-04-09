@@ -676,9 +676,13 @@
             document.getElementById(id).style.opacity = '1';
         });
 
-        // Only managers see and can set cost price
+        // Cashiers can see and set sale price; cost price is manager-only
         const costRow = document.getElementById('costPriceRow');
-        if (costRow) costRow.style.display = isManager ? '' : 'none';
+        if (costRow) costRow.style.display = '';  // show for everyone
+        const costField = document.getElementById('iCost');
+        if (costField) {
+            costField.closest('.form-group').style.display = isManager ? '' : 'none';
+        }
 
         // Show cashier warning if editing (no longer applicable — only managers edit)
         let warn = document.getElementById('cashierEditWarn');
