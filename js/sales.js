@@ -119,6 +119,36 @@ async function loadAll() {
 // ── Date Filter & Show Settled ────────────────────────────────────────────────
 let _salesDateFilter = '';
 let _showSettled     = false;
+let _salesPage       = 1;
+let _salesPerPage    = 20;
+
+// ── Reusable pagination renderer ─────────────────────────────────────────────
+function renderPagination(containerId, total, page, perPage, onPage, onPerPage) {
+    const container  = document.getElementById(containerId);
+    if (!container) return;
+    const totalPages = Math.max(1, Math.ceil(total / perPage));
+    const start      = (page - 1) * perPage + 1;
+    const end        = Math.min(page * perPage, total);
+    container.style.display = total > perPage ? 'flex' : 'none';
+    container.className = 'pagination';
+    container.innerHTML =
+        '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
+        + '<div class="pagination-controls">'
+        + '<button class="page-btn" id="' + containerId + '_prev" ' + (page <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
+        + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._cb(p);" style="width:44px;"></div><span>of ' + totalPages + '</span>'
+        + '</div>'
+        + '<button class="page-btn" id="' + containerId + '_next" ' + (page >= totalPages ? 'disabled' : '') + '>&#x203A;</button>'
+        + '</div>'
+        + '<select class="per-page-select" onchange="document.getElementById(\'' + containerId + '\')._pp(parseInt(this.value));">'
+        + [10,20,50,100].map(n => '<option value="' + n + '"' + (n === perPage ? ' selected' : '') + '>' + n + ' per page</option>').join('')
+        + '</select>';
+    container._cb = onPage;
+    container._pp = onPerPage;
+    const prev = document.getElementById(containerId + '_prev');
+    const next = document.getElementById(containerId + '_next');
+    if (prev) prev.onclick = () => { if (page > 1) onPage(page - 1); };
+    if (next) next.onclick = () => { if (page < totalPages) onPage(page + 1); };
+}
 
 function onSalesDateChange() {
     _salesDateFilter = document.getElementById('salesDateFilter').value;
@@ -168,9 +198,16 @@ function renderSales() {
     }
     if (!list.length) {
         el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F6D2;</div><p>' + (q ? 'No results for "' + escH(q) + '"' : 'No sales yet today.') + '</p></div>';
+        const pg = document.getElementById('salesPagination');
+        if (pg) pg.style.display = 'none';
         return;
     }
-    el.innerHTML = list.map(s => {
+    // Reset page if filters changed and page is out of range
+    const totalPages = Math.max(1, Math.ceil(list.length / _salesPerPage));
+    if (_salesPage > totalPages) _salesPage = 1;
+    const start  = (_salesPage - 1) * _salesPerPage;
+    const paged  = list.slice(start, start + _salesPerPage);
+    el.innerHTML = paged.map(s => {
         const isRev   = s.status === 'reversed';
         const items   = tryParseJSON(s.items, []);
         const desc    = items.map(i => i.name).join(', ') || s.customer || 'Sale';
@@ -193,6 +230,10 @@ function renderSales() {
             +   (!isRev ? '<div class="list-item-actions">' + viewBtn + editBtn + reverseBtn + '</div>' : '')
             + '</div></div>';
     }).join('');
+    renderPagination('salesPagination', list.length, _salesPage, _salesPerPage,
+        (p) => { _salesPage = p; renderSales(); },
+        (pp) => { _salesPerPage = pp; _salesPage = 1; renderSales(); }
+    );
 }
 
 // ── Render: Payouts ───────────────────────────────────────────────────────────
