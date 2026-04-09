@@ -515,9 +515,11 @@
     document.addEventListener('DOMContentLoaded', () => {
         currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
         isManager   = currentUser.toLowerCase().startsWith('manager');
+        const isCashier = currentUser.toLowerCase().startsWith('cashier');
+        window.canDelete = isManager || isCashier;
         loadInventory();
         initBarcodeScanner();
-        // Only managers can add, edit, delete items and see cost/value data
+        // Cashiers and managers can add items
         if (isManager || isCashier) {
             document.getElementById('addItemBtn').style.display = 'inline-flex';
         }
