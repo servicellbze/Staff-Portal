@@ -630,6 +630,54 @@
             .modal-overlay { align-items: flex-end; padding: 0; }
             .modal-card { border-radius: 28px 28px 0 0; max-width: 100%; max-height: 92vh; }
         }
+
+        /* ── Mobile tab select ── */
+        .tab-select-mobile {
+            display: none;
+            width: 100%;
+            padding: 12px 18px;
+            border-radius: var(--radius-full);
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: 700;
+            outline: none;
+            margin-bottom: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 44px;
+            box-shadow: var(--shadow-sm);
+        }
+        .tab-select-mobile:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+        /* ── View Sale receipt card ── */
+        .receipt-header { text-align: center; padding-bottom: 14px; border-bottom: 1px dashed var(--glass-border); margin-bottom: 14px; }
+        .receipt-header h3 { font-size: 1rem; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 4px; }
+        .receipt-header p { font-size: 0.78rem; color: var(--text-dim); margin: 2px 0; }
+        .receipt-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+        .receipt-meta-item { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 8px 12px; }
+        .receipt-meta-label { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 3px; }
+        .receipt-meta-value { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
+        .receipt-items { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        .receipt-items th { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); padding: 0 0 8px; border-bottom: 1px solid var(--glass-border); }
+        .receipt-items th:not(:first-child) { text-align: right; }
+        .receipt-items td { padding: 8px 0; border-bottom: 1px solid var(--glass-border); font-size: 0.85rem; vertical-align: middle; }
+        .receipt-items td:not(:first-child) { text-align: right; }
+        .receipt-items tr:last-child td { border-bottom: none; }
+        .receipt-totals { background: rgba(37,99,235,0.04); border: 1px solid rgba(37,99,235,0.12); border-radius: var(--radius-sm); padding: 12px 14px; }
+        .receipt-total-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; padding: 3px 0; }
+        .receipt-total-row.main { font-size: 1rem; font-weight: 800; color: var(--success); padding-top: 6px; margin-top: 4px; border-top: 1px solid var(--glass-border); }
+        .receipt-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .receipt-badge.paid { background: rgba(16,185,129,0.12); color: #059669; }
+        .receipt-badge.partial { background: rgba(245,158,11,0.12); color: #d97706; }
+        .receipt-badge.reversed { background: rgba(100,116,139,0.12); color: #64748b; }
     </style>
 </head>
 <body>
@@ -657,13 +705,19 @@
         <span id="shiftCountdown" class="shift-time">&#x2014;</span>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
+    <!-- Tabs — desktop pill bar, mobile dropdown -->
+    <div class="tabs" id="tabBar">
         <button class="tab-btn active" onclick="switchTab('sales')">&#x1F6D2; Sales</button>
         <button class="tab-btn" onclick="switchTab('payouts')">&#x1F4B8; Payouts</button>
         <button class="tab-btn" onclick="switchTab('bills')">&#x1F4CB; Bills</button>
         <button class="tab-btn" onclick="switchTab('eod')">&#x1F4CA; End of Day</button>
     </div>
+    <select id="tabSelect" onchange="switchTab(this.value)" class="tab-select-mobile">
+        <option value="sales">&#x1F6D2; Sales</option>
+        <option value="payouts">&#x1F4B8; Payouts</option>
+        <option value="bills">&#x1F4CB; Bills</option>
+        <option value="eod">&#x1F4CA; End of Day</option>
+    </select>
 
     <!-- -- TAB: SALES ---------------------------------------------------- -->
     <div class="tab-panel active" id="tab-sales">
@@ -903,12 +957,12 @@
             </div>
             <div class="form-group">
                 <label>Taken By</label>
-                <input type="text" id="payoutTakenBy" placeholder="Who took the cash?">
+                <input type="text" id="payoutTakenBy" placeholder="e.g. Eric, Ericson...">
             </div>
         </div>
         <div class="form-group">
             <label>Reason *</label>
-            <input type="text" id="payoutReason" placeholder="e.g. Bought screen from supplier, Petty cash...">
+            <input type="text" id="payoutReason" placeholder="e.g. Bought screen from supplier, petty cash...">
         </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('payoutModal')">Cancel</button>
@@ -926,7 +980,7 @@
         </div>
         <div class="form-group">
             <label>Person Name *</label>
-            <input type="text" id="billPerson" placeholder="e.g. Eric, technician001...">
+            <input type="text" id="billPerson" placeholder="e.g. Kareem, Bat, walk-in customer...">
         </div>
         <div class="form-group">
             <label>Items</label>
@@ -977,6 +1031,33 @@
     </div>
 </div>
 
+<!-- -- MODAL: Edit Bill -------------------------------------------------- -->
+<div class="modal-overlay" id="editBillModal" onclick="handleOverlay(event,'editBillModal')">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>&#x270F;&#xFE0F; Edit Bill</h2>
+            <button class="modal-close" onclick="closeModal('editBillModal')">&#x2715;</button>
+        </div>
+        <div class="form-group">
+            <label>Person Name *</label>
+            <input type="text" id="editBillPerson" placeholder="e.g. Kareem, Bat...">
+        </div>
+        <div class="form-group">
+            <label>Items</label>
+            <div class="line-items" id="editBillLineItems"></div>
+            <button class="btn-secondary" style="width:100%;justify-content:center;margin-top:4px;" onclick="addEditBillLine()">+ Add Item</button>
+        </div>
+        <div class="line-total-row">
+            <span>Total Owed</span>
+            <span id="editBillTotalDisplay">BZ$0.00</span>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('editBillModal')">Cancel</button>
+            <button class="btn-primary" id="editBillSubmitBtn" onclick="submitEditBill()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
 <!-- -- MODAL: Reverse Sale ------------------------------------------------ -->
 <div class="modal-overlay" id="reverseSaleModal" onclick="handleOverlay(event,'reverseSaleModal')">
     <div class="modal-card">
@@ -993,6 +1074,20 @@
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('reverseSaleModal')">Cancel</button>
             <button class="btn-primary" id="reverseSubmitBtn" onclick="submitReverse()" style="background:var(--danger);">&#x21A9;&#xFE0F; Confirm Reversal</button>
+        </div>
+    </div>
+</div>
+
+<!-- -- MODAL: View Sale --------------------------------------------------- -->
+<div class="modal-overlay" id="viewSaleModal" onclick="handleOverlay(event,'viewSaleModal')">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h2>&#x1F6D2; Sale Details</h2>
+            <button class="modal-close" onclick="closeModal('viewSaleModal')">&#x2715;</button>
+        </div>
+        <div id="viewSaleContent" style="font-size:0.88rem;"></div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closeModal('viewSaleModal')">Close</button>
         </div>
     </div>
 </div>
