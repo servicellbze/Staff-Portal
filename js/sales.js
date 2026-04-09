@@ -84,6 +84,9 @@ function switchTab(name) {
     document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === name));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
+    // Keep dropdown in sync
+    const sel = document.getElementById('tabSelect');
+    if (sel) sel.value = name;
     if (name === 'eod') updateEOD();
 }
 
@@ -168,6 +171,7 @@ function renderSales() {
         return;
     }
     el.innerHTML = list.map(s => {
+        const isRev   = s.status === 'reversed';
         const items   = tryParseJSON(s.items, []);
         const desc    = items.map(i => i.name).join(', ') || s.customer || 'Sale';
         const ts      = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
@@ -176,6 +180,7 @@ function renderSales() {
             : (s.method === 'partial' ? '<span class="badge badge-partial">Partial</span>' : '<span class="badge badge-paid">Paid</span>');
         const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
         const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">↩️</button>';
+        const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
             + '<div class="list-item-icon">🛒</div>'
             + '<div class="list-item-body">'
@@ -185,7 +190,7 @@ function renderSales() {
             + '</div>'
             + '<div class="list-item-right">'
             +   '<span class="list-item-amount ' + (isRev ? '' : 'green') + '">' + bz(s.amountPaid) + '</span>'
-            +   (!isRev ? '<div class="list-item-actions">' + editBtn + reverseBtn + '</div>' : '')
+            +   (!isRev ? '<div class="list-item-actions">' + viewBtn + editBtn + reverseBtn + '</div>' : '')
             + '</div></div>';
     }).join('');
 }
@@ -234,16 +239,18 @@ function renderBills() {
         const balance   = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
         const isSettled = b.status === 'settled' || balance <= 0;
         const items     = tryParseJSON(b.items, []);
-        const desc      = items.map(i => i.name).join(', ') || 'Bill';
+        const itemNames = items.map(i => i.name).filter(Boolean);
+        const desc      = itemNames.slice(0, 3).join(', ') + (itemNames.length > 3 ? ' <span style="color:var(--text-dim);font-size:0.72rem;">+' + (itemNames.length - 3) + ' more</span>' : '') || 'Bill';
         const ts        = b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
         return '<div class="list-item" style="' + (isSettled ? 'opacity:0.55;' : '') + '">'
             + '<div class="list-item-icon">&#x1F4CB;</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(b.personName || 'Unknown') + '</div>'
-            +   '<div class="list-item-meta">' + escH(desc) + (ts ? ' · ' + ts : '') + '</div>'
+            +   '<div class="list-item-meta">' + desc + (ts ? ' · ' + escH(ts) : '') + '</div>'
             +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '✓ Settled' : 'Owes ' + bz(balance)) + '</span></div>'
             + '</div>'
             + (!isSettled ? '<button class="btn-success-sm" onclick="openSettleBill(\'' + escH(b.billId) + '\')">Settle</button>' : '')
+            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">✏️</button>' : '')
             + '</div>';
     }).join('');
 }
@@ -338,15 +345,40 @@ function printEOD() {
     const shift        = getCurrentShift();
     const varColor     = Math.abs(variance) < 0.01 ? 'green' : variance > 0 ? 'green' : 'red';
     const varText      = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? '+' : '') + bz(variance);
-    const html = `<html><head><title>EOD Report</title><style>body{font-family:Arial,sans-serif;padding:20px;max-width:400px;margin:0 auto;}h2{text-align:center;}table{width:100%;border-collapse:collapse;}td{padding:6px 0;border-bottom:1px solid #eee;}td:last-child{text-align:right;font-weight:bold;}.total{font-size:1.1em;border-top:2px solid #000;}</style></head><body>
-<h2>ServiCell Belize</h2><p style="text-align:center;">${shift ? shift.label : 'End of Day'} &mdash; ${getShiftDate()}</p>
-<p style="text-align:center;">Cashier: ${escH(currentUser)}</p><hr>
-<table><tr><td>Gross Sales</td><td>${bz(gross)}</td></tr><tr><td>Total Payouts</td><td>${bz(payoutsTotal)}</td></tr>
-<tr class="total"><td>Net Expected</td><td>${bz(net)}</td></tr><tr><td>Actual Drawer</td><td>${bz(drawer)}</td></tr>
-<tr><td>Variance</td><td style="color:${varColor}">${varText}</td></tr></table>
-<hr><p style="font-size:0.8em;text-align:center;">Printed ${new Date().toLocaleString()}</p></body></html>`;
-    const w = window.open('', '_blank', 'width=450,height=600');
-    w.document.write(html); w.document.close(); w.print();
+    const html = '<!DOCTYPE html><html><head><title>EOD Report</title>'
+        + '<style>'
+        + '@page{size:72mm auto;margin:0;}'
+        + '*{box-sizing:border-box;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:10pt;width:72mm;margin:0 auto;padding:3mm 3mm 8mm 3mm;}'
+        + 'h2{text-align:center;font-size:11pt;font-weight:bold;margin:0 0 2mm;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:9pt;}'
+        + 'hr{border:none;border-top:1px dashed #000;margin:2mm 0;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:9pt;}'
+        + 'td{padding:2px 0;border-bottom:1px solid #eee;}'
+        + 'td:last-child{text-align:right;font-weight:bold;}'
+        + '.total td{border-top:2px solid #000;border-bottom:none;font-size:10pt;padding-top:3px;}'
+        + '.footer{text-align:center;font-size:8pt;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '</style></head><body>'
+        + '<h2>ServiCell Belize</h2>'
+        + '<p>' + (shift ? shift.label : 'End of Day') + ' &mdash; ' + getShiftDate() + '</p>'
+        + '<p>Cashier: ' + escH(currentUser) + '</p>'
+        + '<hr>'
+        + '<table>'
+        + '<tr><td>Gross Sales</td><td>' + bz(gross) + '</td></tr>'
+        + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
+        + '<tr class="total"><td>Net Expected</td><td>' + bz(net) + '</td></tr>'
+        + '<tr><td>Actual Drawer</td><td>' + bz(drawer) + '</td></tr>'
+        + '<tr><td>Variance</td><td style="color:' + varColor + '">' + varText + '</td></tr>'
+        + '</table>'
+        + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
+        + '</body></html>';
+    const w = window.open('', '_blank', 'width=340,height=500');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
+    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
 }
 
 // ── SKU / Barcode Scanner ─────────────────────────────────────────────────────
@@ -515,7 +547,6 @@ async function submitSale() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Sale recorded!', 'ok');
             printReceipt(items, total, amountPaid, method, data.saleId, '');
-            kickCashDrawer();
             await loadAll();
         } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('❌ ' + (data.error || 'Could not save.')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('Connection error.'); }
@@ -619,7 +650,6 @@ async function submitJobPickup() {
             closeModal('jobPickupModal');
             if (typeof haptic === 'function') haptic('success');
             showToast('Payment collected!', 'ok');
-            kickCashDrawer();
             await loadAll();
         } else { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('❌ ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('Connection error.'); }
@@ -723,6 +753,77 @@ async function submitBill() {
     } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; alert('Connection error.'); }
 }
 
+// ── Edit Bill ─────────────────────────────────────────────────────────────────
+let _editingBillId = null;
+
+function openEditBill(billId) {
+    const b = allBills.find(x => String(x.billId) === String(billId));
+    if (!b) return;
+    _editingBillId = billId;
+    document.getElementById('editBillPerson').value = b.personName || '';
+    document.getElementById('editBillLineItems').innerHTML = '';
+    document.getElementById('editBillSubmitBtn').disabled = false;
+    document.getElementById('editBillSubmitBtn').textContent = 'Save Changes';
+    const items = tryParseJSON(b.items, []);
+    if (items.length) items.forEach(i => addEditBillLine(i.name, i.qty, i.price));
+    else addEditBillLine();
+    updateEditBillTotal();
+    openModal('editBillModal');
+}
+
+function addEditBillLine(name, qty, price) {
+    name = name || ''; qty = qty || 1; price = price || '';
+    const row = document.createElement('div');
+    row.className = 'line-item-row';
+    row.innerHTML =
+        '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateEditBillTotal()">'
+        + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditBillTotal()">'
+        + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateEditBillTotal()">'
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditBillTotal()">&#x2715;</button>';
+    document.getElementById('editBillLineItems').appendChild(row);
+}
+
+function updateEditBillTotal() {
+    let total = 0;
+    document.querySelectorAll('#editBillLineItems .line-item-row').forEach(r => {
+        const i = r.querySelectorAll('input');
+        total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
+    });
+    document.getElementById('editBillTotalDisplay').textContent = bz(total);
+}
+
+async function submitEditBill() {
+    if (!_editingBillId) return;
+    const person = document.getElementById('editBillPerson').value.trim();
+    if (!person) { alert('Enter a person name.'); return; }
+    const rows = document.querySelectorAll('#editBillLineItems .line-item-row');
+    const items = [];
+    rows.forEach(r => {
+        const i = r.querySelectorAll('input');
+        const name = i[0].value.trim(); const qty = parseFloat(i[1].value) || 1; const price = parseFloat(i[2].value) || 0;
+        if (name) items.push({ name, qty, price, total: qty * price });
+    });
+    if (!items.length) { alert('Add at least one item.'); return; }
+    const total = items.reduce((t, i) => t + i.total, 0);
+    const btn = document.getElementById('editBillSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+        const params = new URLSearchParams({
+            action: 'updatebill', billId: _editingBillId,
+            personName: person, items: JSON.stringify(items),
+            totalOwed: total, cashier: currentUser
+        });
+        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
+        const data = await res.json();
+        if (data.success) {
+            closeModal('editBillModal');
+            if (typeof haptic === 'function') haptic('success');
+            showToast('Bill updated!', 'ok');
+            await loadAll();
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('❌ ' + (data.error || 'Error')); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
+}
+
 // ── Settle Bill ───────────────────────────────────────────────────────────────
 function openSettleBill(billId) {
     const b = allBills.find(x => String(x.billId) === String(billId));
@@ -776,6 +877,48 @@ async function submitSettle() {
             await loadAll();
         } else { btn.disabled = false; btn.textContent = 'Settle'; alert('❌ ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; alert('Connection error.'); }
+}
+
+// ── View Sale ─────────────────────────────────────────────────────────────────
+function openViewSale(saleId) {
+    const s = allSales.find(x => String(x.saleId) === String(saleId));
+    if (!s) return;
+    const items  = tryParseJSON(s.items, []);
+    const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    const change = s.method === 'cash' ? Math.max(0, (parseFloat(s.amountPaid)||0) - (parseFloat(s.total)||0)) : 0;
+    const statusBadge = s.status === 'reversed' ? 'reversed' : s.method === 'partial' ? 'partial' : 'paid';
+    const statusLabel = s.status === 'reversed' ? 'Reversed' : s.method === 'partial' ? 'Partial' : 'Paid';
+    const itemRows = items.map(i =>
+        '<tr>'
+        + '<td style="font-weight:600;">' + escH(i.name || '—') + '</td>'
+        + '<td style="color:var(--text-dim);">×' + (i.qty || 1) + '</td>'
+        + '<td>' + bz(i.price) + '</td>'
+        + '<td style="font-weight:800;">' + bz((i.qty||1) * (i.price||0)) + '</td>'
+        + '</tr>'
+    ).join('');
+    document.getElementById('viewSaleContent').innerHTML =
+        '<div class="receipt-header">'
+        + '<h3>ServiCell Belize</h3>'
+        + '<p>' + escH(ts) + '</p>'
+        + '<p>Receipt #<strong>' + escH(s.saleId || '') + '</strong></p>'
+        + '</div>'
+        + '<div class="receipt-meta">'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || '—') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || '—') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Method</div><div class="receipt-meta-value">' + escH(s.method || 'cash') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Status</div><div class="receipt-meta-value"><span class="receipt-badge ' + statusBadge + '">' + statusLabel + '</span></div></div>'
+        + '</div>'
+        + '<table class="receipt-items">'
+        + '<tr><th style="text-align:left;">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'
+        + itemRows
+        + '</table>'
+        + '<div class="receipt-totals">'
+        + '<div class="receipt-total-row"><span style="color:var(--text-dim);">Subtotal</span><span>' + bz(s.total) + '</span></div>'
+        + '<div class="receipt-total-row"><span style="color:var(--text-dim);">Paid</span><span>' + bz(s.amountPaid) + '</span></div>'
+        + (change > 0 ? '<div class="receipt-total-row"><span style="color:var(--text-dim);">Change</span><span>' + bz(change) + '</span></div>' : '')
+        + '<div class="receipt-total-row main"><span>Net</span><span>' + bz(s.amountPaid) + '</span></div>'
+        + '</div>';
+    openModal('viewSaleModal');
 }
 
 // ── Edit Sale ─────────────────────────────────────────────────────────────────
@@ -900,66 +1043,55 @@ async function deductInventory(sku, qty, saleId) {
 
 // ── Receipt Printing ──────────────────────────────────────────────────────────
 function printReceipt(items, total, amountPaid, method, saleId, customer) {
-    // Only print if enabled in settings (default: off — cashier opts in)
     if (localStorage.getItem('scAutoPrintReceipt') !== '1') return;
     const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
     const rows = items.map(i =>
-        `<tr><td>${escH(i.name)}</td><td style="text-align:center;">${i.qty}</td><td style="text-align:right;">${bz(i.price)}</td><td style="text-align:right;">${bz(i.total)}</td></tr>`
+        '<tr><td style="padding:1px 0;word-break:break-word;">' + escH(i.name) + '</td>'
+        + '<td style="text-align:center;white-space:nowrap;padding:1px 4px;">' + i.qty + '</td>'
+        + '<td style="text-align:right;white-space:nowrap;padding:1px 0;">' + bz(i.price) + '</td>'
+        + '<td style="text-align:right;white-space:nowrap;padding:1px 0;">' + bz(i.total) + '</td></tr>'
     ).join('');
-    const html = `<html><head><title>Receipt</title><style>
-body{font-family:'Courier New',monospace;font-size:12px;padding:10px;max-width:300px;margin:0 auto;}
-h2{text-align:center;font-size:14px;margin:0 0 4px;}
-p{text-align:center;margin:2px 0;font-size:11px;}
-table{width:100%;border-collapse:collapse;margin:8px 0;}
-th{border-bottom:1px solid #000;padding:2px 0;font-size:11px;}
-td{padding:2px 0;}
-.total-row td{border-top:1px solid #000;font-weight:bold;padding-top:4px;}
-.footer{text-align:center;margin-top:8px;font-size:10px;border-top:1px dashed #000;padding-top:6px;}
-</style></head><body>
-<h2>ServiCell Belize</h2>
-<p>${new Date().toLocaleString()}</p>
-<p>Cashier: ${escH(currentUser)}</p>
-${customer ? '<p>Customer: ' + escH(customer) + '</p>' : ''}
-<p>Receipt #${escH(saleId || '')}</p>
-<table>
-<tr><th style="text-align:left;">Item</th><th>Qty</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th></tr>
-${rows}
-<tr class="total-row"><td colspan="3">Total</td><td style="text-align:right;">${bz(total)}</td></tr>
-<tr><td colspan="3">Paid (${escH(method)})</td><td style="text-align:right;">${bz(amountPaid)}</td></tr>
-${change > 0 ? `<tr><td colspan="3">Change</td><td style="text-align:right;">${bz(change)}</td></tr>` : ''}
-</table>
-<div class="footer">Thank you for your business!<br>ServiCell Belize</div>
-</body></html>`;
-    const w = window.open('', '_blank', 'width=320,height=500');
-    if (!w) return; // popup blocked
+    const html = '<!DOCTYPE html><html><head><title>Receipt</title>'
+        + '<style>'
+        // 72mm paper = ~2.83in. At 96dpi that's ~272px. Use @page to force it.
+        + '@page{size:72mm auto;margin:0;}'
+        + '*{box-sizing:border-box;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:10pt;'
+        +      'width:72mm;margin:0 auto;padding:3mm 3mm 8mm 3mm;}'
+        + 'h2{text-align:center;font-size:11pt;font-weight:bold;margin:0 0 2mm;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:9pt;}'
+        + 'hr{border:none;border-top:1px dashed #000;margin:2mm 0;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:9pt;}'
+        + 'th{border-bottom:1px solid #000;padding:1px 0;font-size:8pt;text-align:left;}'
+        + 'th:nth-child(2){text-align:center;}'
+        + 'th:nth-child(3),th:nth-child(4){text-align:right;}'
+        + '.divider td{border-top:1px solid #000;padding-top:2px;font-weight:bold;}'
+        + '.footer{text-align:center;font-size:8pt;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '</style></head><body>'
+        + '<h2>ServiCell Belize</h2>'
+        + '<p>' + new Date().toLocaleString() + '</p>'
+        + '<p>Cashier: ' + escH(currentUser) + '</p>'
+        + (customer ? '<p>Customer: ' + escH(customer) + '</p>' : '')
+        + '<p>Receipt #' + escH(saleId || '') + '</p>'
+        + '<hr>'
+        + '<table>'
+        + '<tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'
+        + rows
+        + '<tr class="divider"><td colspan="3">Total</td><td style="text-align:right;">' + bz(total) + '</td></tr>'
+        + '<tr><td colspan="3">Paid (' + escH(method) + ')</td><td style="text-align:right;">' + bz(amountPaid) + '</td></tr>'
+        + (change > 0 ? '<tr><td colspan="3">Change</td><td style="text-align:right;">' + bz(change) + '</td></tr>' : '')
+        + '</table>'
+        + '<div class="footer">Thank you!<br>ServiCell Belize</div>'
+        + '</body></html>';
+    const w = window.open('', '_blank', 'width=340,height=600');
+    if (!w) return;
     w.document.write(html);
     w.document.close();
     w.focus();
-    w.print();
-    setTimeout(() => w.close(), 1000);
-}
-
-// ── Cash Drawer ───────────────────────────────────────────────────────────────
-// Sends ESC/POS "kick drawer" command via Web Serial API (Chrome/Edge on PC only).
-// Requires: a receipt printer with a cash drawer port connected via USB/Serial.
-// The printer must be selected once — it's remembered for the session.
-let _drawerPort = null;
-
-async function kickCashDrawer() {
-    if (localStorage.getItem('scCashDrawer') !== '1') return;
-    if (!('serial' in navigator)) return; // not supported (mobile/Firefox)
-    try {
-        if (!_drawerPort) {
-            _drawerPort = await navigator.serial.requestPort();
-            await _drawerPort.open({ baudRate: 9600 });
-        }
-        // ESC/POS: ESC p 0 25 250 — standard cash drawer kick
-        const writer = _drawerPort.writable.getWriter();
-        await writer.write(new Uint8Array([0x1B, 0x70, 0x00, 0x19, 0xFA]));
-        writer.releaseLock();
-    } catch (e) {
-        console.warn('Cash drawer:', e.message);
-    }
+    // Let the page render before printing
+    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
+    // Fallback if onload already fired
+    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
 }
 
 // ── Modal Helpers ─────────────────────────────────────────────────────────────
@@ -995,6 +1127,16 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set date filter to today by default
     const dateInput = document.getElementById('salesDateFilter');
     if (dateInput) dateInput.value = getShiftDate();
+    // Responsive tabs — use dropdown on narrow screens
+    function syncTabLayout() {
+        const isMobile = window.innerWidth < 540;
+        const bar = document.getElementById('tabBar');
+        const sel = document.getElementById('tabSelect');
+        if (bar) bar.style.display = isMobile ? 'none' : '';
+        if (sel) sel.style.display = isMobile ? 'block' : 'none';
+    }
+    syncTabLayout();
+    window.addEventListener('resize', syncTabLayout);
     loadAll();
     updateShiftBanner();
     setInterval(updateShiftBanner, 60000);
