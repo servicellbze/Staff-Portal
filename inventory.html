@@ -518,7 +518,7 @@
         loadInventory();
         initBarcodeScanner();
         // Only managers can add, edit, delete items and see cost/value data
-        if (isManager) {
+        if (isManager || isCashier) {
             document.getElementById('addItemBtn').style.display = 'inline-flex';
         }
         if (!isManager) {
