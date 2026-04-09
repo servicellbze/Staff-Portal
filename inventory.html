@@ -62,8 +62,10 @@
             contain: layout style;
         }
         .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; will-change: transform; transform: translateZ(0); }
-        .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
-        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; will-change: transform; }
+        .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 90px 100px 120px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
+        .inv-header.show-cost { grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; }
+        .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 90px 100px 120px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; will-change: transform; }
+        .inv-row.show-cost { grid-template-columns: 2fr 1fr 80px 90px 90px 100px 120px; }
         .inv-row:last-child { border-bottom: none; }
         .inv-row:hover { background: rgba(255,255,255,0.03); }
         .inv-row.low-stock { border-left: 3px solid var(--warning); }
@@ -78,8 +80,9 @@
         .qty-cell.ok { color: var(--success); }
         .price-cell { font-size: 0.88rem; font-weight: 600; color: var(--text-main); }
         .stock-bar-wrap { display: flex; align-items: center; gap: 8px; }
-        .stock-bar { flex: 1; height: 4px; background: var(--glass-border); border-radius: 2px; overflow: hidden; }
-        .stock-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s ease; }
+        /* Stock bar — ensure it fills properly */
+        .stock-bar { flex: 1; height: 5px; background: var(--glass-border); border-radius: 3px; overflow: hidden; }
+        .stock-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
         .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
         .row-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .row-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
@@ -285,11 +288,11 @@
         <!-- Table -->
         <div class="inv-section">
             <div class="inv-table-wrap" id="invTableWrap">
-                <div class="inv-header">
+                <div class="inv-header" id="invHeader">
                     <div>Item</div>
                     <div>Category</div>
                     <div>Qty</div>
-                    <div>Cost</div>
+                    <div class="cost-header-col">Cost</div>
                     <div>Sale Price</div>
                     <div>Stock Level</div>
                     <div></div>
@@ -364,7 +367,7 @@
                     <input type="text" id="iLocation" placeholder="e.g. Shelf A2">
                 </div>
             </div>
-            <div class="form-row">
+            <div class="form-row" id="costPriceRow">
                 <div class="form-group">
                     <label>Cost Price (BZD)</label>
                     <input type="number" id="iCost" min="0" step="0.01" placeholder="0.00">
@@ -538,13 +541,13 @@
     document.addEventListener('DOMContentLoaded', () => {
         currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
         isManager   = currentUser.toLowerCase().startsWith('manager');
-        // TEMP: cashiers also get delete access for inventory cleanup — revert when done
-        const isCashier = currentUser.toLowerCase().startsWith('cashier');
-        window.canDelete = isManager || isCashier;
         loadInventory();
         initBarcodeScanner();
-        if (isManager || isCashier) document.getElementById('addItemBtn').style.display = 'inline-flex';
-        // Hide cost price and stock value from non-managers
+        // Only managers can add, edit, delete items and see cost/value data
+        if (isManager) {
+            document.getElementById('addItemBtn').style.display = 'inline-flex';
+            document.getElementById('invHeader').classList.add('show-cost');
+        }
         if (!isManager) {
             const card = document.getElementById('statValueCard');
             if (card) card.style.display = 'none';
@@ -642,13 +645,17 @@
         const isLow  = !isOut && qty <= min;
         const rowCls = isOut ? 'out-of-stock' : isLow ? 'low-stock' : '';
         const qtyCls = isOut ? 'out' : isLow ? 'low' : 'ok';
+        // Stock bar: 0–min = red/yellow zone, min–min*3 = green zone, cap at 100%
         const pct    = min > 0 ? Math.min(100, Math.round((qty / (min * 3)) * 100)) : (qty > 0 ? 100 : 0);
         const barClr = isOut ? '#ef4444' : isLow ? '#f59e0b' : '#10b981';
-        const cost   = parseFloat(i.costPrice) || 0;
         const sale   = parseFloat(i.salePrice) || 0;
+        const costCol = isManager
+            ? `<div class="cost-col"><span class="price-cell" style="font-size:0.78rem;color:var(--text-dim);">BZ$${(parseFloat(i.costPrice)||0).toFixed(2)}</span></div>`
+            : '';
+        const showCostCls = isManager ? 'show-cost' : '';
 
         return `
-        <div class="inv-row ${rowCls}" onclick="openViewModal('${escH(i.sku)}')">
+        <div class="inv-row ${rowCls} ${showCostCls}" onclick="openViewModal('${escH(i.sku)}')">
             <div>
                 <div class="item-name">${escH(i.name || '—')}</div>
                 <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
@@ -656,8 +663,8 @@
             <div class="inv-row-meta">
                 <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
                 <div class="qty-col"><span class="qty-cell ${qtyCls}">${qty}</span><span style="font-size:0.65rem;color:var(--text-dim);margin-left:4px;">/ min ${min}</span></div>
-                <div class="cost-col"><span class="price-cell" style="font-size:0.78rem;color:var(--text-dim);">Cost: BZ$${cost.toFixed(2)}</span></div>
-                <div class="price-col"><span class="price-cell" style="font-size:0.78rem;">Sale: BZ$${sale.toFixed(2)}</span></div>
+                ${costCol}
+                <div class="price-col"><span class="price-cell" style="font-size:0.78rem;">BZ$${sale.toFixed(2)}</span></div>
             </div>
             <div class="stock-col">
                 <div class="stock-bar-wrap">
@@ -667,8 +674,8 @@
             </div>
             <div class="row-actions" onclick="event.stopPropagation()">
                 <button class="row-btn" title="Adjust stock" onclick="openAdjustModal('${escH(i.sku)}')">±</button>
-                ${(isManager || window.canDelete) ? `<button class="row-btn" title="Edit" onclick="openItemModal('${escH(i.sku)}')">✏️</button>` : ''}
-                ${(isManager || window.canDelete) ? `<button class="row-btn danger" title="Delete" onclick="openDeleteModal('${escH(i.sku)}')">🗑️</button>` : ''}
+                ${isManager ? `<button class="row-btn" title="Edit" onclick="openItemModal('${escH(i.sku)}')">✏️</button>` : ''}
+                ${isManager ? `<button class="row-btn danger" title="Delete" onclick="openDeleteModal('${escH(i.sku)}')">🗑️</button>` : ''}
             </div>
         </div>`;
     }
@@ -700,16 +707,13 @@
             document.getElementById(id).style.opacity = '1';
         });
 
-        // Show cashier warning if editing
+        // Only managers see and can set cost price
+        const costRow = document.getElementById('costPriceRow');
+        if (costRow) costRow.style.display = isManager ? '' : 'none';
+
+        // Show cashier warning if editing (no longer applicable — only managers edit)
         let warn = document.getElementById('cashierEditWarn');
-        if (!warn) {
-            warn = document.createElement('div');
-            warn.id = 'cashierEditWarn';
-            warn.style.cssText = 'padding:10px 14px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;font-size:0.78rem;font-weight:700;color:#b45309;margin-bottom:14px;';
-            warn.textContent = '⚠️ Your edit will be flagged and sent to the manager for review.';
-            document.getElementById('itemModal').querySelector('.modal-card').insertBefore(warn, document.getElementById('itemModal').querySelector('.form-group'));
-        }
-        warn.style.display = (!isManager && item) ? 'block' : 'none';
+        if (warn) warn.style.display = 'none';
 
         document.getElementById('itemSubmitBtn').disabled    = false;
         document.getElementById('itemSubmitBtn').textContent = item ? 'Save Changes' : 'Save Item';
@@ -847,10 +851,9 @@
                 <div class="view-field"><div class="view-label">Category</div><div class="view-value">${escH(i.category || '—')}</div></div>
                 <div class="view-field"><div class="view-label">Stock</div><div class="view-value">${qty} units &nbsp;${statusLabel}</div></div>
                 <div class="view-field"><div class="view-label">Min Qty</div><div class="view-value">${min}</div></div>
-                <div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>
-                <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} <span style="font-size:0.75rem;color:var(--text-dim);">${isManager ? "(" + margin + "% margin)" : ""}</span></div></div>
+                ${isManager ? `<div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>` : ''}
+                <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} ${isManager ? `<span style="font-size:0.75rem;color:var(--text-dim);">(${margin}% margin)</span>` : ''}</div></div>
                 <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '—')}</div></div>
-                
                 <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '—')}</div></div>
                 ${i.notes ? `<div class="view-field full"><div class="view-label">Notes</div><div class="view-value">${escH(i.notes)}</div></div>` : ''}
             </div>`;
