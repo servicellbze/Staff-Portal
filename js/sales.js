@@ -18,10 +18,15 @@ let selectedJobId  = null;
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function bz(n) { return 'BZ$' + (parseFloat(n) || 0).toFixed(2); }
 
-function escH(s) {
-    const d = document.createElement('div');
-    d.textContent = String(s || '');
-    return d.innerHTML;
+// ── Perf: reuse a single element for HTML escaping ────────────────────────────
+const _escDiv = document.createElement('div');
+function escH(s) { _escDiv.textContent = String(s || ''); return _escDiv.innerHTML; }
+
+// ── Perf: debounce helper for search inputs ───────────────────────────────────
+const _debounceTimers = {};
+function debounce(key, fn, ms) {
+    clearTimeout(_debounceTimers[key]);
+    _debounceTimers[key] = setTimeout(fn, ms);
 }
 
 function tryParseJSON(str, fallback) {
@@ -120,7 +125,7 @@ async function loadAll() {
 let _salesDateFilter = '';
 let _showSettled     = false;
 let _salesPage       = 1;
-let _salesPerPage    = 20;
+let _salesPerPage    = 10;
 
 // ── Reusable pagination renderer ─────────────────────────────────────────────
 function renderPagination(containerId, total, page, perPage, onPage, onPerPage) {
@@ -173,6 +178,10 @@ function toggleShowSettled() {
     }
     renderBills();
 }
+
+// Debounced search handlers — called from oninput in the HTML
+function onSalesSearch()  { debounce('salesSearch',  renderSales, 120); }
+function onBillsSearch()  { debounce('billsSearch',  renderBills, 120); }
 
 // ── Render: Sales ─────────────────────────────────────────────────────────────
 function renderSales() {
@@ -1177,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (sel) sel.style.display = isMobile ? 'block' : 'none';
     }
     syncTabLayout();
-    window.addEventListener('resize', syncTabLayout);
+    window.addEventListener('resize', () => debounce('resize', syncTabLayout, 100));
     loadAll();
     updateShiftBanner();
     setInterval(updateShiftBanner, 60000);
