@@ -69,6 +69,16 @@
         .inv-row.low-stock { border-left: 3px solid var(--warning); }
         .inv-row.out-of-stock { border-left: 3px solid var(--danger); background: rgba(239,68,68,0.03); }
 
+        /* Desktop: use display:contents so wrapper divs are transparent to the CSS grid */
+        .inv-row-main { display: contents; }
+        .inv-row-main > .inv-row-status-badge { display: none; } /* hidden on desktop */
+        .inv-row-meta { display: contents; }
+        .inv-row-meta > .inv-row-meta-sep { display: none; }
+        .inv-row-meta > .inv-row-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+        .inv-row-meta > .inv-row-meta-item.qty-ok strong  { color: var(--success); }
+        .inv-row-meta > .inv-row-meta-item.qty-low strong { color: var(--warning); }
+        .inv-row-meta > .inv-row-meta-item.qty-out strong { color: var(--danger); }
+
         .item-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
         .item-sku { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; font-family: monospace; }
         .category-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.68rem; font-weight: 700; background: rgba(37,99,235,0.1); color: var(--primary); }
@@ -193,20 +203,73 @@
             .inv-row {
                 display: flex;
                 flex-direction: column;
-                gap: 10px;
-                padding: 14px 16px;
-                border-radius: 16px;
-                margin-bottom: 8px;
+                gap: 0;
+                padding: 0;
+                border-radius: 14px;
+                margin-bottom: 10px;
                 border: 1px solid var(--glass-border) !important;
-                border-left: none !important;
                 background: var(--glass);
                 backdrop-filter: blur(10px);
+                overflow: hidden;
             }
             .inv-row.low-stock  { border-top: 3px solid var(--warning) !important; }
             .inv-row.out-of-stock { border-top: 3px solid var(--danger) !important; }
-            .inv-row:hover { transform: none; }
+            .inv-row:hover { background: rgba(255,255,255,0.05); }
 
-            .inv-row .row-actions { flex-direction: row; justify-content: flex-start; }
+            /* Top section: name + status badge side by side */
+            .inv-row-main {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 10px;
+                padding: 14px 16px 8px;
+            }
+            .inv-row-main > div { flex: 1; min-width: 0; }
+            .inv-row-status-badge {
+                display: inline-flex !important;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 10px;
+                border-radius: var(--radius-full);
+                font-size: 0.7rem;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            /* Meta row: category · qty · price */
+            .inv-row-meta {
+                display: flex !important;
+                align-items: center;
+                gap: 8px;
+                padding: 0 16px 10px;
+                flex-wrap: wrap;
+            }
+            .inv-row-meta > .inv-row-meta-sep { display: inline !important; color: var(--text-dim); font-size: 0.7rem; }
+            .inv-row-meta > .inv-row-meta-item {
+                display: inline-flex !important;
+                align-items: center;
+                gap: 3px;
+                font-size: 0.78rem;
+                color: var(--text-dim);
+                font-weight: 600;
+            }
+            .inv-row-meta > .inv-row-meta-item strong { font-weight: 800; color: var(--text-main); }
+            .inv-row-meta > .inv-row-meta-item.qty-ok strong  { color: var(--success); }
+            .inv-row-meta > .inv-row-meta-item.qty-low strong { color: var(--warning); }
+            .inv-row-meta > .inv-row-meta-item.qty-out strong { color: var(--danger); }
+
+            /* Actions bar at bottom */
+            .inv-row .row-actions {
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-end;
+                padding: 10px 12px;
+                border-top: 1px solid var(--glass-border);
+                gap: 8px;
+            }
+            .inv-row .row-btn { width: 36px; height: 36px; border-radius: 10px; font-size: 0.9rem; }
+
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .form-row, .form-row-3 { grid-template-columns: 1fr; }
             .view-grid { grid-template-columns: 1fr; }
@@ -222,6 +285,7 @@
             .stat-value { font-size: 1.4rem; }
             .toolbar { gap: 8px; }
             .modal-card { padding: 20px 16px 18px; }
+            .pagination { border-radius: var(--radius-md); flex-direction: column; align-items: flex-start; gap: 8px; }
         }
     </style>
 </head>
@@ -600,7 +664,7 @@
 
     // ── Pagination state ──────────────────────────────────────────────────────
     let _invPage    = 1;
-    let _invPerPage = 20;
+    let _invPerPage = 10;
 
     function renderInventory() {
         const q    = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -687,17 +751,19 @@
 
         return `
         <div class="inv-row ${rowCls}" onclick="openViewModal('${escH(i.sku)}')">
-            <div>
-                <div class="item-name">${escH(i.name || '—')}</div>
-                <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
+            <div class="inv-row-main">
+                <div>
+                    <div class="item-name">${escH(i.name || '—')}</div>
+                    <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
+                </div>
+                <span class="inv-row-status-badge" style="color:${statusColor};background:${statusBg};border:1px solid ${statusColor}33;">${statusLabel}</span>
             </div>
-            <div class="category-cell"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
-            <div><span class="qty-cell ${qtyCls}">${qty}</span><span style="font-size:0.65rem;color:var(--text-dim);margin-left:4px;">/ ${min}</span></div>
-            <div><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
-            <div>
-                <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-full);font-size:0.72rem;font-weight:700;color:${statusColor};background:${statusBg};border:1px solid ${statusColor}33;">
-                    ${statusLabel}
-                </span>
+            <div class="inv-row-meta">
+                <span class="category-badge">${escH(i.category || 'Other')}</span>
+                <span class="inv-row-meta-sep">·</span>
+                <span class="inv-row-meta-item qty-${qtyCls}"><strong>${qty}</strong> / ${min}</span>
+                <span class="inv-row-meta-sep">·</span>
+                <span class="inv-row-meta-item"><strong>BZ$${sale.toFixed(2)}</strong></span>
             </div>
             <div class="row-actions" onclick="event.stopPropagation()">
                 <button class="row-btn" title="Adjust stock" onclick="openAdjustModal('${escH(i.sku)}')">±</button>
@@ -706,8 +772,6 @@
             </div>
         </div>`;
     }
-
-    // ── Add/Edit Item Modal ───────────────────────────────────────────────────
     let editingSku = null;
 
     function openItemModal(sku) {
