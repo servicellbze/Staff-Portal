@@ -58,10 +58,7 @@
 
         /* ── Inventory table ── */
         .inv-section { animation: fadeInUp 0.4s ease 0.1s both; }
-        #invBody {
-            contain: strict;
-        }
-        .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; contain: layout style; }
+        .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; }
         .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 110px 160px 80px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
         .inv-row { display: grid; grid-template-columns: 2fr 1fr 80px 110px 160px 80px; padding: 16px 20px; border-bottom: 1px solid var(--glass-border); align-items: center; transition: background 0.15s; cursor: pointer; }
         .inv-row:last-child { border-bottom: none; }
@@ -69,18 +66,14 @@
         .inv-row.low-stock { border-left: 3px solid var(--warning); }
         .inv-row.out-of-stock { border-left: 3px solid var(--danger); background: rgba(239,68,68,0.03); }
 
-        /* Desktop: wrapper divs use display:contents to be transparent to the CSS grid */
-        .inv-row-main  { display: contents; }
-        .inv-row-meta  { display: contents; }
-        .inv-row-status-badge { display: none; }
-        .inv-row-status-badge.badge-ok  { color: var(--success); background: rgba(16,185,129,0.1);  border: 1px solid rgba(16,185,129,0.2); }
-        .inv-row-status-badge.badge-low { color: var(--warning); background: rgba(245,158,11,0.1);  border: 1px solid rgba(245,158,11,0.2); }
-        .inv-row-status-badge.badge-out { color: var(--danger);  background: rgba(239,68,68,0.1);   border: 1px solid rgba(239,68,68,0.2); }
-        .inv-row-meta-sep     { display: none; }
-        .inv-row-meta-item { display: inline-flex; align-items: center; gap: 4px; }
-        .inv-row-meta-item.qty-ok  strong { color: var(--success); }
-        .inv-row-meta-item.qty-low strong { color: var(--warning); }
-        .inv-row-meta-item.qty-out strong { color: var(--danger); }
+        /* Desktop: flat 6-cell grid columns */
+        .inv-col-name, .inv-col-cat, .inv-col-qty, .inv-col-price, .inv-col-status { display: flex; align-items: center; }
+        .inv-col-name { flex-direction: column; align-items: flex-start; }
+        .qty-min { font-size: 0.65rem; color: var(--text-dim); margin-left: 2px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.72rem; font-weight: 700; }
+        .status-badge.badge-ok  { color: var(--success); background: rgba(16,185,129,0.1);  border: 1px solid rgba(16,185,129,0.25); }
+        .status-badge.badge-low { color: var(--warning); background: rgba(245,158,11,0.1);  border: 1px solid rgba(245,158,11,0.25); }
+        .status-badge.badge-out { color: var(--danger);  background: rgba(239,68,68,0.1);   border: 1px solid rgba(239,68,68,0.25); }
 
         .item-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
         .item-sku { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; font-family: monospace; }
@@ -214,57 +207,39 @@
                 background: var(--glass);
                 overflow: hidden;
             }
-            .inv-row.low-stock  { border-top: 3px solid var(--warning) !important; }
-            .inv-row.out-of-stock { border-top: 3px solid var(--danger) !important; }
+            .inv-row.low-stock   { border-top: 3px solid var(--warning) !important; }
+            .inv-row.out-of-stock { border-top: 3px solid var(--danger)  !important; }
             .inv-row:hover { background: rgba(255,255,255,0.05); }
 
-            /* Top section: name + status badge side by side */
-            .inv-row-main {
-                display: flex;
+            /* Name + status on top row */
+            .inv-col-name {
+                flex-direction: row;
                 align-items: flex-start;
                 justify-content: space-between;
-                gap: 10px;
                 padding: 14px 16px 8px;
+                gap: 10px;
             }
-            .inv-row-main > div { flex: 1; min-width: 0; }
-            .inv-row-status-badge {
-                display: inline-flex !important;
-                align-items: center;
-                gap: 4px;
-                padding: 4px 10px;
-                border-radius: var(--radius-full);
-                font-size: 0.7rem;
-                font-weight: 700;
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
+            .inv-col-name > div { flex: 1; min-width: 0; }
+            .status-badge { white-space: nowrap; flex-shrink: 0; }
 
-            /* Meta row: category · qty · price */
-            .inv-row-meta {
-                display: flex !important;
-                align-items: center;
-                gap: 8px;
-                padding: 0 16px 10px;
-                flex-wrap: wrap;
-            }
-            .inv-row-meta > .inv-row-meta-sep { display: inline !important; color: var(--text-dim); font-size: 0.7rem; }
-            .inv-row-meta > .inv-row-meta-item {
-                display: inline-flex !important;
-                align-items: center;
-                gap: 3px;
-                font-size: 0.78rem;
-                color: var(--text-dim);
-                font-weight: 600;
-            }
-            .inv-row-meta > .inv-row-meta-item strong { font-weight: 800; color: var(--text-main); }
-            .inv-row-meta > .inv-row-meta-item.qty-ok strong  { color: var(--success); }
-            .inv-row-meta > .inv-row-meta-item.qty-low strong { color: var(--warning); }
-            .inv-row-meta > .inv-row-meta-item.qty-out strong { color: var(--danger); }
+            /* Meta strip: category · qty · price */
+            .inv-col-cat, .inv-col-qty, .inv-col-price { padding: 0 16px 10px; }
+            .inv-col-cat::after  { content: '·'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
+            .inv-col-qty::after  { content: '·'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
+            .inv-col-cat, .inv-col-qty, .inv-col-price { display: inline-flex; align-items: center; }
+            /* Put cat/qty/price on one line */
+            .inv-col-cat  { padding-bottom: 0; }
+            .inv-col-qty  { padding-bottom: 0; }
+            .inv-col-price { padding-bottom: 10px; }
 
-            /* Actions bar at bottom */
+            /* Hide status col — shown in name row instead */
+            .inv-col-status { display: none; }
+
+            /* Move status badge into name row */
+            .inv-col-name .status-badge { display: inline-flex !important; }
+
+            /* Actions bar */
             .inv-row .row-actions {
-                display: flex;
-                flex-direction: row;
                 justify-content: flex-end;
                 padding: 10px 12px;
                 border-top: 1px solid var(--glass-border);
@@ -763,24 +738,20 @@
 
         return `
         <div class="inv-row ${rowCls}" onclick="openViewModal('${escH(i.sku)}')">
-            <div class="inv-row-main">
-                <div>
-                    <div class="item-name">${escH(i.name || '—')}</div>
-                    <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
-                </div>
-                <span class="inv-row-status-badge ${statusCls}">${statusLabel}</span>
+            <div class="inv-col-name">
+                <div class="item-name">${escH(i.name || '—')}</div>
+                <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
             </div>
-            <div class="inv-row-meta">
-                <span class="category-badge">${escH(i.category || 'Other')}</span>
-                <span class="inv-row-meta-sep">·</span>
-                <span class="inv-row-meta-item qty-${qtyCls}"><strong>${qty}</strong> / ${min}</span>
-                <span class="inv-row-meta-sep">·</span>
-                <span class="inv-row-meta-item"><strong>BZ$${sale.toFixed(2)}</strong></span>
+            <div class="inv-col-cat"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
+            <div class="inv-col-qty"><span class="qty-cell ${qtyCls}">${qty}</span><span class="qty-min"> / ${min}</span></div>
+            <div class="inv-col-price"><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
+            <div class="inv-col-status">
+                <span class="status-badge ${statusCls}">${statusLabel}</span>
             </div>
             <div class="row-actions" onclick="event.stopPropagation()">
-                <button class="row-btn" title="Adjust stock" onclick="openAdjustModal('${escH(i.sku)}')">±</button>
-                ${isManager ? `<button class="row-btn" title="Edit" onclick="openItemModal('${escH(i.sku)}')">✏️</button>` : ''}
-                ${isManager ? `<button class="row-btn danger" title="Delete" onclick="openDeleteModal('${escH(i.sku)}')">🗑️</button>` : ''}
+                <button class="row-btn" title="Adjust stock" onclick="openAdjustModal('${escH(i.sku)}')">&#177;</button>
+                ${isManager ? `<button class="row-btn" title="Edit" onclick="openItemModal('${escH(i.sku)}')">&#9999;&#65039;</button>` : ''}
+                ${isManager ? `<button class="row-btn danger" title="Delete" onclick="openDeleteModal('${escH(i.sku)}')">&#128465;&#65039;</button>` : ''}
             </div>
         </div>`;
     }
