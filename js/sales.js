@@ -1094,54 +1094,9 @@ async function deductInventory(sku, qty, saleId) {
 // ── Receipt Printing ──────────────────────────────────────────────────────────
 function printReceipt(items, total, amountPaid, method, saleId, customer) {
     if (localStorage.getItem('scAutoPrintReceipt') !== '1') return;
-    const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
-    const rows = items.map(i =>
-        '<tr><td style="padding:1px 0;word-break:break-word;">' + escH(i.name) + '</td>'
-        + '<td style="text-align:center;white-space:nowrap;padding:1px 4px;">' + i.qty + '</td>'
-        + '<td style="text-align:right;white-space:nowrap;padding:1px 0;">' + bz(i.price) + '</td>'
-        + '<td style="text-align:right;white-space:nowrap;padding:1px 0;">' + bz(i.total) + '</td></tr>'
-    ).join('');
-    const html = '<!DOCTYPE html><html><head><title>Receipt</title>'
-        + '<style>'
-        // 72mm paper = ~2.83in. At 96dpi that's ~272px. Use @page to force it.
-        + '@page{size:72mm auto;margin:0;}'
-        + '*{box-sizing:border-box;}'
-        + 'body{font-family:"Courier New",Courier,monospace;font-size:10pt;'
-        +      'width:72mm;margin:0 auto;padding:3mm 3mm 8mm 3mm;}'
-        + 'h2{text-align:center;font-size:11pt;font-weight:bold;margin:0 0 2mm;}'
-        + 'p{text-align:center;margin:0 0 1mm;font-size:9pt;}'
-        + 'hr{border:none;border-top:1px dashed #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:9pt;}'
-        + 'th{border-bottom:1px solid #000;padding:1px 0;font-size:8pt;text-align:left;}'
-        + 'th:nth-child(2){text-align:center;}'
-        + 'th:nth-child(3),th:nth-child(4){text-align:right;}'
-        + '.divider td{border-top:1px solid #000;padding-top:2px;font-weight:bold;}'
-        + '.footer{text-align:center;font-size:8pt;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
-        + '</style></head><body>'
-        + '<h2>ServiCell Belize</h2>'
-        + '<p>' + new Date().toLocaleString() + '</p>'
-        + '<p>Cashier: ' + escH(currentUser) + '</p>'
-        + (customer ? '<p>Customer: ' + escH(customer) + '</p>' : '')
-        + '<p>Receipt #' + escH(saleId || '') + '</p>'
-        + '<hr>'
-        + '<table>'
-        + '<tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'
-        + rows
-        + '<tr class="divider"><td colspan="3">Total</td><td style="text-align:right;">' + bz(total) + '</td></tr>'
-        + '<tr><td colspan="3">Paid (' + escH(method) + ')</td><td style="text-align:right;">' + bz(amountPaid) + '</td></tr>'
-        + (change > 0 ? '<tr><td colspan="3">Change</td><td style="text-align:right;">' + bz(change) + '</td></tr>' : '')
-        + '</table>'
-        + '<div class="footer">Thank you!<br>ServiCell Belize</div>'
-        + '</body></html>';
-    const w = window.open('', '_blank', 'width=340,height=600');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    // Let the page render before printing
-    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
-    // Fallback if onload already fired
-    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
+    kickDrawer();
+    const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, currentUser);
+    printHTML(html);
 }
 
 // ── Modal Helpers ─────────────────────────────────────────────────────────────
