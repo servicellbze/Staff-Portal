@@ -456,7 +456,7 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--primary);
-            opacity: 0.7;
+            
         }
 
         .view-field-value {
@@ -1481,9 +1481,12 @@
                 display: none !important;
             }
 
-            body {
+            html, body {
                 background: white !important;
+                background-image: none !important;
+                background-color: white !important;
                 overflow: visible !important;
+                color: black !important;
             }
 
             #printInvoice {
@@ -1937,7 +1940,7 @@
                 <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
                     <span class="choice-icon">🧾</span>
                     <span class="choice-label">Receipt Paper</span>
-                    <span class="choice-sub">80mm thermal roll</span>
+                    <span class="choice-sub">72mm Thermal Roll</span>
                 </button>
                 <button class="paper-choice-btn" onclick="printJobInvoice('regular')">
                     <span class="choice-icon">📄</span>
@@ -1951,6 +1954,9 @@
     </div>
 
     <script src="js/components.js"></script>
+    <script src="js/qz-drawer.js"></script>
+    <script src="js/receipt.js"></script>
+    <script src="js/receipt.js"></script>
     <script>
         const PRICE_TEMPLATES = [
             { label: 'Screen Replacement', price: 120 },
@@ -2646,195 +2652,16 @@
 
         function printJobInvoice(paperSize) {
             const j = currentJobData;
-            if (!j) {
-                showToast('⚠️ No job data available to print', 'err');
-                return;
-            }
-
-            const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-            const isReceipt = paperSize === 'receipt';
-            const priorityLabel = (j.priority || 'low') === 'high' ? 'HIGH — URGENT' : 'LOW — NORMAL';
-
-            let items = [];
-            try { items = j.invoiceItems ? JSON.parse(j.invoiceItems) : []; } catch (e) { items = []; }
-
-            const total = items.reduce((s, it) => s + parseFloat(it.price || 0), 0);
-
-            let paymentStatus;
-            if (items.length === 0 || total === 0) {
-                paymentStatus = 'N/A — Invoice Pending';
-            } else {
-                const payment = (j.payment || 'unpaid').toLowerCase();
-                const isPaid = payment.startsWith('paid');
-                const method = isPaid ? (payment.includes('card') ? 'Card' : 'Cash') : 'Unpaid';
-                paymentStatus = isPaid ? `Paid via ${method}` : 'UNPAID';
-            }
-
-            let costTableHTML = '';
-            if (items.length > 0) {
-                const rows = items.map(it =>
-                    `<tr><td>${it.desc}</td><td>$${parseFloat(it.price || 0).toFixed(2)}</td></tr>`
-                ).join('');
-                costTableHTML = `
-            <table class="pi-cost-table">
-                <tr><th>Service</th><th>BZD</th></tr>
-                ${rows}
-                <tr class="pi-total-row"><td><strong>TOTAL</strong></td><td><strong>$${total.toFixed(2)}</strong></td></tr>
-            </table>
-        `;
-            } else {
-                costTableHTML = `
-        <div class="pi-tbd-notice">
-            <strong>Price To Be Determined</strong><br>
-            <span style="font-size: ${isReceipt ? '8px' : '10px'}; opacity: 0.7;">
-                Final cost will be provided after diagnostic assessment.
-            </span>
-        </div>
-    `;
-            }
-
-            const regularStyles = `
-        @media print { @page { size: A4; margin: 15mm 20mm; } }
-        #printInvoice { font-family: 'Courier New', monospace; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
-        .pi-shop { text-align: center; margin-bottom: 8px; }
-        .pi-shop h1 { font-size: 20px; font-weight: 900; letter-spacing: 3px; margin: 0; }
-        .pi-shop p { font-size: 11px; margin: 2px 0; color: #555; }
-        .pi-rule { border: none; border-top: 2px solid #000; margin: 12px 0 8px; }
-        .pi-title { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; margin: 8px 0 12px; }
-        .pi-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 12px; line-height: 1.8; }
-        .pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 8px 0 12px; padding: 8px 12px; background: #f5f5f5; border-radius: 4px; }
-        .pi-meta-row strong { color: #000; margin-right: 4px; }
-        .pi-section { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #555; margin-bottom: 6px; }
-        .pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 12px; }
-        .pi-field-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #777; }
-        .pi-field-value { font-size: 13px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid #ddd; min-height: 24px; }
-        .pi-notes { border: 1px solid #ccc; padding: 10px; min-height: 70px; font-size: 12px; color: #333; margin-top: 4px; line-height: 1.5; margin-bottom: 12px; }
-        .pi-footer { text-align: center; font-size: 10px; color: #777; margin-top: 18px; border-top: 1px dashed #ccc; padding-top: 8px; line-height: 1.6; }
-        .pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
-        .pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; padding: 4px 0; border-bottom: 1px solid #000; }
-        .pi-cost-table th:last-child { text-align: right; }
-        .pi-cost-table td { padding: 5px 0; border-bottom: 1px dashed #ddd; font-size: 12px; }
-        .pi-cost-table td:last-child { text-align: right; font-family: monospace; font-weight: 700; }
-        .pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 13px; padding-top: 8px; }
-        .pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 8px 0 12px 0; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; }
-        .pi-payment-status strong { color: #000; }
-    `;
-
-            const receiptStyles = `
-        @media print { @page { size: 80mm auto; margin: 4mm 3mm; } }
-        #printInvoice { font-family: 'Courier New', monospace; color: #000; background: white; width: 72mm; margin: 0 auto; padding: 4px; font-size: 10px; }
-        .pi-shop { text-align: center; margin-bottom: 5px; }
-        .pi-shop h1 { font-size: 14px; font-weight: 900; letter-spacing: 2px; margin: 0; }
-        .pi-shop p { font-size: 9px; margin: 1px 0; }
-        .pi-rule { border: none; border-top: 1px solid #000; margin: 5px 0 4px; }
-        .pi-title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 6px; }
-        .pi-meta { font-size: 9px; line-height: 1.7; margin-bottom: 6px; }
-        .pi-meta-row { font-size: 9px; margin: 6px 0 8px; padding: 4px 6px; background: #f5f5f5; border-radius: 3px; line-height: 1.6; }
-        .pi-meta-row strong { display: inline-block; width: 48%; color: #000; }
-        .pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; margin-bottom: 3px; }
-        .pi-grid { margin-bottom: 6px; }
-        .pi-field-label { font-size: 8px; font-weight: 700; text-transform: upper   ; color: #777; }
-        .pi-field-value { font-size: 11px; font-weight: 700; padding: 1px 0; border-bottom: 1px dashed #ccc; min-height: 16px; }
-        .pi-notes { border: 1px solid #ccc; padding: 5px; min-height: 40px; font-size: 9px; line-height: 1.4; margin-top: 3px; margin-bottom: 8px; }
-        .pi-footer { text-align: center; font-size: 8px; color: #777; margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 5px; line-height: 1.5; }
-        .pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9px; }
-        .pi-cost-table th { text-align: left; font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: #555; padding: 2px 0; border-bottom: 1px solid #000; }
-        .pi-cost-table th:last-child { text-align: right; }
-        .pi-cost-table td { padding: 3px 0; border-bottom: 1px dashed #ddd; }
-        .pi-cost-table td:last-child { text-align: right; font-family: monospace; font-weight: 700; }
-        .pi-cost-table .pi-total-row td { border-top: 1px solid #000; border-bottom: none; font-weight: 900; font-size: 11px; padding-top: 5px; }
-        .pi-payment-status { text-align: center; font-size: 9px; font-weight: 900; margin: 8px 0 10px 0; padding: 4px 6px; background: #f0f0f0; border-radius: 3px; }
-        .pi-payment-status strong { color: #000; }
-    `;
-
-            const bodyHTML = `
-        <div class="pi-shop">
-            <img src="img/logo.png" alt="Servicell Belize Logo" style="max-width: 60px; margin-bottom: 4px;">
-            <h1>SERVICELL BELIZE</h1>
-            <p>Device Repair &amp; Services &nbsp;·&nbsp; Belize City, Belize</p>
-            <p>Tel: +501 600-0000</p>
-        </div>
-        <hr class="pi-rule">
-        
-        <div class="pi-title">Job Receipt &amp; Intake Form</div>
-        
-        <div class="pi-meta">
-            <div><strong>JOB #:</strong> ${j.id}</div>
-            <div><strong>DATE:</strong> ${bzDate(j.dateReceived) || today}</div>
-        </div>
-        
-        <div class="pi-meta-row">
-            <div><strong>Type:</strong> ${j.jobType || 'Repair'}</div>
-            <div><strong>Priority:</strong> ${priorityLabel}</div>
-        </div>
-        
-        <hr class="pi-dash">
-        
-        <div class="pi-section">Customer Information</div>
-        <div class="pi-grid">
-            <div>
-                <div class="pi-field-label">Name</div>
-                <div class="pi-field-value">${j.customerName || 'Walk-in'}</div>
-            </div>
-            <div>
-                <div class="pi-field-label">Phone</div>
-                <div class="pi-field-value">${j.customerPhone ? '+501 ' + j.customerPhone : '—'}</div>
-            </div>
-        </div>
-        
-        <hr class="pi-dash">
-        
-        <div class="pi-section">Device Information</div>
-        <div class="pi-grid">
-            <div>
-                <div class="pi-field-label">Device</div>
-                <div class="pi-field-value">${j.device || '—'}</div>
-            </div>
-            <div>
-                <div class="pi-field-label">Issue Reported</div>
-                <div class="pi-field-value">${j.issue || '—'}</div>
-            </div>
-        </div>
-        
-        <div class="pi-grid">
-    <div>
-        <div class="pi-field-label">Status</div>
-        <div class="pi-field-value">${(j.status || 'Received').replace(/^\w/, c => c.toUpperCase())}</div>
-    </div>
-    <div>
-        <div class="pi-field-label">${j.dateCompleted ? 'Completed On' : 'Est. Completion'}</div>
-        <div class="pi-field-value">${j.dateCompleted ? bzDate(j.dateCompleted) : (j.estimatedCompletion || '—')}</div>
-    </div>
-</div>
-        
-        <hr class="pi-dash">
-        
-        <div class="pi-section">Work Notes</div>
-        <div class="pi-notes">${j.notes || 'No additional notes.'}</div>
-        
-        <hr class="pi-dash">
-        
-        <div class="pi-section">Cost Breakdown</div>
-        ${costTableHTML}
-        
-        <div class="pi-payment-status">
-            <strong>Payment Status:</strong> ${paymentStatus}
-        </div>
-        
-        <div class="pi-footer">
-            Thank you for choosing Tech Shop!<br>
-            Devices not collected within <strong>90 days</strong> of completion may be abandoned.<br>
-            We are not responsible for data loss. Please back up your device.
-        </div>
-    `;
-
-            document.getElementById('printInvoice').innerHTML =
-                `<style>${isReceipt ? receiptStyles : regularStyles}</style>` + bodyHTML;
-
+            if (!j) { showToast('⚠️ No job data available to print', 'err'); return; }
             document.getElementById('paperModal').classList.remove('open');
-            setTimeout(() => window.print(), 80);
+            const isReceipt = paperSize === 'receipt';
+            if (isReceipt) {
+                kickDrawer();
+                printHTML(buildJobReceiptHTML(j, { imgSrc: 'img/logo.png' }));
+            } else {
+                setTimeout(() => window.print(), 80);
+            }
         }
-
         function showToast(msg, type = '') {
             const t = document.getElementById('toast');
             t.textContent = msg;

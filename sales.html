@@ -690,6 +690,7 @@
         .page-jump input { width: 44px; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.8rem; font-weight: 700; text-align: center; outline: none; }
         .page-jump input:focus { border-color: var(--primary); }
         .per-page-select { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.75rem; font-weight: 700; outline: none; cursor: pointer; }
+        @media (max-width: 1023px) { .btn-open-drawer { display: none !important; } }
     </style>
 </head>
 <body>
@@ -705,7 +706,12 @@
             <h1>&#x1F4B0; Sales</h1>
             <p id="shiftLabel">Loading shift info&hellip;</p>
         </div>
-        <a href="current-jobs.html" class="btn-secondary">&#x1F527; Current Jobs</a>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="btn-secondary btn-open-drawer" onclick="kickDrawer()" title="Open cash drawer (F9)">
+                &#x1F4B5; Open Drawer
+            </button>
+            <a href="current-jobs.html" class="btn-secondary">&#x1F527; Current Jobs</a>
+        </div>
     </div>
 
     <!-- Shift Banner -->
@@ -1137,8 +1143,15 @@
 <div id="toastEl" class="toast"></div>
 <div id="printArea" style="display:none;"></div>
 <script src="js/components.js"></script>
-
+<script src="js/qz-drawer.js"></script>
+<script src="js/receipt.js"></script>
 <script src="js/sales.js"></script>
+<script>
+    // F9 keybind — open cash drawer from anywhere on the sales page
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F9') { e.preventDefault(); kickDrawer(); }
+    });
+</script>
 
 </body>
 </html>
