@@ -2741,7 +2741,7 @@
                 kickDrawer();
                 printHTML(buildJobReceiptHTML(j, { imgSrc: 'img/logo.png' }));
             } else {
-                setTimeout(() => window.print(), 80);
+                printHTML(buildJobA4HTML(j, { imgSrc: 'img/logo.png' }));
             }
         }
         function showToast(msg, type = '') {

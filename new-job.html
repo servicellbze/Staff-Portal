@@ -1571,7 +1571,7 @@
                 kickDrawer();
                 printHTML(buildJobReceiptHTML(currentJobData, { imgSrc: 'img/logo.png' }));
             } else {
-                setTimeout(() => window.print(), 80);
+                printHTML(buildJobA4HTML(currentJobData, { imgSrc: 'img/logo.png' }));
             }
         }
 
