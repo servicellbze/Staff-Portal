@@ -134,7 +134,7 @@ function renderPagination(containerId, total, page, perPage, onPage, onPerPage) 
     const totalPages = Math.max(1, Math.ceil(total / perPage));
     const start      = (page - 1) * perPage + 1;
     const end        = Math.min(page * perPage, total);
-    container.style.display = total > perPage ? 'flex' : 'none';
+    container.style.display = total > 0 ? 'flex' : 'none';
     container.className = 'pagination';
     container.innerHTML =
         '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
@@ -307,12 +307,27 @@ function renderBills() {
 
 // ── End of Day ────────────────────────────────────────────────────────────────
 function updateEOD() {
-    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const validSales   = allSales.filter(s => s.status !== 'reversed');
+    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gstCollected = gross * 12.5 / 112.5;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const net          = gross - payoutsTotal;
     document.getElementById('eodGross').textContent   = bz(gross);
     document.getElementById('eodPayouts').textContent = bz(payoutsTotal);
     document.getElementById('eodNet').textContent     = bz(net);
+    // GST line — add element if not present
+    let gstEl = document.getElementById('eodGST');
+    if (!gstEl) {
+        const netRow = document.getElementById('eodNet').closest('.eod-row');
+        if (netRow) {
+            const gstRow = document.createElement('div');
+            gstRow.className = 'eod-row';
+            gstRow.innerHTML = '<span class="lbl">GST Collected (12.5%)</span><span class="val" id="eodGST"></span>';
+            netRow.parentNode.insertBefore(gstRow, netRow);
+            gstEl = document.getElementById('eodGST');
+        }
+    }
+    if (gstEl) gstEl.textContent = bz(gstCollected);
     calcVariance();
 }
 
@@ -387,7 +402,10 @@ async function submitEOD() {
 }
 
 function printEOD() {
-    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const validSales   = allSales.filter(s => s.status !== 'reversed');
+    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gstCollected = gross * 12.5 / 112.5;
+    const preTax       = gross - gstCollected;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const net          = gross - payoutsTotal;
     const drawer       = parseFloat(document.getElementById('drawerCount').value) || 0;
@@ -414,7 +432,9 @@ function printEOD() {
         + '<p>Cashier: ' + escH(currentUser) + '</p>'
         + '<hr>'
         + '<table>'
-        + '<tr><td>Gross Sales</td><td>' + bz(gross) + '</td></tr>'
+        + '<tr><td>Gross Sales (incl. GST)</td><td>' + bz(gross) + '</td></tr>'
+        + '<tr><td>Sales excl. GST</td><td>' + bz(preTax) + '</td></tr>'
+        + '<tr><td>GST Collected (12.5%)</td><td>' + bz(gstCollected) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + '<tr class="total"><td>Net Expected</td><td>' + bz(net) + '</td></tr>'
         + '<tr><td>Actual Drawer</td><td>' + bz(drawer) + '</td></tr>'
@@ -930,9 +950,12 @@ async function submitSettle() {
 }
 
 // ── View Sale ─────────────────────────────────────────────────────────────────
+let _viewedSale = null;
+
 function openViewSale(saleId) {
     const s = allSales.find(x => String(x.saleId) === String(saleId));
     if (!s) return;
+    _viewedSale = s;
     const items  = tryParseJSON(s.items, []);
     const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
     const change = s.method === 'cash' ? Math.max(0, (parseFloat(s.amountPaid)||0) - (parseFloat(s.total)||0)) : 0;
@@ -969,6 +992,23 @@ function openViewSale(saleId) {
         + '<div class="receipt-total-row main"><span>Net</span><span>' + bz(s.amountPaid) + '</span></div>'
         + '</div>';
     openModal('viewSaleModal');
+}
+
+function printViewedSale() {
+    if (!_viewedSale) return;
+    const s     = _viewedSale;
+    const items = tryParseJSON(s.items, []);
+    kickDrawer();
+    const html  = buildSaleReceiptHTML(
+        items,
+        parseFloat(s.total) || 0,
+        parseFloat(s.amountPaid) || 0,
+        s.method || 'cash',
+        s.saleId || '',
+        s.customer || '',
+        s.cashier || ''
+    );
+    printHTML(html);
 }
 
 // ── Edit Sale ─────────────────────────────────────────────────────────────────

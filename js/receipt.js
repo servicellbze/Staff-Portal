@@ -144,6 +144,9 @@ function buildJobReceiptHTML(j, opts) {
 // ── Sale Receipt (sales.js) ───────────────────────────────────────────────────
 function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier) {
     const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
+    // GST is included in the price (12.5% of pre-tax = total × 12.5/112.5)
+    const gst     = total * 12.5 / 112.5;
+    const preTax  = total - gst;
     function bz(n) { return 'BZ$' + parseFloat(n||0).toFixed(2); }
 
     const rows = items.map(i =>
@@ -164,11 +167,12 @@ th { border-bottom:2px solid #000; padding:2px 0; font-size:7px; text-align:left
 th:nth-child(2),th:nth-child(3),th:nth-child(4) { text-align:right; }
 td { padding:3px 0; border-bottom:1px dashed #000; }
 .divider td { border-top:2px solid #000; border-bottom:none; font-size:10px; padding-top:4px; }
+.gst-row td { border-bottom:1px dashed #000; font-size:8px; }
 .footer { text-align:center; font-size:8px; margin-top:6px; border-top:1px dashed #000; padding-top:4px; line-height:1.55; }
 </style>${RECEIPT_FONT_LINK}
 <img src="img/logo.png" alt="Servicell Belize">
 <h2>SERVICELL BELIZE</h2>
-<p>Device Repair &amp; Services &middot; Belize City, Belize</p>
+<p>#7 Douglas Jones, Belize City</p>
 <p>Tel: +501 615-3388</p>
 <p>${new Date().toLocaleString()}</p>
 <p>Cashier: ${_esc(cashier||'')}</p>
@@ -178,11 +182,13 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
 <table>
     <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
     ${rows}
+    <tr class="divider"><td colspan="3">Subtotal (excl. GST)</td><td style="text-align:right">${bz(preTax)}</td></tr>
+    <tr class="gst-row"><td colspan="3">GST (12.5%)</td><td style="text-align:right">${bz(gst)}</td></tr>
     <tr class="divider"><td colspan="3">TOTAL</td><td style="text-align:right">${bz(total)}</td></tr>
     <tr><td colspan="3">Paid (${_esc(method)})</td><td style="text-align:right">${bz(amountPaid)}</td></tr>
     ${change > 0 ? `<tr><td colspan="3">Change</td><td style="text-align:right">${bz(change)}</td></tr>` : ''}
 </table>
-<div class="footer">Thank you for choosing Servicell Belize!<br>We are not responsible for data loss.</div>`;
+<div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>`;
 }
 
 // ── Unified print entry point ─────────────────────────────────────────────────

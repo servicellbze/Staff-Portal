@@ -499,6 +499,11 @@ window.InAppNotif = InAppNotif;
 
 // ── Offline banner ────────────────────────────────────────────────────────────
 (function () {
+    // Inject mobile repositioning style once
+    const style = document.createElement('style');
+    style.textContent = '@media (max-width: 768px) { #sc-offline-banner { top: auto !important; bottom: 0 !important; transform: translateY(100%) !important; } #sc-offline-banner.sc-visible { transform: translateY(0) !important; } }';
+    document.head.appendChild(style);
+
     function createBanner() {
         if (document.getElementById('sc-offline-banner')) return;
         const b = document.createElement('div');
@@ -512,9 +517,9 @@ window.InAppNotif = InAppNotif;
             'transform:translateY(-100%)', 'transition:transform 0.3s ease'
         ].join(';');
         document.body.prepend(b);
-        // small delay so transition plays
         requestAnimationFrame(() => requestAnimationFrame(() => {
             b.style.transform = 'translateY(0)';
+            b.classList.add('sc-visible');
         }));
     }
 
