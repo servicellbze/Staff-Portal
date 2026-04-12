@@ -1174,6 +1174,19 @@
             const mainContent = document.querySelector('main');
 
             if (!user || !pass) return;
+
+            // ── Rate limiting: max 3 attempts per username, 20 min lockout ──
+            const lockKey    = 'sc_login_lock_' + user.toLowerCase();
+            const attemptsKey = 'sc_login_attempts_' + user.toLowerCase();
+            const lockData   = JSON.parse(localStorage.getItem(lockKey) || 'null');
+            if (lockData && Date.now() < lockData.until) {
+                const mins = Math.ceil((lockData.until - Date.now()) / 60000);
+                btn.textContent = '🔒 Try again in ' + mins + ' min';
+                btn.disabled = true;
+                setTimeout(() => { btn.textContent = 'Sign In'; btn.disabled = false; }, 3000);
+                return;
+            }
+
             btn.textContent = "Verifying...";
             btn.disabled = true;
 
@@ -1219,13 +1232,25 @@
                     loginOverlay.classList.remove('show');
                     setTimeout(() => {
                         loginOverlay.style.display = 'none';
+                        // Clear lockout on successful login
+                        localStorage.removeItem(lockKey);
+                        localStorage.removeItem(attemptsKey);
                         if (typeof loadDashboard === 'function') {
                             loadDashboard();
                             setInterval(loadDashboard, 60000);
                         }
                     }, 400);
                 } else {
-                    alert("❌ Incorrect username or password");
+                    // Track failed attempts
+                    let attempts = parseInt(localStorage.getItem(attemptsKey) || '0') + 1;
+                    localStorage.setItem(attemptsKey, attempts);
+                    if (attempts >= 3) {
+                        localStorage.setItem(lockKey, JSON.stringify({ until: Date.now() + 20 * 60 * 1000 }));
+                        localStorage.removeItem(attemptsKey);
+                        alert('🔒 Too many failed attempts. Try again in 20 minutes.');
+                    } else {
+                        alert('❌ Incorrect username or password. ' + (3 - attempts) + ' attempt' + (3 - attempts === 1 ? '' : 's') + ' remaining.');
+                    }
                     btn.textContent = "Unlock System";
                     btn.disabled = false;
                 }
