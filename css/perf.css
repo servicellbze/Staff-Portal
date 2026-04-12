@@ -6,7 +6,7 @@
 
 /* ── Remove backdrop-filter on low-end / reduced-motion devices ── */
 @media (prefers-reduced-motion: reduce),
-       (max-device-memory: 4gb) {
+       (max-device-memory: 8gb) {
 
     *,
     .modal-card,
