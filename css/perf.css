@@ -1,0 +1,110 @@
+/*
+ * Performance overrides for low-end devices
+ * Targets devices that signal reduced motion preference OR have limited GPU
+ * backdrop-filter: blur() is the #1 GPU killer — removed on these devices
+ */
+
+/* ── Remove backdrop-filter on low-end / reduced-motion devices ── */
+@media (prefers-reduced-motion: reduce),
+       (max-device-memory: 4gb) {
+
+    *,
+    .modal-card,
+    .modal-overlay,
+    .inv-table-wrap,
+    .btn-secondary,
+    .btn-primary,
+    .pagination,
+    .sync-bar,
+    .stat-card,
+    .kpi-card,
+    .stat-section,
+    .search-input,
+    .filter-select,
+    .job-card,
+    .mf-card,
+    .range-btn,
+    .glass,
+    [class*="glass"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    /* Disable staggered animations — just fade in once */
+    [style*="animation"],
+    .page-header,
+    .stats-row,
+    .inv-section,
+    .toolbar,
+    .sync-bar,
+    .kpi-grid,
+    .stat-section,
+    .date-bar {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    /* Simplify modal transitions */
+    .modal-overlay {
+        transition: opacity 0.1s ease !important;
+    }
+    .modal-card {
+        transition: none !important;
+        transform: none !important;
+    }
+    .modal-overlay.open .modal-card {
+        transform: none !important;
+    }
+
+    /* Remove hover transforms on list rows */
+    .inv-row:hover,
+    .job-card:hover,
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        transform: none !important;
+    }
+
+    /* Reduce pulse animations */
+    .sync-dot,
+    .scan-pulse,
+    .shift-dot {
+        animation: none !important;
+        opacity: 1 !important;
+    }
+}
+
+/* ── Debounce helper — applied via JS, not CSS ── */
+
+/* ── Reduce motion for everyone on mobile (battery + perf) ── */
+@media (max-width: 768px) {
+    .modal-card {
+        transition: opacity 0.15s ease !important;
+        transform: none !important;
+    }
+    .modal-overlay.open .modal-card {
+        transform: none !important;
+    }
+    /* Remove scale animation on cards */
+    .stat-card,
+    .kpi-card {
+        animation-duration: 0.2s !important;
+    }
+}
+
+/* ── content-visibility: skip off-screen rendering ── */
+#invBody,
+#salesList,
+#jobsList,
+.tab-panel {
+    content-visibility: auto;
+}
+
+/* ── Remove expensive transitions on low-end ── */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
