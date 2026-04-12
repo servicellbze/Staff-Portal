@@ -887,6 +887,26 @@
                 font-size: 0.8rem;
             }
         }
+        /* ── Inspection Checklist ── */
+        .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--glass-border); }
+        .checklist-item:last-child { border-bottom: none; }
+        .checklist-item input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+        .checklist-item label { font-size: 0.9rem; font-weight: 600; color: var(--text-main); cursor: pointer; line-height: 1.4; }
+        .checklist-item label span { display: block; font-size: 0.75rem; font-weight: 400; color: var(--text-dim); margin-top: 2px; }
+        .checklist-other { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+        .checklist-other input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+        .checklist-other input[type="text"] { flex: 1; padding: 8px 12px; border-radius: var(--radius-sm); border: 1.5px solid rgba(37,99,235,0.12); background: var(--white-alt); color: var(--text-main); font-family: var(--font-family); font-size: 0.88rem; outline: none; transition: border-color var(--transition-fast); }
+        .checklist-other input[type="text"]:focus { border-color: var(--primary); }
+        .checklist-other input[type="text"]:disabled { opacity: 0.4; cursor: not-allowed; }
+        .img-attach-area { margin-top: 14px; border: 2px dashed var(--glass-border); border-radius: var(--radius-sm); padding: 16px; text-align: center; cursor: pointer; transition: border-color var(--transition-fast); }
+        .img-attach-area:hover { border-color: var(--primary); }
+        .img-attach-area input[type="file"] { display: none; }
+        .img-attach-label { font-size: 0.82rem; color: var(--text-dim); font-weight: 600; }
+        .img-attach-label span { display: block; font-size: 0.72rem; margin-top: 3px; color: var(--text-light); }
+        .img-preview-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .img-preview-item { position: relative; width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 1px solid var(--glass-border); }
+        .img-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .img-preview-item button { position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 50%; border: none; background: rgba(0,0,0,0.6); color: white; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     </style>
     <script src="js/theme-init.js"></script>
     <script src="js/auth-guard.js"></script>
@@ -1062,6 +1082,65 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Card 4: Device Inspection Checklist -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔍</div>
+                    <span class="card-title">Device Inspection</span>
+                    <span class="card-subtitle">Mandatory — to be done on every device</span>
+                </div>
+
+                <div class="checklist-item">
+                    <input type="checkbox" id="chk-screen" name="inspection" value="Screen Broken">
+                    <label for="chk-screen">
+                        Screen Broken / Cracked
+                        <span>Visible cracks, dead pixels, or touch unresponsive</span>
+                    </label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="chk-water" name="inspection" value="Water Damage Indicator Tripped">
+                    <label for="chk-water">
+                        Water Damage Indicator Tripped
+                        <span>Check SIM tray or charging port for red/pink LDI sticker</span>
+                    </label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="chk-body" name="inspection" value="Physical Body Damage">
+                    <label for="chk-body">
+                        Physical Body Damage
+                        <span>Dents, bent frame, scratches, or missing components</span>
+                    </label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="chk-charging" name="inspection" value="Charging Port Damaged">
+                    <label for="chk-charging">
+                        Charging Port Damaged
+                        <span>Bent pins, debris, or loose connection</span>
+                    </label>
+                </div>
+                <div class="checklist-item">
+                    <input type="checkbox" id="chk-camera" name="inspection" value="Camera Damaged">
+                    <label for="chk-camera">
+                        Camera Damaged
+                        <span>Cracked lens, blurry output, or camera not detected</span>
+                    </label>
+                </div>
+                <div class="checklist-other">
+                    <input type="checkbox" id="chk-other" onchange="document.getElementById('chk-other-text').disabled=!this.checked; if(this.checked) document.getElementById('chk-other-text').focus();">
+                    <input type="text" id="chk-other-text" placeholder="Other damage observed…" maxlength="120" disabled>
+                </div>
+
+                <!-- Image Attachments (session only — not saved to sheet) -->
+                <div class="img-attach-area" onclick="document.getElementById('inspectionImages').click()">
+                    <input type="file" id="inspectionImages" accept="image/*" multiple onchange="handleInspectionImages(event)">
+                    <div class="img-attach-label">
+                        📷 Attach Photos
+                        <span>Optional · shown on receipt only · not stored in spreadsheet</span>
+                    </div>
+                </div>
+                <div class="img-preview-grid" id="imgPreviewGrid"></div>
             </div>
 
             <!-- Submit -->
@@ -1248,6 +1327,13 @@
             // Get technician username
             const technician = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Unknown';
 
+            // Build inspection checklist string
+            const inspectionChecked = [...document.querySelectorAll('input[name="inspection"]:checked')].map(c => c.value);
+            const otherChk = document.getElementById('chk-other');
+            const otherTxt = document.getElementById('chk-other-text').value.trim();
+            if (otherChk.checked && otherTxt) inspectionChecked.push('Other: ' + otherTxt);
+            const inspection = inspectionChecked.length ? inspectionChecked.join('; ') : 'No damage noted';
+
             const sheetData = {
                 action: 'create',
                 repairId: Number(repairId),
@@ -1262,7 +1348,8 @@
                 dateReceived,
                 estimatedCompletion,
                 payment: 'pending',
-                technician: technician  // ← NOW INSIDE THE OBJECT!
+                technician: technician,
+                inspection
             };
 
             lastJobData = {
@@ -1277,7 +1364,8 @@
                 notes,
                 dateReceived,
                 estimatedCompletion,
-                technician  // Also add here for consistency
+                technician,
+                inspection
             };
             currentJobData = lastJobData;
 
@@ -1291,6 +1379,8 @@
                 });
 
                 showSuccess(repairId);
+                // Upload inspection images to Drive in the background
+                uploadInspectionImages(repairId);
             } catch (err) {
                 console.error(err);
                 showToast('❌ Something went wrong.', 'error');
@@ -1326,6 +1416,13 @@
             document.getElementById('cm-day').checked = true;
             document.getElementById('estimatedCompletion').type = 'datetime-local';
             document.getElementById('completionHint').textContent = 'Shows date and time on invoice';
+            // Reset inspection checklist
+            document.querySelectorAll('input[name="inspection"]').forEach(c => c.checked = false);
+            document.getElementById('chk-other').checked = false;
+            document.getElementById('chk-other-text').value = '';
+            document.getElementById('chk-other-text').disabled = true;
+            document.getElementById('imgPreviewGrid').innerHTML = '';
+            _inspectionImages = [];
             const btn = document.getElementById('submitBtn');
             btn.classList.remove('loading');
             btn.disabled = false;
@@ -1334,6 +1431,78 @@
             document.getElementById('successBanner').classList.remove('show');
             document.getElementById('paperModal').classList.remove('open');
             fetchLastId();
+        }
+
+        // ── Inspection image handling (session only) ──────────────────────────
+        let _inspectionImages = [];
+
+        function handleInspectionImages(e) {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    _inspectionImages.push(ev.target.result);
+                    const grid = document.getElementById('imgPreviewGrid');
+                    const item = document.createElement('div');
+                    item.className = 'img-preview-item';
+                    const idx = _inspectionImages.length - 1;
+                    item.innerHTML = `<img src="${ev.target.result}" alt="inspection photo"><button onclick="removeInspectionImage(${idx},this.parentNode)">✕</button>`;
+                    grid.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = ''; // allow re-selecting same file
+        }
+
+        function removeInspectionImage(idx, el) {
+            _inspectionImages[idx] = null;
+            el.remove();
+        }
+
+        // ── Compress image via canvas before upload ───────────────────────────
+        function compressImage(dataUrl, maxPx, quality) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxPx || h > maxPx) {
+                        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+                        else       { w = Math.round(w * maxPx / h); h = maxPx; }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = dataUrl;
+            });
+        }
+
+        // ── Upload inspection images to Google Drive (background) ─────────────
+        async function uploadInspectionImages(repairId) {
+            const images = _inspectionImages.filter(Boolean);
+            if (!images.length) return;
+            for (let i = 0; i < images.length; i++) {
+                try {
+                    const compressed = await compressImage(images[i], 1200, 0.8);
+                    const mimeType   = 'image/jpeg';
+                    const imageData  = compressed.replace(/^data:[^;]+;base64,/, '');
+                    const params = new URLSearchParams();
+                    params.append('action', 'uploadimage');
+                    params.append('repairId', repairId);
+                    params.append('imageData', imageData);
+                    params.append('mimeType', mimeType);
+                    params.append('imageIndex', i + 1);
+                    await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: params.toString()
+                    });
+                } catch (e) {
+                    console.warn('Image upload failed for index ' + i, e);
+                }
+            }
         }
 
         function openPaperModal() {

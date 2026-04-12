@@ -1533,6 +1533,17 @@
             animation: fadeInUp 0.3s ease both;
         }
 
+        /* ── Inspection photo lightbox ── */
+        #photoLightbox { position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:99999; display:none; flex-direction:column; align-items:center; justify-content:center; }
+        #photoLightbox.open { display:flex; }
+        #photoLightbox img { max-width:92vw; max-height:80vh; border-radius:12px; object-fit:contain; user-select:none; touch-action:pan-y; }
+        #photoLightbox .lb-close { position:absolute; top:16px; right:16px; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:1.1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        #photoLightbox .lb-nav { position:absolute; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.15); border:none; color:#fff; font-size:1.3rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+        #photoLightbox .lb-prev { left:12px; }
+        #photoLightbox .lb-next { right:12px; }
+        #photoLightbox .lb-counter { position:absolute; bottom:20px; color:rgba(255,255,255,0.7); font-size:0.8rem; font-weight:700; }
+        #photoLightbox .lb-nav:disabled { opacity:0.2; cursor:default; }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -1773,6 +1784,14 @@
                         <div class="view-field-label">Notes</div>
                         <div class="view-notes-box" id="view-notes">No notes.</div>
                     </div>
+                    <div class="view-field full" id="view-inspection-section">
+                        <div class="view-field-label">🔍 Inspection Checklist</div>
+                        <div class="view-notes-box" id="view-inspection">No damage noted.</div>
+                    </div>
+                    <div class="view-field full" id="view-images-section" style="display:none;">
+                        <div class="view-field-label">📷 Inspection Photos</div>
+                        <div id="view-inspection-images" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;"></div>
+                    </div>
                     <div class="view-field full" id="view-invoice-section" style="display:none;">
                         <div class="view-field-label">Invoice</div>
                         <div class="view-line-items" id="view-line-items"></div>
@@ -1790,6 +1809,15 @@
                 <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
             </div>
         </div>
+    </div>
+
+    <!-- ── Photo Lightbox ── -->
+    <div id="photoLightbox">
+        <button class="lb-close" onclick="closeLightbox()">✕</button>
+        <button class="lb-nav lb-prev" id="lbPrev" onclick="lbNav(-1)">&#x2039;</button>
+        <img id="lbImg" src="" alt="Inspection photo">
+        <button class="lb-nav lb-next" id="lbNext" onclick="lbNav(1)">&#x203A;</button>
+        <div class="lb-counter" id="lbCounter"></div>
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -2222,6 +2250,59 @@
             document.getElementById('view-phone').textContent = j.customerPhone || '—';
             document.getElementById('view-job-type').textContent = j.jobType || '—';
             document.getElementById('view-technician').textContent = j.technician || '—';
+
+            // Inspection checklist — show all items, tick the ones that were checked
+            const CHECKLIST_ITEMS = [
+                'Screen Broken / Cracked',
+                'Water Damage Indicator Tripped',
+                'Physical Body Damage',
+                'Charging Port Damaged',
+                'Camera Damaged'
+            ];
+            const inspEl = document.getElementById('view-inspection');
+            const checked = j.inspection && j.inspection !== 'No damage noted'
+                ? j.inspection.split(';').map(s => s.trim()).filter(Boolean)
+                : [];
+            let rows = CHECKLIST_ITEMS.map(item => {
+                const isChecked = checked.some(c => c.toLowerCase().includes(item.toLowerCase().split('/')[0].trim().toLowerCase()));
+                return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--glass-border);font-size:0.85rem;">
+                    <span style="font-size:1.1rem;flex-shrink:0;">${isChecked ? '☑' : '☐'}</span>
+                    <span style="color:${isChecked ? 'var(--danger)' : 'var(--text-main)'};">${item}</span>
+                </div>`;
+            });
+            const otherItems = checked.filter(c => c.toLowerCase().startsWith('other:'));
+            otherItems.forEach(o => {
+                rows.push(`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:0.85rem;">
+                    <span style="font-size:1.1rem;flex-shrink:0;">☑</span>
+                    <span style="color:var(--danger);">${o}</span>
+                </div>`);
+            });
+            inspEl.innerHTML = rows.join('');
+
+            // Inspection images
+            const imgsSection = document.getElementById('view-images-section');
+            const imgsGrid    = document.getElementById('view-inspection-images');
+            imgsGrid.innerHTML = '';
+            if (j.inspectionImages && j.inspectionImages.length) {
+                imgsSection.style.display = '';
+                j.inspectionImages.forEach((url, idx) => {
+                    const thumb = document.createElement('div');
+                    thumb.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border);cursor:pointer;flex-shrink:0;';
+                    thumb.onclick = () => openLightbox(j.inspectionImages, idx);
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                    img.onerror = () => { thumb.style.display = 'none'; };
+                    thumb.appendChild(img);
+                    imgsGrid.appendChild(thumb);
+                });
+            } else if (j.inspection && j.inspection !== 'No damage noted') {
+                // Job has inspection data but images haven't uploaded yet
+                imgsSection.style.display = '';
+                imgsGrid.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--warning);font-weight:700;padding:6px 0;">⚠️ Photos Pending — still uploading to Drive</div>';
+            } else {
+                imgsSection.style.display = 'none';
+            }
 
             const pClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
             const pLabel = pClass === 'high' ? '🔴 High — Urgent' : '🔵 Low — Normal';
@@ -2681,6 +2762,47 @@
         document.getElementById('statusFilter').addEventListener('change', filterAndRender);
         loadJobs();
         setInterval(loadJobs, 60000);
+
+        // ── Photo Lightbox ────────────────────────────────────────────────────
+        let _lbImages = [], _lbIndex = 0, _lbTouchX = null;
+
+        function openLightbox(images, idx) {
+            _lbImages = images;
+            _lbIndex  = idx;
+            _renderLightbox();
+            document.getElementById('photoLightbox').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('photoLightbox').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function lbNav(dir) {
+            _lbIndex = Math.max(0, Math.min(_lbImages.length - 1, _lbIndex + dir));
+            _renderLightbox();
+        }
+
+        function _renderLightbox() {
+            document.getElementById('lbImg').src = _lbImages[_lbIndex];
+            document.getElementById('lbCounter').textContent = (_lbIndex + 1) + ' / ' + _lbImages.length;
+            document.getElementById('lbPrev').disabled = _lbIndex === 0;
+            document.getElementById('lbNext').disabled = _lbIndex === _lbImages.length - 1;
+        }
+
+        // Swipe support
+        document.getElementById('photoLightbox').addEventListener('touchstart', e => { _lbTouchX = e.touches[0].clientX; }, { passive: true });
+        document.getElementById('photoLightbox').addEventListener('touchend', e => {
+            if (_lbTouchX === null) return;
+            const diff = _lbTouchX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 40) lbNav(diff > 0 ? 1 : -1);
+            _lbTouchX = null;
+        });
+        // Close on backdrop tap
+        document.getElementById('photoLightbox').addEventListener('click', e => {
+            if (e.target === document.getElementById('photoLightbox')) closeLightbox();
+        });
 
         document.addEventListener("DOMContentLoaded", () => {
             const splash = document.querySelector('.splash-screen');
