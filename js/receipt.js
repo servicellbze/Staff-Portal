@@ -210,3 +210,140 @@ function _windowPrint(htmlContent) {
     w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
     setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
 }
+
+// ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
+const A4_STYLES = `
+@media print { @page { size: A4; margin: 15mm 20mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; } body { background: white !important; } }
+body { font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size: 11px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
+* { box-sizing: border-box; }
+.pi-shop { text-align: center; margin-bottom: 12px; }
+.pi-shop img { max-width: 80px; display: block; margin: 0 auto 6px; }
+.pi-shop h1 { font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 0 0 3px; }
+.pi-shop p { font-size: 11px; margin: 2px 0; }
+.pi-rule { border: none; border-top: 2px solid #000; margin: 10px 0 8px; }
+.pi-dash { border: none; border-top: 1px dashed #000; margin: 8px 0 6px; }
+.pi-title { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 12px; }
+.pi-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; line-height: 1.8; }
+.pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 6px 0 10px; padding: 8px 12px; background: #f5f5f5; gap: 16px; }
+.pi-section { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; margin-top: 4px; }
+.pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 10px; }
+.pi-field-label { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+.pi-field-value { font-size: 13px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid #000; min-height: 24px; }
+.pi-notes { border: 1px solid #000; padding: 10px; min-height: 70px; font-size: 12px; line-height: 1.5; margin-top: 4px; margin-bottom: 12px; }
+.pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
+.pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 4px 0; border-bottom: 2px solid #000; }
+.pi-cost-table th:last-child, .pi-cost-table td:last-child { text-align: right; }
+.pi-cost-table td { padding: 5px 0; border-bottom: 1px dashed #000; font-size: 12px; }
+.pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 13px; padding-top: 8px; }
+.pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 10px 0 12px; padding: 8px 12px; background: #f0f0f0; }
+.pi-inspection { border: 1px solid #000; padding: 8px 12px; margin: 4px 0 12px; font-size: 11px; line-height: 1.7; }
+.pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+.pi-sig { border-top: 1px solid #000; padding-top: 4px; font-size: 9px; text-align: center; }
+.pi-footer { text-align: center; font-size: 11px; font-weight: 700; margin-top: 20px; border-top: 1px dashed #000; padding-top: 8px; line-height: 1.6; }
+`;
+
+function buildJobA4HTML(j, opts) {
+    opts = opts || {};
+    const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    function bzDate(d) {
+        if (!d || d === '—') return '—';
+        try { return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+        catch(_) { return d; }
+    }
+
+    function fmtPhone(p) {
+        if (!p) return '—';
+        const c = p.replace(/\D/g,'');
+        return c.length === 7 ? '+501 ' + c.slice(0,3) + '-' + c.slice(3) : p;
+    }
+
+    function fmtStatus(s) {
+        return ({ ordered:'Parts Ordered', received:'Received', inqueue:'In Queue',
+                  fixing:'Being Repaired', testing:'Testing', ready:'Ready for Pickup' })[s] || s || '—';
+    }
+
+    const priorityLabel = (j.priority||'low').toLowerCase() === 'high' ? 'HIGH — URGENT' : 'LOW — NORMAL';
+    const receivedDate  = j.dateReceived ? bzDate(j.dateReceived) : today;
+    const estimatedDate = j.estimatedCompletion || '—';
+
+    const items = (() => {
+        if (!j.invoiceItems || j.invoiceItems === '—') return [];
+        try { return JSON.parse(j.invoiceItems); } catch(_) { return []; }
+    })();
+    const total = items.reduce((s,i) => s + (parseFloat(i.price||0)||0), 0);
+
+    let paymentStatus = 'N/A — Invoice Pending';
+    if (items.length && total > 0) {
+        const p = String(j.payment||'unpaid').toLowerCase();
+        paymentStatus = p.startsWith('paid') ? 'Paid via ' + (p.includes('card') ? 'Card' : 'Cash') : 'UNPAID';
+    }
+
+    const costTableHTML = items.length ? `
+        <table class="pi-cost-table">
+            <thead><tr><th>Service / Item</th><th>BZD</th></tr></thead>
+            <tbody>
+                ${items.map(i => `<tr><td>${_esc(i.desc||'')}</td><td>${(parseFloat(i.price||0)||0).toFixed(2)}</td></tr>`).join('')}
+                <tr class="pi-total-row"><td><strong>TOTAL</strong></td><td><strong>${total.toFixed(2)}</strong></td></tr>
+            </tbody>
+        </table>` :
+        `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:10px;">Final cost will be provided after diagnostic assessment.</span></div>`;
+
+    const inspectionHTML = (j.inspection && j.inspection !== 'No damage noted')
+        ? `<div class="pi-section">Device Inspection</div>
+           <div class="pi-inspection">${_esc(j.inspection).replace(/;/g, '<br>')}</div>`
+        : '';
+
+    const imgSrc = opts.imgSrc || 'img/logo.png';
+
+    return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
+<style>${A4_STYLES}</style>
+<div class="pi-shop">
+    <img src="${imgSrc}" alt="Servicell Belize">
+    <h1>SERVICELL BELIZE</h1>
+    <p>Device Repair &amp; Services &middot; #7 Douglas Jones, Belize City</p>
+    <p>Tel: +501 615-3388</p>
+</div>
+<hr class="pi-rule">
+<div class="pi-title">Job Invoice &amp; Intake Form</div>
+<div class="pi-meta">
+    <div><strong>JOB #:</strong> ${_esc(j.id)}</div>
+    <div><strong>DATE:</strong> ${_esc(receivedDate)}</div>
+</div>
+<div class="pi-meta-row">
+    <div><strong>Type:</strong> ${_esc(j.jobType||'Repair')}</div>
+    <div><strong>Priority:</strong> ${_esc(priorityLabel)}</div>
+    <div><strong>Technician:</strong> ${_esc(j.technician||'—')}</div>
+</div>
+<hr class="pi-dash">
+<div class="pi-section">Customer Information</div>
+<div class="pi-grid">
+    <div><div class="pi-field-label">Name</div><div class="pi-field-value">${_esc(j.customerName||'Walk-in')}</div></div>
+    <div><div class="pi-field-label">Phone</div><div class="pi-field-value">${_esc(fmtPhone(j.customerPhone))}</div></div>
+</div>
+<hr class="pi-dash">
+<div class="pi-section">Device Information</div>
+<div class="pi-grid">
+    <div><div class="pi-field-label">Device</div><div class="pi-field-value">${_esc(j.device||'—')}</div></div>
+    <div><div class="pi-field-label">Issue Reported</div><div class="pi-field-value">${_esc(j.issue||'—')}</div></div>
+    <div><div class="pi-field-label">Status</div><div class="pi-field-value">${_esc(fmtStatus(j.status))}</div></div>
+    <div><div class="pi-field-label">${j.dateCompleted ? 'Completed On' : 'Est. Completion'}</div><div class="pi-field-value">${_esc(j.dateCompleted ? bzDate(j.dateCompleted) : estimatedDate)}</div></div>
+</div>
+<hr class="pi-dash">
+<div class="pi-section">Work Notes</div>
+<div class="pi-notes">${_esc(j.notes||'No additional notes.')}</div>
+${inspectionHTML}
+<hr class="pi-dash">
+<div class="pi-section">Cost Breakdown</div>
+${costTableHTML}
+<div class="pi-payment-status"><strong>Payment Status:</strong> ${_esc(paymentStatus)}</div>
+<div class="pi-sigs">
+    <div class="pi-sig">Customer Signature &amp; Date</div>
+    <div class="pi-sig">Staff Signature &amp; Date</div>
+</div>
+<div class="pi-footer">
+    Thank you for choosing Servicell Belize!<br>
+    Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>
+    We are not responsible for data loss. Please back up your device.
+</div>`;
+}
