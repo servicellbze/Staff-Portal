@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/perf.css">
     <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="css/splash.css">
@@ -344,7 +345,7 @@
     </main>
 
     <!-- ── Add/Edit Item Modal ── -->
-    <div class="modal-overlay" id="itemModal" onclick="handleOverlay(event,'itemModal')">
+    <div class="modal-overlay" id="itemModal">
         <div class="modal-card">
             <div class="modal-header">
                 <h2 id="itemModalTitle">➕ Add Item</h2>
@@ -359,9 +360,9 @@
                     <label>SKU / Barcode *</label>
                     <div class="sku-wrap">
                         <input type="text" id="iSku" placeholder="e.g. SCR-IP14P-BLK" style="padding-right:44px;">
-                        <button class="sku-scan-btn" onclick="focusScanToField('iSku')" title="Scan barcode">⌖</button>
+                        <button class="sku-scan-btn" onclick="openCameraScanner('iSku')" title="Scan barcode">⌖</button>
                     </div>
-                    <div class="form-hint">Scan your barcode scanner here or type manually</div>
+                    <div class="form-hint">Scan your barcode scanner here or tap ⌖ to scan with camera</div>
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -427,7 +428,7 @@
     </div>
 
     <!-- ── Stock Adjustment Modal ── -->
-    <div class="modal-overlay" id="adjustModal" onclick="handleOverlay(event,'adjustModal')">
+    <div class="modal-overlay" id="adjustModal">
         <div class="modal-card">
             <div class="modal-header">
                 <h2>± Adjust Stock</h2>
@@ -653,6 +654,11 @@
     // ── Pagination state ──────────────────────────────────────────────────────
     let _invPage    = 1;
     let _invPerPage = 10;
+    let _invDebounceTimer = null;
+    function debouncedRender() {
+        clearTimeout(_invDebounceTimer);
+        _invDebounceTimer = setTimeout(renderInventory, 120);
+    }
 
     function renderInventory() {
         const q    = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -701,7 +707,7 @@
         const totalPages = Math.max(1, Math.ceil(total / perPage));
         const start      = (page - 1) * perPage + 1;
         const end        = Math.min(page * perPage, total);
-        container.style.display = total > perPage ? 'flex' : 'none';
+        container.style.display = total > 0 ? 'flex' : 'none';
         container.className = 'pagination';
         container.innerHTML =
             '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
@@ -1047,11 +1053,12 @@
     }
 
     // ── Camera Scanner ────────────────────────────────────────────────────────
-    async function openCameraScanner() {
+    async function openCameraScanner(targetField) {
         if (!('BarcodeDetector' in window)) {
             alert('Camera barcode scanning is not supported on this browser. Use your USB scanner instead.');
             return;
         }
+        if (targetField) scanTargetField = targetField;
         try {
             cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             document.getElementById('cameraFeed').srcObject = cameraStream;

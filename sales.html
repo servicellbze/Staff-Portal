@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/perf.css">
     <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="css/splash.css">
@@ -864,7 +865,7 @@
 </main>
 
 <!-- -- MODAL: New Sale ---------------------------------------------------- -->
-<div class="modal-overlay" id="saleModal" onclick="handleOverlay(event,'saleModal')">
+<div class="modal-overlay" id="saleModal">
     <div class="modal-card">
         <div class="modal-header">
             <h2>&#x1F6D2; New Sale</h2>
@@ -1051,7 +1052,7 @@
 </div>
 
 <!-- -- MODAL: Edit Bill -------------------------------------------------- -->
-<div class="modal-overlay" id="editBillModal" onclick="handleOverlay(event,'editBillModal')">
+<div class="modal-overlay" id="editBillModal">
     <div class="modal-card">
         <div class="modal-header">
             <h2>&#x270F;&#xFE0F; Edit Bill</h2>
@@ -1107,12 +1108,13 @@
         <div id="viewSaleContent" style="font-size:0.88rem;"></div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('viewSaleModal')">Close</button>
+            <button class="btn-primary" onclick="printViewedSale()">&#x1F5A8;&#xFE0F; Print Receipt</button>
         </div>
     </div>
 </div>
 
 <!-- -- MODAL: Edit Sale --------------------------------------------------- -->
-<div class="modal-overlay" id="editSaleModal" onclick="handleOverlay(event,'editSaleModal')">
+<div class="modal-overlay" id="editSaleModal">
     <div class="modal-card">
         <div class="modal-header">
             <h2>&#x270F;&#xFE0F; Edit Sale</h2>
