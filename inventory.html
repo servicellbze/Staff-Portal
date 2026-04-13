@@ -386,8 +386,9 @@
             </div>
             <div class="form-row-3">
                 <div class="form-group">
-                    <label>Quantity *</label>
-                    <input type="number" id="iQty" min="0" value="0">
+                    <label style="color:var(--text-dim);">Quantity</label>
+                    <input type="number" id="iQty" min="0" value="0" disabled style="opacity:0.45;cursor:not-allowed;">
+                    <div class="form-hint">Use the <strong>± Adjust Stock</strong> button to change quantity</div>
                 </div>
                 <div class="form-group">
                     <label>Min Qty (alert)</label>
