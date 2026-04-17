@@ -452,7 +452,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Quantity *</label>
-                    <input type="number" id="adjQty" min="1" value="1">
+                    <input type="number" id="adjQty" min="1" value="1" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value==='')this.value='1'" onkeydown="if(event.key==='Enter'){this.blur();}">
                 </div>
                 <div class="form-group">
                     <label>Linked Job ID</label>
@@ -771,7 +771,7 @@
         document.getElementById('iName').value      = item?.name       || '';
         document.getElementById('iSku').value       = item?.sku        || '';
         document.getElementById('iSku').readOnly    = !!item;
-        document.getElementById('iCategory').value  = item?.category   || 'Screens';
+        document.getElementById('iCategory').value  = item?.category   || localStorage.getItem('sc_last_category') || 'Screens';
         document.getElementById('iQty').value       = item?.qty        ?? 0;
         document.getElementById('iMinQty').value    = item?.minQty     ?? 1;
         document.getElementById('iLocation').value  = item?.location   || '';
@@ -837,6 +837,8 @@
             if (data.success) {
                 closeModal('itemModal');
                 haptic('success');
+                // Remember last used category for next add
+                localStorage.setItem('sc_last_category', payload.category || 'Screens');
                 sendNotification('received', '📦 Inventory Updated', `${name} has been ${editingSku ? 'updated' : 'added'}.`);
                 await loadInventory();
             } else { btn.disabled = false; btn.textContent = editingSku ? 'Save Changes' : 'Save Item'; alert('❌ ' + (data.error || 'Could not save.')); }
