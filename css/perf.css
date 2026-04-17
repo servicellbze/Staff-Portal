@@ -1,8 +1,69 @@
 /*
- * Performance overrides for low-end devices
- * Targets devices that signal reduced motion preference OR have limited GPU
- * backdrop-filter: blur() is the #1 GPU killer — removed on these devices
+ * Performance overrides for low-end devices and iOS
+ * backdrop-filter: blur() on fixed/sticky elements is the #1 iOS scroll killer
  */
+
+/* ── iOS-specific: remove backdrop-filter from ALL fixed elements ────────────
+   On iOS, any fixed element with blur forces full-page GPU recomposition
+   on every scroll frame, causing the characteristic "laggy scroll" feel.
+   We detect iOS via the hover:none + pointer:coarse combo (touch-only devices)
+   combined with -webkit-overflow-scrolling support.
+   ─────────────────────────────────────────────────────────────────────────── */
+@supports (-webkit-overflow-scrolling: touch) {
+    nav,
+    .mobile-menu-panel,
+    .account-dropdown,
+    .notif-panel,
+    .modal-overlay,
+    .modal-card,
+    .account-chip,
+    .bell-btn,
+    .shift-banner,
+    .tabs,
+    .sync-bar,
+    .pagination,
+    .inv-table-wrap,
+    .stat-card,
+    .kpi-card,
+    .stat-section,
+    .sum-card,
+    .btn-primary,
+    .btn-secondary,
+    .search-input,
+    .filter-select,
+    .job-card,
+    .mf-card,
+    .range-btn,
+    [class*="glass"] {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    /* Compensate visually — slightly more opaque backgrounds */
+    nav {
+        background: var(--glass-strong) !important;
+    }
+    .mobile-menu-panel,
+    .account-dropdown,
+    .notif-panel,
+    .modal-card {
+        background: var(--glass-strong) !important;
+    }
+
+    /* Smooth momentum scrolling on all scrollable containers */
+    .modal-card,
+    .notif-list,
+    .inv-table-wrap,
+    main,
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Disable scroll-triggered nav shrink animation on iOS — causes jank */
+    nav.scrolled {
+        transition: none !important;
+    }
+}
 
 /* ── Remove backdrop-filter on low-end / reduced-motion devices ── */
 @media (prefers-reduced-motion: reduce),
@@ -74,8 +135,6 @@
     }
 }
 
-/* ── Debounce helper — applied via JS, not CSS ── */
-
 /* ── Reduce motion for everyone on mobile (battery + perf) ── */
 @media (max-width: 768px) {
     .modal-card {
@@ -85,10 +144,14 @@
     .modal-overlay.open .modal-card {
         transform: none !important;
     }
-    /* Remove scale animation on cards */
     .stat-card,
     .kpi-card {
         animation-duration: 0.2s !important;
+    }
+
+    /* Prevent layout thrashing from scroll-triggered class changes */
+    nav {
+        will-change: auto !important;
     }
 }
 
