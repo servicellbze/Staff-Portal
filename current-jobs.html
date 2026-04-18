@@ -2380,6 +2380,16 @@
                 unclaimBtn.style.display = 'none';
             }
 
+            // Lock edit button if claimed by someone else and not a manager
+            const editBtn = document.querySelector('#viewModal .mf-save');
+            if (editBtn) {
+                const locked = j.claimedBy && scRole !== 'manager' &&
+                    (localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '') !== j.claimedBy;
+                editBtn.disabled = locked;
+                editBtn.title = locked ? 'Claimed by ' + j.claimedBy : '';
+                editBtn.style.opacity = locked ? '0.4' : '';
+            }
+
             // Inspection checklist — show all items, tick the ones that were checked
             const CHECKLIST_ITEMS = [
                 'Screen Broken / Cracked',
@@ -2524,9 +2534,20 @@
             openEditModal(currentViewId);
         }
 
+        function isLockedFromJob(j) {
+            if (!j.claimedBy) return false;
+            const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+            const scRole = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
+            return scRole !== 'manager' && scUser !== j.claimedBy;
+        }
+
         function openEditModal(id) {
             const j = getJob(id);
             if (!j) return;
+            if (isLockedFromJob(j)) {
+                showToast('🔒 Claimed by ' + j.claimedBy + ' — only they or a manager can edit this job.', 'err');
+                return;
+            }
             currentEditId = id;
             currentJobData = j;
 
@@ -2663,9 +2684,11 @@
             document.getElementById('saveSpinner').style.display = 'block';
 
             try {
+                const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
                 const params = new URLSearchParams({
                     action: 'update',
                     id: currentEditId,
+                    username: scUser,
                     status,
                     priority,
                     notes,
@@ -2675,7 +2698,17 @@
                     invoiceItems: invoiceItemsJSON
                 });
 
-                await fetch(`${SCRIPT_URL}?${params.toString()}`, { mode: 'no-cors' });
+                const saveRes = await fetch(`${SCRIPT_URL}?${params.toString()}`, { method: 'POST' });
+                let saveData = {};
+                try { saveData = await saveRes.json(); } catch(_) {}
+                if (saveData.locked) {
+                    showToast('🔒 ' + saveData.error, 'err');
+                    haptic('error');
+                    btn.disabled = false;
+                    document.getElementById('saveBtnText').style.display = 'inline';
+                    document.getElementById('saveSpinner').style.display = 'none';
+                    return;
+                }
 
                 const job = allJobs.find(j => String(j.id) === String(currentEditId));
                 if (job) {
@@ -2724,6 +2757,10 @@
         function openDeleteModal(id) {
             const j = getJob(id);
             if (!j) return;
+            if (isLockedFromJob(j)) {
+                showToast('🔒 Claimed by ' + j.claimedBy + ' — only they or a manager can delete this job.', 'err');
+                return;
+            }
 
             document.getElementById('del-id').textContent = '#' + j.id;
             document.getElementById('del-name').textContent = j.customerName || 'Walk-in';
