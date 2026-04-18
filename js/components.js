@@ -256,10 +256,17 @@ const ComponentLoader = {
             }
         });
 
-        // Scroll shrink effect
+        // Scroll shrink effect — throttled via rAF to avoid per-frame jank
         const nav = document.getElementById('mainNav');
+        let _scrollTicking = false;
         window.addEventListener('scroll', () => {
-            nav?.classList.toggle('scrolled', window.pageYOffset > 50);
+            if (!_scrollTicking) {
+                requestAnimationFrame(() => {
+                    nav?.classList.toggle('scrolled', window.pageYOffset > 50);
+                    _scrollTicking = false;
+                });
+                _scrollTicking = true;
+            }
         }, { passive: true });
 
         // Dynamic grid columns based on item count
@@ -738,4 +745,28 @@ if (IS_ANDROID) {
     });
 
     resetTimer();
+})();
+
+// ── Universal scroll lock guard ───────────────────────────────────────────────
+// Prevents the page from getting permanently stuck in a non-scrollable state.
+// Runs every 2 seconds and on visibility change — clears overflow lock if no
+// modal or lightbox is actually open.
+(function () {
+    function releaseScrollIfSafe() {
+        const anyOpen = document.querySelector(
+            '.modal-overlay.open, #photoLightbox.open, [id$="Modal"].open'
+        );
+        if (!anyOpen) {
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+        }
+    }
+    setInterval(releaseScrollIfSafe, 2000);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') releaseScrollIfSafe();
+    });
+    // Also release on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') releaseScrollIfSafe();
+    });
 })();

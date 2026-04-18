@@ -278,8 +278,22 @@ function renderCashierPerf(sales, payouts, closes) {
 function renderTechPerf(jobs, from, to) {
     const el = document.getElementById('techPerf');
     const techs = {};
+
+    // Build a jobId → claimedBy map for revenue attribution
+    const jobClaimMap = {};
+    jobs.forEach(j => { if (j.claimedBy && j.id) jobClaimMap[String(j.id)] = j.claimedBy; });
+
+    // Pull sales from cache and attribute revenue to the technician who claimed the job
+    const allSales = (window._allSales || []).filter(s => s.status !== 'reversed');
+    const techRevenue = {};
+    allSales.forEach(s => {
+        if (!s.jobId) return;
+        const claimer = jobClaimMap[String(s.jobId)];
+        if (!claimer) return;
+        techRevenue[claimer] = (techRevenue[claimer] || 0) + (parseFloat(s.amountPaid) || 0);
+    });
+
     jobs.forEach(j => {
-        // Attribution: claimedBy takes priority; unclaimed completed jobs go to 'Unassigned'
         const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
         if (!techs[t]) techs[t] = { assigned: 0, completed: 0, stale: 0, unclaimed: 0, totalMs: 0, countMs: 0 };
         techs[t].assigned++;
@@ -291,7 +305,6 @@ function renderTechPerf(jobs, from, to) {
                 if (ms > 0) { techs[t].totalMs += ms; techs[t].countMs++; }
             }
         }
-        // Stale = active job not updated in 3+ days
         const STALE = 3 * 24 * 60 * 60 * 1000;
         const skip  = ['abandoned','unsuccessful','resolved','ready'];
         if (!skip.includes(status)) {
@@ -301,24 +314,44 @@ function renderTechPerf(jobs, from, to) {
             );
             if (last && (Date.now() - last) > STALE) {
                 techs[t].stale++;
-                // Also track unclaimed stale separately
                 if (!j.claimedBy && status === 'received') techs[t].unclaimed++;
             }
         }
     });
+
     const sorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
     if (!sorted.length) { el.innerHTML = '<div class="empty-state">No technician data.</div>'; return; }
+
+    // Find top values for bonus highlighting — only award if there's a clear single winner
+    const maxCompleted = Math.max(...sorted.map(([,d]) => d.completed));
+    const maxRevenue   = Math.max(...sorted.map(([name]) => techRevenue[name] || 0));
+    const completedWinners = sorted.filter(([name, d]) => !name.includes('Unassigned') && d.completed === maxCompleted && maxCompleted > 0);
+    const revenueWinners   = sorted.filter(([name])    => !name.includes('Unassigned') && (techRevenue[name] || 0) === maxRevenue && maxRevenue > 0);
+    const soloJobsWinner   = completedWinners.length === 1 ? completedWinners[0][0] : null;
+    const soloRevWinner    = revenueWinners.length   === 1 ? revenueWinners[0][0]   : null;
+
     el.innerHTML = sorted.map(([name, d]) => {
-        const avgDays  = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
+        const avgDays    = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
+        const revenue    = techRevenue[name] || 0;
         const isUnassigned = name === 'Unassigned';
+        const topJobs    = name === soloJobsWinner;
+        const topRev     = name === soloRevWinner;
         return '<div class="person-row">'
             + '<div class="person-avatar">' + (isUnassigned ? '❓' : '&#x1F527;') + '</div>'
-            + '<div><div class="person-name">' + escH(name) + '</div>'
-            + '<div class="person-meta">' + d.assigned + ' assigned &bull; avg ' + avgDays + ' days'
-            + (d.stale    ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
-            + (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
-            + '</div></div>'
-            + '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'
+            + '<div style="flex:1;min-width:0;">'
+            +   '<div class="person-name">' + escH(name)
+            +     (topJobs ? ' <span style="font-size:0.65rem;background:rgba(16,185,129,0.15);color:var(--success);padding:2px 7px;border-radius:99px;font-weight:800;">🏆 Most Jobs</span>' : '')
+            +     (topRev  ? ' <span style="font-size:0.65rem;background:rgba(37,99,235,0.15);color:var(--primary);padding:2px 7px;border-radius:99px;font-weight:800;">💰 Top Revenue</span>' : '')
+            +   '</div>'
+            +   '<div class="person-meta">' + d.assigned + (isUnassigned ? ' unassigned' : ' assigned') + ' &bull; avg ' + avgDays + ' days'
+            +     (d.stale    ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
+            +     (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
+            +   '</div>'
+            + '</div>'
+            + '<div style="display:flex;gap:16px;flex-shrink:0;text-align:right;">'
+            +   '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'
+            +   (revenue > 0 ? '<div class="person-stats"><div class="person-stat-main" style="font-size:0.95rem;color:var(--success);">' + bz(revenue) + '</div><div class="person-stat-sub">revenue</div></div>' : '')
+            + '</div>'
             + '</div>';
     }).join('');
 }

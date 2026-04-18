@@ -99,26 +99,32 @@ function switchTab(name) {
 async function loadAll() {
     setSyncState('loading', 'Syncing...');
     const date = getShiftDate();
-    // Fetch all independently — partial failures don't break the whole page
-    const [sData, pData, bData, jData, eData] = await Promise.all([
+    const [sData, pData, bData, eData] = await Promise.all([
         fetch(SCRIPT_URL + '?action=listsales&date='     + date).then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listpayouts&date='   + date).then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listbills')           .then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=list')                .then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listdaycloses&date=' + date).then(r => r.json()).catch(() => ({}))
     ]);
     allSales   = sData.sales   || [];
     allPayouts = pData.payouts || [];
     allBills   = bData.bills   || [];
-    allJobs    = jData.jobs    || [];
     renderSales(); renderPayouts(); renderBills(); updateEOD();
     renderEODHistory(eData.closes || []);
-    const anyFailed = [sData, pData, bData, jData, eData].some(d => !d || d.error);
+    const anyFailed = [sData, pData, bData, eData].some(d => !d || d.error);
     if (anyFailed) {
         setSyncState('error', 'Some data failed to load — tap Refresh');
     } else {
         setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }
+}
+
+// Jobs are only needed for the job pickup modal — load lazily
+async function ensureJobsLoaded() {
+    if (allJobs.length) return;
+    try {
+        const d = await fetch(SCRIPT_URL + '?action=list').then(r => r.json());
+        allJobs = d.jobs || [];
+    } catch (_) {}
 }
 
 // ── Date Filter & Show Settled ────────────────────────────────────────────────
@@ -635,6 +641,7 @@ function openJobPickupModal() {
     document.getElementById('jobBalanceDisplay').style.display = 'none';
     selectedJobId = null;
     openModal('jobPickupModal');
+    ensureJobsLoaded();
     setTimeout(() => document.getElementById('jobSearch').focus(), 300);
 }
 
@@ -1141,7 +1148,14 @@ function printReceipt(items, total, amountPaid, method, saleId, customer) {
 
 // ── Modal Helpers ─────────────────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.classList.add('modal-open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.classList.remove('modal-open'); }
+function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+    // Only remove scroll lock if no other modals are open
+    if (!document.querySelector('.modal-overlay.open')) {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+    }
+}
 function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
 // ── Sync State ────────────────────────────────────────────────────────────────
