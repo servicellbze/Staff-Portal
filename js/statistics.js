@@ -278,11 +278,10 @@ function renderCashierPerf(sales, payouts, closes) {
 function renderTechPerf(jobs, from, to) {
     const el = document.getElementById('techPerf');
     const techs = {};
-    const fromMs = new Date(from).getTime();
-    const toMs   = new Date(to + 'T23:59:59').getTime();
     jobs.forEach(j => {
-        const t = j.technician || 'Unknown';
-        if (!techs[t]) techs[t] = { assigned: 0, completed: 0, stale: 0, totalMs: 0, countMs: 0 };
+        // Attribution: claimedBy takes priority; unclaimed completed jobs go to 'Unassigned'
+        const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
+        if (!techs[t]) techs[t] = { assigned: 0, completed: 0, stale: 0, unclaimed: 0, totalMs: 0, countMs: 0 };
         techs[t].assigned++;
         const status = (j.status || '').toLowerCase();
         if (['resolved','ready'].includes(status)) {
@@ -300,17 +299,25 @@ function renderTechPerf(jobs, from, to) {
                 j.dateReceived  ? new Date(j.dateReceived).getTime()  : 0,
                 j.dateCompleted ? new Date(j.dateCompleted).getTime() : 0
             );
-            if (last && (Date.now() - last) > STALE) techs[t].stale++;
+            if (last && (Date.now() - last) > STALE) {
+                techs[t].stale++;
+                // Also track unclaimed stale separately
+                if (!j.claimedBy && status === 'received') techs[t].unclaimed++;
+            }
         }
     });
     const sorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
     if (!sorted.length) { el.innerHTML = '<div class="empty-state">No technician data.</div>'; return; }
     el.innerHTML = sorted.map(([name, d]) => {
-        const avgDays = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
+        const avgDays  = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
+        const isUnassigned = name === 'Unassigned';
         return '<div class="person-row">'
-            + '<div class="person-avatar">&#x1F527;</div>'
+            + '<div class="person-avatar">' + (isUnassigned ? '❓' : '&#x1F527;') + '</div>'
             + '<div><div class="person-name">' + escH(name) + '</div>'
-            + '<div class="person-meta">' + d.assigned + ' assigned &bull; avg ' + avgDays + ' days' + (d.stale ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '') + '</div></div>'
+            + '<div class="person-meta">' + d.assigned + ' assigned &bull; avg ' + avgDays + ' days'
+            + (d.stale    ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
+            + (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
+            + '</div></div>'
             + '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'
             + '</div>';
     }).join('');
