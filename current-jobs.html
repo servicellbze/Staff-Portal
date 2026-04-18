@@ -2305,7 +2305,7 @@
             const j = getJob(currentViewId);
             if (!j) return;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const role   = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
+            const role   = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
             const claimBtn = document.getElementById('claimBtn');
             claimBtn.disabled = true;
             claimBtn.textContent = 'Claiming…';
@@ -2331,7 +2331,7 @@
 
         async function unclaimCurrentJob() {
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const role   = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
+            const role   = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
             if (!confirm('Reassign this job? The current claim will be removed.')) return;
             try {
                 const params = new URLSearchParams({ action: 'unclaim', id: currentViewId, username: scUser, role });
@@ -2363,7 +2363,7 @@
 
             // ── Claim status ──
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const scRole = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
+            const scRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
             const canClaim   = ['manager','technician'].includes(scRole);
             const canUnclaim = scRole === 'manager';
             const claimBtn   = document.getElementById('claimBtn');
@@ -2537,7 +2537,7 @@
         function isLockedFromJob(j) {
             if (!j.claimedBy) return false;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const scRole = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
+            const scRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
             return scRole !== 'manager' && scUser !== j.claimedBy;
         }
 
