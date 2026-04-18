@@ -689,6 +689,41 @@
             box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
         }
 
+        .mf-claim {
+            background: #0891b2;
+            color: #fff;
+        }
+
+        .mf-claim:hover {
+            background: #0e7490;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
+        }
+
+        .mf-unclaim {
+            background: rgba(255,255,255,0.07);
+            color: var(--text-dim);
+            border: 1px solid var(--glass-border);
+        }
+
+        .mf-unclaim:hover {
+            background: rgba(255,255,255,0.13);
+            color: var(--text-main);
+        }
+
+        .claimed-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            background: rgba(8,145,178,0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(8,145,178,0.3);
+        }
+
         /* Delete Modal specifics */
         .delete-body {
             padding: 28px;
@@ -1776,6 +1811,10 @@
                         <div class="view-field-label">Logged By</div>
                         <div class="view-field-value" id="view-technician">—</div>
                     </div>
+                    <div class="view-field" id="view-claimed-field">
+                        <div class="view-field-label">Claimed By</div>
+                        <div class="view-field-value" id="view-claimed-by">—</div>
+                    </div>
                     <div class="view-field full">
                         <div class="view-field-label">Completion Date</div>
                         <div class="view-field-value" id="view-completion-info">—</div>
@@ -1806,6 +1845,8 @@
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('viewModal')">Close</button>
                 <button class="mf-btn mf-print" onclick="printFromView()">🖨️ Print</button>
+                <button class="mf-btn mf-claim" id="claimBtn" onclick="claimCurrentJob()" style="display:none;">🔒 Claim Job</button>
+                <button class="mf-btn mf-unclaim" id="unclaimBtn" onclick="unclaimCurrentJob()" style="display:none;">🔓 Reassign</button>
                 <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
             </div>
         </div>
@@ -2110,6 +2151,9 @@
                 }
                 const priorityClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
                 const priorityLabel = priorityClass === 'high' ? '🔴 Urgent' : '🔵 Normal';
+                const claimedChip = j.claimedBy
+                    ? `<div style="margin-top:4px;"><span class="claimed-chip">🔒 ${j.claimedBy}</span></div>`
+                    : (stat.class === 'received' ? `<div style="margin-top:4px;font-size:0.7rem;opacity:0.45;">Unclaimed</div>` : '');
                 return `
         <div class="job-row status-${stat.class}">
             <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
@@ -2121,7 +2165,7 @@
             <div><span class="job-type-badge">${j.jobType || 'Repair'}</span></div>
             <div><span class="priority-badge ${priorityClass}">${priorityLabel}</span></div>
             <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
-            <div style="font-size:0.85rem;">${storage}</div>
+            <div style="font-size:0.85rem;">${storage}${claimedChip}</div>
             <div class="action-btns">
                 <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
                 <button class="action-btn" title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
@@ -2239,6 +2283,69 @@
 
         function getJob(id) { return allJobs.find(j => String(j.id) === String(id)); }
 
+        function deriveRole(username) {
+            const u = (username || '').toLowerCase();
+            if (u.startsWith('manager'))    return 'manager';
+            if (u.startsWith('cashier'))    return 'cashier';
+            if (u.startsWith('technician')) return 'technician';
+            return 'technician';
+        }
+
+        async function claimCurrentJob() {
+            const j = getJob(currentViewId);
+            if (!j) return;
+            const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+            const role   = deriveRole(scUser);
+            const claimBtn = document.getElementById('claimBtn');
+            claimBtn.disabled = true;
+            claimBtn.textContent = 'Claiming…';
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'claimjob', id: currentViewId, username: scUser, role })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Job claimed!', 'ok');
+                    await loadJobs();
+                    // Re-open modal with fresh data
+                    openViewModal(currentViewId);
+                } else {
+                    showToast('❌ ' + (data.error || 'Could not claim job'), 'err');
+                    claimBtn.disabled = false;
+                    claimBtn.textContent = '🔒 Claim Job';
+                }
+            } catch(e) {
+                showToast('❌ Network error', 'err');
+                claimBtn.disabled = false;
+                claimBtn.textContent = '🔒 Claim Job';
+            }
+        }
+
+        async function unclaimCurrentJob() {
+            const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+            const role   = deriveRole(scUser);
+            if (!confirm('Reassign this job? The current claim will be removed.')) return;
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'unclaim', id: currentViewId, username: scUser, role })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('🔓 Job unclaimed', 'ok');
+                    await loadJobs();
+                    openViewModal(currentViewId);
+                } else {
+                    showToast('❌ ' + (data.error || 'Could not unclaim'), 'err');
+                }
+            } catch(e) {
+                showToast('❌ Network error', 'err');
+            }
+        }
+
         function openViewModal(id) {
             const j = getJob(id);
             if (!j) return;
@@ -2250,6 +2357,25 @@
             document.getElementById('view-phone').textContent = j.customerPhone || '—';
             document.getElementById('view-job-type').textContent = j.jobType || '—';
             document.getElementById('view-technician').textContent = j.technician || '—';
+
+            // ── Claim status ──
+            const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+            const scRole = deriveRole(scUser);
+            const canClaim   = ['manager','technician'].includes(scRole);
+            const canUnclaim = scRole === 'manager';
+            const claimBtn   = document.getElementById('claimBtn');
+            const unclaimBtn = document.getElementById('unclaimBtn');
+            const claimedByEl = document.getElementById('view-claimed-by');
+
+            if (j.claimedBy) {
+                claimedByEl.innerHTML = `<span class="claimed-chip">🔒 ${j.claimedBy}</span>`;
+                claimBtn.style.display   = 'none';
+                unclaimBtn.style.display = canUnclaim ? '' : 'none';
+            } else {
+                claimedByEl.textContent  = '—';
+                claimBtn.style.display   = canClaim ? '' : 'none';
+                unclaimBtn.style.display = 'none';
+            }
 
             // Inspection checklist — show all items, tick the ones that were checked
             const CHECKLIST_ITEMS = [
