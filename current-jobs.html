@@ -2305,21 +2305,17 @@
             const j = getJob(currentViewId);
             if (!j) return;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const role   = deriveRole(scUser);
+            const role   = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
             const claimBtn = document.getElementById('claimBtn');
             claimBtn.disabled = true;
             claimBtn.textContent = 'Claiming…';
             try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'claimjob', id: currentViewId, username: scUser, role })
-                });
+                const params = new URLSearchParams({ action: 'claimjob', id: currentViewId, username: scUser, role });
+                const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     showToast('✅ Job claimed!', 'ok');
                     await loadJobs();
-                    // Re-open modal with fresh data
                     openViewModal(currentViewId);
                 } else {
                     showToast('❌ ' + (data.error || 'Could not claim job'), 'err');
@@ -2335,14 +2331,11 @@
 
         async function unclaimCurrentJob() {
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const role   = deriveRole(scUser);
+            const role   = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
             if (!confirm('Reassign this job? The current claim will be removed.')) return;
             try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'unclaim', id: currentViewId, username: scUser, role })
-                });
+                const params = new URLSearchParams({ action: 'unclaim', id: currentViewId, username: scUser, role });
+                const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
                     showToast('🔓 Job unclaimed', 'ok');
@@ -2370,7 +2363,7 @@
 
             // ── Claim status ──
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const scRole = deriveRole(scUser);
+            const scRole = localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser);
             const canClaim   = ['manager','technician'].includes(scRole);
             const canUnclaim = scRole === 'manager';
             const claimBtn   = document.getElementById('claimBtn');
