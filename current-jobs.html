@@ -624,8 +624,14 @@
         /* ── Modal Footer Buttons ── */
         .modal-footer {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             padding: 0 28px 24px;
+        }
+
+        .modal-footer .mf-btn {
+            flex: 1 1 auto;
+            min-width: 80px;
         }
 
         .mf-btn {
@@ -1038,6 +1044,10 @@
             .modal-footer {
                 padding: 0 20px 32px;
                 gap: 8px;
+            }
+
+            .modal-footer .mf-btn {
+                min-width: 70px;
             }
 
             .view-grid {
