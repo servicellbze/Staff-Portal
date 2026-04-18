@@ -54,22 +54,6 @@
         }
 
         /* -- Shift Banner -------------------------------- */
-        .shift-banner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px 18px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-full);
-            backdrop-filter: blur(10px);
-            margin-bottom: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            animation: fadeInUp 0.4s ease 0.05s both;
-            flex-wrap: wrap;
-        }
         .shift-info { display: flex; align-items: center; gap: 10px; }
         .shift-dot {
             width: 8px; height: 8px;
@@ -83,6 +67,22 @@
         .shift-warn  { color: var(--warning); font-weight: 800; }
         .shift-off   { color: var(--danger); font-weight: 800; }
 
+        .shift-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 18px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-full);
+            margin-bottom: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            animation: fadeInUp 0.4s ease 0.05s both;
+            flex-wrap: wrap;
+        }
+
         /* -- Tabs ---------------------------------------- */
         .tabs {
             display: flex;
@@ -92,7 +92,6 @@
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-full);
             padding: 4px;
-            backdrop-filter: blur(10px);
             animation: fadeInUp 0.4s ease 0.08s both;
             overflow-x: auto;
             scrollbar-width: none;
@@ -122,7 +121,7 @@
             color: var(--text-main);
             background: rgba(255, 255, 255, 0.05);
         }
-        .tab-panel { display: none; animation: fadeInUp 0.3s ease both; }
+        .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
         /* -- Summary Cards ------------------------------- */
@@ -137,7 +136,6 @@
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-md);
             padding: 14px 16px;
-            backdrop-filter: blur(10px);
         }
         .sum-label {
             font-size: 0.65rem;
@@ -151,6 +149,32 @@
         .sum-card.green .sum-value  { color: var(--success); }
         .sum-card.red   .sum-value  { color: var(--danger); }
         .sum-card.yellow .sum-value { color: var(--warning); }
+
+        /* -- Sync Bar ------------------------------------ */
+        .sync-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            padding: 10px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-full);
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-dim);
+        }
+        .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+        .sync-dot.loading { background: var(--warning); }
+        .sync-dot.error   { background: var(--danger); animation: none; }
+
+        /* -- List Card ----------------------------------- */
+        .list-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
 
         /* -- Action Bar ---------------------------------- */
         .action-bar {
@@ -238,13 +262,6 @@
         .btn-success-sm:hover { background: rgba(16, 185, 129, 0.2); }
 
         /* -- List Card ----------------------------------- */
-        .list-card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-        }
         .list-item {
             display: flex;
             align-items: center;
@@ -333,6 +350,7 @@
             transform: translateY(16px) scale(0.98);
             transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             scrollbar-width: none;
+            will-change: transform;
         }
         .modal-card::-webkit-scrollbar { display: none; }
         .modal-overlay.open .modal-card { transform: translateY(0) scale(1); }
@@ -544,20 +562,6 @@
         .bill-balance.settled { background: rgba(16, 185, 129, 0.1); color: var(--success); }
 
         /* -- Sync Bar ------------------------------------ */
-        .sync-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-top: 14px;
-            padding: 10px 16px;
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-full);
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-dim);
-            backdrop-filter: blur(8px);
-        }
         .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
         .sync-dot.loading { background: var(--warning); }
         .sync-dot.error   { background: var(--danger); animation: none; }
@@ -763,7 +767,7 @@
             <button class="btn-secondary" onclick="openJobPickupModal()">&#x1F4E6; Job Pickup</button>
             <input type="date" id="salesDateFilter" style="padding:10px 13px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;outline:none;cursor:pointer;margin-left:auto;" onchange="onSalesDateChange()">
         </div>
-        <input type="text" id="salesSearch" placeholder="&#x1F50D; Search by item, amount, cashier..." oninput="renderSales()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="salesSearch" placeholder="&#x1F50D; Search by item, amount, cashier..." oninput="debounce('salesSearch',renderSales,150)" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="salesList">
             <div class="empty-state">
                 <div class="empty-icon">&#x1F6D2;</div>
@@ -812,7 +816,7 @@
             <button class="btn-primary" onclick="openBillModal()">+ New Bill</button>
             <button class="btn-secondary" id="showSettledBtn" onclick="toggleShowSettled()" style="margin-left:auto;">&#x1F4CB; Show Settled</button>
         </div>
-        <input type="text" id="billsSearch" placeholder="&#x1F50D; Search by name or item..." oninput="renderBills()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="billsSearch" placeholder="&#x1F50D; Search by name or item..." oninput="debounce('billsSearch',renderBills,150)" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="billsList">
             <div class="empty-state">
                 <div class="empty-icon">&#x1F4CB;</div>

@@ -707,14 +707,14 @@
         }
 
         .mf-unclaim {
-            background: rgba(255,255,255,0.07);
-            color: var(--text-dim);
-            border: 1px solid var(--glass-border);
+            background: #0891b2;
+            color: #fff;
         }
 
         .mf-unclaim:hover {
-            background: rgba(255,255,255,0.13);
-            color: var(--text-main);
+            background: #0e7490;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
         }
 
         .claimed-chip {
@@ -725,9 +725,9 @@
             border-radius: 99px;
             font-size: 0.65rem;
             font-weight: 800;
-            background: rgba(8,145,178,0.15);
-            color: #38bdf8;
-            border: 1px solid rgba(8,145,178,0.3);
+            background: rgba(8,145,178,0.18);
+            color: #0891b2;
+            border: 1px solid rgba(8,145,178,0.4);
             margin-top: 3px;
         }
 
@@ -1863,7 +1863,22 @@
         </div>
     </div>
 
-    <!-- ── Photo Lightbox ── -->
+    <!-- ── Reassign Confirm Modal ── -->
+    <div class="modal-overlay" id="reassignModal" style="z-index:3100;">
+        <div class="modal-box" style="max-width:360px;">
+            <div class="modal-header">
+                <h2>🔓 Reassign Job</h2>
+                <button class="modal-close" onclick="closeModal('reassignModal')">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top:8px;">
+                <p style="font-size:0.9rem;color:var(--text-dim);line-height:1.6;">This will remove the current claim and make the job available for anyone to claim. Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="mf-btn mf-cancel" onclick="closeModal('reassignModal')">Cancel</button>
+                <button class="mf-btn mf-save" id="reassignConfirmBtn" style="background:#0891b2;">🔓 Yes, Reassign</button>
+            </div>
+        </div>
+    </div>
     <div id="photoLightbox">
         <button class="lb-close" onclick="closeLightbox()">✕</button>
         <button class="lb-nav lb-prev" id="lbPrev" onclick="lbNav(-1)">&#x2039;</button>
@@ -2308,17 +2323,22 @@
             if (!j) return;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
             const role   = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
+            // If stored role doesn't match username prefix, trust the prefix
+            const effectiveRole = (role === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : role;
             const claimBtn = document.getElementById('claimBtn');
             claimBtn.disabled = true;
             claimBtn.textContent = 'Claiming…';
             try {
-                const params = new URLSearchParams({ action: 'claimjob', id: currentViewId, username: scUser, role });
+                const params = new URLSearchParams({ action: 'claimjob', id: currentViewId, username: scUser, role: effectiveRole });
                 const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                    showToast('✅ Job claimed!', 'ok');
-                    await loadJobs();
-                    openViewModal(currentViewId);
+                        // Update local cache — no full reload needed
+                        const job = allJobs.find(j => String(j.id) === String(currentViewId));
+                        if (job) { job.claimedBy = scUser; job.claimedAt = data.claimedAt || new Date().toISOString(); }
+                        showToast('✅ Job claimed!', 'ok');
+                        filterAndRender();
+                        openViewModal(currentViewId);
                 } else {
                     showToast('❌ ' + (data.error || 'Could not claim job'), 'err');
                     claimBtn.disabled = false;
@@ -2334,21 +2354,30 @@
         async function unclaimCurrentJob() {
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
             const role   = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
-            if (!confirm('Reassign this job? The current claim will be removed.')) return;
-            try {
-                const params = new URLSearchParams({ action: 'unclaim', id: currentViewId, username: scUser, role });
-                const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
-                const data = await res.json();
-                if (data.success) {
-                    showToast('🔓 Job unclaimed', 'ok');
-                    await loadJobs();
-                    openViewModal(currentViewId);
-                } else {
-                    showToast('❌ ' + (data.error || 'Could not unclaim'), 'err');
+            const effectiveRole = (role === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : role;
+
+            // Show confirm modal instead of browser confirm()
+            openModal('reassignModal');
+            document.getElementById('reassignConfirmBtn').onclick = async function() {
+                closeModal('reassignModal');
+                try {
+                    const params = new URLSearchParams({ action: 'unclaim', id: currentViewId, username: scUser, role: effectiveRole });
+                    const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                        // Update local cache — no full reload needed
+                        const job = allJobs.find(j => String(j.id) === String(currentViewId));
+                        if (job) { job.claimedBy = ''; job.claimedAt = ''; }
+                        showToast('🔓 Job reassigned', 'ok');
+                        filterAndRender();
+                        openViewModal(currentViewId);
+                    } else {
+                        showToast('❌ ' + (data.error || 'Could not unclaim'), 'err');
+                    }
+                } catch(e) {
+                    showToast('❌ Network error', 'err');
                 }
-            } catch(e) {
-                showToast('❌ Network error', 'err');
-            }
+            };
         }
 
         function openViewModal(id) {
@@ -2365,7 +2394,10 @@
 
             // ── Claim status ──
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const scRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
+            const _stored = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
+            const scRole  = (_stored === 'manager' || deriveRole(scUser) === 'manager') ? 'manager'
+                          : (_stored === 'technician' || deriveRole(scUser) === 'technician') ? 'technician'
+                          : (_stored || deriveRole(scUser));
             const canClaim   = ['manager','technician'].includes(scRole);
             const canUnclaim = scRole === 'manager';
             const claimBtn   = document.getElementById('claimBtn');
@@ -2385,8 +2417,11 @@
             // Lock edit button if claimed by someone else and not a manager
             const editBtn = document.querySelector('#viewModal .mf-save');
             if (editBtn) {
-                const locked = j.claimedBy && scRole !== 'manager' &&
-                    (localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '') !== j.claimedBy;
+                const storedRole  = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
+                const effectiveRole = (storedRole === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : scRole;
+                const locked = j.claimedBy
+                    && effectiveRole !== 'manager'
+                    && scUser.trim() !== j.claimedBy.trim();
                 editBtn.disabled = locked;
                 editBtn.title = locked ? 'Claimed by ' + j.claimedBy : '';
                 editBtn.style.opacity = locked ? '0.4' : '';
@@ -2539,8 +2574,12 @@
         function isLockedFromJob(j) {
             if (!j.claimedBy) return false;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const scRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
-            return scRole !== 'manager' && scUser !== j.claimedBy;
+            // Check stored role AND derive from username — use whichever grants more access
+            const storedRole  = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
+            const derivedRole = deriveRole(scUser);
+            const scRole = (storedRole === 'manager' || derivedRole === 'manager') ? 'manager' : (storedRole || derivedRole);
+            if (scRole === 'manager') return false;
+            return scUser.trim() !== j.claimedBy.trim();
         }
 
         function openEditModal(id) {
