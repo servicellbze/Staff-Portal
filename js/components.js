@@ -358,8 +358,9 @@ setInterval(() => InAppNotif.syncFromServer(), 30000);
 async function checkRevoked() {
     const username = getLoggedInUser();
     if (!username || !navigator.onLine) return;
-    const page = window.location.pathname.split('/').pop();
-    if (page === 'index.html' || !page) return; // skip on login page
+    // Skip on login page — check both pathname and hash
+    const path = window.location.pathname + window.location.href;
+    if (path.includes('index.html') && !localStorage.getItem('isLoggedIn') && !sessionStorage.getItem('isLoggedIn')) return;
     const url = (typeof window.SCRIPT_URL !== 'undefined' && window.SCRIPT_URL)
         || 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
     try {
@@ -374,6 +375,9 @@ async function checkRevoked() {
 }
 setInterval(checkRevoked, 60000);
 window.addEventListener('sc-back-online', checkRevoked);
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkRevoked();
+});
 
 // Also sync when coming back online or tab becomes visible
 window.addEventListener('sc-back-online', () => InAppNotif.syncFromServer());
