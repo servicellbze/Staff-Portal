@@ -4,33 +4,33 @@
 
 const RECEIPT_STYLES = `
 @media print { @page { size: 72mm auto; margin: 3mm 2mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } }
-#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 47mm; margin: 0 auto; padding: 2px 0 20mm; font-size: 9px; font-weight: 700; line-height: 1.5; letter-spacing: -0.2px; word-spacing: -0.3px; }
-#printInvoice * { font-weight: 700; box-sizing: border-box; }
+#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 47mm; margin: 0 auto; padding: 2px 0 20mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
+#printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 5px; }
 .pi-shop img { max-width: 70px; margin-bottom: 3px; display: block; margin-left: auto; margin-right: auto; }
-.pi-shop h1 { font-size: 13px; font-weight: 900; letter-spacing: 1px; margin: 0 0 2px; }
-.pi-shop p { font-size: 8px; margin: 1px 0; letter-spacing: 0; }
+.pi-shop h1 { font-size: 14px; font-weight: 900; letter-spacing: 1px; margin: 0 0 2px; }
+.pi-shop p { font-size: 9px; margin: 1px 0; letter-spacing: 0; }
 .pi-rule { border: none; border-top: 2px solid #000; margin: 5px 0 4px; }
-.pi-dash { border: none; border-top: 1px dashed #000; margin: 4px 0 3px; }
-.pi-title { text-align: center; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 3px 0 4px; }
-.pi-meta { font-size: 8px; line-height: 1.5; margin-bottom: 3px; }
-.pi-meta-row { font-size: 8px; margin: 3px 0 4px; padding: 3px 5px; background: #f0f0f0; line-height: 1.6; }
+.pi-dash { border: none; border-top: 1px solid #000; margin: 4px 0 3px; }
+.pi-title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 3px 0 4px; }
+.pi-meta { font-size: 9px; line-height: 1.6; margin-bottom: 3px; }
+.pi-meta-row { font-size: 9px; margin: 3px 0 4px; padding: 3px 5px; background: #f0f0f0; line-height: 1.6; }
 .pi-meta-row strong { display: block; }
-.pi-section { font-size: 7px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 2px; }
+.pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 2px; }
 .pi-grid { margin-bottom: 3px; }
-.pi-field-label { font-size: 7px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2px; }
-.pi-field-value { font-size: 9px; padding: 1px 0; border-bottom: 1px dashed #000; min-height: 13px; margin-bottom: 3px; }
-.pi-notes { border: 1px solid #000; padding: 3px 4px; min-height: 28px; font-size: 8px; line-height: 1.4; margin: 2px 0 5px; }
-.pi-cost-table { width: 100%; border-collapse: collapse; margin: 3px 0 5px; font-size: 8px; }
-.pi-cost-table th { text-align: left; font-size: 7px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 0; border-bottom: 2px solid #000; }
+.pi-field-label { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2px; }
+.pi-field-value { font-size: 10px; padding: 1px 0; border-bottom: 1px solid #000; min-height: 14px; margin-bottom: 3px; }
+.pi-notes { border: 1px solid #000; padding: 3px 4px; min-height: 28px; font-size: 9px; line-height: 1.5; margin: 2px 0 5px; }
+.pi-cost-table { width: 100%; border-collapse: collapse; margin: 3px 0 5px; font-size: 9px; }
+.pi-cost-table th { text-align: left; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 0; border-bottom: 2px solid #000; }
 .pi-cost-table th:last-child { text-align: right; }
-.pi-cost-table td { padding: 3px 0; border-bottom: 1px dashed #000; }
+.pi-cost-table td { padding: 3px 0; border-bottom: 1px solid #000; }
 .pi-cost-table td:last-child { text-align: right; }
-.pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 10px; padding-top: 4px; }
-.pi-payment-status { text-align: center; font-size: 8px; margin: 4px 0 5px; padding: 3px 5px; background: #f0f0f0; }
-.pi-footer { text-align: center; font-size: 8px; margin-top: 6px; border-top: 1px dashed #000; padding-top: 4px; line-height: 1.55; }
+.pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 11px; font-weight: 900; padding-top: 4px; }
+.pi-payment-status { text-align: center; font-size: 9px; margin: 4px 0 5px; padding: 3px 5px; background: #f0f0f0; font-weight: 900; }
+.pi-footer { text-align: center; font-size: 9px; margin-top: 6px; border-top: 1px solid #000; padding-top: 4px; line-height: 1.6; }
 .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-.pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 7px; text-align: center; }
+.pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; text-align: center; }
 `;
 
 const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&display=swap">';
@@ -155,20 +155,20 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 3mm 2mm; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:9px; font-weight:700; width:47mm; margin:0 auto; padding:2px 0 20mm; line-height:1.5; letter-spacing:-0.2px; background:white; }
-* { box-sizing:border-box; font-weight:700; }
-h2 { text-align:center; font-size:13px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
-p { text-align:center; margin:1px 0; font-size:8px; }
+body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:10px; font-weight:700; width:47mm; margin:0 auto; padding:2px 0 20mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
+* { box-sizing:border-box; font-weight:700; color:#000; }
+h2 { text-align:center; font-size:14px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
+p { text-align:center; margin:1px 0; font-size:9px; }
 img { display:block; margin:0 auto 3px; max-width:70px; }
-hr { border:none; border-top:1px dashed #000; margin:4px 0 3px; }
+hr { border:none; border-top:1px solid #000; margin:4px 0 3px; }
 hr.solid { border-top:2px solid #000; margin:5px 0 4px; }
-table { width:100%; border-collapse:collapse; font-size:8px; }
-th { border-bottom:2px solid #000; padding:2px 0; font-size:7px; text-align:left; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; }
+table { width:100%; border-collapse:collapse; font-size:9px; }
+th { border-bottom:2px solid #000; padding:3px 0; font-size:8px; text-align:left; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; }
 th:nth-child(2),th:nth-child(3),th:nth-child(4) { text-align:right; }
-td { padding:3px 0; border-bottom:1px dashed #000; }
-.divider td { border-top:2px solid #000; border-bottom:none; font-size:10px; padding-top:4px; }
-.gst-row td { border-bottom:1px dashed #000; font-size:8px; }
-.footer { text-align:center; font-size:8px; margin-top:6px; border-top:1px dashed #000; padding-top:4px; line-height:1.55; }
+td { padding:3px 0; border-bottom:1px solid #000; }
+.divider td { border-top:2px solid #000; border-bottom:none; font-size:11px; font-weight:900; padding-top:4px; }
+.gst-row td { border-bottom:1px solid #000; font-size:9px; }
+.footer { text-align:center; font-size:9px; margin-top:6px; border-top:1px solid #000; padding-top:4px; line-height:1.6; }
 </style>${RECEIPT_FONT_LINK}
 <img src="img/logo.png" alt="Servicell Belize">
 <h2>SERVICELL BELIZE</h2>

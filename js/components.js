@@ -770,3 +770,25 @@ if (IS_ANDROID) {
         if (e.key === 'Escape') releaseScrollIfSafe();
     });
 })();
+
+// ── Service Policy Modal ──────────────────────────────────────────────────────
+function openPolicyModal() {
+    const m = document.getElementById('policyModal');
+    if (!m) return;
+    // Lazy-load iframe on first open
+    const iframe = document.getElementById('policyIframe');
+    if (iframe && iframe.src === 'about:blank') {
+        iframe.src = 'https://servicellbze.github.io/ServiCell/policy.html';
+    }
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    m.onclick = function(e) { if (e.target === m) closePolicyModal(); };
+}
+function closePolicyModal() {
+    const m = document.getElementById('policyModal');
+    if (!m) return;
+    m.style.display = 'none';
+    document.body.style.overflow = '';
+}
+window.openPolicyModal  = openPolicyModal;
+window.closePolicyModal = closePolicyModal;

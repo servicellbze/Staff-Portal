@@ -437,44 +437,144 @@ function exportCSV() {
 // ── Print Report (PDF) ────────────────────────────────────────────────────────
 function exportPDF() {
     const { from, to } = getDateRange();
-    const allS     = window._allSales || [];
-    const sales    = allS.filter(s => s.status !== 'reversed');
-    const reversed = allS.filter(s => s.status === 'reversed');
-    const gross    = sales.reduce((t, s) => t + (parseFloat(s.amountPaid)||0), 0);
-    const revRate  = (sales.length + reversed.length) > 0
-        ? Math.round((reversed.length / (sales.length + reversed.length)) * 100) : 0;
+    const allS      = window._allSales || [];
+    const allJobs   = window._allJobs  || [];
+    const sales     = allS.filter(s => s.status !== 'reversed');
+    const reversed  = allS.filter(s => s.status === 'reversed');
+    const gross     = sales.reduce((t, s) => t + (parseFloat(s.amountPaid)||0), 0);
+    const totalTx   = sales.length + reversed.length;
+    const revRate   = totalTx > 0 ? Math.round((reversed.length / totalTx) * 100) : 0;
+
+    // Jobs in period
+    const jobs = allJobs.filter(j => {
+        if (!j.dateReceived) return true;
+        const d = j.dateReceived.slice(0, 10);
+        return d >= from && d <= to;
+    });
+    const completedJobs = jobs.filter(j => ['resolved','ready'].includes((j.status||'').toLowerCase()));
+
+    // Top items
     const itemCounts = {};
     sales.forEach(s => { tryParseJSON(s.items, []).forEach(i => { if (i.name) itemCounts[i.name] = (itemCounts[i.name]||0) + (i.qty||1); }); });
-    const topItems = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0, 5);
+    const topItems = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
 
-    const itemRows = topItems.map(([n, q]) => '<tr><td>' + escH(n) + '</td><td>' + q + '</td></tr>').join('') || '<tr><td colspan="2" style="color:#94a3b8;">No data</td></tr>';
+    // Technician performance
+    const jobClaimMap = {};
+    jobs.forEach(j => { if (j.claimedBy && j.id) jobClaimMap[String(j.id)] = j.claimedBy; });
+    const techRevenue = {};
+    sales.forEach(s => {
+        if (!s.jobId) return;
+        const claimer = jobClaimMap[String(s.jobId)];
+        if (!claimer) return;
+        techRevenue[claimer] = (techRevenue[claimer] || 0) + (parseFloat(s.amountPaid)||0);
+    });
+    const techs = {};
+    jobs.forEach(j => {
+        const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
+        if (!techs[t]) techs[t] = { completed: 0, assigned: 0 };
+        techs[t].assigned++;
+        if (['resolved','ready'].includes((j.status||'').toLowerCase())) techs[t].completed++;
+    });
+    const techSorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
+    const maxCompleted = Math.max(...techSorted.map(([,d]) => d.completed), 0);
+    const maxRevenue   = Math.max(...techSorted.map(([n]) => techRevenue[n]||0), 0);
+    const soloJobsWinner = techSorted.filter(([n,d]) => n !== 'Unassigned' && d.completed === maxCompleted && maxCompleted > 0).length === 1
+        ? techSorted.find(([n,d]) => n !== 'Unassigned' && d.completed === maxCompleted)[0] : null;
+    const soloRevWinner  = techSorted.filter(([n]) => n !== 'Unassigned' && (techRevenue[n]||0) === maxRevenue && maxRevenue > 0).length === 1
+        ? techSorted.find(([n]) => n !== 'Unassigned' && (techRevenue[n]||0) === maxRevenue)[0] : null;
 
-    const html = '<html><head><title>ServiCell Report</title><style>'
-        + 'body{font-family:Arial,sans-serif;padding:24px;max-width:700px;margin:0 auto;color:#1a1a1a;}'
-        + 'h1{font-size:1.4rem;margin-bottom:4px;}h2{font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:#2563eb;margin:20px 0 8px;}'
-        + '.sub{color:#666;font-size:0.85rem;margin-bottom:20px;}'
-        + 'table{width:100%;border-collapse:collapse;margin-bottom:16px;}td,th{padding:7px 10px;border-bottom:1px solid #eee;font-size:0.85rem;}'
-        + 'th{text-align:left;font-weight:700;background:#f8fafc;}td:last-child{text-align:right;}'
-        + '.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}'
-        + '.kpi{flex:1;min-width:110px;padding:12px;border:1px solid #e2e8f0;border-radius:8px;}'
-        + '.kpi-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:4px;}'
-        + '.kpi-val{font-size:1.2rem;font-weight:800;}'
-        + '.footer{margin-top:24px;font-size:0.75rem;color:#94a3b8;text-align:center;border-top:1px solid #eee;padding-top:12px;}'
-        + '</style></head><body>'
-        + '<h1>ServiCell Belize &mdash; Statistics Report</h1>'
-        + '<div class="sub">Period: ' + from + ' to ' + to + ' &nbsp;&bull;&nbsp; Generated: ' + new Date().toLocaleString() + '</div>'
-        + '<h2>Key Metrics</h2>'
+    // Cashier performance
+    const cashiers = {};
+    sales.forEach(s => {
+        const c = s.cashier || 'Unknown';
+        if (!cashiers[c]) cashiers[c] = { sales: 0, revenue: 0 };
+        cashiers[c].sales++;
+        cashiers[c].revenue += parseFloat(s.amountPaid)||0;
+    });
+    const cashierSorted = Object.entries(cashiers).sort((a,b) => b[1].revenue - a[1].revenue);
+
+    // Job status breakdown
+    const statusCounts = {};
+    jobs.forEach(j => { const s = (j.status||'received').toLowerCase(); statusCounts[s] = (statusCounts[s]||0) + 1; });
+
+    // ── HTML ──
+    const css = `
+        body{font-family:Arial,sans-serif;padding:28px 32px;max-width:760px;margin:0 auto;color:#1a1a1a;font-size:13px;}
+        h1{font-size:1.5rem;font-weight:800;margin:0 0 2px;}
+        .sub{color:#64748b;font-size:0.82rem;margin-bottom:6px;}
+        .meta{color:#64748b;font-size:0.78rem;margin-bottom:24px;padding-bottom:12px;border-bottom:2px solid #e2e8f0;}
+        h2{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.5px;color:#2563eb;margin:22px 0 8px;font-weight:800;}
+        .kpi-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+        .kpi{flex:1;min-width:100px;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;}
+        .kpi-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:1px;color:#64748b;margin-bottom:4px;}
+        .kpi-val{font-size:1.25rem;font-weight:800;color:#1a1a1a;}
+        table{width:100%;border-collapse:collapse;margin-bottom:4px;}
+        th{text-align:left;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#64748b;padding:6px 8px;border-bottom:2px solid #e2e8f0;background:#f8fafc;}
+        td{padding:7px 8px;border-bottom:1px solid #f1f5f9;font-size:0.85rem;vertical-align:middle;}
+        tr:last-child td{border-bottom:none;}
+        .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:0.65rem;font-weight:700;margin-left:6px;}
+        .badge-jobs{background:#dcfce7;color:#166534;}
+        .badge-rev{background:#dbeafe;color:#1e40af;}
+        .right{text-align:right;}
+        .footer{margin-top:28px;font-size:0.72rem;color:#94a3b8;text-align:center;border-top:1px solid #e2e8f0;padding-top:12px;}
+        @media print{@page{margin:15mm 18mm;}}
+    `;
+
+    const itemRows = topItems.map(([n,q]) =>
+        '<tr><td>' + escH(n) + '</td><td class="right">' + q + '</td></tr>'
+    ).join('') || '<tr><td colspan="2" style="color:#94a3b8;">No data</td></tr>';
+
+    const techRows = techSorted.map(([name, d]) => {
+        const rev = techRevenue[name] || 0;
+        const badges = (name === soloJobsWinner ? '<span class="badge badge-jobs">🏆 Most Jobs</span>' : '')
+                     + (name === soloRevWinner  ? '<span class="badge badge-rev">💰 Top Revenue</span>' : '');
+        return '<tr><td>' + escH(name) + badges + '</td>'
+            + '<td class="right">' + d.assigned + '</td>'
+            + '<td class="right">' + d.completed + '</td>'
+            + '<td class="right">' + (rev > 0 ? bz(rev) : '—') + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="color:#94a3b8;">No data</td></tr>';
+
+    const cashierRows = cashierSorted.map(([name, d]) =>
+        '<tr><td>' + escH(name) + '</td><td class="right">' + d.sales + '</td><td class="right">' + bz(d.revenue) + '</td></tr>'
+    ).join('') || '<tr><td colspan="3" style="color:#94a3b8;">No data</td></tr>';
+
+    const statusRows = Object.entries(statusCounts).sort((a,b) => b[1]-a[1]).map(([s,c]) =>
+        '<tr><td>' + escH(s.charAt(0).toUpperCase() + s.slice(1)) + '</td><td class="right">' + c + '</td></tr>'
+    ).join('') || '<tr><td colspan="2" style="color:#94a3b8;">No data</td></tr>';
+
+    const html = '<html><head><title>ServiCell Report</title><style>' + css + '</style></head><body>'
+        + '<h1>ServiCell Belize &mdash; Performance Report</h1>'
+        + '<div class="sub">Period: <strong>' + from + '</strong> to <strong>' + to + '</strong></div>'
+        + '<div class="meta">Generated: ' + new Date().toLocaleString() + ' &nbsp;&bull;&nbsp; Confidential &mdash; Manager Use Only</div>'
+
+        + '<h2>Financial Summary</h2>'
         + '<div class="kpi-row">'
         + '<div class="kpi"><div class="kpi-label">Gross Revenue</div><div class="kpi-val">' + bz(gross) + '</div></div>'
         + '<div class="kpi"><div class="kpi-label">Transactions</div><div class="kpi-val">' + sales.length + '</div></div>'
         + '<div class="kpi"><div class="kpi-label">Reversals</div><div class="kpi-val">' + reversed.length + ' (' + revRate + '%)</div></div>'
+        + '<div class="kpi"><div class="kpi-label">Jobs Completed</div><div class="kpi-val">' + completedJobs.length + '</div></div>'
         + '</div>'
+
+        + '<h2>Technician Performance</h2>'
+        + '<table><tr><th>Technician</th><th class="right">Assigned</th><th class="right">Completed</th><th class="right">Revenue</th></tr>'
+        + techRows + '</table>'
+
+        + '<h2>Cashier Performance</h2>'
+        + '<table><tr><th>Cashier</th><th class="right">Sales</th><th class="right">Gross Revenue</th></tr>'
+        + cashierRows + '</table>'
+
+        + '<h2>Job Status Breakdown</h2>'
+        + '<table><tr><th>Status</th><th class="right">Count</th></tr>'
+        + statusRows + '</table>'
+
         + '<h2>Top Selling Items</h2>'
-        + '<table><tr><th>Item</th><th>Qty Sold</th></tr>' + itemRows + '</table>'
-        + '<div class="footer">ServiCell Belize Staff Portal &bull; Confidential</div>'
+        + '<table><tr><th>Item</th><th class="right">Qty Sold</th></tr>'
+        + itemRows + '</table>'
+
+        + '<div class="footer">ServiCell Belize Staff Portal &bull; This report is confidential and intended for management use only.</div>'
         + '</body></html>';
 
-    const w = window.open('', '_blank', 'width=750,height=700');
+    const w = window.open('', '_blank', 'width=820,height=900');
     if (!w) { alert('Allow popups to print the report.'); return; }
     w.document.write(html); w.document.close(); w.focus(); w.print();
     setTimeout(() => w.close(), 1500);
