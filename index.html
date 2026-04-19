@@ -1117,6 +1117,16 @@
             const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true';
             const duration = [1000, 1500][Math.floor(Math.random() * 2)];
 
+            // Show suspended notice if redirected from force-logout
+            if (new URLSearchParams(window.location.search).get('revoked') === '1') {
+                const notice = document.createElement('div');
+                notice.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 22px;border-radius:99px;font-size:0.88rem;font-weight:700;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
+                notice.textContent = '🚫 Your session was ended by a manager. Please log back in.';
+                document.body.appendChild(notice);
+                setTimeout(() => notice.remove(), 6000);
+                history.replaceState({}, '', window.location.pathname);
+            }
+
             setTimeout(() => {
                 if (splash) splash.classList.add('exiting');
                 setTimeout(() => {
@@ -1245,7 +1255,9 @@
                     // Track failed attempts
                     let attempts = parseInt(localStorage.getItem(attemptsKey) || '0') + 1;
                     localStorage.setItem(attemptsKey, attempts);
-                    if (attempts >= 3) {
+                    if (data.revoked) {
+                        alert('🚫 Your account has been suspended. Please contact your manager.');
+                    } else if (attempts >= 3) {
                         localStorage.setItem(lockKey, JSON.stringify({ until: Date.now() + 20 * 60 * 1000 }));
                         localStorage.removeItem(attemptsKey);
                         alert('🔒 Too many failed attempts. Try again in 20 minutes.');

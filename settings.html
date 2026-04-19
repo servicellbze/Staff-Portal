@@ -334,21 +334,21 @@
 
         /* Merlot preview */
         .preview-merlot {
-            background: linear-gradient(135deg, #faf6f1 0%, #f0e6d8 100%);
+            background: linear-gradient(135deg, #1a0a0e 0%, #2d1018 100%);
         }
 
         .preview-merlot .preview-nav {
-            background: rgba(255, 252, 248, 0.9);
-            border-color: rgba(139, 38, 53, 0.15);
+            background: rgba(45, 16, 24, 0.75);
+            border-color: rgba(201, 100, 80, 0.18);
         }
 
         .preview-merlot .preview-card {
-            background: rgba(255, 252, 248, 0.9);
-            border-color: rgba(139, 38, 53, 0.12);
+            background: rgba(45, 16, 24, 0.75);
+            border-color: rgba(201, 100, 80, 0.18);
         }
 
         .preview-merlot .preview-dot {
-            background: #8b2635;
+            background: #e8735a;
         }
 
         .preview-nav {
@@ -1514,12 +1514,30 @@
                     <span class="about-key">Last data sync</span>
                     <span class="about-val" id="aboutSync">—</span>
                 </div>
+                <div style="margin-top:20px;padding:14px 16px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(var(--primary-rgb),0.04);font-size:0.75rem;line-height:1.7;color:var(--text-dim);">
+                    <div style="font-weight:800;color:var(--text-main);margin-bottom:6px;font-size:0.8rem;">© 2026 ServiCell Belize</div>
+                    This portal was built with care for the ServiCell team. Please keep it within the family — don't share your credentials or distribute the app outside of work.<br><br>
+                    Built for the people who keep the shop running. 🛠️
+                </div>
                 <button class="clear-btn" onclick="clearCache()">
                     🗑️ Clear cached data
                 </button>
                 <button class="change-password-btn" onclick="openChangePasswordModal()">
                     🔐 Change Password
                 </button>
+            </div>
+        </div>
+
+        <!-- ── Manager Only: Staff Access ── -->
+        <div class="settings-card" id="staffAccessCard" style="display:none;">
+            <div class="card-header">
+                <h2>👥 Staff Access</h2>
+            </div>
+            <div class="card-body">
+                <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:14px;">Force-logout a staff member by suspending their account. They'll be redirected to the login screen within 60 seconds. You can restore access at any time.</p>
+                <div id="staffAccessList" style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="font-size:0.82rem;color:var(--text-dim);">Loading staff...</div>
+                </div>
             </div>
         </div>
 
@@ -1648,10 +1666,12 @@
                 '--glass': 'rgba(255, 255, 255, 0.85)',
                 '--glass-border': 'rgba(37, 99, 235, 0.1)',
                 '--glass-strong': 'rgba(255, 255, 255, 0.95)',
+                '--white-alt': '#e2e8f0',
                 '--text-main': '#0f172a',
                 '--text-dim': '#64748b',
                 '--text-light': '#94a3b8',
                 '--primary': '#2563eb',
+                '--primary-rgb': '37, 99, 235',
                 '--primary-light': '#3b82f6',
                 '--primary-dark': '#1d4ed8',
                 '--accent': '#60a5fa',
@@ -1662,10 +1682,12 @@
                 '--glass': 'rgba(15, 23, 42, 0.85)',
                 '--glass-border': 'rgba(255, 255, 255, 0.08)',
                 '--glass-strong': 'rgba(15, 23, 42, 0.97)',
+                '--white-alt': '#1e293b',
                 '--text-main': '#f1f5f9',
                 '--text-dim': '#94a3b8',
                 '--text-light': '#64748b',
                 '--primary': '#60a5fa',
+                '--primary-rgb': '96, 165, 250',
                 '--primary-light': '#93c5fd',
                 '--primary-dark': '#3b82f6',
                 '--accent': '#93c5fd',
@@ -1676,29 +1698,32 @@
                 '--glass': 'rgba(15, 32, 68, 0.85)',
                 '--glass-border': 'rgba(37, 99, 235, 0.35)',
                 '--glass-strong': 'rgba(10, 22, 40, 0.97)',
+                '--white-alt': '#0f2044',
                 '--text-main': '#e0eeff',
                 '--text-dim': '#7eaee8',
                 '--text-light': '#4d7db8',
                 '--primary': '#3b82f6',
+                '--primary-rgb': '59, 130, 246',
                 '--primary-light': '#60a5fa',
                 '--primary-dark': '#2563eb',
                 '--accent': '#60a5fa',
                 '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
             },
             merlot: {
-                '--bg-gradient': 'linear-gradient(135deg, #faf6f1 0%, #f0e6d8 100%)',
-                '--glass': 'rgba(255, 252, 248, 0.9)',
-                '--glass-border': 'rgba(139, 38, 53, 0.12)',
-                '--glass-strong': 'rgba(255, 252, 248, 0.98)',
-                '--white-alt': '#f5ebe0',
-                '--text-main': '#4a1c24',
-                '--text-dim': '#8b5a5a',
-                '--text-light': '#b89090',
-                '--primary': '#8b2635',
-                '--primary-light': '#a63d4d',
-                '--primary-dark': '#6b1e2a',
+                '--bg-gradient': 'linear-gradient(135deg, #1a0a0e 0%, #2d1018 100%)',
+                '--glass': 'rgba(45, 16, 24, 0.75)',
+                '--glass-border': 'rgba(201, 100, 80, 0.18)',
+                '--glass-strong': 'rgba(26, 10, 14, 0.95)',
+                '--white-alt': '#2d1018',
+                '--text-main': '#f5e6e0',
+                '--text-dim': '#c49a8a',
+                '--text-light': '#8b5a50',
+                '--primary': '#e8735a',
+                '--primary-rgb': '232, 115, 90',
+                '--primary-light': '#f0957e',
+                '--primary-dark': '#c9533c',
                 '--accent': '#c9a86c',
-                '--shadow-md': '0 10px 30px rgba(139, 38, 53, 0.15)',
+                '--shadow-md': '0 10px 30px rgba(232, 115, 90, 0.25)',
             }
         };
 
@@ -1710,14 +1735,32 @@
 
         function setTheme(name) {
             localStorage.setItem('scTheme', name);
+            // Inject a temporary transition so the theme crossfades smoothly
+            const style = document.createElement('style');
+            style.id = '__theme-transition__';
+            style.textContent = '*, *::before, *::after { transition: background 0.4s ease, color 0.3s ease, border-color 0.4s ease, box-shadow 0.4s ease !important; }';
+            document.head.appendChild(style);
             applyTheme(name);
             document.querySelectorAll('.theme-card').forEach(c => {
                 c.classList.toggle('selected', c.dataset.theme === name);
             });
             // Update status bar color
-            const THEME_COLORS = { light:'#f8fafc', dark:'#0f172a', scblue:'#0a1628', merlot:'#faf6f1' };
+            const THEME_COLORS = { light:'#f8fafc', dark:'#0f172a', scblue:'#0a1628', merlot:'#1a0a0e' };
             const meta = document.querySelector('meta[name="theme-color"]');
             if (meta) meta.content = THEME_COLORS[name] || '#0f172a';
+            // Force nav repaint
+            document.querySelectorAll('.nav-btn, .mobile-nav-btn, .account-chip, .account-avatar, .bell-btn, .mobile-avatar, .dropdown-role-badge').forEach(el => {
+                el.style.color = '';
+                el.style.background = '';
+                el.style.borderColor = '';
+            });
+            const nav = document.getElementById('mainNav');
+            if (nav) { nav.style.display = 'none'; void nav.offsetHeight; nav.style.display = ''; }
+            // Remove the transition override after the animation completes
+            setTimeout(() => {
+                const s = document.getElementById('__theme-transition__');
+                if (s) s.remove();
+            }, 500);
         }
 
         // ── Compact mode ────────────────────────────────────────────────────
@@ -2235,6 +2278,12 @@
                 document.getElementById('autoPrintToggle').checked = localStorage.getItem('scAutoPrintReceipt') === '1';
             }
 
+            // ── Staff Access (manager only) ───────────────────────────────────
+            if (_role === 'manager') {
+                document.getElementById('staffAccessCard').style.display = 'block';
+                loadStaffList();
+            }
+
             // ── Collapsible changelog ─────────────────────────────────────────
             document.querySelectorAll('.changelog-entry').forEach(function(entry) {
                 const badge = entry.querySelector('.changelog-badge');
@@ -2257,6 +2306,111 @@
             });
         });
     </script>
+
+    <script>
+    // ── Staff Access ──────────────────────────────────────────────────────────
+    const SCRIPT_URL_SETTINGS = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+    let _pendingRevoke = null;
+
+    function showStaffToast(msg, type) {
+        let t = document.getElementById('staffToast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'staffToast';
+            t.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 22px;border-radius:99px;font-size:0.88rem;font-weight:600;box-shadow:0 20px 40px rgba(0,0,0,0.4);z-index:99999;transition:transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);white-space:nowrap;border:1px solid rgba(255,255,255,0.1);font-family:inherit;';
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        t.style.background = type === 'ok' ? '#059669' : type === 'err' ? '#dc2626' : '#1e293b';
+        t.style.color = '#fff';
+        t.style.transform = 'translateX(-50%) translateY(0)';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => { t.style.transform = 'translateX(-50%) translateY(100px)'; }, 3000);
+    }
+
+    async function loadStaffList() {
+        const el = document.getElementById('staffAccessList');
+        const currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+        el.innerHTML = '<div style="font-size:0.82rem;color:var(--text-dim);">Loading...</div>';
+        try {
+            const res  = await fetch(SCRIPT_URL_SETTINGS + '?action=listusers');
+            const data = await res.json();
+            const users = (data.users || []).filter(u => u.username !== currentUser);
+            if (!users.length) { el.innerHTML = '<div style="font-size:0.82rem;color:var(--text-dim);">No other staff found.</div>'; return; }
+            el.innerHTML = users.map(u => {
+                const isRevoked = u.revoked;
+                return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);gap:10px;">
+                    <div style="min-width:0;">
+                        <div style="font-size:0.88rem;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(u.displayName || u.username)}</div>
+                        <div style="font-size:0.72rem;color:var(--text-dim);">${escapeHtml(u.username)} &bull; ${escapeHtml(u.role)}${isRevoked ? ' &bull; <span style="color:#ef4444;font-weight:800;">Suspended</span>' : ''}</div>
+                    </div>
+                    <button onclick="confirmRevoke('${escapeHtml(u.username)}', ${!isRevoked})"
+                        style="flex-shrink:0;padding:7px 14px;border-radius:99px;border:none;font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;
+                        background:${isRevoked ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
+                        color:${isRevoked ? '#10b981' : '#ef4444'};">
+                        ${isRevoked ? '✅ Restore' : '🚫 Suspend'}
+                    </button>
+                </div>`;
+            }).join('');
+        } catch(e) {
+            el.innerHTML = '<div style="font-size:0.82rem;color:#ef4444;">Could not load staff list. Make sure GAS is redeployed.</div>';
+        }
+    }
+
+    function escapeHtml(s) { const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+
+    function confirmRevoke(username, revoke) {
+        _pendingRevoke = { username, revoke };
+        const modal = document.getElementById('revokeConfirmModal');
+        const msg   = document.getElementById('revokeConfirmMsg');
+        const btn   = document.getElementById('revokeConfirmBtn');
+        msg.textContent = revoke
+            ? `Suspend ${username}? They will be logged out within 60 seconds and cannot log back in until restored.`
+            : `Restore ${username}? They will be able to log in again immediately.`;
+        btn.textContent = revoke ? '🚫 Yes, Suspend' : '✅ Yes, Restore';
+        btn.style.background = revoke ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)';
+        btn.style.color = revoke ? '#ef4444' : '#10b981';
+        modal.style.display = 'flex';
+    }
+
+    function closeRevokeModal() {
+        document.getElementById('revokeConfirmModal').style.display = 'none';
+        _pendingRevoke = null;
+    }
+
+    async function executeRevoke() {
+        if (!_pendingRevoke) return;
+        const { username, revoke } = _pendingRevoke;
+        closeRevokeModal();
+        const currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+        const action = revoke ? 'revokeuser' : 'restoreuser';
+        try {
+            const params = new URLSearchParams({ action, username, by: currentUser });
+            const res  = await fetch(SCRIPT_URL_SETTINGS + '?' + params, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showStaffToast(revoke ? '🚫 ' + username + ' suspended' : '✅ ' + username + ' restored', revoke ? 'err' : 'ok');
+                loadStaffList();
+            } else {
+                showStaffToast('❌ ' + (data.error || 'Could not update'), 'err');
+            }
+        } catch(e) {
+            showStaffToast('❌ Connection error', 'err');
+        }
+    }
+    </script>
+
+    <!-- ── Revoke Confirm Modal ── -->
+    <div id="revokeConfirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:20px;width:100%;max-width:360px;padding:24px;box-shadow:0 25px 60px rgba(0,0,0,0.4);">
+            <div style="font-size:1rem;font-weight:800;color:var(--text-main);margin-bottom:10px;">⚠️ Confirm Action</div>
+            <p id="revokeConfirmMsg" style="font-size:0.85rem;color:var(--text-dim);line-height:1.6;margin-bottom:20px;"></p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="closeRevokeModal()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
+                <button id="revokeConfirmBtn" onclick="executeRevoke()" style="flex:1;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;"></button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
