@@ -41,7 +41,6 @@
             gap: 16px;
             margin-bottom: 20px;
             flex-wrap: wrap;
-            animation: fadeInUp 0.4s ease both;
         }
         .page-header-left h1 {
             font-size: 1.9rem;
@@ -80,7 +79,6 @@
             margin-bottom: 20px;
             font-size: 0.8rem;
             font-weight: 700;
-            animation: fadeInUp 0.4s ease 0.05s both;
             flex-wrap: wrap;
         }
 
@@ -93,7 +91,6 @@
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-full);
             padding: 4px;
-            animation: fadeInUp 0.4s ease 0.08s both;
             overflow-x: auto;
             scrollbar-width: none;
         }
@@ -219,7 +216,6 @@
             font-size: 0.88rem;
             font-weight: 700;
             cursor: pointer;
-            backdrop-filter: blur(10px);
             transition: border-color var(--transition-fast);
             white-space: nowrap;
             text-decoration: none;
@@ -325,8 +321,7 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(6px);
+            background: rgba(0, 0, 0, 0.55);
             z-index: var(--z-modal);
             display: flex;
             align-items: center;
@@ -341,7 +336,6 @@
             background: var(--glass-strong);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-lg);
-            backdrop-filter: blur(20px);
             padding: 26px 26px 22px;
             width: 100%;
             max-width: 540px;
@@ -490,7 +484,6 @@
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-md);
             padding: 20px;
-            backdrop-filter: blur(10px);
             margin-bottom: 14px;
         }
         .eod-section h3 {
@@ -619,8 +612,8 @@
             to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50%       { opacity: 0.5; transform: scale(0.85); }
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
         }
 
         /* -- Responsive ---------------------------------- */
@@ -652,7 +645,6 @@
             outline: none;
             margin-bottom: 16px;
             cursor: pointer;
-            backdrop-filter: blur(10px);
             -webkit-appearance: none;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -686,7 +678,7 @@
         .receipt-badge.reversed { background: rgba(100,116,139,0.12); color: #64748b; }
 
         /* ── Pagination ── */
-        .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); backdrop-filter: blur(10px); flex-wrap: wrap; }
+        .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); flex-wrap: wrap; }
         .pagination-info { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
         .pagination-controls { display: flex; align-items: center; gap: 6px; }
         .page-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-family: var(--font-family); }
