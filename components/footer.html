@@ -6,8 +6,101 @@
         </div>
         
         <div class="footer-right">
+            <button class="util-link" onclick="openPolicyModal()" style="background:none;border:none;cursor:pointer;font-family:inherit;">📋 Service Policy</button>
             <a href="https://www.google.com/maps?q=ServiCell+Belize" target="_blank" class="util-link">📍 Shop Location</a>
             <span class="copyright">&copy; 2026</span>
         </div>
     </div>
 </footer>
+
+<!-- ── Service Policy Modal ── -->
+<style>
+#policyModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+#policyModalCard {
+    background: var(--glass-strong);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 680px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+}
+#policyModalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--glass-border);
+    flex-shrink: 0;
+}
+#policyModalHeader span {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--text-main);
+}
+#policyModalClose {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(100,116,139,0.15);
+    color: var(--text-dim);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+}
+#policyModalClose:hover { background: rgba(100,116,139,0.28); }
+#policyIframeWrap {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+#policyIframe {
+    border: none;
+    width: calc(100% + 18px);
+    height: calc(100% + 120px);
+    background: #fff;
+    display: block;
+    margin-bottom: -120px;
+    margin-right: -18px;
+}
+@media (max-width: 600px) {
+    #policyModal { padding: 0; align-items: flex-end; }
+    #policyModalCard {
+        border-radius: 20px 20px 0 0;
+        max-width: 100%;
+        height: 88vh;
+    }
+}
+</style>
+
+<div id="policyModal">
+    <div id="policyModalCard">
+        <div id="policyModalHeader">
+            <span>📋 Service Policy</span>
+            <button id="policyModalClose" onclick="closePolicyModal()">✕</button>
+        </div>
+        <div id="policyIframeWrap">
+            <iframe id="policyIframe"
+                src="about:blank"
+                title="ServiCell Service Policy"
+                loading="lazy">
+            </iframe>
+        </div>
+    </div>
+</div>
