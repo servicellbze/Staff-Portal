@@ -54,20 +54,20 @@
             '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
         },
         merlot: {
-            '--bg-gradient': 'linear-gradient(135deg, #faf6f1 0%, #f0e6d8 100%)',
-            '--glass': 'rgba(255, 252, 248, 0.9)',
-            '--glass-border': 'rgba(139, 38, 53, 0.12)',
-            '--glass-strong': 'rgba(255, 252, 248, 0.98)',
-            '--white-alt': '#f5ebe0',
-            '--text-main': '#4a1c24',
-            '--text-dim': '#8b5a5a',
-            '--text-light': '#b89090',
-            '--primary': '#8b2635',
-            '--primary-rgb': '139, 38, 53',
-            '--primary-light': '#a63d4d',
-            '--primary-dark': '#6b1e2a',
+            '--bg-gradient': 'linear-gradient(135deg, #1a0a0e 0%, #2d1018 100%)',
+            '--glass': 'rgba(45, 16, 24, 0.75)',
+            '--glass-border': 'rgba(201, 100, 80, 0.18)',
+            '--glass-strong': 'rgba(26, 10, 14, 0.95)',
+            '--white-alt': '#2d1018',
+            '--text-main': '#f5e6e0',
+            '--text-dim': '#c49a8a',
+            '--text-light': '#8b5a50',
+            '--primary': '#e8735a',
+            '--primary-rgb': '232, 115, 90',
+            '--primary-light': '#f0957e',
+            '--primary-dark': '#c9533c',
             '--accent': '#c9a86c',
-            '--shadow-md': '0 10px 30px rgba(139, 38, 53, 0.15)',
+            '--shadow-md': '0 10px 30px rgba(232, 115, 90, 0.25)',
         }
     };
 
@@ -87,7 +87,7 @@
         light:   '#f8fafc',
         dark:    '#0f172a',
         scblue:  '#0a1628',
-        merlot:  '#faf6f1'
+        merlot:  '#1a0a0e'
     };
     const themeColor = THEME_COLORS[theme] || '#0f172a';
     let metaTheme = document.querySelector('meta[name="theme-color"]');

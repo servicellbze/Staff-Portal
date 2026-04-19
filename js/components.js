@@ -354,6 +354,27 @@ if (document.readyState === 'loading') {
 // Poll every 30 seconds for new notifications from other devices
 setInterval(() => InAppNotif.syncFromServer(), 30000);
 
+// ── Revoke check — runs every 60s ────────────────────────────────────────────
+async function checkRevoked() {
+    const username = getLoggedInUser();
+    if (!username || !navigator.onLine) return;
+    const page = window.location.pathname.split('/').pop();
+    if (page === 'index.html' || !page) return; // skip on login page
+    const url = (typeof window.SCRIPT_URL !== 'undefined' && window.SCRIPT_URL)
+        || 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+    try {
+        const res  = await fetch(`${url}?action=checkrole&username=${encodeURIComponent(username)}`);
+        const data = await res.json();
+        if (data.revoked) {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.replace('index.html?revoked=1');
+        }
+    } catch (_) {}
+}
+setInterval(checkRevoked, 60000);
+window.addEventListener('sc-back-online', checkRevoked);
+
 // Also sync when coming back online or tab becomes visible
 window.addEventListener('sc-back-online', () => InAppNotif.syncFromServer());
 document.addEventListener('visibilitychange', () => {
