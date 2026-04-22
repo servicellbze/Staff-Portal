@@ -1985,6 +1985,20 @@
                         <label for="pay-card">💳 Card</label>
                     </div>
                 </div>
+
+                <!-- ── Add Photos (technician/manager only) ── -->
+                <div id="editPhotoSection" style="display:none;margin-top:20px;">
+                    <span class="edit-label">📷 Add Photos</span>
+                    <div id="editPhotoPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+                    <div style="display:flex;gap:8px;">
+                        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1.5px dashed var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+                            📁 Choose File
+                            <input type="file" id="editPhotoInput" accept="image/*" multiple style="display:none;" onchange="handleEditPhotos(event)">
+                        </label>
+                        <button type="button" onclick="editWebcamOpen()" style="flex:1;padding:10px;border-radius:12px;border:1.5px dashed var(--glass-border);background:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">📷 Camera</button>
+                    </div>
+                    <div id="editPhotoUploadStatus" style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;display:none;"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('editModal')">Cancel</button>
@@ -2148,30 +2162,37 @@
                 const stat = classifyStatus(j);
                 let storage = '—';
                 if (stat.class === 'abandoned') {
-                    // 1. Get the date it was finished/ready (j.dateCompleted)
                     const compDateStr = j.dateCompleted || j.dateAbandoned;
-
                     if (compDateStr) {
-                        const compDate = new Date(compDateStr);
-                        // 2. Add 90 days to find the exact date it became "Abandoned"
+                        const compDate   = new Date(compDateStr);
                         const deadlineDate = new Date(compDate.getTime() + (90 * 24 * 60 * 60 * 1000));
-
-                        const abandonedStr = deadlineDate.toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric'
-                        });
-
-                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">Abandoned On ${abandonedStr}</span>`;
+                        const abandonedStr = deadlineDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                        // Archive warning: 180 days from dateCompleted
+                        const archiveDaysLeft = j.dateCompleted
+                            ? 180 - Math.floor((Date.now() - new Date(j.dateCompleted).getTime()) / 86400000)
+                            : null;
+                        const archiveWarn = archiveDaysLeft !== null && archiveDaysLeft <= 3 && archiveDaysLeft >= 0
+                            ? `<div style="margin-top:3px;font-size:0.68rem;font-weight:800;color:#fbbf24;">⏳ Archiving in ${archiveDaysLeft}d</div>` : '';
+                        storage = `<span style="color:#fca5a5;font-size:0.78rem;font-weight:700;">Abandoned On ${abandonedStr}</span>${archiveWarn}`;
                     } else {
                         storage = `<span style="color:#fca5a5;font-weight:800;">ABANDONED</span>`;
                     }
-
+                } else if (stat.class === 'resolved') {
+                    // Resolved = picked up — archive after 60 days
+                    if (j.dateCompleted) {
+                        const daysPassed    = Math.floor((Date.now() - new Date(j.dateCompleted).getTime()) / 86400000);
+                        const archiveDaysLeft = 60 - daysPassed;
+                        if (archiveDaysLeft <= 3 && archiveDaysLeft >= 0) {
+                            storage = `<span style="font-size:0.72rem;font-weight:800;color:#fbbf24;">⏳ Archiving in ${archiveDaysLeft}d</span>`;
+                        } else {
+                            storage = `<span style="font-size:0.75rem;opacity:0.6;">${new Date(j.dateCompleted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>`;
+                        }
+                    }
                 } else if (stat.class === 'ready' || stat.class === 'unsuccessful') {
                     if (j.dateCompleted) {
-                        // 3. Simple calculation: (Deadline - Now) / Milliseconds in a day
                         const msElapsed = new Date() - new Date(j.dateCompleted);
                         const daysPassed = Math.floor(msElapsed / 86400000);
                         const daysLeft = 90 - daysPassed;
-
                         const alertStyle = daysLeft <= 7 ? 'color:#f87171;font-weight:800;' : 'opacity:0.8;';
                         storage = `<span style="${alertStyle}">${Math.max(0, daysLeft)}d left</span>`;
                     }
@@ -2428,30 +2449,49 @@
                 editBtn.style.opacity = locked ? '0.4' : '';
             }
 
-            // Inspection checklist — show all items, tick the ones that were checked
+            // Inspection checklist — unchecked = ✅ green (ok), checked = ❌ red (issue)
             const CHECKLIST_ITEMS = [
-                'Screen Broken / Cracked',
-                'Water Damage Indicator Tripped',
-                'Physical Body Damage',
-                'Charging Port Damaged',
-                'Camera Damaged'
+                { label: 'SIM Tray',                    key: 'SIM Tray Missing' },
+                { label: 'SIM Card / Memory Card',      key: 'SIM/Memory Card Missing' },
+                { label: 'Case / Cover',                key: 'Case/Cover Present' },
+                { label: 'Charger / Cable',             key: 'Charger/Cable Present' },
             ];
             const inspEl = document.getElementById('view-inspection');
             const checked = j.inspection && j.inspection !== 'No damage noted'
                 ? j.inspection.split(';').map(s => s.trim()).filter(Boolean)
                 : [];
-            let rows = CHECKLIST_ITEMS.map(item => {
-                const isChecked = checked.some(c => c.toLowerCase().includes(item.toLowerCase().split('/')[0].trim().toLowerCase()));
-                return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--glass-border);font-size:0.85rem;">
-                    <span style="font-size:1.1rem;flex-shrink:0;">${isChecked ? '☑' : '☐'}</span>
-                    <span style="color:${isChecked ? 'var(--danger)' : 'var(--text-main)'};">${item}</span>
-                </div>`;
-            });
+
+            // Check if this job has any of the new accessory checklist values
+            const hasNewChecklist = checked.some(c =>
+                ['sim tray','sim/memory','case/cover','charger/cable'].some(k => c.toLowerCase().includes(k))
+            );
+
+            let rows;
+            if (!hasNewChecklist && checked.length === 0) {
+                // Old job — no checklist data, show dash
+                rows = CHECKLIST_ITEMS.map(item =>
+                    `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--glass-border);font-size:0.85rem;">
+                        <span style="font-size:1rem;flex-shrink:0;color:var(--text-dim);">—</span>
+                        <span style="color:var(--text-dim);">${item.label}</span>
+                    </div>`
+                );
+                rows.push(`<div style="font-size:0.72rem;color:var(--text-dim);margin-top:6px;font-style:italic;">Checklist not recorded for this job.</div>`);
+            } else {
+                rows = CHECKLIST_ITEMS.map(item => {
+                    const isChecked = checked.some(c => c.toLowerCase().includes(item.key.toLowerCase().split('/')[0].trim().toLowerCase()));
+                    const icon  = isChecked ? '❌' : '✅';
+                    const color = isChecked ? 'var(--danger)' : 'var(--success)';
+                    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--glass-border);font-size:0.85rem;">
+                        <span style="font-size:1rem;flex-shrink:0;">${icon}</span>
+                        <span style="color:${color};font-weight:600;">${item.label}</span>
+                    </div>`;
+                });
+            }
             const otherItems = checked.filter(c => c.toLowerCase().startsWith('other:'));
             otherItems.forEach(o => {
                 rows.push(`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:0.85rem;">
-                    <span style="font-size:1.1rem;flex-shrink:0;">☑</span>
-                    <span style="color:var(--danger);">${o}</span>
+                    <span style="font-size:1rem;flex-shrink:0;">❌</span>
+                    <span style="color:var(--danger);font-weight:600;">${o}</span>
                 </div>`);
             });
             inspEl.innerHTML = rows.join('');
@@ -2575,11 +2615,13 @@
         function isLockedFromJob(j) {
             if (!j.claimedBy) return false;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            // Check stored role AND derive from username — use whichever grants more access
             const storedRole  = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
             const derivedRole = deriveRole(scUser);
-            const scRole = (storedRole === 'manager' || derivedRole === 'manager') ? 'manager' : (storedRole || derivedRole);
-            if (scRole === 'manager') return false;
+            const scRole = (storedRole === 'manager' || derivedRole === 'manager') ? 'manager'
+                         : (storedRole === 'technician' || derivedRole === 'technician') ? 'technician'
+                         : (storedRole || derivedRole);
+            // Managers always bypass, cashiers always bypass (limited to ready/resolved only)
+            if (scRole === 'manager' || scRole === 'cashier') return false;
             return scUser.trim() !== j.claimedBy.trim();
         }
 
@@ -2592,6 +2634,30 @@
             }
             currentEditId = id;
             currentJobData = j;
+
+            // Show photo section for technicians and managers only
+            const _scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+            const _scRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(_scUser)).toLowerCase().trim();
+            const _eff    = (_scRole === 'manager' || deriveRole(_scUser) === 'manager') ? 'manager'
+                          : (_scRole === 'technician' || deriveRole(_scUser) === 'technician') ? 'technician' : _scRole;
+            const photoSection = document.getElementById('editPhotoSection');
+            if (photoSection) {
+                photoSection.style.display = ['manager','technician'].includes(_eff) ? '' : 'none';
+            }
+
+            // Cashiers can only set Ready or Picked Up — hide all other status pills
+            const cashierOnly = ['es-ready', 'es-resolved'];
+            const allPills = ['es-received', 'es-fixing', 'es-testing', 'es-ready', 'es-resolved', 'es-unsuccessful'];
+            allPills.forEach(pid => {
+                const pill = document.getElementById(pid)?.closest('.edit-pill');
+                if (pill) pill.style.display = (_eff === 'cashier') ? (cashierOnly.includes(pid) ? '' : 'none') : '';
+            });
+            // Reset photo state
+            _editPhotos = [];
+            const preview = document.getElementById('editPhotoPreview');
+            if (preview) preview.innerHTML = '';
+            const status = document.getElementById('editPhotoUploadStatus');
+            if (status) { status.style.display = 'none'; status.textContent = ''; }
 
             document.getElementById('edit-id-tag').textContent = '#' + j.id;
 
@@ -2675,6 +2741,71 @@
             openModal('editModal');
         }
 
+        // ── Edit modal photo upload ────────────────────────────────────────────
+        let _editPhotos = [];
+
+        function handleEditPhotos(e) {
+            const files = Array.from(e.target.files);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    _editPhotos.push(ev.target.result);
+                    const idx = _editPhotos.length - 1;
+                    const preview = document.getElementById('editPhotoPreview');
+                    const thumb = document.createElement('div');
+                    thumb.style.cssText = 'position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border);flex-shrink:0;';
+                    thumb.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">
+                        <button onclick="_editPhotos[${idx}]=null;this.parentNode.remove();" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+                    preview.appendChild(thumb);
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        async function uploadEditPhotos(repairId) {
+            const images = _editPhotos.filter(Boolean);
+            if (!images.length) return;
+            const status = document.getElementById('editPhotoUploadStatus');
+            if (status) { status.style.display = 'block'; status.textContent = `⏳ Uploading ${images.length} photo${images.length > 1 ? 's' : ''}…`; }
+            // Get current image count so we don't overwrite existing ones
+            const job = getJob(repairId);
+            const existingCount = (job && job.inspectionImages) ? job.inspectionImages.length : 0;
+            for (let i = 0; i < images.length; i++) {
+                try {
+                    const compressed = await compressImageEdit(images[i], 1200, 0.8);
+                    const params = new URLSearchParams({
+                        action: 'uploadimage',
+                        repairId,
+                        imageData: compressed.replace(/^data:[^;]+;base64,/, ''),
+                        mimeType: 'image/jpeg',
+                        imageIndex: existingCount + i + 1
+                    });
+                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+                } catch(e) { console.warn('Edit photo upload failed', e); }
+            }
+            if (status) { status.textContent = `✅ ${images.length} photo${images.length > 1 ? 's' : ''} uploaded`; }
+            _editPhotos = [];
+        }
+
+        function compressImageEdit(dataUrl, maxPx, quality) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxPx || h > maxPx) {
+                        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+                        else       { w = Math.round(w * maxPx / h); h = maxPx; }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.src = dataUrl;
+            });
+        }
+
         async function saveEdit() {
             if (window.isOffline && window.isOffline()) {
                 showToast('📡 You\'re offline — changes cannot be saved.', 'err');
@@ -2684,7 +2815,12 @@
             const status = document.querySelector('input[name="editStatus"]:checked')?.value || 'received';
             const priority = document.querySelector('input[name="editPriority"]:checked')?.value || 'low';
             const notes = document.getElementById('edit-notes').value.trim();
-            const dateCompleted = document.getElementById('edit-date-completed').value;
+            // Auto-fill completion date when marking ready or resolved, if not already set
+            const _dcInput = document.getElementById('edit-date-completed');
+            if (['ready', 'resolved'].includes(status) && !_dcInput.value) {
+                _dcInput.value = new Date().toISOString().split('T')[0];
+            }
+            const dateCompleted = _dcInput.value;
 
             // Get estimated completion and format it
             let estimatedCompletion = '';
@@ -2784,6 +2920,10 @@
                 haptic('success');
                 filterAndRender();
                 updateStats(allJobs);
+                // Upload any new photos in the background
+                if (_editPhotos.filter(Boolean).length > 0) {
+                    uploadEditPhotos(currentEditId);
+                }
                 setTimeout(loadJobs, 2000);
 
             } catch (err) {
@@ -3049,6 +3189,97 @@
                         filterAndRender();
                     }, 500);
                 }
+            }
+        });
+    </script>
+
+    <!-- ── Webcam Overlay ── -->
+    <div id="editWebcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">📷 Take a Photo</div>
+        <select id="editWebcamDeviceSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="editWebcamSwitchDevice()"></select>
+        <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
+            <video id="editWebcamVideo" autoplay playsinline style="width:min(90vw,480px);height:min(60vw,320px);object-fit:cover;display:block;"></video>
+            <canvas id="editWebcamCanvas" style="display:none;"></canvas>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <button onclick="editWebcamSnap()" style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">📸 Snap</button>
+            <button onclick="editWebcamClose()" style="padding:14px 24px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
+        </div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);">Tap Snap or press Space</div>
+    </div>
+
+    <script>
+        let _editWebcamStream = null;
+
+        async function editWebcamOpen() {
+            const overlay = document.getElementById('editWebcamOverlay');
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Enumerate cameras
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(d => d.kind === 'videoinput');
+                const sel = document.getElementById('editWebcamDeviceSelect');
+                sel.innerHTML = cameras.map((c, i) =>
+                    `<option value="${c.deviceId}">${c.label || 'Camera ' + (i + 1)}</option>`
+                ).join('');
+                sel.style.display = cameras.length > 1 ? 'block' : 'none';
+            } catch(_) {}
+
+            await editWebcamStartStream();
+        }
+
+        async function editWebcamStartStream(deviceId) {
+            if (_editWebcamStream) { _editWebcamStream.getTracks().forEach(t => t.stop()); }
+            const constraints = { video: deviceId
+                ? { deviceId: { exact: deviceId } }
+                : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            };
+            try {
+                _editWebcamStream = await navigator.mediaDevices.getUserMedia(constraints);
+                document.getElementById('editWebcamVideo').srcObject = _editWebcamStream;
+            } catch(e) {
+                editWebcamClose();
+                showToast('Camera not available — use file picker instead.', 'err');
+            }
+        }
+
+        function editWebcamSwitchDevice() {
+            const sel = document.getElementById('editWebcamDeviceSelect');
+            editWebcamStartStream(sel.value);
+        }
+
+        function editWebcamSnap() {
+            const video  = document.getElementById('editWebcamVideo');
+            const canvas = document.getElementById('editWebcamCanvas');
+            canvas.width  = video.videoWidth  || 1280;
+            canvas.height = video.videoHeight || 720;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            editWebcamClose();
+            // Feed into the edit photo array and show preview
+            _editPhotos.push(dataUrl);
+            const idx     = _editPhotos.length - 1;
+            const preview = document.getElementById('editPhotoPreview');
+            const thumb   = document.createElement('div');
+            thumb.style.cssText = 'position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border);flex-shrink:0;';
+            thumb.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">
+                <button onclick="_editPhotos[${idx}]=null;this.parentNode.remove();" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;font-size:0.65rem;cursor:pointer;">✕</button>`;
+            preview.appendChild(thumb);
+            showToast('📸 Photo added', 'ok');
+        }
+
+        function editWebcamClose() {
+            if (_editWebcamStream) { _editWebcamStream.getTracks().forEach(t => t.stop()); _editWebcamStream = null; }
+            document.getElementById('editWebcamOverlay').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && document.getElementById('editWebcamOverlay').style.display === 'flex') {
+                e.preventDefault();
+                editWebcamSnap();
             }
         });
     </script>

@@ -286,6 +286,17 @@
             </div>
         </div>
 
+        <!-- Inventory Accuracy Alert -->
+        <div id="invAccuracyAlert" style="display:none;margin-bottom:16px;padding:14px 18px;border-radius:14px;border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.08);font-size:0.85rem;line-height:1.6;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                <div>
+                    <div style="font-weight:800;color:var(--warning);margin-bottom:4px;">⚠️ Inventory Accuracy Warning</div>
+                    <div id="invAccuracyMsg" style="color:var(--text-dim);"></div>
+                </div>
+                <button onclick="document.getElementById('invAccuracyAlert').style.display='none'" style="flex-shrink:0;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-dim);padding:2px 6px;">✕</button>
+            </div>
+        </div>
+
         <!-- Stats -->
         <div class="stats-row" id="statsRow">
             <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">unique SKUs</div></div>
@@ -605,6 +616,62 @@
 
     window.addEventListener('sc-back-online', loadInventory);
 
+    // ── Inventory Accuracy Check ──────────────────────────────────────────────
+    function checkInventoryAccuracy(items, movements) {
+        const issues = [];
+
+        // 1. No movements in 7+ days
+        const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+        if (movements.length > 0) {
+            const latest = movements.reduce((max, m) => {
+                const t = m.timestamp ? new Date(m.timestamp).getTime() : 0;
+                return t > max ? t : max;
+            }, 0);
+            if (latest && (Date.now() - latest) > STALE_MS) {
+                const days = Math.floor((Date.now() - latest) / 86400000);
+                issues.push(`No stock movements recorded in ${days} days — a manual count is recommended.`);
+            }
+        } else {
+            issues.push('No stock movement history found — inventory counts may not be verified.');
+        }
+
+        // 2. Discrepancy check — reconstruct expected qty from movements
+        // Only check items that have movement history
+        const skuMap = {};
+        movements.forEach(m => {
+            const sku = String(m.sku || '');
+            if (!sku) return;
+            if (!skuMap[sku]) skuMap[sku] = 0;
+            const qty = parseInt(m.qty) || 0;
+            if (m.type === 'add')    skuMap[sku] += qty;
+            else if (m.type === 'remove') skuMap[sku] -= qty;
+            else if (m.type === 'set')    skuMap[sku]  = qty;
+        });
+        const discrepancies = [];
+        items.forEach(item => {
+            const expected = skuMap[item.sku];
+            if (expected === undefined) return; // no movement history, skip
+            const actual = parseInt(item.qty) || 0;
+            if (Math.abs(actual - expected) > 0) {
+                discrepancies.push(`${item.name} (expected ${expected}, actual ${actual})`);
+            }
+        });
+        if (discrepancies.length > 0) {
+            const shown = discrepancies.slice(0, 3);
+            const extra = discrepancies.length - shown.length;
+            issues.push(`Possible discrepancies detected in: ${shown.join(', ')}${extra > 0 ? ` and ${extra} more` : ''}.`);
+        }
+
+        const alert = document.getElementById('invAccuracyAlert');
+        const msg   = document.getElementById('invAccuracyMsg');
+        if (issues.length > 0) {
+            msg.innerHTML = issues.map(i => `• ${i}`).join('<br>');
+            alert.style.display = 'block';
+        } else {
+            alert.style.display = 'none';
+        }
+    }
+
     // ── Load ──────────────────────────────────────────────────────────────────
     async function loadInventory() {
         setSyncState('loading', 'Syncing…');
@@ -622,6 +689,7 @@
             populateCategoryFilter();
             renderInventory();
             renderStats();
+            checkInventoryAccuracy(allItems, allMovements);
             setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
         } catch (err) {
             const ci = localStorage.getItem('sc_cache_inventory');

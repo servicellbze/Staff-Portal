@@ -889,10 +889,13 @@
             }
         }
         /* ── Inspection Checklist ── */
-        .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--glass-border); }
+        .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--glass-border); transition: background 0.15s; border-radius: 8px; padding-left: 8px; padding-right: 8px; }
         .checklist-item:last-child { border-bottom: none; }
-        .checklist-item input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
-        .checklist-item label { font-size: 0.9rem; font-weight: 600; color: var(--text-main); cursor: pointer; line-height: 1.4; }
+        .checklist-item input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--danger); cursor: pointer; flex-shrink: 0; }
+        .checklist-item label { font-size: 0.9rem; font-weight: 600; color: var(--success); cursor: pointer; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; }
+        .checklist-item label::before { content: '✅'; font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+        .checklist-item input:checked + label { color: var(--danger); }
+        .checklist-item input:checked + label::before { content: '❌'; }
         .checklist-item label span { display: block; font-size: 0.75rem; font-weight: 400; color: var(--text-dim); margin-top: 2px; }
         .checklist-other { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
         .checklist-other input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
@@ -1090,58 +1093,49 @@
                 <div class="card-header">
                     <div class="card-icon">🔍</div>
                     <span class="card-title">Device Inspection</span>
-                    <span class="card-subtitle">Mandatory — to be done on every device</span>
+                    <span class="card-subtitle">Note any accessories the customer brought in</span>
                 </div>
 
                 <div class="checklist-item">
-                    <input type="checkbox" id="chk-screen" name="inspection" value="Screen Broken">
-                    <label for="chk-screen">
-                        Screen Broken / Cracked
-                        <span>Visible cracks, dead pixels, or touch unresponsive</span>
+                    <input type="checkbox" id="chk-sim-tray" name="inspection" value="SIM Tray Missing">
+                    <label for="chk-sim-tray">
+                        SIM Tray
+                        <span>Check if SIM tray is present and undamaged</span>
                     </label>
                 </div>
                 <div class="checklist-item">
-                    <input type="checkbox" id="chk-water" name="inspection" value="Water Damage Indicator Tripped">
-                    <label for="chk-water">
-                        Water Damage Indicator Tripped
-                        <span>Check SIM tray or charging port for red/pink LDI sticker</span>
+                    <input type="checkbox" id="chk-sim-card" name="inspection" value="SIM/Memory Card Missing">
+                    <label for="chk-sim-card">
+                        SIM Card / Memory Card
+                        <span>Note if customer left a SIM or memory card inside</span>
                     </label>
                 </div>
                 <div class="checklist-item">
-                    <input type="checkbox" id="chk-body" name="inspection" value="Physical Body Damage">
-                    <label for="chk-body">
-                        Physical Body Damage
-                        <span>Dents, bent frame, scratches, or missing components</span>
+                    <input type="checkbox" id="chk-case" name="inspection" value="Case/Cover Present">
+                    <label for="chk-case">
+                        Case / Cover
+                        <span>Customer brought a case or cover with the device</span>
                     </label>
                 </div>
                 <div class="checklist-item">
-                    <input type="checkbox" id="chk-charging" name="inspection" value="Charging Port Damaged">
-                    <label for="chk-charging">
-                        Charging Port Damaged
-                        <span>Bent pins, debris, or loose connection</span>
-                    </label>
-                </div>
-                <div class="checklist-item">
-                    <input type="checkbox" id="chk-camera" name="inspection" value="Camera Damaged">
-                    <label for="chk-camera">
-                        Camera Damaged
-                        <span>Cracked lens, blurry output, or camera not detected</span>
+                    <input type="checkbox" id="chk-charger" name="inspection" value="Charger/Cable Present">
+                    <label for="chk-charger">
+                        Charger / Cable
+                        <span>Customer brought a charger or cable with the device</span>
                     </label>
                 </div>
                 <div class="checklist-other">
                     <input type="checkbox" id="chk-other" onchange="document.getElementById('chk-other-text').disabled=!this.checked; if(this.checked) document.getElementById('chk-other-text').focus();">
-                    <input type="text" id="chk-other-text" placeholder="Other damage observed…" maxlength="120" disabled>
+                    <input type="text" id="chk-other-text" placeholder="Other notes…" maxlength="120" disabled>
                 </div>
 
-                <!-- Image Attachments (session only — not saved to sheet) -->
-                <div class="img-attach-area" onclick="document.getElementById('inspectionImages').click()">
-                    <input type="file" id="inspectionImages" accept="image/*" multiple onchange="handleInspectionImages(event)">
-                    <div class="img-attach-label">
-                        📷 Attach Photos
-                        <span>Optional · shown on receipt only · not stored in spreadsheet</span>
-                    </div>
+                <!-- Image Attachments -->
+                <div style="margin-top:16px;">
+                    <button type="button" onclick="openPhotoModal()" style="width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--glass-border);background:none;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+                        📷 Add Inspection Photos
+                    </button>
+                    <div id="photoModalSummary" style="display:none;margin-top:8px;font-size:0.75rem;color:var(--text-dim);"></div>
                 </div>
-                <div class="img-preview-grid" id="imgPreviewGrid"></div>
             </div>
 
             <!-- Submit -->
@@ -1160,7 +1154,86 @@
     <div class="toast" id="toast"></div>
     <div id="printInvoice"></div>
 
-    <!-- Paper Size Modal -->
+    <!-- ── Photo Inspection Modal ── -->
+    <div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.5);scrollbar-width:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--glass-border);position:sticky;top:0;background:var(--glass-strong);z-index:1;">
+                <span style="font-weight:800;font-size:1rem;color:var(--text-main);">📷 Inspection Photos</span>
+                <button onclick="closePhotoModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(100,116,139,0.15);color:var(--text-dim);font-size:1rem;cursor:pointer;">✕</button>
+            </div>
+            <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px;">
+                <p style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;margin:0;">Three photos are required before submitting. Tap a slot to add a photo.</p>
+
+                <!-- Slot 1: Front -->
+                <div>
+                    <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">Front of Device <span style="color:var(--danger);">*</span></div>
+                    <div id="slot-front" onclick="triggerSlot('front')" style="height:120px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('front')">
+                        <span style="font-size:0.82rem;color:var(--text-dim);">📱 Tap to add</span>
+                    </div>
+                    <input type="file" id="input-front" accept="image/*" style="display:none;" onchange="handleSlot('front',event)">
+                    <div style="display:flex;gap:6px;margin-top:6px;">
+                        <button type="button" onclick="triggerSlot('front')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📁 File</button>
+                        <button type="button" onclick="webcamOpen('front')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📷 Camera</button>
+                    </div>
+                </div>
+
+                <!-- Slot 2: Back -->
+                <div>
+                    <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">Back of Device <span style="color:var(--danger);">*</span></div>
+                    <div id="slot-back" onclick="triggerSlot('back')" style="height:120px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('back')">
+                        <span style="font-size:0.82rem;color:var(--text-dim);">🔙 Tap to add</span>
+                    </div>
+                    <input type="file" id="input-back" accept="image/*" style="display:none;" onchange="handleSlot('back',event)">
+                    <div style="display:flex;gap:6px;margin-top:6px;">
+                        <button type="button" onclick="triggerSlot('back')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📁 File</button>
+                        <button type="button" onclick="webcamOpen('back')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📷 Camera</button>
+                    </div>
+                </div>
+
+                <!-- Slot 3: Accessories -->
+                <div>
+                    <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">Accessories / Other Items <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">(optional)</span></div>
+                    <div id="slot-accessories" onclick="triggerSlot('accessories')" style="height:120px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('accessories')">
+                        <span style="font-size:0.82rem;color:var(--text-dim);">🎒 Tap to add</span>
+                    </div>
+                    <input type="file" id="input-accessories" accept="image/*" style="display:none;" onchange="handleSlot('accessories',event)">
+                    <div style="display:flex;gap:6px;margin-top:6px;">
+                        <button type="button" onclick="triggerSlot('accessories')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📁 File</button>
+                        <button type="button" onclick="webcamOpen('accessories')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📷 Camera</button>
+                    </div>
+                </div>
+
+                <!-- Slot 4: Additional (optional) -->
+                <div>
+                    <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:6px;">Additional Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></div>
+                    <div id="slot-extra-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+                    <label style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:1.5px dashed var(--glass-border);cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--text-dim);">
+                        ＋ Add More
+                        <input type="file" id="input-extra" accept="image/*" multiple style="display:none;" onchange="handleExtraSlot(event)">
+                    </label>
+                </div>
+            </div>
+            <div style="padding:0 22px 22px;display:flex;gap:10px;">
+                <button onclick="closePhotoModal()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
+                <button onclick="confirmPhotos()" id="photoConfirmBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">✓ Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Webcam Capture Overlay ── -->
+    <div id="webcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);" id="webcamSlotLabel">Taking photo…</div>
+        <select id="webcamDeviceSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="webcamSwitchDevice()"></select>
+        <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
+            <video id="webcamVideo" autoplay playsinline style="width:min(90vw,480px);height:min(60vw,320px);object-fit:cover;display:block;"></video>
+            <canvas id="webcamCanvas" style="display:none;"></canvas>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <button onclick="webcamSnap()" style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">📸 Snap</button>
+            <button onclick="webcamClose()" style="padding:14px 24px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
+        </div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);">Tap Snap or press Space</div>
+    </div>
     <div class="paper-modal-overlay" id="paperModal">
         <div class="paper-modal-box">
             <h3>🖨️ Choose Paper Size</h3>
@@ -1434,7 +1507,161 @@
             fetchLastId();
         }
 
-        // ── Inspection image handling (session only) ──────────────────────────
+        // ── Webcam ────────────────────────────────────────────────────────────
+        let _webcamSlot = null;
+        let _webcamStream = null;
+
+        async function webcamOpen(slot) {
+            _webcamSlot = slot;
+            const overlay = document.getElementById('webcamOverlay');
+            const label   = document.getElementById('webcamSlotLabel');
+            const labels  = { front: 'Front of Device', back: 'Back of Device', accessories: 'Accessories' };
+            label.textContent = labels[slot] || 'Taking photo…';
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            // Enumerate cameras and populate selector
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(d => d.kind === 'videoinput');
+                const sel = document.getElementById('webcamDeviceSelect');
+                sel.innerHTML = cameras.map((c, i) =>
+                    `<option value="${c.deviceId}">${c.label || 'Camera ' + (i + 1)}</option>`
+                ).join('');
+                sel.style.display = cameras.length > 1 ? 'block' : 'none';
+            } catch(_) {}
+
+            await webcamStartStream();
+        }
+
+        async function webcamStartStream(deviceId) {
+            if (_webcamStream) { _webcamStream.getTracks().forEach(t => t.stop()); }
+            const constraints = { video: deviceId
+                ? { deviceId: { exact: deviceId } }
+                : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            };
+            try {
+                _webcamStream = await navigator.mediaDevices.getUserMedia(constraints);
+                document.getElementById('webcamVideo').srcObject = _webcamStream;
+            } catch(e) {
+                webcamClose();
+                showToast('Camera not available — use file picker instead.', 'error');
+            }
+        }
+
+        function webcamSwitchDevice() {
+            const sel = document.getElementById('webcamDeviceSelect');
+            webcamStartStream(sel.value);
+        }
+
+        function webcamSnap() {
+            const video  = document.getElementById('webcamVideo');
+            const canvas = document.getElementById('webcamCanvas');
+            canvas.width  = video.videoWidth  || 1280;
+            canvas.height = video.videoHeight || 720;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            webcamClose();
+            // Feed into the slot
+            _slots[_webcamSlot] = dataUrl;
+            const slotEl = document.getElementById('slot-' + _webcamSlot);
+            slotEl.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;">`;
+            slotEl.style.border = '2px solid var(--success)';
+        }
+
+        function webcamClose() {
+            if (_webcamStream) { _webcamStream.getTracks().forEach(t => t.stop()); _webcamStream = null; }
+            document.getElementById('webcamOverlay').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Space bar to snap
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space' && document.getElementById('webcamOverlay').style.display === 'flex') {
+                e.preventDefault();
+                webcamSnap();
+            }
+        });
+
+        // ── Photo Modal ───────────────────────────────────────────────────────
+        const _slots = { front: null, back: null, accessories: null };
+        let _extraPhotos = [];
+
+        function openPhotoModal() {
+            document.getElementById('photoModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function triggerSlot(name) {
+            document.getElementById('input-' + name).click();
+        }
+
+        function updateSlotBorder(name) {
+            const el = document.getElementById('slot-' + name);
+            if (!el) return;
+            el.style.borderColor = _slots[name] ? 'var(--success)' : 'var(--glass-border)';
+        }
+
+        function handleSlot(name, e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                _slots[name] = ev.target.result;
+                const slot = document.getElementById('slot-' + name);
+                slot.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+                slot.style.borderColor = 'var(--success)';
+                slot.style.border = '2px solid var(--success)';
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        }
+
+        function handleExtraSlot(e) {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    _extraPhotos.push(ev.target.result);
+                    const idx = _extraPhotos.length - 1;
+                    const grid = document.getElementById('slot-extra-grid');
+                    const thumb = document.createElement('div');
+                    thumb.style.cssText = 'position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border);';
+                    thumb.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;">
+                        <button onclick="_extraPhotos[${idx}]=null;this.parentNode.remove();" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.6);border:none;color:#fff;font-size:0.65rem;cursor:pointer;">✕</button>`;
+                    grid.appendChild(thumb);
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        function confirmPhotos() {
+            const missing = ['front','back'].filter(s => !_slots[s]);
+            if (missing.length > 0) {
+                const names = missing.map(s => s === 'accessories' ? 'Accessories' : s.charAt(0).toUpperCase() + s.slice(1));
+                showToast('📷 Missing: ' + names.join(', '), 'error');
+                return;
+            }
+            closePhotoModal();
+            // Build the combined _inspectionImages array in order
+            _inspectionImages = [
+                _slots.front,
+                _slots.back,
+                _slots.accessories,
+                ..._extraPhotos.filter(Boolean)
+            ].filter(Boolean);
+            // Update summary label
+            const summary = document.getElementById('photoModalSummary');
+            summary.style.display = 'block';
+            summary.textContent = `✅ ${_inspectionImages.length} photo${_inspectionImages.length > 1 ? 's' : ''} ready (Front, Back, Accessories${_extraPhotos.filter(Boolean).length > 0 ? ' + ' + _extraPhotos.filter(Boolean).length + ' more' : ''})`;
+        }
+
+        // ── Inspection image handling (kept for upload compatibility) ─────────
         let _inspectionImages = [];
 
         function handleInspectionImages(e) {

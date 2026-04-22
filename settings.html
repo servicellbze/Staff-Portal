@@ -1232,8 +1232,42 @@
 
                     <div class="changelog-entry">
                         <div class="changelog-version">
-                            v4.6.0
+                            v4.7.0
                             <span class="changelog-badge badge-current">Current</span>
+                        </div>
+                        <div class="changelog-date">April 21, 2026</div>
+                        <ul class="changelog-changes">
+                            <li>Job claim system — technicians and managers can claim jobs, locking them to a single owner</li>
+                            <li>Manager override — managers can reassign or override any claimed job</li>
+                            <li>Claim lock on edit/delete — only the claimer or a manager can modify a claimed job</li>
+                            <li>Cashiers restricted to Ready and Picked Up statuses in edit modal</li>
+                            <li>Technician performance in statistics now attributed to the claimer, not the logger</li>
+                            <li>Revenue per technician added to statistics — linked via job claim and sale</li>
+                            <li>Bonus badges (🏆 Most Jobs, 💰 Top Revenue) — awarded only to clear solo winners</li>
+                            <li>Unclaimed stale jobs alert — notification fires after 3 days with no claimer</li>
+                            <li>Force logout — managers can suspend staff accounts from Settings; revoked users are kicked within 60 seconds</li>
+                            <li>Inventory accuracy alert — warns when no stock movements in 7+ days or discrepancies detected</li>
+                            <li>Technicians can add photos to existing jobs from the edit modal</li>
+                            <li>Structured photo intake modal — Front, Back, Accessories slots with required validation</li>
+                            <li>Webcam capture — live camera stream with multi-camera selector for external webcams</li>
+                            <li>Checklist redefined — now covers SIM Tray, SIM Card, Case, Charger (accessories only)</li>
+                            <li>Checklist logic inverted — unchecked = ✅ present, checked = ❌ missing/noted</li>
+                            <li>Old jobs show gray dash on checklist to avoid confusion</li>
+                            <li>Merlot theme redesigned — deep burgundy with terracotta accents</li>
+                            <li>Theme transitions — smooth crossfade when switching themes</li>
+                            <li>Service Policy modal in footer — loads policy page in-app without leaving</li>
+                            <li>Staff Access panel in Settings — manager-only suspend/restore with confirm modal</li>
+                            <li>Print report expanded — includes technician performance, cashier performance, job status breakdown</li>
+                            <li>EOD and sale receipts improved for thermal printer visibility</li>
+                            <li>Universal scroll lock guard — prevents page getting stuck after modal close</li>
+                            <li>Sales page performance — removed all backdrop-filter, debounced search, lazy job loading</li>
+                        </ul>
+                    </div>
+
+                    <div class="changelog-entry">
+                        <div class="changelog-version">
+                            v4.6.0
+                            <span class="changelog-badge badge-legacy">Legacy</span>
                         </div>
                         <div class="changelog-date">April 13, 2026</div>
                         <ul class="changelog-changes">
