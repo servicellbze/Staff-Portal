@@ -585,12 +585,22 @@ function addSaleLine(name, qty, price, sku) {
         + ' oninput="saleLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},150)">'
         + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
         + '</div>'
-        + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateSaleTotal()">'
+        + '<div style="display:flex;align-items:center;gap:0;border:1px solid var(--glass-border);border-radius:8px;overflow:hidden;flex-shrink:0;">'
+        + '<button type="button" onclick="adjustLineQty(this,-1)" style="width:28px;height:36px;border:none;background:var(--glass);color:var(--text-main);font-size:1rem;cursor:pointer;font-weight:700;flex-shrink:0;">−</button>'
+        + '<input class="line-input" type="number" value="' + qty + '" min="1" style="text-align:center;width:40px;border:none;border-left:1px solid var(--glass-border);border-right:1px solid var(--glass-border);border-radius:0;padding:0;" oninput="updateSaleTotal()">'
+        + '<button type="button" onclick="adjustLineQty(this,1)" style="width:28px;height:36px;border:none;background:var(--glass);color:var(--text-main);font-size:1rem;cursor:pointer;font-weight:700;flex-shrink:0;">+</button>'
+        + '</div>'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateSaleTotal()">'
         + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateSaleTotal()">&#x2715;</button>';
     document.getElementById('saleLineItems').appendChild(row);
-    // Wire the name input to update total
     row.querySelector('input[type="text"]').addEventListener('input', updateSaleTotal);
+}
+
+function adjustLineQty(btn, delta) {
+    const qtyInput = btn.parentElement.querySelector('input[type="number"]');
+    const current  = parseInt(qtyInput.value) || 1;
+    qtyInput.value = Math.max(1, current + delta);
+    updateSaleTotal();
 }
 
 function saleLineAutocomplete(input, dropId) {
