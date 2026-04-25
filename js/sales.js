@@ -635,11 +635,15 @@ function updateSaleTotal() {
         total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
     });
     document.getElementById('saleTotalDisplay').textContent = bz(total);
-    // Auto-fill tendered if empty and cash is selected
+    // Keep tendered in sync with total for cash — unless cashier has entered more than total (giving change)
     const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
     if (method === 'cash') {
-        const field = document.getElementById('saleCashTendered');
-        if (field && !field.value) field.value = total > 0 ? total.toFixed(2) : '';
+        const field    = document.getElementById('saleCashTendered');
+        const tendered = parseFloat(field?.value) || 0;
+        // Only auto-update if tendered equals the previous total (i.e. cashier hasn't overridden it)
+        if (field && (tendered === 0 || tendered <= total)) {
+            field.value = total > 0 ? total.toFixed(2) : '';
+        }
         calcSaleChange();
     }
 }
