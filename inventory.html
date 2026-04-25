@@ -678,7 +678,7 @@
         try {
             const [invRes, movRes] = await Promise.all([
                 fetch(`${SCRIPT_URL}?action=listinventory`),
-                fetch(`${SCRIPT_URL}?action=listmovements&limit=200`)
+                fetch(`${SCRIPT_URL}?action=listmovements&limit=500`)
             ]);
             const invData = await invRes.json();
             const movData = await movRes.json();
@@ -1015,7 +1015,7 @@
             </div>`;
 
         // Load movements for this SKU
-        const moves = allMovements.filter(m => m.sku === sku).slice(0, 15);
+        const moves = allMovements.filter(m => String(m.sku || '').trim().toLowerCase() === String(sku || '').trim().toLowerCase()).slice(0, 20);
         const mList = document.getElementById('movementList');
         if (!moves.length) { mList.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text-dim);font-size:0.82rem;">No movements recorded yet.</div>`; }
         else {
