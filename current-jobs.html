@@ -1726,7 +1726,7 @@
                 <option value="abandoned">Abandoned</option>
             </select>
             <button class="refresh-btn" onclick="loadJobs()" title="Sync Spreadsheet">🔄</button>
-            <button id="archiveToggleBtn" onclick="toggleArchiveView()" title="Search archived jobs" style="height:50px;padding:0 14px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--text-dim);white-space:nowrap;transition:all 0.2s;">📦 Archives</button>
+            <button id="archiveToggleBtn" onclick="toggleArchiveView()" title="Search archived jobs" style="height:50px;padding:0 16px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--text-dim);white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:6px;">📦 Archives</button>
         </div>
 
         <div class="stats-row">
@@ -1757,6 +1757,10 @@
         </div>
 
         <div class="jobs-container">
+            <div id="archiveBanner" style="display:none;padding:12px 20px;background:rgba(37,99,235,0.08);border-bottom:1px solid rgba(37,99,235,0.15);font-size:0.8rem;font-weight:700;color:var(--primary);display:none;align-items:center;justify-content:space-between;">
+                <span>📦 Viewing archived jobs — these have been removed from the active list.</span>
+                <button onclick="toggleArchiveView()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--primary);font-family:inherit;text-decoration:underline;">Back to Active</button>
+            </div>
             <div class="jobs-header">
                 <div>ID</div>
                 <div>Customer</div>
@@ -2290,34 +2294,39 @@
 
         async function toggleArchiveView() {
             _viewingArchive = !_viewingArchive;
-            const btn = document.getElementById('archiveToggleBtn');
+            const btn    = document.getElementById('archiveToggleBtn');
+            const banner = document.getElementById('archiveBanner');
             if (_viewingArchive) {
-                btn.style.background = 'rgba(37,99,235,0.15)';
-                btn.style.borderColor = 'var(--primary)';
-                btn.style.color = 'var(--primary)';
-                btn.textContent = '📦 Archives (on)';
+                btn.style.background   = 'rgba(37,99,235,0.15)';
+                btn.style.borderColor  = 'var(--primary)';
+                btn.style.color        = 'var(--primary)';
+                btn.innerHTML          = '📦 Archives <span style="font-size:0.65rem;background:var(--primary);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
+                if (banner) banner.style.display = 'flex';
                 if (!archivedJobs.length) {
-                    btn.textContent = '⏳ Loading…';
+                    btn.innerHTML = '⏳ Loading…';
                     try {
                         const res = await fetch(SCRIPT_URL + '?action=listarchived');
                         const data = await res.json();
                         archivedJobs = data.jobs || [];
+                        btn.innerHTML = '📦 Archives <span style="font-size:0.65rem;background:var(--primary);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
+                        if (!archivedJobs.length) showToast('No archived jobs found.', '');
                     } catch(e) {
                         showToast('❌ Could not load archives', 'err');
                         _viewingArchive = false;
-                        btn.style.background = '';
+                        btn.style.background  = '';
                         btn.style.borderColor = '';
-                        btn.style.color = '';
-                        btn.textContent = '📦 Archives';
+                        btn.style.color       = '';
+                        btn.innerHTML         = '📦 Archives';
+                        if (banner) banner.style.display = 'none';
                         return;
                     }
-                    btn.textContent = '📦 Archives (on)';
                 }
             } else {
-                btn.style.background = '';
+                btn.style.background  = '';
                 btn.style.borderColor = '';
-                btn.style.color = '';
-                btn.textContent = '📦 Archives';
+                btn.style.color       = '';
+                btn.innerHTML         = '📦 Archives';
+                if (banner) banner.style.display = 'none';
             }
             filterAndRender();
         }

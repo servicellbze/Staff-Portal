@@ -1162,7 +1162,7 @@
                 <button onclick="closePhotoModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(100,116,139,0.15);color:var(--text-dim);font-size:1rem;cursor:pointer;">✕</button>
             </div>
             <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px;">
-                <p style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;margin:0;">Three photos are required before submitting. Tap a slot to add a photo.</p>
+                <p style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;margin:0;">Front and back photos are required. Accessories are optional.</p>
 
                 <!-- Slot 1: Front -->
                 <div>
@@ -1351,6 +1351,14 @@
                 haptic('error');
                 if (!customerName) nameInput.style.borderColor = '#ef4444';
                 if (!device) deviceInput.style.borderColor = '#ef4444';
+                return;
+            }
+
+            // Mandate front and back photos
+            if (!_slots.front || !_slots.back) {
+                showToast('📷 Front and back photos are required before submitting.', 'error');
+                haptic('error');
+                openPhotoModal();
                 return;
             }
 
