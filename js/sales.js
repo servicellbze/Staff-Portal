@@ -582,7 +582,7 @@ function addSaleLine(name, qty, price, sku) {
     row.innerHTML =
         '<div style="position:relative;flex:1;">'
         + '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" autocomplete="off"'
-        + ' oninput="saleLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},150)">'
+        + ' oninput="saleLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
         + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
         + '</div>'
         + '<div style="display:flex;align-items:center;gap:0;border:1px solid var(--glass-border);border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--glass);">'
@@ -607,7 +607,12 @@ function saleLineAutocomplete(input, dropId) {
     const q   = (input.value || '').trim().toLowerCase();
     const box = document.getElementById(dropId);
     if (!box) return;
-    if (!q || q.length < 2) { box.style.display = 'none'; return; }
+    if (!q) { box.style.display = 'none'; return; }
+    // Load cache if not ready yet
+    if (!window._inventoryCache || !window._inventoryCache.length) {
+        loadInventoryCache().then(() => saleLineAutocomplete(input, dropId));
+        return;
+    }
     const inv = window._inventoryCache || [];
     const matches = inv.filter(i =>
         (i.name || '').toLowerCase().includes(q) || String(i.sku).toLowerCase().includes(q)
