@@ -423,7 +423,7 @@ function printEOD() {
         + '<style>'
         + '@page{size:72mm auto;margin:0;}'
         + '*{box-sizing:border-box;}'
-        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 8mm 3mm;color:#000;background:#fff;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 40mm 3mm;color:#000;background:#fff;}'
         + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
         + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'

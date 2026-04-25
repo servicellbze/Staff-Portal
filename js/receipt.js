@@ -4,7 +4,7 @@
 
 const RECEIPT_STYLES = `
 @media print { @page { size: 72mm auto; margin: 3mm 2mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } }
-#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 47mm; margin: 0 auto; padding: 2px 0 20mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
+#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 47mm; margin: 0 auto; padding: 2px 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 5px; }
 .pi-shop img { max-width: 70px; margin-bottom: 3px; display: block; margin-left: auto; margin-right: auto; }
@@ -155,7 +155,7 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 3mm 2mm; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:10px; font-weight:700; width:47mm; margin:0 auto; padding:2px 0 20mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
+body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:10px; font-weight:700; width:47mm; margin:0 auto; padding:2px 0 40mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
 * { box-sizing:border-box; font-weight:700; color:#000; }
 h2 { text-align:center; font-size:14px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
 p { text-align:center; margin:1px 0; font-size:9px; }
