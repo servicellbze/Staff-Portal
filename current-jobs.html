@@ -2239,8 +2239,8 @@
             <div style="font-size:0.85rem;">${storage}</div>
             <div class="action-btns">
                 <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
-                <button class="action-btn" title="Edit Entry"     onclick="openEditModal('${j.id}')">✏️</button>
-                <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>
+                ${j._archived ? '' : `<button class="action-btn" title="Edit Entry" onclick="openEditModal('${j.id}')">✏️</button>
+                <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>`}
             </div>
         </div>`;
             }).join('');
@@ -2397,7 +2397,7 @@
             }
         }
 
-        function getJob(id) { return allJobs.find(j => String(j.id) === String(id)); }
+        function getJob(id) { return allJobs.find(j => String(j.id) === String(id)) || archivedJobs.find(j => String(j.id) === String(id)); }
 
         function deriveRole(username) {
             const u = (username || '').toLowerCase();
@@ -2504,16 +2504,24 @@
             }
 
             // Lock edit button if claimed by someone else and not a manager
+            // Also hide entirely for archived jobs
             const editBtn = document.querySelector('#viewModal .mf-save');
             if (editBtn) {
-                const storedRole  = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
-                const effectiveRole = (storedRole === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : scRole;
-                const locked = j.claimedBy
-                    && effectiveRole !== 'manager'
-                    && scUser.trim() !== j.claimedBy.trim();
-                editBtn.disabled = locked;
-                editBtn.title = locked ? 'Claimed by ' + j.claimedBy : '';
-                editBtn.style.opacity = locked ? '0.4' : '';
+                if (j._archived) {
+                    editBtn.style.display = 'none';
+                    document.getElementById('claimBtn').style.display   = 'none';
+                    document.getElementById('unclaimBtn').style.display = 'none';
+                } else {
+                    editBtn.style.display = '';
+                    const storedRole    = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
+                    const effectiveRole = (storedRole === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : scRole;
+                    const locked = j.claimedBy
+                        && effectiveRole !== 'manager'
+                        && scUser.trim() !== j.claimedBy.trim();
+                    editBtn.disabled     = locked;
+                    editBtn.title        = locked ? 'Claimed by ' + j.claimedBy : '';
+                    editBtn.style.opacity = locked ? '0.4' : '';
+                }
             }
 
             // Inspection checklist — unchecked = ✅ green (ok), checked = ❌ red (issue)
