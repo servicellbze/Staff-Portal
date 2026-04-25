@@ -560,6 +560,10 @@ function openSaleModal() {
     document.getElementById('saleLineItems').innerHTML = '';
     document.getElementById('pm-cash').checked = true;
     document.getElementById('partialAmountGroup').style.display = 'none';
+    document.getElementById('cashTenderedGroup').style.display = 'block';
+    document.getElementById('saleCashTendered').value = '';
+    const disp = document.getElementById('saleChangeDisplay');
+    if (disp) disp.style.display = 'none';
     document.getElementById('saleSubmitBtn').disabled = false;
     document.getElementById('saleSubmitBtn').textContent = 'Complete Sale';
     updateSaleTotal();
@@ -631,10 +635,46 @@ function updateSaleTotal() {
         total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
     });
     document.getElementById('saleTotalDisplay').textContent = bz(total);
+    // Auto-fill tendered if empty and cash is selected
+    const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
+    if (method === 'cash') {
+        const field = document.getElementById('saleCashTendered');
+        if (field && !field.value) field.value = total > 0 ? total.toFixed(2) : '';
+        calcSaleChange();
+    }
 }
 
 function togglePartialField() {
-    document.getElementById('partialAmountGroup').style.display = document.getElementById('pm-partial').checked ? 'block' : 'none';
+    const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
+    document.getElementById('partialAmountGroup').style.display  = method === 'partial' ? 'block' : 'none';
+    document.getElementById('cashTenderedGroup').style.display   = method === 'cash'    ? 'block' : 'none';
+    if (method === 'cash') {
+        // Default tendered to the current total
+        const total = parseFloat(document.getElementById('saleTotalDisplay').textContent.replace('BZ$','')) || 0;
+        const field = document.getElementById('saleCashTendered');
+        if (field && !field.value) field.value = total > 0 ? total.toFixed(2) : '';
+        calcSaleChange();
+    } else {
+        const disp = document.getElementById('saleChangeDisplay');
+        if (disp) disp.style.display = 'none';
+    }
+}
+
+function calcSaleChange() {
+    const total    = parseFloat(document.getElementById('saleTotalDisplay').textContent.replace('BZ$','')) || 0;
+    const tendered = parseFloat(document.getElementById('saleCashTendered').value) || 0;
+    const disp     = document.getElementById('saleChangeDisplay');
+    if (!disp) return;
+    if (!tendered || total <= 0) { disp.style.display = 'none'; return; }
+    const change = tendered - total;
+    disp.style.display = 'block';
+    if (change < 0) {
+        disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
+        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
+    } else {
+        disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
+        disp.textContent = change < 0.01 ? '✓ Exact — no change' : '💵 Change: BZ$' + change.toFixed(2);
+    }
 }
 
 async function submitSale() {
