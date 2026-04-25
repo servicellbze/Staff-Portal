@@ -3,7 +3,7 @@
 // Update CACHE_DATE to today's date on every deploy — no manual versioning needed.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-25c'; // ← change this to today's date on each deploy
+const CACHE_DATE = '2026-04-25d'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
