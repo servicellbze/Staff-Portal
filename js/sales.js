@@ -691,8 +691,16 @@ async function submitSale() {
     if (!items.length) { alert('Add at least one item.'); return; }
     const total      = items.reduce((t, i) => t + i.total, 0);
     const method     = document.querySelector('input[name="saleMethod"]:checked').value;
-    const amountPaid = method === 'partial' ? (parseFloat(document.getElementById('salePartialAmount').value) || 0) : total;
-    if (method === 'partial' && amountPaid <= 0) { alert('Enter the partial amount paid.'); return; }
+    let amountPaid;
+    if (method === 'partial') {
+        amountPaid = parseFloat(document.getElementById('salePartialAmount').value) || 0;
+        if (amountPaid <= 0) { showToast('Enter the partial amount paid.', 'err'); return; }
+    } else if (method === 'cash') {
+        const tendered = parseFloat(document.getElementById('saleCashTendered').value) || 0;
+        amountPaid = tendered > 0 ? tendered : total; // use tendered if entered, else total
+    } else {
+        amountPaid = total;
+    }
     const btn = document.getElementById('saleSubmitBtn');
     btn.disabled = true; btn.textContent = 'Processing...';
     try {
