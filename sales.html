@@ -904,6 +904,11 @@
             <input type="number" id="salePartialAmount" placeholder="0.00" min="0" step="0.01">
             <div class="form-hint">Remaining balance will be tracked as a partial payment.</div>
         </div>
+        <div class="form-group" id="cashTenderedGroup" style="display:none;">
+            <label>Cash Tendered (BZ$)</label>
+            <input type="number" id="saleCashTendered" placeholder="0.00" min="0" step="0.01" oninput="calcSaleChange()">
+            <div id="saleChangeDisplay" style="display:none;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;"></div>
+        </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('saleModal')">Cancel</button>
             <button class="btn-primary" id="saleSubmitBtn" onclick="submitSale()">Complete Sale</button>
