@@ -573,12 +573,55 @@ function addSaleLine(name, qty, price, sku) {
     const row = document.createElement('div');
     row.className = 'line-item-row';
     row.dataset.sku = sku;
+    row.style.position = 'relative';
+    const dropId = 'ac-' + Date.now() + Math.random().toString(36).slice(2);
     row.innerHTML =
-        '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateSaleTotal()">'
+        '<div style="position:relative;flex:1;">'
+        + '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" autocomplete="off"'
+        + ' oninput="saleLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},150)">'
+        + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
+        + '</div>'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateSaleTotal()">'
         + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateSaleTotal()">&#x2715;</button>';
     document.getElementById('saleLineItems').appendChild(row);
+    // Wire the name input to update total
+    row.querySelector('input[type="text"]').addEventListener('input', updateSaleTotal);
+}
+
+function saleLineAutocomplete(input, dropId) {
+    const q   = (input.value || '').trim().toLowerCase();
+    const box = document.getElementById(dropId);
+    if (!box) return;
+    if (!q || q.length < 2) { box.style.display = 'none'; return; }
+    const inv = window._inventoryCache || [];
+    const matches = inv.filter(i =>
+        (i.name || '').toLowerCase().includes(q) || String(i.sku).toLowerCase().includes(q)
+    ).slice(0, 8);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = matches.map(i =>
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 14px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--glass-border);"'
+        + ' onmousedown="saleLineSelect(this,\'' + escH(String(i.sku)) + '\',\'' + dropId + '\')"'
+        + ' onmouseover="this.style.background=\'rgba(37,99,235,0.08)\'" onmouseout="this.style.background=\'\'">'
+        + '<span><strong>' + escH(i.name) + '</strong> <span style="color:var(--text-dim);font-size:0.72rem;">' + escH(String(i.sku)) + '</span></span>'
+        + '<span style="font-weight:800;color:var(--success);font-size:0.82rem;">' + bz(i.salePrice) + '</span>'
+        + '</div>'
+    ).join('');
+}
+
+function saleLineSelect(el, sku, dropId) {
+    const item = (window._inventoryCache || []).find(i => String(i.sku) === String(sku));
+    if (!item) return;
+    const row = el.closest('.line-item-row');
+    if (!row) return;
+    row.dataset.sku = sku;
+    const inputs = row.querySelectorAll('input');
+    inputs[0].value = item.name;
+    inputs[2].value = item.salePrice || '';
+    updateSaleTotal();
+    const box = document.getElementById(dropId);
+    if (box) box.style.display = 'none';
 }
 
 function updateSaleTotal() {
