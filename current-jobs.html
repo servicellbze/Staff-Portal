@@ -1713,7 +1713,7 @@
         <div class="search-section">
             <div class="search-box">
                 <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, or device...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, device, or phone...">
             </div>
             <select id="statusFilter" class="filter-dropdown">
                 <option value="all">All Shop Activity</option>
@@ -1726,6 +1726,7 @@
                 <option value="abandoned">Abandoned</option>
             </select>
             <button class="refresh-btn" onclick="loadJobs()" title="Sync Spreadsheet">🔄</button>
+            <button id="archiveToggleBtn" onclick="toggleArchiveView()" title="Search archived jobs" style="height:50px;padding:0 14px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--text-dim);white-space:nowrap;transition:all 0.2s;">📦 Archives</button>
         </div>
 
         <div class="stats-row">
@@ -1864,6 +1865,23 @@
         </div>
     </div>
 
+    <!-- ── Unsaved Changes Modal ── -->
+    <div class="modal-overlay" id="unsavedModal" style="z-index:3200;">
+        <div class="modal-box" style="max-width:360px;">
+            <div class="modal-header">
+                <h2>⚠️ Unsaved Changes</h2>
+                <button class="modal-close" onclick="closeModal('unsavedModal')">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top:8px;">
+                <p style="font-size:0.9rem;color:var(--text-dim);line-height:1.6;">You have unsaved changes. Are you sure you want to close without saving?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="mf-btn mf-cancel" onclick="closeModal('unsavedModal')">Keep Editing</button>
+                <button class="mf-btn mf-delete" onclick="forceCloseEdit()">Discard Changes</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Reassign Confirm Modal ── -->
     <div class="modal-overlay" id="reassignModal" style="z-index:3100;">
         <div class="modal-box" style="max-width:360px;">
@@ -1896,7 +1914,7 @@
             <div class="modal-header">
                 <h2>✏️ Edit Job <span id="edit-id-tag"
                         style="font-family:monospace;color:var(--primary);font-size:0.9rem;"></span></h2>
-                <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+                <button class="modal-close" onclick="tryCloseEdit()">✕</button>
             </div>
             <div class="modal-body">
                 <span class="edit-label">Status</span>
@@ -2001,7 +2019,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="mf-btn mf-cancel" onclick="closeModal('editModal')">Cancel</button>
+                <button class="mf-btn mf-cancel" onclick="tryCloseEdit()">Cancel</button>
                 <button class="mf-btn mf-print" onclick="printFromEdit()">🖨️ Print</button>
                 <button class="mf-btn mf-save" id="saveBtn" onclick="saveEdit()">
                     <span id="saveBtnText">💾 Save</span>
@@ -2203,7 +2221,7 @@
                     ? `<span class="claimed-chip">🔒 ${j.claimedBy}</span>`
                     : (stat.class === 'received' ? `<div style="font-size:0.65rem;opacity:0.4;margin-top:2px;">Unclaimed</div>` : '');
                 return `
-        <div class="job-row status-${stat.class}">
+        <div class="job-row status-${stat.class}" style="${j._archived ? 'opacity:0.55;filter:grayscale(0.4);' : ''}">
             <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
             <div>
                 <div style="font-weight:700;">${j.customerName || 'Walk-in'}</div>
@@ -2255,13 +2273,53 @@
         function filterAndRender() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filter = document.getElementById('statusFilter').value;
-            _filteredJobs = allJobs.filter(j => {
-                const matchSearch = String(j.id).includes(term) || (j.customerName || '').toLowerCase().includes(term) || (j.device || '').toLowerCase().includes(term);
-                const matchFilter = filter === 'all' || classifyStatus(j).class === filter;
+            const sourceJobs = _viewingArchive
+                ? archivedJobs.map(j => ({ ...j, _archived: true }))
+                : allJobs;
+            _filteredJobs = sourceJobs.filter(j => {
+                const matchSearch = String(j.id).includes(term) || (j.customerName || '').toLowerCase().includes(term) || (j.device || '').toLowerCase().includes(term) || (j.customerPhone || '').replace(/\D/g,'').includes(term.replace(/\D/g,''));
+                const matchFilter = _viewingArchive || filter === 'all' || classifyStatus(j).class === filter;
                 return matchSearch && matchFilter;
             });
             _jobsPage = 1;
             renderJobs(_filteredJobs);
+        }
+
+        let _viewingArchive = false;
+        let archivedJobs = [];
+
+        async function toggleArchiveView() {
+            _viewingArchive = !_viewingArchive;
+            const btn = document.getElementById('archiveToggleBtn');
+            if (_viewingArchive) {
+                btn.style.background = 'rgba(37,99,235,0.15)';
+                btn.style.borderColor = 'var(--primary)';
+                btn.style.color = 'var(--primary)';
+                btn.textContent = '📦 Archives (on)';
+                if (!archivedJobs.length) {
+                    btn.textContent = '⏳ Loading…';
+                    try {
+                        const res = await fetch(SCRIPT_URL + '?action=listarchived');
+                        const data = await res.json();
+                        archivedJobs = data.jobs || [];
+                    } catch(e) {
+                        showToast('❌ Could not load archives', 'err');
+                        _viewingArchive = false;
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                        btn.textContent = '📦 Archives';
+                        return;
+                    }
+                    btn.textContent = '📦 Archives (on)';
+                }
+            } else {
+                btn.style.background = '';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                btn.textContent = '📦 Archives';
+            }
+            filterAndRender();
         }
 
         async function loadJobs() {
@@ -2618,6 +2676,25 @@
         function switchToEdit() {
             closeModal('viewModal');
             openEditModal(currentViewId);
+        }
+
+        function tryCloseEdit() {
+            const j = getJob(currentEditId);
+            if (!j) { closeModal('editModal'); return; }
+            // Check if anything changed
+            const status   = document.querySelector('input[name="editStatus"]:checked')?.value || '';
+            const notes    = document.getElementById('edit-notes').value.trim();
+            const changed  = status !== (j.status || '').toLowerCase() || notes !== (j.notes || '').trim();
+            if (changed) {
+                openModal('unsavedModal');
+            } else {
+                closeModal('editModal');
+            }
+        }
+
+        function forceCloseEdit() {
+            closeModal('unsavedModal');
+            closeModal('editModal');
         }
 
         function isLockedFromJob(j) {
