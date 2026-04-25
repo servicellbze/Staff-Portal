@@ -635,22 +635,27 @@
             issues.push('No stock movement history found — inventory counts may not be verified.');
         }
 
-        // 2. Discrepancy check — reconstruct expected qty from movements
-        // Only check items that have movement history
+        // 2. Discrepancy check — reconstruct expected qty from movements (oldest first)
         const skuMap = {};
-        movements.forEach(m => {
-            const sku = String(m.sku || '');
+        const sortedMovements = [...movements].sort((a, b) => {
+            const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+            const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+            return ta - tb;
+        });
+        sortedMovements.forEach(m => {
+            const sku = String(m.sku || '').trim().toLowerCase();
             if (!sku) return;
             if (!skuMap[sku]) skuMap[sku] = 0;
             const qty = parseInt(m.qty) || 0;
-            if (m.type === 'add')    skuMap[sku] += qty;
+            if (m.type === 'add')         skuMap[sku] += qty;
             else if (m.type === 'remove') skuMap[sku] -= qty;
             else if (m.type === 'set')    skuMap[sku]  = qty;
         });
         const discrepancies = [];
         items.forEach(item => {
-            const expected = skuMap[item.sku];
-            if (expected === undefined) return; // no movement history, skip
+            const key      = String(item.sku || '').trim().toLowerCase();
+            const expected = skuMap[key];
+            if (expected === undefined) return;
             const actual = parseInt(item.qty) || 0;
             if (Math.abs(actual - expected) > 0) {
                 discrepancies.push(`${item.name} (expected ${expected}, actual ${actual})`);
