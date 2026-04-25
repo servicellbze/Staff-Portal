@@ -315,10 +315,14 @@ function renderBills() {
 function updateEOD() {
     const validSales   = allSales.filter(s => s.status !== 'reversed');
     const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const net          = gross - payoutsTotal;
     document.getElementById('eodGross').textContent   = bz(gross);
+    document.getElementById('eodCash').textContent    = bz(cashSales);
+    document.getElementById('eodCard').textContent    = bz(cardSales);
     document.getElementById('eodPayouts').textContent = bz(payoutsTotal);
     document.getElementById('eodNet').textContent     = bz(net);
     // GST line — add element if not present
@@ -410,6 +414,8 @@ async function submitEOD() {
 function printEOD() {
     const validSales   = allSales.filter(s => s.status !== 'reversed');
     const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const preTax       = gross - gstCollected;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
@@ -441,6 +447,8 @@ function printEOD() {
         + '<hr>'
         + '<table>'
         + '<tr><td>Gross Sales (incl. GST)</td><td>' + bz(gross) + '</td></tr>'
+        + '<tr><td>&nbsp;&nbsp;💵 Cash</td><td>' + bz(cashSales) + '</td></tr>'
+        + '<tr><td>&nbsp;&nbsp;💳 Card</td><td>' + bz(cardSales) + '</td></tr>'
         + '<tr><td>Sales excl. GST</td><td>' + bz(preTax) + '</td></tr>'
         + '<tr><td>GST Collected (12.5%)</td><td>' + bz(gstCollected) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
