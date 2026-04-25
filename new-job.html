@@ -1401,12 +1401,22 @@
             // Get technician username
             const technician = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Unknown';
 
-            // Build inspection checklist string
-            const inspectionChecked = [...document.querySelectorAll('input[name="inspection"]:checked')].map(c => c.value);
+            // Build inspection checklist string — always save all 4 items with their state
+            const ACCESSORY_ITEMS = [
+                { id: 'chk-sim-tray', label: 'SIM Tray',             present: 'SIM Tray: Present',      missing: 'SIM Tray: Missing' },
+                { id: 'chk-sim-card', label: 'SIM/Memory Card',      present: 'SIM Card: Present',       missing: 'SIM Card: Missing' },
+                { id: 'chk-case',     label: 'Case/Cover',           present: 'Case: Present',           missing: 'Case: Not Brought' },
+                { id: 'chk-charger',  label: 'Charger/Cable',        present: 'Charger: Present',        missing: 'Charger: Not Brought' },
+            ];
+            const inspectionParts = ACCESSORY_ITEMS.map(item => {
+                const el = document.getElementById(item.id);
+                // Checked = flagged/missing, unchecked = present/ok
+                return el && el.checked ? item.missing : item.present;
+            });
             const otherChk = document.getElementById('chk-other');
             const otherTxt = document.getElementById('chk-other-text').value.trim();
-            if (otherChk.checked && otherTxt) inspectionChecked.push('Other: ' + otherTxt);
-            const inspection = inspectionChecked.length ? inspectionChecked.join('; ') : 'No damage noted';
+            if (otherChk && otherChk.checked && otherTxt) inspectionParts.push('Other: ' + otherTxt);
+            const inspection = inspectionParts.join('; ');
 
             const sheetData = {
                 action: 'create',

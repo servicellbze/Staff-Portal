@@ -2463,7 +2463,7 @@
 
             // Check if this job has any of the new accessory checklist values
             const hasNewChecklist = checked.some(c =>
-                ['sim tray','sim/memory','case/cover','charger/cable'].some(k => c.toLowerCase().includes(k))
+                ['sim tray:', 'sim card:', 'case:', 'charger:'].some(k => c.toLowerCase().startsWith(k))
             );
 
             let rows;
@@ -2477,13 +2477,21 @@
                 );
                 rows.push(`<div style="font-size:0.72rem;color:var(--text-dim);margin-top:6px;font-style:italic;">Checklist not recorded for this job.</div>`);
             } else {
-                rows = CHECKLIST_ITEMS.map(item => {
-                    const isChecked = checked.some(c => c.toLowerCase().includes(item.key.toLowerCase().split('/')[0].trim().toLowerCase()));
-                    const icon  = isChecked ? '❌' : '✅';
-                    const color = isChecked ? 'var(--danger)' : 'var(--success)';
+                const CHECKLIST_DISPLAY = [
+                    { label: 'SIM Tray',         present: 'sim tray: present',      missing: 'sim tray: missing' },
+                    { label: 'SIM Card / Memory', present: 'sim card: present',      missing: 'sim card: missing' },
+                    { label: 'Case / Cover',      present: 'case: present',          missing: 'case: not brought' },
+                    { label: 'Charger / Cable',   present: 'charger: present',       missing: 'charger: not brought' },
+                ];
+                rows = CHECKLIST_DISPLAY.map(item => {
+                    const isMissing = checked.some(c => c.toLowerCase().startsWith(item.missing));
+                    const icon  = isMissing ? '❌' : '✅';
+                    const color = isMissing ? 'var(--danger)' : 'var(--success)';
+                    const note  = isMissing ? 'Not brought' : 'Present';
                     return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--glass-border);font-size:0.85rem;">
                         <span style="font-size:1rem;flex-shrink:0;">${icon}</span>
-                        <span style="color:${color};font-weight:600;">${item.label}</span>
+                        <span style="color:${color};font-weight:600;flex:1;">${item.label}</span>
+                        <span style="font-size:0.72rem;color:${color};opacity:0.8;">${note}</span>
                     </div>`;
                 });
             }
