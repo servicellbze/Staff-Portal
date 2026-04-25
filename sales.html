@@ -417,6 +417,11 @@
         .line-item-row {
             display: grid;
             grid-template-columns: 1fr 96px 80px 28px;
+        }
+        /* Hide number input spinners inside line item rows */
+        .line-item-row input[type="number"]::-webkit-inner-spin-button,
+        .line-item-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .line-item-row input[type="number"] { -moz-appearance: textfield; }
             gap: 6px;
             align-items: center;
         }
