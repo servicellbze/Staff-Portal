@@ -39,9 +39,14 @@ function getCurrentShift() {
     const day = now.getDay();
     const h   = now.getHours() + now.getMinutes() / 60;
     if (day === 0) return null;
-    const nightEnd = day === 6 ? 19 : 20;
-    if (h >= 8  && h < 15)       return { label: 'Morning Shift', start: 8,  end: 15 };
-    if (h >= 15 && h < nightEnd) return { label: 'Night Shift',   start: 15, end: nightEnd };
+    if (day === 6) {
+        // Saturday — single shift 9am to 7pm
+        if (h >= 9 && h < 19) return { label: 'Saturday Shift', start: 9, end: 19 };
+        return null;
+    }
+    // Weekdays — Morning 8–4, Night 4–8
+    if (h >= 8  && h < 16) return { label: 'Morning Shift', start: 8,  end: 16 };
+    if (h >= 16 && h < 20) return { label: 'Night Shift',   start: 16, end: 20 };
     return null;
 }
 
@@ -408,6 +413,7 @@ async function submitEOD() {
             btn.textContent = '✓ Submitted';
             document.getElementById('drawerCount').value = '';
             document.getElementById('varianceDisplay').style.display = 'none';
+            printEOD();
             await loadAll();
         } else {
             btn.disabled = false; btn.textContent = '✓ Submit End of Day';
@@ -425,7 +431,9 @@ function printEOD() {
     const preTax       = gross - gstCollected;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const net          = gross - payoutsTotal;
-    const drawer       = parseFloat(document.getElementById('drawerCount').value) || 0;
+    const drawerRaw    = document.getElementById('drawerCount').value;
+    const drawer       = drawerRaw ? parseFloat(drawerRaw) : net;
+    const drawerLabel  = drawerRaw ? bz(drawer) : bz(net) + ' (not counted)';
     const variance     = drawer - net;
     const shift        = getCurrentShift();
     const varColor     = Math.abs(variance) < 0.01 ? 'green' : variance > 0 ? 'green' : 'red';
@@ -457,8 +465,9 @@ function printEOD() {
         + '<tr><td>Sales excl. GST</td><td>' + bz(preTax) + '</td></tr>'
         + '<tr><td>GST Collected (12.5%)</td><td>' + bz(gstCollected) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
+        + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Net Expected</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
-        + '<tr><td>Actual Drawer</td><td>' + bz(drawer) + '</td></tr>'
+        + '<tr><td>Actual Drawer</td><td>' + drawerLabel + '</td></tr>'
         + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
@@ -746,7 +755,18 @@ async function submitSale() {
         if (data.success) {
             closeModal('saleModal');
             if (typeof haptic === 'function') haptic('success');
-            showToast('Sale recorded!', 'ok');
+            // Show sale confirmation modal
+            const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
+            document.getElementById('scTotal').textContent = bz(total);
+            document.getElementById('scPaid').textContent  = bz(amountPaid);
+            const changeRow = document.getElementById('scChangeRow');
+            if (change > 0.01) {
+                document.getElementById('scChange').textContent = bz(change);
+                changeRow.style.display = 'flex';
+            } else {
+                changeRow.style.display = 'none';
+            }
+            openModal('saleConfirmModal');
             printReceipt(items, total, amountPaid, method, data.saleId, '');
             await loadAll();
         } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('❌ ' + (data.error || 'Could not save.')); }
@@ -846,12 +866,16 @@ async function submitJobPickup() {
         const data = await res.json();
         if (data.success) {
             const payStatus    = balance <= 0.01 ? 'paid' : 'partial';
-            const updateParams = new URLSearchParams({ action: 'update', id: selectedJobId, payStatus });
-            if (balance <= 0.01) updateParams.set('status', 'resolved');
+            const updateParams = new URLSearchParams({ action: 'update', id: selectedJobId, payStatus, username: currentUser });
+            if (balance <= 0.01) {
+                updateParams.set('status', 'resolved');
+            } else {
+                showToast('⚠️ Partial payment — device stays until fully paid.', '');
+            }
             await fetch(SCRIPT_URL, { method: 'POST', body: updateParams });
             closeModal('jobPickupModal');
             if (typeof haptic === 'function') haptic('success');
-            showToast('Payment collected!', 'ok');
+            if (balance <= 0.01) showToast('Payment collected!', 'ok');
             await loadAll();
         } else { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('❌ ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('Connection error.'); }
@@ -1241,6 +1265,21 @@ async function submitReverse() {
         const res  = await fetch(SCRIPT_URL, { method: 'POST', body: params });
         const data = await res.json();
         if (data.success) {
+            // Restore inventory for any SKU-linked items
+            const s = allSales.find(x => String(x.saleId) === String(_reversingSaleId));
+            if (s) {
+                const items = tryParseJSON(s.items, []);
+                items.forEach(item => {
+                    if (item.sku) {
+                        const params = new URLSearchParams({
+                            action: 'adjuststock', sku: item.sku,
+                            qty: Math.abs(Number(item.qty) || 1), type: 'add',
+                            reason: 'Reversal — ' + _reversingSaleId, updatedBy: currentUser
+                        });
+                        fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
+                    }
+                });
+            }
             closeModal('reverseSaleModal');
             if (typeof haptic === 'function') haptic('medium');
             showToast('Sale reversed.', '');
