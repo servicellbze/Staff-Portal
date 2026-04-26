@@ -131,3 +131,18 @@ html { scrollbar-width: none; }
     scrollbar-width: thin;
     scrollbar-color: rgba(var(--primary-rgb), 0.25) transparent;
 }
+
+/* ── Global cursor fix ───────────────────────────────────────────────────────
+   Prevents the text cursor (I-beam) from appearing on non-editable elements
+   when clicking anywhere on the page.                                        */
+body, div, span, p, h1, h2, h3, h4, h5, h6, li, td, th, label {
+    cursor: default;
+}
+a, button, [onclick], [role="button"], select, input, textarea, .nav-btn,
+.action-btn, .row-btn, .item-btn, .tab-btn, .page-btn, .mf-btn,
+.btn-primary, .btn-secondary, .btn-danger, .btn-submit, .modal-close {
+    cursor: pointer;
+}
+input, textarea, [contenteditable] {
+    cursor: text;
+}
