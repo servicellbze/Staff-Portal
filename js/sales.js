@@ -138,10 +138,10 @@ async function ensureJobsLoaded() {
 }
 
 // ── Date Filter & Show Settled ────────────────────────────────────────────────
-let _salesDateFilter = '';
-let _showSettled     = false;
-let _salesPage       = 1;
-let _salesPerPage    = 10;
+let _currentDateFilter = ''; // Shared across all tabs
+let _showSettled       = false;
+let _salesPage         = 1;
+let _salesPerPage      = 10;
 
 // ── Reusable pagination renderer ─────────────────────────────────────────────
 function renderPagination(containerId, total, page, perPage, onPage, onPerPage) {
@@ -172,15 +172,25 @@ function renderPagination(containerId, total, page, perPage, onPage, onPerPage) 
 }
 
 function onSalesDateChange() {
-    _salesDateFilter = document.getElementById('salesDateFilter').value;
-    if (_salesDateFilter && _salesDateFilter !== getShiftDate()) {
+    _currentDateFilter = document.getElementById('salesDateFilter').value;
+    if (_currentDateFilter && _currentDateFilter !== getShiftDate()) {
         setSyncState('loading', 'Loading...');
-        fetch(SCRIPT_URL + '?action=listsales&date=' + _salesDateFilter)
-            .then(r => r.json())
-            .then(d => { allSales = d.sales || []; renderSales(); setSyncState('ok', 'Showing: ' + _salesDateFilter); })
-            .catch(() => setSyncState('error', 'Failed to load'));
+        const date = _currentDateFilter;
+        Promise.all([
+            fetch(SCRIPT_URL + '?action=listsales&date=' + date).then(r => r.json()).catch(() => ({})),
+            fetch(SCRIPT_URL + '?action=listpayouts&date=' + date).then(r => r.json()).catch(() => ({})),
+            fetch(SCRIPT_URL + '?action=listdaycloses&date=' + date).then(r => r.json()).catch(() => ({}))
+        ]).then(([sData, pData, eData]) => {
+            allSales = sData.sales || [];
+            allPayouts = pData.payouts || [];
+            renderSales();
+            renderPayouts();
+            updateEOD();
+            renderEODHistory(eData.closes || []);
+            setSyncState('ok', 'Showing: ' + _currentDateFilter);
+        }).catch(() => setSyncState('error', 'Failed to load'));
     } else {
-        _salesDateFilter = '';
+        _currentDateFilter = '';
         loadAll();
     }
 }
@@ -196,8 +206,8 @@ function toggleShowSettled() {
 }
 
 // Debounced search handlers — called from oninput in the HTML
-function onSalesSearch()  { debounce('salesSearch',  renderSales, 120); }
-function onBillsSearch()  { debounce('billsSearch',  renderBills, 120); }
+function onSalesSearch()  { debounce('salesSearch',  renderSales, 50); }
+function onBillsSearch()  { debounce('billsSearch',  renderBills, 50); }
 
 // ── Render: Sales ─────────────────────────────────────────────────────────────
 function renderSales() {
@@ -237,7 +247,8 @@ function renderSales() {
         const items   = tryParseJSON(s.items, []);
         const desc    = items.map(i => i.name).join(', ') || s.customer || 'Sale';
         const ts      = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(s.method || 'cash') + '</span>';
+        const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
+        const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
         const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
             : (s.method === 'partial' ? '<span class="badge badge-partial">Partial</span>' : '<span class="badge badge-paid">Paid</span>');
         const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
@@ -438,6 +449,7 @@ function printEOD() {
     const shift        = getCurrentShift();
     const varColor     = Math.abs(variance) < 0.01 ? 'green' : variance > 0 ? 'green' : 'red';
     const varText      = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? '+' : '') + bz(variance);
+    const displayDate  = _currentDateFilter || getShiftDate();
     const html = '<!DOCTYPE html><html><head><title>EOD Report</title>'
         + '<style>'
         + '@page{size:72mm auto;margin:0;}'
@@ -455,7 +467,7 @@ function printEOD() {
         + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
         + '<h2>SERVICELL BELIZE</h2>'
-        + '<p>' + (shift ? shift.label : 'End of Day') + ' &mdash; ' + getShiftDate() + '</p>'
+        + '<p>' + (shift ? shift.label : 'End of Day') + ' &mdash; ' + displayDate + '</p>'
         + '<p>Cashier: ' + escH(currentUser) + '</p>'
         + '<hr>'
         + '<table>'
@@ -469,6 +481,146 @@ function printEOD() {
         + '<tr class="total"><td><strong>Net Expected</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
         + '<tr><td>Actual Drawer</td><td>' + drawerLabel + '</td></tr>'
         + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
+        + '</table>'
+        + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
+        + '</body></html>';
+    const w = window.open('', '_blank', 'width=340,height=500');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
+    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
+}
+
+// ── Print Sales Report ────────────────────────────────────────────────────────
+function printSalesReport() {
+    const validSales = allSales.filter(s => s.status !== 'reversed');
+    const gross = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const displayDate = _currentDateFilter || getShiftDate();
+    const shift = getCurrentShift();
+    
+    const salesRows = [...validSales].reverse().map(s => {
+        const items = tryParseJSON(s.items, []);
+        const desc = items.map(i => i.name).join(', ') || 'Sale';
+        const ts = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH(desc.substring(0, 30)) + (desc.length > 30 ? '...' : '') + '</td><td style="font-size:9pt;">' + escH(s.method || 'cash') + '</td><td style="text-align:right;font-size:9pt;">' + bz(s.amountPaid) + '</td></tr>';
+    }).join('');
+    
+    const html = '<!DOCTYPE html><html><head><title>Sales Report</title>'
+        + '<style>'
+        + '@page{size:72mm auto;margin:0;}'
+        + '*{box-sizing:border-box;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 60mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
+        + 'td{padding:3px 0;border-bottom:1px solid #000;}'
+        + 'td:last-child{text-align:right;font-weight:900;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
+        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '</style></head><body>'
+        + '<h2>SERVICELL BELIZE</h2>'
+        + '<p>Sales Report</p>'
+        + '<p>' + displayDate + '</p>'
+        + '<hr>'
+        + '<table>'
+        + '<tr><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Time</th><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Items</th><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Method</th><th style="text-align:right;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Amount</th></tr>'
+        + salesRows
+        + '<tr class="total"><td colspan="3"><strong>Total Sales</strong></td><td><strong>' + bz(gross) + '</strong></td></tr>'
+        + '<tr><td colspan="3">Transactions</td><td>' + validSales.length + '</td></tr>'
+        + '</table>'
+        + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
+        + '</body></html>';
+    const w = window.open('', '_blank', 'width=340,height=500');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
+    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
+}
+
+// ── Print Payouts Report ──────────────────────────────────────────────────────
+function printPayoutsReport() {
+    const total = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
+    const displayDate = _currentDateFilter || getShiftDate();
+    
+    const payoutRows = [...allPayouts].reverse().map(p => {
+        const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;">' + escH(p.takenBy || '—') + '</td><td style="text-align:right;font-size:9pt;">' + bz(p.amount) + '</td></tr>';
+    }).join('');
+    
+    const html = '<!DOCTYPE html><html><head><title>Payouts Report</title>'
+        + '<style>'
+        + '@page{size:72mm auto;margin:0;}'
+        + '*{box-sizing:border-box;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 60mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
+        + 'td{padding:3px 0;border-bottom:1px solid #000;}'
+        + 'td:last-child{text-align:right;font-weight:900;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
+        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '</style></head><body>'
+        + '<h2>SERVICELL BELIZE</h2>'
+        + '<p>Payouts Report</p>'
+        + '<p>' + displayDate + '</p>'
+        + '<hr>'
+        + '<table>'
+        + '<tr><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Time</th><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Reason</th><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Taken By</th><th style="text-align:right;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Amount</th></tr>'
+        + (payoutRows || '<tr><td colspan="4" style="text-align:center;font-size:9pt;padding:10px 0;">No payouts</td></tr>')
+        + '<tr class="total"><td colspan="3"><strong>Total Payouts</strong></td><td><strong>' + bz(total) + '</strong></td></tr>'
+        + '</table>'
+        + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
+        + '</body></html>';
+    const w = window.open('', '_blank', 'width=340,height=500');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
+    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
+}
+
+// ── Print Bills Report ────────────────────────────────────────────────────────
+function printBillsReport() {
+    const open = allBills.filter(b => b.status === 'open');
+    const totalOwed = open.reduce((t, b) => t + Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0)), 0);
+    
+    const billRows = open.map(b => {
+        const balance = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
+        const items = tryParseJSON(b.items, []);
+        const itemNames = items.map(i => i.name).join(', ');
+        return '<tr><td style="font-size:9pt;">' + escH(b.personName || 'Unknown') + '</td><td style="font-size:9pt;">' + escH(itemNames.substring(0, 25)) + (itemNames.length > 25 ? '...' : '') + '</td><td style="text-align:right;font-size:9pt;">' + bz(balance) + '</td></tr>';
+    }).join('');
+    
+    const html = '<!DOCTYPE html><html><head><title>Bills Report</title>'
+        + '<style>'
+        + '@page{size:72mm auto;margin:0;}'
+        + '*{box-sizing:border-box;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 60mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
+        + 'td{padding:3px 0;border-bottom:1px solid #000;}'
+        + 'td:last-child{text-align:right;font-weight:900;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
+        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '</style></head><body>'
+        + '<h2>SERVICELL BELIZE</h2>'
+        + '<p>Open Bills Report</p>'
+        + '<p>' + new Date().toLocaleDateString() + '</p>'
+        + '<hr>'
+        + '<table>'
+        + '<tr><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Person</th><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Items</th><th style="text-align:right;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Balance</th></tr>'
+        + (billRows || '<tr><td colspan="3" style="text-align:center;font-size:9pt;padding:10px 0;">No open bills</td></tr>')
+        + '<tr class="total"><td colspan="2"><strong>Total Outstanding</strong></td><td><strong>' + bz(totalOwed) + '</strong></td></tr>'
+        + '<tr><td colspan="2">Open Bills</td><td>' + open.length + '</td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
@@ -780,9 +932,13 @@ function openJobPickupModal() {
     document.getElementById('jobSelected').style.display = 'none';
     document.getElementById('jobPaymentSection').style.display = 'none';
     document.getElementById('jobPickupBtn').style.display = 'none';
-    document.getElementById('jobInvoiceAmount').value = '';
+    document.getElementById('jobInvoiceItems').innerHTML = '';
+    document.getElementById('jobTotalDisplay').textContent = 'BZ$0.00';
+    document.getElementById('jobCashTendered').value = '';
     document.getElementById('jpm-cash').checked = true;
+    document.getElementById('jobCashTenderedGroup').style.display = 'block';
     document.getElementById('jobPartialGroup').style.display = 'none';
+    document.getElementById('jobChangeDisplay').style.display = 'none';
     document.getElementById('jobBalanceDisplay').style.display = 'none';
     selectedJobId = null;
     openModal('jobPickupModal');
@@ -814,25 +970,81 @@ function selectJob(id) {
     const sel = document.getElementById('jobSelected');
     sel.innerHTML = '<strong>#' + escH(String(j.id)) + '</strong> · ' + escH(j.customerName || '—') + ' · ' + escH(j.device || '—') + ' · ' + escH(j.status || '—');
     sel.style.display = 'block';
+    
+    // Display invoice items
     const invoiceItems = tryParseJSON(j.invoiceItems, []);
+    const itemsEl = document.getElementById('jobInvoiceItems');
+    if (invoiceItems.length) {
+        itemsEl.innerHTML = invoiceItems.map(item => 
+            '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--glass-border);">'
+            + '<span style="font-weight:600;">' + escH(item.desc || 'Service') + '</span>'
+            + '<span style="font-weight:800;color:var(--success);">' + bz(item.price || 0) + '</span>'
+            + '</div>'
+        ).join('');
+    } else {
+        itemsEl.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:8px 0;">No invoice items yet</div>';
+    }
+    
     const total = invoiceItems.reduce((t, i) => t + (parseFloat(i.price) || 0), 0);
-    document.getElementById('jobInvoiceAmount').value = total > 0 ? total.toFixed(2) : (j.invoiceAmount || '');
+    document.getElementById('jobTotalDisplay').textContent = bz(total);
+    
+    // Set cash tendered to total by default
+    document.getElementById('jobCashTendered').value = total > 0 ? total.toFixed(2) : '';
+    document.getElementById('jpm-cash').checked = true;
+    document.getElementById('jobCashTenderedGroup').style.display = 'block';
+    document.getElementById('jobPartialGroup').style.display = 'none';
+    
     document.getElementById('jobPaymentSection').style.display = 'block';
     document.getElementById('jobPickupBtn').style.display = 'inline-flex';
-    calcJobBalance();
+    
+    calcJobChange();
+}
+
+function toggleJobPaymentFields() {
+    const method = document.querySelector('input[name="jobMethod"]:checked')?.value || 'cash';
+    document.getElementById('jobCashTenderedGroup').style.display = method === 'cash' ? 'block' : 'none';
+    document.getElementById('jobPartialGroup').style.display = method === 'partial' ? 'block' : 'none';
+    
+    if (method === 'cash') {
+        const total = parseFloat(document.getElementById('jobTotalDisplay').textContent.replace('BZ$', '')) || 0;
+        const field = document.getElementById('jobCashTendered');
+        if (!field.value) field.value = total > 0 ? total.toFixed(2) : '';
+        calcJobChange();
+    } else if (method === 'partial') {
+        calcJobBalance();
+    } else {
+        document.getElementById('jobChangeDisplay').style.display = 'none';
+        document.getElementById('jobBalanceDisplay').style.display = 'none';
+    }
+}
+
+function calcJobChange() {
+    const total = parseFloat(document.getElementById('jobTotalDisplay').textContent.replace('BZ$', '')) || 0;
+    const tendered = parseFloat(document.getElementById('jobCashTendered').value) || 0;
+    const disp = document.getElementById('jobChangeDisplay');
+    if (!disp) return;
+    if (!tendered || total <= 0) { disp.style.display = 'none'; return; }
+    const change = tendered - total;
+    disp.style.display = 'block';
+    if (change < 0) {
+        disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
+        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
+    } else {
+        disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
+        disp.textContent = change < 0.01 ? '✓ Exact — no change' : '💵 Change: BZ$' + change.toFixed(2);
+    }
 }
 
 function toggleJobPartial() {
-    document.getElementById('jobPartialGroup').style.display = document.getElementById('jpm-partial').checked ? 'block' : 'none';
-    calcJobBalance();
+    toggleJobPaymentFields();
 }
 
 function calcJobBalance() {
-    const total   = parseFloat(document.getElementById('jobInvoiceAmount').value) || 0;
-    const method  = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
-    const paid    = method === 'partial' ? (parseFloat(document.getElementById('jobPartialAmount').value) || 0) : total;
+    const total = parseFloat(document.getElementById('jobTotalDisplay').textContent.replace('BZ$', '')) || 0;
+    const method = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
+    const paid = method === 'partial' ? (parseFloat(document.getElementById('jobPartialAmount').value) || 0) : total;
     const balance = total - paid;
-    const disp    = document.getElementById('jobBalanceDisplay');
+    const disp = document.getElementById('jobBalanceDisplay');
     if (total <= 0) { disp.style.display = 'none'; return; }
     disp.style.display = 'block';
     if (balance <= 0.01) {
@@ -846,16 +1058,25 @@ function calcJobBalance() {
 
 async function submitJobPickup() {
     if (!selectedJobId) return;
-    const total      = parseFloat(document.getElementById('jobInvoiceAmount').value) || 0;
-    const method     = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
-    const amountPaid = method === 'partial' ? (parseFloat(document.getElementById('jobPartialAmount').value) || 0) : total;
-    const balance    = total - amountPaid;
+    const j = allJobs.find(x => String(x.id) === String(selectedJobId));
+    const invoiceItems = tryParseJSON(j.invoiceItems, []);
+    const total = invoiceItems.reduce((t, i) => t + (parseFloat(i.price) || 0), 0);
+    const method = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
+    
+    let amountPaid = total;
+    if (method === 'partial') {
+        amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
+    } else if (method === 'cash') {
+        const tendered = parseFloat(document.getElementById('jobCashTendered').value) || 0;
+        amountPaid = tendered > 0 ? tendered : total;
+    }
+    
+    const balance = total - amountPaid;
     if (method === 'partial' && balance > 0.01)
         if (!confirm('Customer still owes ' + bz(balance) + '. Device will NOT be released. Continue?')) return;
     const btn = document.getElementById('jobPickupBtn');
     btn.disabled = true; btn.textContent = 'Processing...';
     try {
-        const j = allJobs.find(x => String(x.id) === String(selectedJobId));
         const params = new URLSearchParams({
             action: 'createsale', customer: j ? (j.customerName || '') : '',
             items: JSON.stringify([{ name: 'Job #' + selectedJobId + ' — ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
@@ -865,7 +1086,7 @@ async function submitJobPickup() {
         const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
         const data = await res.json();
         if (data.success) {
-            const payStatus    = balance <= 0.01 ? 'paid' : 'partial';
+            const payStatus = balance <= 0.01 ? 'paid' : 'partial';
             const updateParams = new URLSearchParams({ action: 'update', id: selectedJobId, payStatus, username: currentUser });
             if (balance <= 0.01) {
                 updateParams.set('status', 'resolved');
@@ -875,7 +1096,30 @@ async function submitJobPickup() {
             await fetch(SCRIPT_URL, { method: 'POST', body: updateParams });
             closeModal('jobPickupModal');
             if (typeof haptic === 'function') haptic('success');
-            if (balance <= 0.01) showToast('Payment collected!', 'ok');
+            
+            // Show confirmation modal with change if cash
+            if (method === 'cash' && balance <= 0.01) {
+                const change = Math.max(0, amountPaid - total);
+                document.getElementById('scTotal').textContent = bz(total);
+                document.getElementById('scPaid').textContent = bz(amountPaid);
+                const changeRow = document.getElementById('scChangeRow');
+                if (change > 0.01) {
+                    document.getElementById('scChange').textContent = bz(change);
+                    changeRow.style.display = 'flex';
+                } else {
+                    changeRow.style.display = 'none';
+                }
+                openModal('saleConfirmModal');
+            } else if (balance <= 0.01) {
+                showToast('Payment collected!', 'ok');
+            }
+            
+            // Print receipt
+            printReceipt(
+                invoiceItems.map(i => ({ name: i.desc, qty: 1, price: i.price, total: i.price })),
+                total, amountPaid, method, data.saleId, j.customerName || ''
+            );
+            
             await loadAll();
         } else { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('❌ ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('Connection error.'); }
@@ -1115,8 +1359,7 @@ function openViewSale(saleId) {
     const items  = tryParseJSON(s.items, []);
     const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
     const change = s.method === 'cash' ? Math.max(0, (parseFloat(s.amountPaid)||0) - (parseFloat(s.total)||0)) : 0;
-    const statusBadge = s.status === 'reversed' ? 'reversed' : s.method === 'partial' ? 'partial' : 'paid';
-    const statusLabel = s.status === 'reversed' ? 'Reversed' : s.method === 'partial' ? 'Partial' : 'Paid';
+    const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
     const itemRows = items.map(i =>
         '<tr>'
         + '<td style="font-weight:600;">' + escH(i.name || '—') + '</td>'
@@ -1125,6 +1368,15 @@ function openViewSale(saleId) {
         + '<td style="font-weight:800;">' + bz((i.qty||1) * (i.price||0)) + '</td>'
         + '</tr>'
     ).join('');
+    
+    // Build status badge - only show if reversed or partial
+    let statusBadgeHTML = '';
+    if (s.status === 'reversed') {
+        statusBadgeHTML = '<div class="receipt-meta-item"><div class="receipt-meta-label">Status</div><div class="receipt-meta-value"><span class="receipt-badge reversed">Reversed</span></div></div>';
+    } else if (s.method === 'partial') {
+        statusBadgeHTML = '<div class="receipt-meta-item"><div class="receipt-meta-label">Status</div><div class="receipt-meta-value"><span class="receipt-badge partial">Partial</span></div></div>';
+    }
+    
     document.getElementById('viewSaleContent').innerHTML =
         '<div class="receipt-header">'
         + '<h3>ServiCell Belize</h3>'
@@ -1134,8 +1386,8 @@ function openViewSale(saleId) {
         + '<div class="receipt-meta">'
         + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || '—') + '</div></div>'
         + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || '—') + '</div></div>'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Method</div><div class="receipt-meta-value">' + escH(s.method || 'cash') + '</div></div>'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Status</div><div class="receipt-meta-value"><span class="receipt-badge ' + statusBadge + '">' + statusLabel + '</span></div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Method</div><div class="receipt-meta-value">' + escH(methodDisplay) + '</div></div>'
+        + statusBadgeHTML
         + '</div>'
         + '<table class="receipt-items">'
         + '<tr><th style="text-align:left;">Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>'
@@ -1242,10 +1494,11 @@ function reverseSale(saleId) {
     _reversingSaleId = saleId;
     const items = tryParseJSON(s.items, []);
     const desc  = items.map(i => i.name).join(', ') || 'Sale';
+    const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
     document.getElementById('reverseSaleInfo').innerHTML =
         '<strong>' + escH(desc) + '</strong>'
         + '<br>Amount: ' + bz(s.amountPaid)
-        + ' &nbsp;&bull;&nbsp; Method: ' + escH(s.method || 'cash')
+        + ' &nbsp;&bull;&nbsp; Method: ' + escH(methodDisplay)
         + (s.cashier ? ' &nbsp;&bull;&nbsp; By: ' + escH(s.cashier) : '');
     document.getElementById('reverseReason').value = '';
     document.getElementById('reverseSubmitBtn').disabled = false;

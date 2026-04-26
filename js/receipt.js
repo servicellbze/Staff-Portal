@@ -3,8 +3,8 @@
 // Requires: js/qz-drawer.js loaded before this file
 
 const RECEIPT_STYLES = `
-@media print { @page { size: 72mm auto; margin: 3mm 2mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } }
-#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 47mm; margin: 0 auto; padding: 2px 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
+@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } }
+#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 5px; }
 .pi-shop img { max-width: 70px; margin-bottom: 3px; display: block; margin-left: auto; margin-right: auto; }
@@ -148,14 +148,28 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
     const gst     = total * 12.5 / 112.5;
     const preTax  = total - gst;
     function bz(n) { return 'BZ$' + parseFloat(n||0).toFixed(2); }
+    
+    // Map technical names to friendly first names
+    const nameMap = {
+        'Cashier_Chee': 'Ericson',
+        'Cashier_Coleman': 'Kiana',
+        'Technician_Bailey': 'Kareem',
+        'Technician_Bat': 'Bat',
+        'Manager_Chee': 'Eric'
+    };
+    
+    const friendlyName = cashier ? (nameMap[cashier] || cashier.replace(/^(Cashier_|Manager_|Technician_)/i, '')) : 'Staff';
+    
+    // Capitalize payment method for professional display
+    const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
 
     const rows = items.map(i =>
         `<tr><td>${_esc(i.name)}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${bz(i.price)}</td><td style="text-align:right">${bz(i.total)}</td></tr>`
     ).join('');
 
     return `<style>
-@media print { @page { size: 72mm auto; margin: 3mm 2mm; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:10px; font-weight:700; width:47mm; margin:0 auto; padding:2px 0 40mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
+@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
+body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:10px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 40mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
 * { box-sizing:border-box; font-weight:700; color:#000; }
 h2 { text-align:center; font-size:14px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
 p { text-align:center; margin:1px 0; font-size:9px; }
@@ -175,7 +189,7 @@ td { padding:3px 0; border-bottom:1px solid #000; }
 <p>#7 Douglas Jones, Belize City</p>
 <p>Tel: +501 615-3388</p>
 <p>${new Date().toLocaleString()}</p>
-<p>Cashier: ${_esc(cashier||'')}</p>
+<p>Served by: ${_esc(friendlyName)}</p>
 ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
 <p>Receipt #${_esc(saleId||'')}</p>
 <hr class="solid">
@@ -185,7 +199,7 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
     <tr class="divider"><td colspan="3">Subtotal (excl. GST)</td><td style="text-align:right">${bz(preTax)}</td></tr>
     <tr class="gst-row"><td colspan="3">GST (12.5%)</td><td style="text-align:right">${bz(gst)}</td></tr>
     <tr class="divider"><td colspan="3">TOTAL</td><td style="text-align:right">${bz(total)}</td></tr>
-    <tr><td colspan="3">Paid (${_esc(method)})</td><td style="text-align:right">${bz(amountPaid)}</td></tr>
+    <tr><td colspan="3">Paid (${_esc(displayMethod)})</td><td style="text-align:right">${bz(amountPaid)}</td></tr>
     ${change > 0 ? `<tr><td colspan="3">Change</td><td style="text-align:right">${bz(change)}</td></tr>` : ''}
 </table>
 <div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>`;
