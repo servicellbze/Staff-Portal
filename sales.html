@@ -423,10 +423,7 @@
         /* Hide number input spinners inside line item rows */
         .line-item-row input[type="number"]::-webkit-inner-spin-button,
         .line-item-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        .line-item-row input[type="number"] { -moz-appearance: textfield; }
-            gap: 6px;
-            align-items: center;
-        }
+        .line-item-row input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
         .line-input {
             padding: 8px 10px;
             border-radius: 8px;
@@ -1153,6 +1150,32 @@
 
 <!-- -- Footer & Utility --------------------------------------------------- -->
 <div id="footer-placeholder"></div>
+
+<!-- ── Sale Confirmation Modal ── -->
+<div class="modal-overlay" id="saleConfirmModal">
+    <div class="modal-card" style="max-width:360px;text-align:center;">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+            <button class="modal-close" onclick="closeModal('saleConfirmModal')">✕</button>
+        </div>
+        <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+        <div style="font-size:1rem;font-weight:800;color:var(--text-main);margin-bottom:20px;">Sale Complete</div>
+        <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
+                <span style="color:var(--text-dim);font-weight:600;">Transaction Total</span>
+                <span style="font-weight:800;color:var(--text-main);" id="scTotal">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
+                <span style="color:var(--text-dim);font-weight:600;">Amount Paid</span>
+                <span style="font-weight:800;color:var(--text-main);" id="scPaid">—</span>
+            </div>
+            <div id="scChangeRow" style="display:flex;justify-content:space-between;font-size:1rem;border-top:1px solid var(--glass-border);padding-top:10px;margin-top:2px;">
+                <span style="color:var(--text-dim);font-weight:700;">Change</span>
+                <span style="font-weight:900;color:var(--success);font-size:1.1rem;" id="scChange">—</span>
+            </div>
+        </div>
+        <button onclick="closeModal('saleConfirmModal')" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;">Done</button>
+    </div>
+</div>
 <div id="toastEl" class="toast"></div>
 <div id="printArea" style="display:none;"></div>
 <script src="js/components.js"></script>
