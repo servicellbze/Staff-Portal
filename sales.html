@@ -762,9 +762,10 @@
         <div class="action-bar">
             <button class="btn-primary" onclick="openSaleModal()">+ New Sale</button>
             <button class="btn-secondary" onclick="openJobPickupModal()">&#x1F4E6; Job Pickup</button>
+            <button class="btn-secondary" onclick="printSalesReport()">&#x1F5A8;&#xFE0F; Print Report</button>
             <input type="date" id="salesDateFilter" style="padding:10px 13px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;outline:none;cursor:pointer;margin-left:auto;" onchange="onSalesDateChange()">
         </div>
-        <input type="text" id="salesSearch" placeholder="&#x1F50D; Search by item, amount, cashier..." oninput="debounce('salesSearch',renderSales,150)" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="salesSearch" placeholder="&#x1F50D; Search by item, amount, cashier..." oninput="onSalesSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="salesList">
             <div class="empty-state">
                 <div class="empty-icon">&#x1F6D2;</div>
@@ -788,6 +789,7 @@
         </div>
         <div class="action-bar">
             <button class="btn-primary" onclick="openPayoutModal()">+ Log Payout</button>
+            <button class="btn-secondary" onclick="printPayoutsReport()">&#x1F5A8;&#xFE0F; Print Report</button>
         </div>
         <div class="list-card" id="payoutsList">
             <div class="empty-state">
@@ -811,9 +813,10 @@
         </div>
         <div class="action-bar">
             <button class="btn-primary" onclick="openBillModal()">+ New Bill</button>
+            <button class="btn-secondary" onclick="printBillsReport()">&#x1F5A8;&#xFE0F; Print Report</button>
             <button class="btn-secondary" id="showSettledBtn" onclick="toggleShowSettled()" style="margin-left:auto;">&#x1F4CB; Show Settled</button>
         </div>
-        <input type="text" id="billsSearch" placeholder="&#x1F50D; Search by name or item..." oninput="debounce('billsSearch',renderBills,150)" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="billsSearch" placeholder="&#x1F50D; Search by name or item..." oninput="onBillsSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="billsList">
             <div class="empty-state">
                 <div class="empty-icon">&#x1F4CB;</div>
@@ -937,26 +940,34 @@
         </div>
         <div id="jobPaymentSection" style="display:none;">
             <div class="form-group">
-                <label>Invoice Amount (BZ$)</label>
-                <input type="number" id="jobInvoiceAmount" placeholder="0.00" min="0" step="0.01" oninput="calcJobBalance()">
-                <div class="form-hint">From the job invoice. Edit if needed.</div>
+                <label>Invoice Items</label>
+                <div id="jobInvoiceItems" style="background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:14px;font-size:0.85rem;"></div>
+            </div>
+            <div class="line-total-row">
+                <span>Total</span>
+                <span id="jobTotalDisplay">BZ$0.00</span>
             </div>
             <div class="form-group">
                 <label>Payment Method</label>
                 <div class="pay-pills">
                     <div class="pay-pill cash">
-                        <input type="radio" name="jobMethod" id="jpm-cash" value="cash" checked onchange="toggleJobPartial()">
+                        <input type="radio" name="jobMethod" id="jpm-cash" value="cash" checked onchange="toggleJobPaymentFields()">
                         <label for="jpm-cash">&#x1F4B5; Cash</label>
                     </div>
                     <div class="pay-pill card">
-                        <input type="radio" name="jobMethod" id="jpm-card" value="card" onchange="toggleJobPartial()">
+                        <input type="radio" name="jobMethod" id="jpm-card" value="card" onchange="toggleJobPaymentFields()">
                         <label for="jpm-card">&#x1F4B3; Card</label>
                     </div>
                     <div class="pay-pill partial">
-                        <input type="radio" name="jobMethod" id="jpm-partial" value="partial" onchange="toggleJobPartial()">
+                        <input type="radio" name="jobMethod" id="jpm-partial" value="partial" onchange="toggleJobPaymentFields()">
                         <label for="jpm-partial">&#x26A1; Partial</label>
                     </div>
                 </div>
+            </div>
+            <div class="form-group" id="jobCashTenderedGroup" style="display:block;">
+                <label>Cash Tendered (BZ$)</label>
+                <input type="number" id="jobCashTendered" placeholder="0.00" min="0" step="0.01" oninput="calcJobChange()">
+                <div id="jobChangeDisplay" style="display:none;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;"></div>
             </div>
             <div class="form-group" id="jobPartialGroup" style="display:none;">
                 <label>Amount Paid Now (BZ$)</label>
