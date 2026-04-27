@@ -625,12 +625,6 @@
             .summary-row { grid-template-columns: repeat(2, 1fr); }
             .form-row { grid-template-columns: 1fr; }
             .line-item-row { grid-template-columns: 1fr 96px 70px 28px; }
-            /* Hide gross sales on mobile by default — shown via JS for managers */
-            .sum-card.green { display: none; }
-            .eod-row.eod-gross { display: none; }
-            /* Show gross sales for managers on mobile */
-            body.manager-view .sum-card.green { display: block; }
-            body.manager-view .eod-row.eod-gross { display: flex; }
         }
         @media (max-width: 480px) {
             main { padding: 110px var(--space-sm) var(--space-md); }
@@ -835,7 +829,7 @@
     <div class="tab-panel" id="tab-eod">
         <div class="eod-section">
             <h3>&#x1F4CA; Shift Summary</h3>
-            <div class="eod-row eod-gross"><span class="lbl">Gross Sales</span><span class="val" id="eodGross">BZ$0.00</span></div>
+            <div class="eod-row"><span class="lbl">Gross Sales</span><span class="val" id="eodGross">BZ$0.00</span></div>
             <div class="eod-row"><span class="lbl">&#x1F4B5; Cash Sales</span><span class="val" id="eodCash" style="color:var(--success);">BZ$0.00</span></div>
             <div class="eod-row"><span class="lbl">&#x1F4B3; Card Sales</span><span class="val" id="eodCard" style="color:var(--primary);">BZ$0.00</span></div>
             <div class="eod-row"><span class="lbl">Total Payouts</span><span class="val" id="eodPayouts">BZ$0.00</span></div>

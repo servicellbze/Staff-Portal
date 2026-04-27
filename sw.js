@@ -3,7 +3,7 @@
 // Network-first strategy for fast security updates
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-27-bugfix'; // ← Updated to force cache refresh
+const CACHE_DATE = '2026-04-14'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
@@ -53,7 +53,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// ── Fetch: cache-first for fast loads, network-first for API calls ──────────
+// ── Fetch: network-first for API calls, cache-first for assets ───────────────
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
@@ -68,7 +68,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Cache-first for everything else (app shell, CSS, JS, images) - FAST!
+    // Cache-first for everything else (app shell, CSS, JS, images)
     event.respondWith(
         caches.match(event.request)
             .then(cached => {
