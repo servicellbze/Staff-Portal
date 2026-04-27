@@ -3,3 +3,20 @@
 
 /manifest.json
   Cache-Control: no-cache
+
+# Force browsers to check for updates on HTML/JS/CSS files
+/*.html
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/js/*.js
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/css/*.css
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+# Static assets can be cached longer
+/img/*
+  Cache-Control: public, max-age=86400
+
+/favicon.png
+  Cache-Control: public, max-age=86400
