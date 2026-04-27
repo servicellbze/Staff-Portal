@@ -1634,7 +1634,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (dateInput) dateInput.value = getShiftDate();
     // Responsive tabs — use dropdown on narrow screens
     function syncTabLayout() {
-        const isMobile = window.innerWidth < 540;
+        const isMobile = window.innerWidth < 768;
         const bar = document.getElementById('tabBar');
         const sel = document.getElementById('tabSelect');
         if (bar) bar.style.display = isMobile ? 'none' : '';
