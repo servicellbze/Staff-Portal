@@ -544,6 +544,12 @@
         .variance-display.exact { background: rgba(16, 185, 129, 0.1);  color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
         .variance-display.over  { background: rgba(16, 185, 129, 0.08); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.15); }
         .variance-display.short { background: rgba(239, 68, 68, 0.1);   color: var(--danger);  border: 1px solid rgba(239, 68, 68, 0.2); }
+        
+        /* -- Role-based visibility (mobile only) --------- */
+        @media (max-width: 1023px) {
+            body:not(.is-manager) #grossSalesCard { display: none !important; }
+            body:not(.is-manager) .variance-display.over { display: none !important; }
+        }
 
         /* -- Bill Balance -------------------------------- */
         .bill-balance {
@@ -658,6 +664,12 @@
             box-shadow: var(--shadow-sm);
         }
         .tab-select-mobile:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        
+        /* Show dropdown on mobile, hide pill tabs */
+        @media (max-width: 539px) {
+            .tabs { display: none !important; }
+            .tab-select-mobile { display: block; }
+        }
 
         /* ── View Sale receipt card ── */
         .receipt-header { text-align: center; padding-bottom: 14px; border-bottom: 1px dashed var(--glass-border); margin-bottom: 14px; }
@@ -742,7 +754,7 @@
     <!-- -- TAB: SALES ---------------------------------------------------- -->
     <div class="tab-panel active" id="tab-sales">
         <div class="summary-row">
-            <div class="sum-card green">
+            <div class="sum-card green" id="grossSalesCard">
                 <div class="sum-label">Gross Sales</div>
                 <div class="sum-value" id="sumGross">BZ$0.00</div>
             </div>

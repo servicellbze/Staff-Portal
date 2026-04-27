@@ -3,7 +3,7 @@
 // Network-first strategy for fast security updates
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-14'; // ← change this to today's date on each deploy
+const CACHE_DATE = '2026-04-27'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
@@ -53,7 +53,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// ── Fetch: network-first for API calls, cache-first for assets ───────────────
+// ── Fetch: network-first for critical files, cache-first for assets ──────────
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
@@ -68,7 +68,38 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Cache-first for everything else (app shell, CSS, JS, images)
+    // Network-first for HTML, JS, and CSS files (security-critical)
+    // This ensures updates are applied immediately when online
+    const isSecurityCritical = url.pathname.endsWith('.html') || 
+                               url.pathname.endsWith('.js') || 
+                               url.pathname.endsWith('.css');
+    
+    if (isSecurityCritical) {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    // Cache the fresh response
+                    if (response.status === 200) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    // Fall back to cache only if network fails
+                    return caches.match(event.request).then(cached => {
+                        if (cached) return cached;
+                        if (event.request.mode === 'navigate') {
+                            return caches.match(BASE + '/index.html');
+                        }
+                        return new Response('', { status: 503 });
+                    });
+                })
+        );
+        return;
+    }
+
+    // Cache-first for images and other static assets
     event.respondWith(
         caches.match(event.request)
             .then(cached => {
