@@ -3,7 +3,7 @@
 // Network-first strategy for fast security updates
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-27'; // ← auto-updated
+const CACHE_DATE = '2026-04-27-fix'; // ← Updated to force cache refresh
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
@@ -53,7 +53,7 @@ self.addEventListener('activate', event => {
     );
 });
 
-// ── Fetch: network-first for app files (fast updates), cache-first for assets ───
+// ── Fetch: cache-first for fast loads, network-first for API calls ──────────
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
 
@@ -68,37 +68,7 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Network-first for HTML, JS, CSS (security updates apply immediately)
-    const isAppFile = url.pathname.endsWith('.html') || 
-                      url.pathname.endsWith('.js') || 
-                      url.pathname.endsWith('.css') ||
-                      url.pathname === BASE + '/' ||
-                      url.pathname === BASE;
-    
-    if (isAppFile) {
-        event.respondWith(
-            fetch(event.request)
-                .then(response => {
-                    // Update cache with fresh version
-                    if (response.status === 200) {
-                        const clone = response.clone();
-                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                    }
-                    return response;
-                })
-                .catch(() => {
-                    // Fallback to cache if offline
-                    return caches.match(event.request).then(cached => {
-                        return cached || (event.request.mode === 'navigate' 
-                            ? caches.match(BASE + '/index.html') 
-                            : new Response('', { status: 503 }));
-                    });
-                })
-        );
-        return;
-    }
-
-    // Cache-first for images and other static assets
+    // Cache-first for everything else (app shell, CSS, JS, images) - FAST!
     event.respondWith(
         caches.match(event.request)
             .then(cached => {
