@@ -3,7 +3,7 @@
 // Network-first strategy for fast security updates
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-04-27-fix'; // ← Updated to force cache refresh
+const CACHE_DATE = '2026-04-27-bugfix'; // ← Updated to force cache refresh
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
