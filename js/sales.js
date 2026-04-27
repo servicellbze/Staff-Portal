@@ -109,11 +109,12 @@ function switchTab(name) {
 async function loadAll() {
     setSyncState('loading', 'Syncing...');
     const date = getShiftDate();
+    const today = getShiftDate(); // Always use today for EOD closes
     const [sData, pData, bData, eData] = await Promise.all([
         fetch(SCRIPT_URL + '?action=listsales&date='     + date).then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listpayouts&date='   + date).then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listbills')           .then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listdaycloses&date=' + date).then(r => r.json()).catch(() => ({}))
+        fetch(SCRIPT_URL + '?action=listdaycloses&date=' + today).then(r => r.json()).catch(() => ({}))
     ]);
     allSales   = sData.sales   || [];
     allPayouts = pData.payouts || [];
@@ -176,10 +177,11 @@ function onSalesDateChange() {
     if (_currentDateFilter && _currentDateFilter !== getShiftDate()) {
         setSyncState('loading', 'Loading...');
         const date = _currentDateFilter;
+        const today = getShiftDate(); // Always use today for EOD closes
         Promise.all([
             fetch(SCRIPT_URL + '?action=listsales&date=' + date).then(r => r.json()).catch(() => ({})),
             fetch(SCRIPT_URL + '?action=listpayouts&date=' + date).then(r => r.json()).catch(() => ({})),
-            fetch(SCRIPT_URL + '?action=listdaycloses&date=' + date).then(r => r.json()).catch(() => ({}))
+            fetch(SCRIPT_URL + '?action=listdaycloses&date=' + today).then(r => r.json()).catch(() => ({}))
         ]).then(([sData, pData, eData]) => {
             allSales = sData.sales || [];
             allPayouts = pData.payouts || [];
@@ -382,16 +384,23 @@ function calcVariance() {
 function renderEODHistory(closes) {
     const el = document.getElementById('eodHistory');
     if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>No previous closes today.</p></div>'; return; }
+    
+    // Check if mobile and if user is manager
+    const isMobile = window.innerWidth <= 768;
+    const showVariance = !isMobile || isManager;
+    
     el.innerHTML = [...closes].reverse().map(c => {
         const ts       = c.timestamp ? new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const variance = parseFloat(c.variance) || 0;
         const varColor = Math.abs(variance) < 0.01 ? 'var(--success)' : variance > 0 ? 'var(--success)' : 'var(--danger)';
         const varLabel = Math.abs(variance) < 0.01 ? '✓ Exact' : (variance > 0 ? '+' : '') + bz(variance);
+        
         return '<div class="eod-history-item">'
             + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + '</div>'
             + '<div style="font-size:0.72rem;color:var(--text-dim);">' + escH(ts) + (c.closedBy ? ' · ' + escH(c.closedBy) : '') + '</div></div>'
             + '<div style="text-align:right;"><div style="font-size:0.88rem;font-weight:800;">Net: ' + bz(c.netExpected) + '</div>'
-            + '<div style="font-size:0.72rem;font-weight:700;color:' + varColor + ';">Variance: ' + varLabel + '</div></div>'
+            + (showVariance ? '<div style="font-size:0.72rem;font-weight:700;color:' + varColor + ';">Variance: ' + varLabel + '</div>' : '')
+            + '</div>'
             + '</div>';
     }).join('');
 }
@@ -434,6 +443,13 @@ async function submitEOD() {
 }
 
 function printEOD() {
+    // Require drawer count before printing
+    const drawerRaw = document.getElementById('drawerCount').value;
+    if (!drawerRaw || drawerRaw.trim() === '') {
+        alert('⚠️ Please enter the drawer count before printing the report.');
+        return;
+    }
+    
     const validSales   = allSales.filter(s => s.status !== 'reversed');
     const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
     const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
@@ -1501,10 +1517,17 @@ function reverseSale(saleId) {
         + ' &nbsp;&bull;&nbsp; Method: ' + escH(methodDisplay)
         + (s.cashier ? ' &nbsp;&bull;&nbsp; By: ' + escH(s.cashier) : '');
     document.getElementById('reverseReason').value = '';
-    document.getElementById('reverseSubmitBtn').disabled = false;
+    document.getElementById('reverseConfirmCheck').checked = false;
+    document.getElementById('reverseSubmitBtn').disabled = true;
     document.getElementById('reverseSubmitBtn').textContent = '↩️ Confirm Reversal';
     openModal('reverseSaleModal');
     setTimeout(() => document.getElementById('reverseReason').focus(), 300);
+}
+
+function toggleReverseButton() {
+    const checkbox = document.getElementById('reverseConfirmCheck');
+    const btn = document.getElementById('reverseSubmitBtn');
+    btn.disabled = !checkbox.checked;
 }
 
 async function submitReverse() {
@@ -1600,6 +1623,12 @@ function showToast(msg, type) {
 document.addEventListener('DOMContentLoaded', function () {
     currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Cashier';
     isManager   = currentUser.toLowerCase().startsWith('manager');
+    
+    // Add manager-view class to body for CSS targeting
+    if (isManager) {
+        document.body.classList.add('manager-view');
+    }
+    
     // Set date filter to today by default
     const dateInput = document.getElementById('salesDateFilter');
     if (dateInput) dateInput.value = getShiftDate();
