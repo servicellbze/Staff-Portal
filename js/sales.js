@@ -342,7 +342,8 @@ function updateEOD() {
     const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
-    const net          = gross - payoutsTotal;
+    // Net drawer = cash/partial sales only (card never touches the drawer) minus payouts
+    const net          = cashSales - payoutsTotal;
     document.getElementById('eodGross').textContent   = bz(gross);
     document.getElementById('eodCash').textContent    = bz(cashSales);
     document.getElementById('eodCard').textContent    = bz(cardSales);
@@ -459,7 +460,8 @@ function printEOD() {
     const gstCollected = gross * 12.5 / 112.5;
     const preTax       = gross - gstCollected;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
-    const net          = gross - payoutsTotal;
+    // Net drawer = cash only (card never touches the drawer) minus payouts
+    const net          = cashSales - payoutsTotal;
     const drawerRaw    = document.getElementById('drawerCount').value;
     const drawer       = drawerRaw ? parseFloat(drawerRaw) : net;
     const drawerLabel  = drawerRaw ? bz(drawer) : bz(net) + ' (not counted)';
@@ -490,13 +492,13 @@ function printEOD() {
         + '<hr>'
         + '<table>'
         + '<tr><td>Gross Sales (incl. GST)</td><td>' + bz(gross) + '</td></tr>'
-        + '<tr><td>&nbsp;&nbsp;Cash</td><td>' + bz(cashSales) + '</td></tr>'
-        + '<tr><td>&nbsp;&nbsp;Card</td><td>' + bz(cardSales) + '</td></tr>'
+        + '<tr><td>&nbsp;&nbsp;Cash / Partial</td><td>' + bz(cashSales) + '</td></tr>'
+        + '<tr><td>&nbsp;&nbsp;Card (not in drawer)</td><td>' + bz(cardSales) + '</td></tr>'
         + '<tr><td>Sales excl. GST</td><td>' + bz(preTax) + '</td></tr>'
         + '<tr><td>GST Collected (12.5%)</td><td>' + bz(gstCollected) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
-        + '<tr class="total"><td><strong>Net Expected</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
+        + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
         + '<tr><td>Actual Drawer</td><td>' + drawerLabel + '</td></tr>'
         + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
         + '</table>'
