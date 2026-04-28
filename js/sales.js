@@ -376,12 +376,7 @@ function calcVariance() {
     if (Math.abs(diff) < 0.01) {
         disp.className = 'variance-display exact'; disp.textContent = '✓ Drawer is exact — ' + bz(drawer);
     } else if (diff > 0) {
-        if (isManager) {
-            disp.className = 'variance-display over'; disp.textContent = '↑ Over by ' + bz(diff);
-        } else {
-            // Non-managers don't see the amount — just a neutral acknowledgement
-            disp.className = 'variance-display exact'; disp.textContent = '✓ Submitted for review';
-        }
+        disp.className = 'variance-display over'; disp.textContent = '↑ Over by ' + bz(diff);
     } else {
         disp.className = 'variance-display short'; disp.textContent = '⚠️ Short by ' + bz(Math.abs(diff)) + ' — Manager will be notified';
     }
