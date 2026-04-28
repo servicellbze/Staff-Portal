@@ -1863,6 +1863,7 @@
                 <button class="mf-btn mf-print" onclick="printFromView()">🖨️ Print</button>
                 <button class="mf-btn mf-claim" id="claimBtn" onclick="claimCurrentJob()" style="display:none;">🔒 Claim Job</button>
                 <button class="mf-btn mf-unclaim" id="unclaimBtn" onclick="unclaimCurrentJob()" style="display:none;">🔓 Reassign</button>
+                <button class="mf-btn" id="editPhotosBtn" onclick="openPhotoEditor(currentViewId)" style="display:none;">📷 Edit Photos</button>
                 <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
             </div>
         </div>
@@ -1907,6 +1908,59 @@
         <img id="lbImg" src="" alt="Inspection photo">
         <button class="lb-nav lb-next" id="lbNext" onclick="lbNav(1)">&#x203A;</button>
         <div class="lb-counter" id="lbCounter"></div>
+    </div>
+
+    <!-- ── Photo Editor Modal ── -->
+    <div class="modal-overlay" id="photoEditorModal" style="z-index:3100;">
+        <div class="modal-box" style="max-width:560px;">
+            <div class="modal-header">
+                <h2>📷 Edit Photos</h2>
+                <div style="font-size:0.72rem;color:var(--text-dim);font-weight:600;" id="photoEditorJobLabel"></div>
+            </div>
+
+            <!-- Existing photos -->
+            <div style="margin-bottom:18px;">
+                <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:10px;">Current Photos</div>
+                <div id="photoEditorExisting" style="display:flex;flex-wrap:wrap;gap:10px;min-height:48px;">
+                    <div style="font-size:0.82rem;color:var(--text-dim);padding:12px 0;" id="photoEditorNoPhotos">No photos yet.</div>
+                </div>
+            </div>
+
+            <!-- Add new photos -->
+            <div style="margin-bottom:18px;">
+                <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:10px;">Add Photos</div>
+                <div id="photoEditorNewPreview" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+                <div style="display:flex;gap:8px;">
+                    <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;border:1.5px dashed var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+                        📁 Choose Files
+                        <input type="file" accept="image/*" multiple style="display:none;" onchange="handlePhotoEditorFiles(event)">
+                    </label>
+                    <button type="button" onclick="photoEditorWebcamOpen()" style="flex:1;padding:11px;border-radius:12px;border:1.5px dashed var(--glass-border);background:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">📷 Camera</button>
+                </div>
+            </div>
+
+            <div id="photoEditorStatus" style="font-size:0.75rem;color:var(--text-dim);margin-bottom:10px;display:none;"></div>
+
+            <div class="modal-footer">
+                <button class="mf-btn mf-cancel" onclick="closePhotoEditor()">Cancel</button>
+                <button class="mf-btn mf-save" id="photoEditorSaveBtn" onclick="savePhotoEditor()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Photo Editor Webcam Overlay ── -->
+    <div id="photoEditorWebcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10001;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">📷 Take a Photo</div>
+        <select id="photoEditorWebcamSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="photoEditorWebcamSwitch()"></select>
+        <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
+            <video id="photoEditorWebcamVideo" autoplay playsinline style="width:min(90vw,480px);height:min(60vw,320px);object-fit:cover;display:block;"></video>
+            <canvas id="photoEditorWebcamCanvas" style="display:none;"></canvas>
+        </div>
+        <div style="display:flex;gap:12px;">
+            <button onclick="photoEditorWebcamSnap()" style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">📸 Snap</button>
+            <button onclick="photoEditorWebcamClose()" style="padding:14px 24px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
+        </div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);">Tap Snap or press Space</div>
     </div>
 
     <!-- ══════════════════════════════════════════
@@ -2521,6 +2575,12 @@
                     editBtn.title        = locked ? 'Claimed by ' + j.claimedBy : '';
                     editBtn.style.opacity = locked ? '0.4' : '';
                 }
+            }
+
+            // Show Edit Photos button for all roles (not archived)
+            const editPhotosBtn = document.getElementById('editPhotosBtn');
+            if (editPhotosBtn) {
+                editPhotosBtn.style.display = !j._archived ? '' : 'none';
             }
 
             // Inspection checklist — unchecked = ✅ green (ok), checked = ❌ red (issue)
@@ -3381,6 +3441,248 @@
             if (e.code === 'Space' && document.getElementById('editWebcamOverlay').style.display === 'flex') {
                 e.preventDefault();
                 editWebcamSnap();
+            }
+        });
+    </script>
+
+    <script>
+        // ── Photo Editor Modal ────────────────────────────────────────────────
+        let _peJobId    = null;   // job ID being edited
+        let _peNewPhotos = [];    // new base64 photos to upload
+        let _peRemovedUrls = [];  // existing URLs marked for removal
+        let _peWebcamStream = null;
+
+        function openPhotoEditor(jobId) {
+            const j = getJob(jobId);
+            if (!j) return;
+            _peJobId       = jobId;
+            _peNewPhotos   = [];
+            _peRemovedUrls = [];
+
+            document.getElementById('photoEditorJobLabel').textContent = '#' + j.id + ' — ' + (j.customerName || 'Walk-in') + ' · ' + (j.device || '');
+            document.getElementById('photoEditorNewPreview').innerHTML = '';
+            document.getElementById('photoEditorStatus').style.display = 'none';
+            document.getElementById('photoEditorSaveBtn').disabled = false;
+            document.getElementById('photoEditorSaveBtn').textContent = 'Save Changes';
+
+            // Render existing photos as removable pills
+            const grid = document.getElementById('photoEditorExisting');
+            const none = document.getElementById('photoEditorNoPhotos');
+            grid.innerHTML = '';
+            const imgs = j.inspectionImages || [];
+            if (imgs.length) {
+                none.style.display = 'none';
+                imgs.forEach((url, idx) => {
+                    grid.appendChild(_peThumb(url, idx));
+                });
+            } else {
+                none.style.display = '';
+                grid.appendChild(none);
+            }
+
+            closeModal('viewModal');
+            openModal('photoEditorModal');
+        }
+
+        function _peThumb(url, idx) {
+            const wrap = document.createElement('div');
+            wrap.dataset.url = url;
+            wrap.style.cssText = 'position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid var(--glass-border);flex-shrink:0;transition:opacity 0.2s;';
+            wrap.innerHTML = `
+                <img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.parentNode.style.display='none'">
+                <button onclick="_peMarkRemove(this)" title="Remove photo"
+                    style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(220,38,38,0.85);border:none;color:#fff;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;line-height:1;">✕</button>`;
+            return wrap;
+        }
+
+        function _peMarkRemove(btn) {
+            const wrap = btn.closest('[data-url]');
+            if (!wrap) return;
+            const url = wrap.dataset.url;
+            if (_peRemovedUrls.includes(url)) {
+                // Undo removal
+                _peRemovedUrls = _peRemovedUrls.filter(u => u !== url);
+                wrap.style.opacity = '1';
+                wrap.style.outline = '';
+                btn.style.background = 'rgba(220,38,38,0.85)';
+                btn.textContent = '✕';
+            } else {
+                // Mark for removal
+                _peRemovedUrls.push(url);
+                wrap.style.opacity = '0.35';
+                wrap.style.outline = '2px solid var(--danger)';
+                btn.style.background = 'rgba(16,185,129,0.85)';
+                btn.textContent = '↩';
+            }
+        }
+
+        function handlePhotoEditorFiles(e) {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    _peNewPhotos.push(ev.target.result);
+                    const idx = _peNewPhotos.length - 1;
+                    const preview = document.getElementById('photoEditorNewPreview');
+                    const thumb = document.createElement('div');
+                    thumb.style.cssText = 'position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid var(--glass-border);flex-shrink:0;';
+                    thumb.innerHTML = `
+                        <img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;display:block;">
+                        <button onclick="_peNewPhotos[${idx}]=null;this.parentNode.remove();"
+                            style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(220,38,38,0.85);border:none;color:#fff;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;">✕</button>`;
+                    preview.appendChild(thumb);
+                };
+                reader.readAsDataURL(file);
+            });
+            e.target.value = '';
+        }
+
+        async function savePhotoEditor() {
+            const btn = document.getElementById('photoEditorSaveBtn');
+            const status = document.getElementById('photoEditorStatus');
+            const newPhotos = _peNewPhotos.filter(Boolean);
+            const toRemove  = [..._peRemovedUrls];
+
+            if (!newPhotos.length && !toRemove.length) {
+                closePhotoEditor();
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+            status.style.display = 'block';
+
+            // Step 1: Remove marked photos
+            if (toRemove.length) {
+                status.textContent = `🗑️ Removing ${toRemove.length} photo${toRemove.length > 1 ? 's' : ''}…`;
+                for (const url of toRemove) {
+                    try {
+                        const params = new URLSearchParams({ action: 'removeimage', repairId: _peJobId, imageUrl: url });
+                        await fetch(SCRIPT_URL, { method: 'POST', body: params });
+                    } catch(e) { console.warn('Remove photo failed', e); }
+                }
+            }
+
+            // Step 2: Upload new photos
+            if (newPhotos.length) {
+                const j = getJob(_peJobId);
+                const existingCount = j && j.inspectionImages ? j.inspectionImages.filter(u => !toRemove.includes(u)).length : 0;
+                status.textContent = `⏳ Uploading ${newPhotos.length} photo${newPhotos.length > 1 ? 's' : ''}…`;
+                for (let i = 0; i < newPhotos.length; i++) {
+                    try {
+                        const compressed = await _peCompress(newPhotos[i], 1200, 0.82);
+                        const params = new URLSearchParams({
+                            action: 'uploadimage',
+                            repairId: _peJobId,
+                            imageData: compressed.replace(/^data:[^;]+;base64,/, ''),
+                            mimeType: 'image/jpeg',
+                            imageIndex: existingCount + i + 1
+                        });
+                        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+                    } catch(e) { console.warn('Upload photo failed', e); }
+                }
+            }
+
+            status.textContent = '✅ Done!';
+            showToast('Photos updated!', 'ok');
+            btn.textContent = '✓ Saved';
+
+            // Refresh job data and reopen view modal
+            setTimeout(async () => {
+                await loadJobs();
+                closePhotoEditor();
+                openViewModal(_peJobId);
+            }, 800);
+        }
+
+        function closePhotoEditor() {
+            photoEditorWebcamClose();
+            _peJobId = null; _peNewPhotos = []; _peRemovedUrls = [];
+            closeModal('photoEditorModal');
+        }
+
+        function _peCompress(dataUrl, maxPx, quality) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width, h = img.height;
+                    if (w > maxPx || h > maxPx) {
+                        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+                        else       { w = Math.round(w * maxPx / h); h = maxPx; }
+                    }
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(img, 0, 0, w, h);
+                    resolve(c.toDataURL('image/jpeg', quality));
+                };
+                img.src = dataUrl;
+            });
+        }
+
+        // ── Photo Editor Webcam ───────────────────────────────────────────────
+        async function photoEditorWebcamOpen() {
+            const overlay = document.getElementById('photoEditorWebcamOverlay');
+            overlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(d => d.kind === 'videoinput');
+                const sel = document.getElementById('photoEditorWebcamSelect');
+                sel.innerHTML = cameras.map((c, i) => `<option value="${c.deviceId}">${c.label || 'Camera ' + (i + 1)}</option>`).join('');
+                sel.style.display = cameras.length > 1 ? 'block' : 'none';
+            } catch(_) {}
+            await _peWebcamStart();
+        }
+
+        async function _peWebcamStart(deviceId) {
+            if (_peWebcamStream) { _peWebcamStream.getTracks().forEach(t => t.stop()); }
+            const constraints = { video: deviceId
+                ? { deviceId: { exact: deviceId } }
+                : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            };
+            try {
+                _peWebcamStream = await navigator.mediaDevices.getUserMedia(constraints);
+                document.getElementById('photoEditorWebcamVideo').srcObject = _peWebcamStream;
+            } catch(e) {
+                photoEditorWebcamClose();
+                showToast('Camera not available — use file picker instead.', 'err');
+            }
+        }
+
+        function photoEditorWebcamSwitch() {
+            _peWebcamStart(document.getElementById('photoEditorWebcamSelect').value);
+        }
+
+        function photoEditorWebcamSnap() {
+            const video  = document.getElementById('photoEditorWebcamVideo');
+            const canvas = document.getElementById('photoEditorWebcamCanvas');
+            canvas.width  = video.videoWidth  || 1280;
+            canvas.height = video.videoHeight || 720;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+            photoEditorWebcamClose();
+            _peNewPhotos.push(dataUrl);
+            const idx = _peNewPhotos.length - 1;
+            const preview = document.getElementById('photoEditorNewPreview');
+            const thumb = document.createElement('div');
+            thumb.style.cssText = 'position:relative;width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid var(--glass-border);flex-shrink:0;';
+            thumb.innerHTML = `
+                <img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;">
+                <button onclick="_peNewPhotos[${idx}]=null;this.parentNode.remove();"
+                    style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(220,38,38,0.85);border:none;color:#fff;font-size:0.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900;">✕</button>`;
+            preview.appendChild(thumb);
+            showToast('📸 Photo added', 'ok');
+        }
+
+        function photoEditorWebcamClose() {
+            if (_peWebcamStream) { _peWebcamStream.getTracks().forEach(t => t.stop()); _peWebcamStream = null; }
+            document.getElementById('photoEditorWebcamOverlay').style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && document.getElementById('photoEditorWebcamOverlay').style.display === 'flex') {
+                e.preventDefault();
+                photoEditorWebcamSnap();
             }
         });
     </script>
