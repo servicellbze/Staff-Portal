@@ -113,7 +113,8 @@ async function loadAll() {
         fetch(SCRIPT_URL + '?action=listsales&date='     + date).then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listpayouts&date='   + date).then(r => r.json()).catch(() => ({})),
         fetch(SCRIPT_URL + '?action=listbills')           .then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listdaycloses&date=' + date).then(r => r.json()).catch(() => ({}))
+        // Load recent closes without date filter to show last week's activity
+        fetch(SCRIPT_URL + '?action=listdaycloses').then(r => r.json()).catch(() => ({}))
     ]);
     allSales   = sData.sales   || [];
     allPayouts = pData.payouts || [];
@@ -179,7 +180,8 @@ function onSalesDateChange() {
         Promise.all([
             fetch(SCRIPT_URL + '?action=listsales&date=' + date).then(r => r.json()).catch(() => ({})),
             fetch(SCRIPT_URL + '?action=listpayouts&date=' + date).then(r => r.json()).catch(() => ({})),
-            fetch(SCRIPT_URL + '?action=listdaycloses&date=' + date).then(r => r.json()).catch(() => ({}))
+            // Load recent closes without date filter to show last week's activity
+            fetch(SCRIPT_URL + '?action=listdaycloses').then(r => r.json()).catch(() => ({}))
         ]).then(([sData, pData, eData]) => {
             allSales = sData.sales || [];
             allPayouts = pData.payouts || [];
@@ -373,7 +375,12 @@ function calcVariance() {
     if (Math.abs(diff) < 0.01) {
         disp.className = 'variance-display exact'; disp.textContent = '✓ Drawer is exact — ' + bz(drawer);
     } else if (diff > 0) {
-        disp.className = 'variance-display over'; disp.textContent = '↑ Over by ' + bz(diff);
+        if (isManager) {
+            disp.className = 'variance-display over'; disp.textContent = '↑ Over by ' + bz(diff);
+        } else {
+            // Non-managers don't see the amount — just a neutral acknowledgement
+            disp.className = 'variance-display exact'; disp.textContent = '✓ Submitted for review';
+        }
     } else {
         disp.className = 'variance-display short'; disp.textContent = '⚠️ Short by ' + bz(Math.abs(diff)) + ' — Manager will be notified';
     }
@@ -381,14 +388,25 @@ function calcVariance() {
 
 function renderEODHistory(closes) {
     const el = document.getElementById('eodHistory');
-    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>No previous closes today.</p></div>'; return; }
+    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>No recent closes found.</p></div>'; return; }
     el.innerHTML = [...closes].reverse().map(c => {
         const ts       = c.timestamp ? new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const date     = c.shiftDate || c.timestamp ? new Date(c.timestamp || c.shiftDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
         const variance = parseFloat(c.variance) || 0;
-        const varColor = Math.abs(variance) < 0.01 ? 'var(--success)' : variance > 0 ? 'var(--success)' : 'var(--danger)';
-        const varLabel = Math.abs(variance) < 0.01 ? '✓ Exact' : (variance > 0 ? '+' : '') + bz(variance);
+        let varColor, varLabel;
+        if (Math.abs(variance) < 0.01) {
+            varColor = 'var(--success)';
+            varLabel = '✓ Exact';
+        } else if (variance < 0) {
+            varColor = 'var(--danger)';
+            varLabel = '⚠️ Short ' + bz(Math.abs(variance));
+        } else {
+            // Over — managers see the amount, cashiers see a neutral placeholder
+            varColor = isManager ? 'var(--success)' : 'var(--text-dim)';
+            varLabel = isManager ? '+' + bz(variance) : '— Reviewed';
+        }
         return '<div class="eod-history-item">'
-            + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + '</div>'
+            + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + (date ? ' · ' + date : '') + '</div>'
             + '<div style="font-size:0.72rem;color:var(--text-dim);">' + escH(ts) + (c.closedBy ? ' · ' + escH(c.closedBy) : '') + '</div></div>'
             + '<div style="text-align:right;"><div style="font-size:0.88rem;font-weight:800;">Net: ' + bz(c.netExpected) + '</div>'
             + '<div style="font-size:0.72rem;font-weight:700;color:' + varColor + ';">Variance: ' + varLabel + '</div></div>'
@@ -1607,6 +1625,11 @@ function showToast(msg, type) {
 document.addEventListener('DOMContentLoaded', function () {
     currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Cashier';
     isManager   = currentUser.toLowerCase().startsWith('manager');
+    
+    // Apply manager class to body for CSS-based role visibility
+    if (isManager) {
+        document.body.classList.add('is-manager');
+    }
     
     // Set date filter to today by default
     const dateInput = document.getElementById('salesDateFilter');
