@@ -40,14 +40,13 @@ function getCurrentShift() {
     const h   = now.getHours() + now.getMinutes() / 60;
     if (day === 0) return null;
     if (day === 6) {
-        // Saturday � single shift 9am to 7pm
+        // Saturday - single shift 9am to 7pm
         if (h >= 9 && h < 19) return { label: 'Saturday Shift', start: 9, end: 19 };
         return null;
     }
-    // Weekdays � Morning 8�4, Night 4�8
-    if (h >= 8  && h < 16) return { label: 'Morning Shift', start: 8,  end: 16 };
-    if (h >= 16 && h < 20) return { label: 'Night Shift',   start: 16, end: 20 };
-    return null;
+    // Weekdays: Morning 8-4, Night 4pm-8am (wraps past midnight)
+    if (h >= 8 && h < 16) return { label: 'Morning Shift', start: 8, end: 16 };
+    return { label: 'Night Shift', start: 16, end: 32 }; // Night covers 4pm-8am next day
 }
 
 function getShiftDate() {
@@ -72,8 +71,14 @@ function updateShiftBanner() {
         return;
     }
     const now      = new Date();
+    // For Night Shift, end is 8am next day (stored as 32 = 24+8)
     const endTime  = new Date(now);
-    endTime.setHours(shift.end, 0, 0, 0);
+    if (shift.end >= 24) {
+        endTime.setDate(endTime.getDate() + 1);
+        endTime.setHours(shift.end - 24, 0, 0, 0);
+    } else {
+        endTime.setHours(shift.end, 0, 0, 0);
+    }
     const msLeft   = endTime - now;
     const minsLeft = Math.floor(msLeft / 60000);
     const hoursLeft = Math.floor(minsLeft / 60);
@@ -343,28 +348,24 @@ function renderBills() {
 }
 
 // -- End of Day ----------------------------------------------------------------
-let _eodSelectedShift = null; // overrides getCurrentShift() when set
-
 function initEODShiftPills() {
-    const auto = getCurrentShift();
-    // Pre-select the auto-detected shift; if none active, leave unselected
-    document.querySelectorAll('.eod-shift-pill').forEach(btn => {
-        const match = auto && btn.dataset.shift === auto.label;
-        btn.classList.toggle('active', match);
-    });
-    _eodSelectedShift = auto ? auto.label : null;
-    _updateFloatVisibility();
-}
-
-function selectEODShift(btn) {
-    document.querySelectorAll('.eod-shift-pill').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    _eodSelectedShift = btn.dataset.shift;
+    // Update the shift label and float visibility based on current time
+    const shift = getCurrentShift();
+    const labelEl = document.getElementById('eodShiftLabel');
+    if (labelEl) {
+        if (shift) {
+            const icon = shift.label === 'Morning Shift' ? '🌅' : shift.label === 'Saturday Shift' ? '📅' : '🌙';
+            labelEl.textContent = 'For: ' + icon + ' ' + shift.label;
+            labelEl.style.color = 'var(--primary)';
+        } else {
+            labelEl.textContent = 'No active shift detected';
+            labelEl.style.color = 'var(--text-dim)';
+        }
+    }
     _updateFloatVisibility();
 }
 
 function getEODShiftLabel() {
-    if (_eodSelectedShift) return _eodSelectedShift;
     const s = getCurrentShift();
     return s ? s.label : 'Unknown';
 }
