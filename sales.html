@@ -498,20 +498,7 @@
             color: var(--primary);
             margin-bottom: 14px;
         }
-        .eod-shift-pill {
-            padding: 7px 14px;
-            border-radius: var(--radius-full);
-            border: 1.5px solid var(--glass-border);
-            background: var(--glass);
-            color: var(--text-dim);
-            font-family: var(--font-family);
-            font-size: 0.78rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
-        .eod-shift-pill:hover { border-color: var(--primary); color: var(--text-main); }
-        .eod-shift-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .eod-shift-pill { display: none; } /* pills removed — shift is auto-detected */
         .eod-row {
             display: flex;
             justify-content: space-between;
@@ -854,12 +841,7 @@
     <div class="tab-panel" id="tab-eod">
         <div class="eod-section">
             <h3>&#x1F4CA; Shift Summary</h3>
-            <!-- Shift override pills -->
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="eodShiftPills">
-                <button class="eod-shift-pill" data-shift="Morning Shift" onclick="selectEODShift(this)">&#x1F305; Morning</button>
-                <button class="eod-shift-pill" data-shift="Night Shift"   onclick="selectEODShift(this)">&#x1F319; Night</button>
-                <button class="eod-shift-pill" data-shift="Saturday Shift" onclick="selectEODShift(this)">&#x1F4C5; Saturday</button>
-            </div>
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text-dim);margin-bottom:14px;" id="eodShiftLabel">&#x23F3; Detecting shift&hellip;</div>
             <div class="eod-row"><span class="lbl">Gross Sales</span><span class="val" id="eodGross">BZ$0.00</span></div>
             <div class="eod-row"><span class="lbl">&#x1F4B5; Cash Sales</span><span class="val" id="eodCash" style="color:var(--success);">BZ$0.00</span></div>
             <div class="eod-row"><span class="lbl">&#x1F4B3; Card Sales</span><span class="val" id="eodCard" style="color:var(--primary);">BZ$0.00</span></div>
