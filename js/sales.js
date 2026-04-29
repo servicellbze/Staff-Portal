@@ -661,14 +661,14 @@ function printSalesReport() {
         const ts = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const method = (s.method || 'cash').toUpperCase();
         
-        // Create rows for each item with quantity
+        // Create rows for each item with quantity and total
         const itemRows = items.map(item => {
             const itemName = escH((item.name || 'Item').substring(0, 24));
             const qty = item.qty || 1;
-            const price = parseFloat(item.price) || 0;
+            const total = parseFloat(item.total) || (parseFloat(item.price) || 0) * qty;
             return '<tr><td style="font-size:8pt;">' + itemName + '</td>'
                 + '<td style="text-align:center;font-size:8pt;">' + qty + '</td>'
-                + '<td style="text-align:right;font-size:8pt;">' + bz(price) + '</td></tr>';
+                + '<td style="text-align:right;font-size:8pt;">' + bz(total) + '</td></tr>';
         }).join('');
         
         // Header row for this sale
@@ -702,7 +702,7 @@ function printSalesReport() {
         + '<table>'
         + '<tr><th style="text-align:left;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Item</th>'
         + '<th style="text-align:center;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Qty</th>'
-        + '<th style="text-align:right;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Price</th></tr>'
+        + '<th style="text-align:right;font-size:8pt;padding:2px 0;border-bottom:2px solid #000;">Total</th></tr>'
         + salesRows
         + '<tr class="total"><td colspan="2"><strong>Total Sales</strong></td><td><strong>' + bz(gross) + '</strong></td></tr>'
         + '<tr><td colspan="2">Transactions</td><td>' + validSales.length + '</td></tr>'
