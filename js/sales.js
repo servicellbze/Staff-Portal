@@ -259,7 +259,7 @@ function renderSales() {
         const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
             : (s.method === 'partial' ? '<span class="badge badge-partial">Partial</span>' : '<span class="badge badge-paid">Paid</span>');
         const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
-        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">✏️</button>';
+        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         // Sale total = item value (s.total). amountPaid may differ for partial sales.
         // For cash: show tendered separately only when it exceeds the total (change was given).
@@ -550,6 +550,7 @@ function printEOD() {
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
     const drawer       = parseFloat(drawerRaw);
     const drawerLabel  = bz(drawer);
+    const profit       = float_ > 0 ? drawer - float_ : null; // profit only meaningful when float is set
     // Variance = drawer vs net — float is NOT counted toward over/short
     const variance     = drawer - net;
     const shiftLabel   = getEODShiftLabel();
@@ -587,7 +588,7 @@ function printEOD() {
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
         + '<tr><td>Float (Starting Cash)</td><td>' + bz(float_) + '</td></tr>'
         + '<tr><td>Actual Drawer Total</td><td>' + drawerLabel + '</td></tr>'
-        + '<tr><td>Profit in Drawer</td><td>' + bz(profit) + '</td></tr>'
+        + (profit !== null ? '<tr><td>Profit in Drawer</td><td>' + bz(profit) + '</td></tr>' : '')
         + '<tr class="variance"><td><strong>Variance</strong></td><td><strong style="color:' + varColor + ';">' + varText + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
