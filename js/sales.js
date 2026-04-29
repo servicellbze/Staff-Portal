@@ -588,6 +588,7 @@ function printEOD() {
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
     _openAndPrint(html);
+}
 
 // -- Print Sales Report --------------------------------------------------------
 function printSalesReport() {
@@ -630,6 +631,7 @@ function printSalesReport() {
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
     _openAndPrint(html);
+}
 
 // -- Print Payouts Report ------------------------------------------------------
 function printPayoutsReport() {
@@ -667,6 +669,7 @@ function printPayoutsReport() {
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
     _openAndPrint(html);
+}
 
 // -- Print Bills Report --------------------------------------------------------
 function printBillsReport() {
@@ -707,6 +710,7 @@ function printBillsReport() {
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
     _openAndPrint(html);
+}
 
 // -- SKU / Barcode Scanner -----------------------------------------------------
 // -- Inventory Cache -----------------------------------------------------------
