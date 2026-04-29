@@ -215,7 +215,7 @@ function onBillsSearch()  { debounce('billsSearch',  renderBills, 50); }
 function renderSales() {
     const q      = (document.getElementById('salesSearch')?.value || '').trim().toLowerCase();
     const active = allSales.filter(s => s.status !== 'reversed');
-    const gross  = active.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gross  = active.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     document.getElementById('sumGross').textContent    = bz(gross);
     document.getElementById('sumCount').textContent    = active.length;
     document.getElementById('sumPartial').textContent  = active.filter(s => s.method === 'partial').length;
@@ -256,6 +256,14 @@ function renderSales() {
         const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
         const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">↩️</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
+        // Sale total = item value (s.total). amountPaid may differ for partial sales.
+        // For cash: show tendered separately only when it exceeds the total (change was given).
+        const saleTotal   = parseFloat(s.total) || parseFloat(s.amountPaid) || 0;
+        const tendered    = parseFloat(s.amountPaid) || 0;
+        const change      = s.method === 'cash' ? Math.max(0, tendered - saleTotal) : 0;
+        const amountLine  = change > 0.01
+            ? bz(saleTotal) + ' <span style="color:var(--text-dim);font-size:0.72rem;font-weight:700;">/ ' + bz(tendered) + ' tendered</span>'
+            : bz(saleTotal);
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
             + '<div class="list-item-icon">🛒</div>'
             + '<div class="list-item-body">'
@@ -264,7 +272,7 @@ function renderSales() {
             +   '<div style="margin-top:4px;display:flex;gap:6px;">' + mBadge + sBadge + '</div>'
             + '</div>'
             + '<div class="list-item-right">'
-            +   '<span class="list-item-amount ' + (isRev ? '' : 'green') + '">' + bz(s.amountPaid) + '</span>'
+            +   '<span class="list-item-amount ' + (isRev ? '' : 'green') + '">' + amountLine + '</span>'
             +   (!isRev ? '<div class="list-item-actions">' + viewBtn + editBtn + reverseBtn + '</div>' : '')
             + '</div></div>';
     }).join('');
@@ -337,9 +345,9 @@ function renderBills() {
 // ── End of Day ────────────────────────────────────────────────────────────────
 function updateEOD() {
     const validSales   = allSales.filter(s => s.status !== 'reversed');
-    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
-    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
-    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     // Net drawer = cash/partial sales only (card never touches the drawer) minus payouts
@@ -417,7 +425,7 @@ async function submitEOD() {
     const drawer       = parseFloat(drawerVal);
     const variance     = drawer - net;
     const shift        = getCurrentShift();
-    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const btn          = document.getElementById('submitEODBtn');
     btn.disabled = true; btn.textContent = 'Submitting...';
@@ -449,9 +457,9 @@ async function submitEOD() {
 
 function printEOD() {
     const validSales   = allSales.filter(s => s.status !== 'reversed');
-    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
-    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
-    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const preTax       = gross - gstCollected;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
@@ -511,7 +519,7 @@ function printEOD() {
 // ── Print Sales Report ────────────────────────────────────────────────────────
 function printSalesReport() {
     const validSales = allSales.filter(s => s.status !== 'reversed');
-    const gross = validSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0);
+    const gross = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const displayDate = _currentDateFilter || getShiftDate();
     const shift = getCurrentShift();
     
@@ -904,8 +912,8 @@ async function submitSale() {
         amountPaid = parseFloat(document.getElementById('salePartialAmount').value) || 0;
         if (amountPaid <= 0) { showToast('Enter the partial amount paid.', 'err'); return; }
     } else if (method === 'cash') {
-        const tendered = parseFloat(document.getElementById('saleCashTendered').value) || 0;
-        amountPaid = tendered > 0 ? tendered : total; // use tendered if entered, else total
+        // amountPaid is always the sale total — tendered is only used for change calculation
+        amountPaid = total;
     } else {
         amountPaid = total;
     }
@@ -922,10 +930,11 @@ async function submitSale() {
         if (data.success) {
             closeModal('saleModal');
             if (typeof haptic === 'function') haptic('success');
-            // Show sale confirmation modal
-            const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
+            // Show sale confirmation modal — use tendered for change display, not amountPaid
+            const tendered = method === 'cash' ? (parseFloat(document.getElementById('saleCashTendered').value) || total) : total;
+            const change = method === 'cash' ? Math.max(0, tendered - total) : 0;
             document.getElementById('scTotal').textContent = bz(total);
-            document.getElementById('scPaid').textContent  = bz(amountPaid);
+            document.getElementById('scPaid').textContent  = bz(tendered);
             const changeRow = document.getElementById('scChangeRow');
             if (change > 0.01) {
                 document.getElementById('scChange').textContent = bz(change);
@@ -1081,9 +1090,9 @@ async function submitJobPickup() {
     let amountPaid = total;
     if (method === 'partial') {
         amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
-    } else if (method === 'cash') {
-        const tendered = parseFloat(document.getElementById('jobCashTendered').value) || 0;
-        amountPaid = tendered > 0 ? tendered : total;
+    } else {
+        // cash or card — amountPaid is always the invoice total, tendered is change only
+        amountPaid = total;
     }
     
     const balance = total - amountPaid;
@@ -1114,9 +1123,10 @@ async function submitJobPickup() {
             
             // Show confirmation modal with change if cash
             if (method === 'cash' && balance <= 0.01) {
-                const change = Math.max(0, amountPaid - total);
+                const jobTendered = parseFloat(document.getElementById('jobCashTendered').value) || total;
+                const change = Math.max(0, jobTendered - total);
                 document.getElementById('scTotal').textContent = bz(total);
-                document.getElementById('scPaid').textContent = bz(amountPaid);
+                document.getElementById('scPaid').textContent = bz(jobTendered);
                 const changeRow = document.getElementById('scChangeRow');
                 if (change > 0.01) {
                     document.getElementById('scChange').textContent = bz(change);
