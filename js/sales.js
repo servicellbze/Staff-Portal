@@ -659,22 +659,22 @@ function printSalesReport() {
     const salesRows = [...validSales].reverse().map(s => {
         const items = tryParseJSON(s.items, []);
         const ts = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        const methodIcon = s.method === 'card' ? '💳' : s.method === 'partial' ? '⚡' : '💵';
+        const method = (s.method || 'cash').toUpperCase();
         
         // Create rows for each item with quantity
         const itemRows = items.map(item => {
-            const itemName = escH((item.name || 'Item').substring(0, 22));
+            const itemName = escH((item.name || 'Item').substring(0, 24));
             const qty = item.qty || 1;
             const price = parseFloat(item.price) || 0;
-            return '<tr><td style="font-size:8pt;padding-left:4px;">' + itemName + '</td>'
+            return '<tr><td style="font-size:8pt;">' + itemName + '</td>'
                 + '<td style="text-align:center;font-size:8pt;">' + qty + '</td>'
                 + '<td style="text-align:right;font-size:8pt;">' + bz(price) + '</td></tr>';
         }).join('');
         
         // Header row for this sale
         const headerRow = '<tr style="background:#f0f0f0;"><td colspan="3" style="font-size:8pt;padding:2px 0;border-top:1px solid #000;">'
-            + methodIcon + ' ' + escH(ts) + ' · ' + escH(s.cashier || 'Staff')
-            + (s.jobId && String(s.jobId).trim() ? ' · Job #' + escH(s.jobId) : '')
+            + escH(ts) + ' [' + method + '] ' + escH(s.cashier || 'Staff')
+            + (s.jobId && String(s.jobId).trim() ? ' - Job #' + escH(s.jobId) : '')
             + '</td></tr>';
         
         return headerRow + itemRows;
