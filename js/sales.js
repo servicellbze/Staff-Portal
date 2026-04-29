@@ -89,7 +89,7 @@ function updateShiftBanner() {
         dot.className = 'shift-dot off'; countdown.textContent = 'Shift ended'; countdown.className = 'shift-off';
     } else if (minsLeft <= 30) {
         dot.className = 'shift-dot warn';
-        countdown.textContent = '?? Shift ends in ' + minsLeft + ' minutes';
+        countdown.textContent = '⚠️ Shift ends in ' + minsLeft + ' minutes';
         countdown.className = 'shift-warn';
     } else {
         dot.className = 'shift-dot';
@@ -258,8 +258,8 @@ function renderSales() {
         const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
         const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
             : (s.method === 'partial' ? '<span class="badge badge-partial">Partial</span>' : '<span class="badge badge-paid">Paid</span>');
-        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">??</button>';
-        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">??</button>';
+        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
+        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">✏️</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         // Sale total = item value (s.total). amountPaid may differ for partial sales.
         // For cash: show tendered separately only when it exceeds the total (change was given).
@@ -270,7 +270,7 @@ function renderSales() {
             ? bz(saleTotal) + ' <span style="color:var(--text-dim);font-size:0.72rem;font-weight:700;">/ ' + bz(tendered) + ' tendered</span>'
             : bz(saleTotal);
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
-            + '<div class="list-item-icon">??</div>'
+            + '<div class="list-item-icon">💸</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(desc) + '</div>'
             +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? '  ·  ' + escH(s.cashier) : '') + (s.jobId ? '  ·  Job #' + escH(s.jobId) : '') + '</div>'
@@ -293,11 +293,11 @@ function renderPayouts() {
     document.getElementById('sumPayouts').textContent     = bz(total);
     document.getElementById('sumPayoutCount').textContent = allPayouts.length;
     const el = document.getElementById('payoutsList');
-    if (!allPayouts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">??</div><p>No payouts logged today.</p></div>'; return; }
+    if (!allPayouts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">💸</div><p>No payouts logged today.</p></div>'; return; }
     el.innerHTML = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         return '<div class="list-item">'
-            + '<div class="list-item-icon">??</div>'
+            + '<div class="list-item-icon">💸</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(p.reason || 'Payout') + '</div>'
             +   '<div class="list-item-meta">' + escH(ts) + (p.loggedBy ? '  ·  ' + escH(p.loggedBy) : '') + (p.takenBy ? '  ·  Taken by: ' + escH(p.takenBy) : '') + '</div>'
@@ -342,7 +342,7 @@ function renderBills() {
             +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '\u2713 Settled' : 'Owes ' + bz(balance)) + '</span></div>'
             + '</div>'
             + (!isSettled ? '<button class="btn-success-sm" onclick="openSettleBill(\'' + escH(b.billId) + '\')">Settle</button>' : '')
-            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">??</button>' : '')
+            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">✏️</button>' : '')
             + '</div>';
     }).join('');
 }
@@ -440,7 +440,7 @@ function calcVariance() {
 
 function renderEODHistory(closes) {
     const el = document.getElementById('eodHistory');
-    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">??</div><p>No recent closes found.</p></div>'; return; }
+    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>No recent closes found.</p></div>'; return; }
     el.innerHTML = [...closes].reverse().map(c => {
         const ts       = c.timestamp ? new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const date     = c.shiftDate || c.timestamp ? new Date(c.timestamp || c.shiftDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
@@ -498,7 +498,7 @@ async function submitEOD() {
         if (data.success) {
             if (typeof haptic === 'function') haptic('success');
             if (variance < -0.01 && typeof sendNotification === 'function')
-                sendNotification('manageronly', '?? Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
+                sendNotification('manageronly', '⚠️ Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
             showToast('End of day submitted!', 'ok');
             btn.textContent = '\u2713 Submitted';
             document.getElementById('drawerCount').value = '';
@@ -947,7 +947,7 @@ function calcSaleChange() {
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
-        disp.textContent = '?? Short by BZ$' + Math.abs(change).toFixed(2);
+        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
         disp.textContent = change < 0.01 ? '✓ Exact  —  no change' : '💵 Change: BZ$' + change.toFixed(2);
@@ -1113,7 +1113,7 @@ function calcJobChange() {
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
-        disp.textContent = '?? Short by BZ$' + Math.abs(change).toFixed(2);
+        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
         disp.textContent = change < 0.01 ? '✓ Exact  —  no change' : '💵 Change: BZ$' + change.toFixed(2);
@@ -1242,7 +1242,7 @@ async function submitPayout() {
             closeModal('payoutModal');
             if (typeof haptic === 'function') haptic('success');
             if (typeof sendNotification === 'function')
-                sendNotification('manageronly', '?? Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
+                sendNotification('manageronly', '💸 Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
             showToast('Payout logged!', 'ok');
             await loadAll();
         } else { btn.disabled = false; btn.textContent = 'Log Payout'; alert('\u274c ' + (data.error || 'Error')); }
@@ -1266,7 +1266,7 @@ function addBillLine(name, qty, price) {
         '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateBillTotal()">'
-        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">?</button>';
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">✕</button>';
     document.getElementById('billLineItems').appendChild(row);
 }
 
@@ -1528,7 +1528,7 @@ function addEditSaleLine(name, qty, price) {
         '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateEditSaleTotal()">'
-        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">?</button>';
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">✕</button>';
     document.getElementById('editSaleLineItems').appendChild(row);
 }
 
@@ -1589,7 +1589,7 @@ function reverseSale(saleId) {
     document.getElementById('reverseReason').value = '';
     document.getElementById('reverseConfirmCheck').checked = false;
     document.getElementById('reverseSubmitBtn').disabled = true;
-    document.getElementById('reverseSubmitBtn').textContent = '?? Confirm Reversal';
+    document.getElementById('reverseSubmitBtn').textContent = '↩️ Confirm Reversal';
     openModal('reverseSaleModal');
     setTimeout(() => document.getElementById('reverseReason').focus(), 300);
 }
@@ -1631,11 +1631,11 @@ async function submitReverse() {
             showToast('Sale reversed.', '');
             await loadAll();
         } else {
-            btn.disabled = false; btn.textContent = '?? Confirm Reversal';
+            btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
             alert('\u274c ' + (data.error || 'Could not reverse.'));
         }
     } catch (e) {
-        btn.disabled = false; btn.textContent = '?? Confirm Reversal';
+        btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
         alert('Connection error.');
     }
 }
