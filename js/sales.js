@@ -262,13 +262,26 @@ function renderSales() {
         const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         // Sale total = item value (s.total). amountPaid may differ for partial sales.
-        // For cash: show tendered separately only when it exceeds the total (change was given).
         const saleTotal   = parseFloat(s.total) || parseFloat(s.amountPaid) || 0;
         const tendered    = parseFloat(s.amountPaid) || 0;
-        const change      = s.method === 'cash' ? Math.max(0, tendered - saleTotal) : 0;
-        const amountLine  = change > 0.01
-            ? bz(saleTotal) + ' <span style="color:var(--text-dim);font-size:0.72rem;font-weight:700;">/ ' + bz(tendered) + ' tendered</span>'
-            : bz(saleTotal);
+        
+        // Build amount display: always show sale total and tendered amount
+        let amountLine = '<div style="text-align:right;">';
+        amountLine += '<div style="font-size:0.95rem;font-weight:800;">Sale: ' + bz(saleTotal) + '</div>';
+        
+        // Show tendered amount for all payment methods
+        if (s.method === 'partial') {
+            // For partial: show what was paid
+            amountLine += '<div style="font-size:0.72rem;color:var(--warning);font-weight:700;">Paid: ' + bz(tendered) + '</div>';
+        } else if (s.method === 'cash' && tendered !== saleTotal) {
+            // For cash: show tendered if different from total (change given)
+            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Tendered: ' + bz(tendered) + '</div>';
+        } else if (s.method === 'card') {
+            // For card: show tendered amount
+            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Charged: ' + bz(tendered) + '</div>';
+        }
+        amountLine += '</div>';
+        
         // Icon based on payment method
         const methodIcon = s.method === 'card' ? '💳' : s.method === 'partial' ? '⚡' : '💵';
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
@@ -279,7 +292,7 @@ function renderSales() {
             +   '<div style="margin-top:4px;display:flex;gap:6px;">' + mBadge + sBadge + '</div>'
             + '</div>'
             + '<div class="list-item-right">'
-            +   '<span class="list-item-amount ' + (isRev ? '' : 'green') + '">' + amountLine + '</span>'
+            +   '<div class="list-item-amount ' + (isRev ? '' : 'green') + '">' + amountLine + '</div>'
             +   (!isRev ? '<div class="list-item-actions">' + viewBtn + editBtn + reverseBtn + '</div>' : '')
             + '</div></div>';
     }).join('');
