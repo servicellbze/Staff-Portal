@@ -1,10 +1,10 @@
-﻿// ─────────────────────────────────────────────────────────────────────────────
-// sales.js — ServiCell Belize Sales Page
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// sales.js � ServiCell Belize Sales Page
+// -----------------------------------------------------------------------------
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
-// ── State ─────────────────────────────────────────────────────────────────────
+// -- State ---------------------------------------------------------------------
 let currentUser    = '';
 let isManager      = false;
 let allSales       = [];
@@ -15,14 +15,14 @@ let editingSaleId  = null;
 let settlingBillId = null;
 let selectedJobId  = null;
 
-// ── Utilities ─────────────────────────────────────────────────────────────────
+// -- Utilities -----------------------------------------------------------------
 function bz(n) { return 'BZ$' + (parseFloat(n) || 0).toFixed(2); }
 
-// ── Perf: reuse a single element for HTML escaping ────────────────────────────
+// -- Perf: reuse a single element for HTML escaping ----------------------------
 const _escDiv = document.createElement('div');
 function escH(s) { _escDiv.textContent = String(s || ''); return _escDiv.innerHTML; }
 
-// ── Perf: debounce helper for search inputs ───────────────────────────────────
+// -- Perf: debounce helper for search inputs -----------------------------------
 const _debounceTimers = {};
 function debounce(key, fn, ms) {
     clearTimeout(_debounceTimers[key]);
@@ -33,18 +33,18 @@ function tryParseJSON(str, fallback) {
     try { return JSON.parse(str); } catch (_) { return fallback; }
 }
 
-// ── Shift Logic ───────────────────────────────────────────────────────────────
+// -- Shift Logic ---------------------------------------------------------------
 function getCurrentShift() {
     const now = new Date();
     const day = now.getDay();
     const h   = now.getHours() + now.getMinutes() / 60;
     if (day === 0) return null;
     if (day === 6) {
-        // Saturday — single shift 9am to 7pm
+        // Saturday � single shift 9am to 7pm
         if (h >= 9 && h < 19) return { label: 'Saturday Shift', start: 9, end: 19 };
         return null;
     }
-    // Weekdays — Morning 8–4, Night 4–8
+    // Weekdays � Morning 8�4, Night 4�8
     if (h >= 8  && h < 16) return { label: 'Morning Shift', start: 8,  end: 16 };
     if (h >= 16 && h < 20) return { label: 'Night Shift',   start: 16, end: 20 };
     return null;
@@ -65,7 +65,7 @@ function updateShiftBanner() {
     const label     = document.getElementById('shiftLabel');
     if (!shift) {
         dot.className         = 'shift-dot off';
-        status.textContent    = new Date().getDay() === 0 ? 'Sunday — Closed' : 'Shop is closed';
+        status.textContent    = new Date().getDay() === 0 ? 'Sunday � Closed' : 'Shop is closed';
         countdown.textContent = '';
         countdown.className   = 'shift-off';
         if (label) label.textContent = 'No active shift';
@@ -78,13 +78,13 @@ function updateShiftBanner() {
     const minsLeft = Math.floor(msLeft / 60000);
     const hoursLeft = Math.floor(minsLeft / 60);
     const minsRem   = minsLeft % 60;
-    if (label) label.textContent = shift.label + ' · ' + getShiftDate();
+    if (label) label.textContent = shift.label + ' � ' + getShiftDate();
     status.textContent = shift.label;
     if (minsLeft <= 0) {
         dot.className = 'shift-dot off'; countdown.textContent = 'Shift ended'; countdown.className = 'shift-off';
     } else if (minsLeft <= 30) {
         dot.className = 'shift-dot warn';
-        countdown.textContent = '⚠️ Shift ends in ' + minsLeft + ' minutes';
+        countdown.textContent = '?? Shift ends in ' + minsLeft + ' minutes';
         countdown.className = 'shift-warn';
     } else {
         dot.className = 'shift-dot';
@@ -93,7 +93,7 @@ function updateShiftBanner() {
     }
 }
 
-// ── Tab Switching ─────────────────────────────────────────────────────────────
+// -- Tab Switching -------------------------------------------------------------
 function switchTab(name) {
     const tabs = ['sales', 'payouts', 'bills', 'eod'];
     document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === name));
@@ -102,10 +102,10 @@ function switchTab(name) {
     // Keep dropdown in sync
     const sel = document.getElementById('tabSelect');
     if (sel) sel.value = name;
-    if (name === 'eod') updateEOD();
+    if (name === 'eod') { updateEOD(); initEODShiftPills(); }
 }
 
-// ── Load All Data ─────────────────────────────────────────────────────────────
+// -- Load All Data -------------------------------------------------------------
 async function loadAll() {
     setSyncState('loading', 'Syncing...');
     const date = getShiftDate();
@@ -123,13 +123,13 @@ async function loadAll() {
     renderEODHistory(eData.closes || []);
     const anyFailed = [sData, pData, bData, eData].some(d => !d || d.error);
     if (anyFailed) {
-        setSyncState('error', 'Some data failed to load — tap Refresh');
+        setSyncState('error', 'Some data failed to load � tap Refresh');
     } else {
         setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }
 }
 
-// Jobs are only needed for the job pickup modal — load lazily
+// Jobs are only needed for the job pickup modal � load lazily
 async function ensureJobsLoaded() {
     if (allJobs.length) return;
     try {
@@ -138,13 +138,13 @@ async function ensureJobsLoaded() {
     } catch (_) {}
 }
 
-// ── Date Filter & Show Settled ────────────────────────────────────────────────
+// -- Date Filter & Show Settled ------------------------------------------------
 let _currentDateFilter = ''; // Shared across all tabs
 let _showSettled       = false;
 let _salesPage         = 1;
 let _salesPerPage      = 10;
 
-// ── Reusable pagination renderer ─────────────────────────────────────────────
+// -- Reusable pagination renderer ---------------------------------------------
 function renderPagination(containerId, total, page, perPage, onPage, onPerPage) {
     const container  = document.getElementById(containerId);
     if (!container) return;
@@ -154,7 +154,7 @@ function renderPagination(containerId, total, page, perPage, onPage, onPerPage) 
     container.style.display = total > 0 ? 'flex' : 'none';
     container.className = 'pagination';
     container.innerHTML =
-        '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
+        '<span class="pagination-info">Showing ' + start + '�' + end + ' of ' + total + '</span>'
         + '<div class="pagination-controls">'
         + '<button class="page-btn" id="' + containerId + '_prev" ' + (page <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
         + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._cb(p);" style="width:44px;"></div><span>of ' + totalPages + '</span>'
@@ -207,11 +207,11 @@ function toggleShowSettled() {
     renderBills();
 }
 
-// Debounced search handlers — called from oninput in the HTML
+// Debounced search handlers � called from oninput in the HTML
 function onSalesSearch()  { debounce('salesSearch',  renderSales, 50); }
 function onBillsSearch()  { debounce('billsSearch',  renderBills, 50); }
 
-// ── Render: Sales ─────────────────────────────────────────────────────────────
+// -- Render: Sales -------------------------------------------------------------
 function renderSales() {
     const q      = (document.getElementById('salesSearch')?.value || '').trim().toLowerCase();
     const active = allSales.filter(s => s.status !== 'reversed');
@@ -253,8 +253,8 @@ function renderSales() {
         const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
         const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
             : (s.method === 'partial' ? '<span class="badge badge-partial">Partial</span>' : '<span class="badge badge-paid">Paid</span>');
-        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
-        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">↩️</button>';
+        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">??</button>';
+        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">??</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         // Sale total = item value (s.total). amountPaid may differ for partial sales.
         // For cash: show tendered separately only when it exceeds the total (change was given).
@@ -265,10 +265,10 @@ function renderSales() {
             ? bz(saleTotal) + ' <span style="color:var(--text-dim);font-size:0.72rem;font-weight:700;">/ ' + bz(tendered) + ' tendered</span>'
             : bz(saleTotal);
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
-            + '<div class="list-item-icon">🛒</div>'
+            + '<div class="list-item-icon">??</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(desc) + '</div>'
-            +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? ' · ' + escH(s.cashier) : '') + (s.jobId ? ' · Job #' + escH(s.jobId) : '') + '</div>'
+            +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? ' � ' + escH(s.cashier) : '') + (s.jobId ? ' � Job #' + escH(s.jobId) : '') + '</div>'
             +   '<div style="margin-top:4px;display:flex;gap:6px;">' + mBadge + sBadge + '</div>'
             + '</div>'
             + '<div class="list-item-right">'
@@ -282,27 +282,27 @@ function renderSales() {
     );
 }
 
-// ── Render: Payouts ───────────────────────────────────────────────────────────
+// -- Render: Payouts -----------------------------------------------------------
 function renderPayouts() {
     const total = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     document.getElementById('sumPayouts').textContent     = bz(total);
     document.getElementById('sumPayoutCount').textContent = allPayouts.length;
     const el = document.getElementById('payoutsList');
-    if (!allPayouts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">💸</div><p>No payouts logged today.</p></div>'; return; }
+    if (!allPayouts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">??</div><p>No payouts logged today.</p></div>'; return; }
     el.innerHTML = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         return '<div class="list-item">'
-            + '<div class="list-item-icon">💸</div>'
+            + '<div class="list-item-icon">??</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(p.reason || 'Payout') + '</div>'
-            +   '<div class="list-item-meta">' + escH(ts) + (p.loggedBy ? ' · ' + escH(p.loggedBy) : '') + (p.takenBy ? ' · Taken by: ' + escH(p.takenBy) : '') + '</div>'
+            +   '<div class="list-item-meta">' + escH(ts) + (p.loggedBy ? ' � ' + escH(p.loggedBy) : '') + (p.takenBy ? ' � Taken by: ' + escH(p.takenBy) : '') + '</div>'
             + '</div>'
-            + '<span class="list-item-amount red">−' + bz(p.amount) + '</span>'
+            + '<span class="list-item-amount red">-' + bz(p.amount) + '</span>'
             + '</div>';
     }).join('');
 }
 
-// ── Render: Bills ─────────────────────────────────────────────────────────────
+// -- Render: Bills -------------------------------------------------------------
 function renderBills() {
     const q         = (document.getElementById('billsSearch')?.value || '').trim().toLowerCase();
     const open      = allBills.filter(b => b.status === 'open');
@@ -333,16 +333,60 @@ function renderBills() {
             + '<div class="list-item-icon">&#x1F4CB;</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(b.personName || 'Unknown') + '</div>'
-            +   '<div class="list-item-meta">' + desc + (ts ? ' · ' + escH(ts) : '') + '</div>'
-            +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '✓ Settled' : 'Owes ' + bz(balance)) + '</span></div>'
+            +   '<div class="list-item-meta">' + desc + (ts ? ' � ' + escH(ts) : '') + '</div>'
+            +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '? Settled' : 'Owes ' + bz(balance)) + '</span></div>'
             + '</div>'
             + (!isSettled ? '<button class="btn-success-sm" onclick="openSettleBill(\'' + escH(b.billId) + '\')">Settle</button>' : '')
-            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">✏️</button>' : '')
+            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">??</button>' : '')
             + '</div>';
     }).join('');
 }
 
-// ── End of Day ────────────────────────────────────────────────────────────────
+// -- End of Day ----------------------------------------------------------------
+let _eodSelectedShift = null; // overrides getCurrentShift() when set
+
+function initEODShiftPills() {
+    const auto = getCurrentShift();
+    // Pre-select the auto-detected shift; if none active, leave unselected
+    document.querySelectorAll('.eod-shift-pill').forEach(btn => {
+        const match = auto && btn.dataset.shift === auto.label;
+        btn.classList.toggle('active', match);
+    });
+    _eodSelectedShift = auto ? auto.label : null;
+    _updateFloatVisibility();
+}
+
+function selectEODShift(btn) {
+    document.querySelectorAll('.eod-shift-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _eodSelectedShift = btn.dataset.shift;
+    _updateFloatVisibility();
+}
+
+function getEODShiftLabel() {
+    if (_eodSelectedShift) return _eodSelectedShift;
+    const s = getCurrentShift();
+    return s ? s.label : 'Unknown';
+}
+
+// Float is only recorded at the end of the final shift of the day
+function _isFloatShift() {
+    const label = getEODShiftLabel();
+    return label === 'Night Shift' || label === 'Saturday Shift';
+}
+
+function _updateFloatVisibility() {
+    const floatSection = document.getElementById('eodFloatSection');
+    const hint         = document.getElementById('eodDrawerHint');
+    const floatInput   = document.getElementById('floatAmount');
+    const isFloat      = _isFloatShift();
+    if (floatSection) floatSection.style.display = isFloat ? '' : 'none';
+    if (!isFloat && floatInput) floatInput.value = '';
+    if (hint) hint.textContent = isFloat
+        ? 'Enter the float (cash left in drawer for tomorrow), then count the full drawer total.'
+        : 'Count all cash in the drawer and enter the total below.';
+    calcVariance();
+}
 function updateEOD() {
     const validSales   = allSales.filter(s => s.status !== 'reversed');
     const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
@@ -357,7 +401,7 @@ function updateEOD() {
     document.getElementById('eodCard').textContent    = bz(cardSales);
     document.getElementById('eodPayouts').textContent = bz(payoutsTotal);
     document.getElementById('eodNet').textContent     = bz(net);
-    // GST line — add element if not present
+    // GST line � add element if not present
     let gstEl = document.getElementById('eodGST');
     if (!gstEl) {
         const netRow = document.getElementById('eodNet').closest('.eod-row');
@@ -374,25 +418,29 @@ function updateEOD() {
 }
 
 function calcVariance() {
-    const net    = parseFloat((document.getElementById('eodNet').textContent || '').replace('BZ$', '')) || 0;
+    const net      = parseFloat((document.getElementById('eodNet').textContent || '').replace('BZ$', '')) || 0;
     const drawerEl = document.getElementById('drawerCount');
-    const disp   = document.getElementById('varianceDisplay');
+    const floatEl  = document.getElementById('floatAmount');
+    const disp     = document.getElementById('varianceDisplay');
     if (!drawerEl.value) { disp.style.display = 'none'; return; }
-    const drawer = parseFloat(drawerEl.value) || 0;
-    const diff   = drawer - net;
+    const drawer   = parseFloat(drawerEl.value) || 0;
+    const float_   = parseFloat(floatEl?.value) || 0;
+    // Profit in drawer = total counted minus the float that was already there
+    const profit   = drawer - float_;
+    const diff     = profit - net;
     disp.style.display = 'block';
     if (Math.abs(diff) < 0.01) {
-        disp.className = 'variance-display exact'; disp.textContent = '✓ Drawer is exact — ' + bz(drawer);
+        disp.className = 'variance-display exact'; disp.textContent = '? Exact � Profit: ' + bz(profit);
     } else if (diff > 0) {
-        disp.className = 'variance-display over'; disp.textContent = '↑ Over by ' + bz(diff);
+        disp.className = 'variance-display over'; disp.textContent = '? Over by ' + bz(diff) + ' � Profit: ' + bz(profit);
     } else {
-        disp.className = 'variance-display short'; disp.textContent = '⚠️ Short by ' + bz(Math.abs(diff)) + ' — Manager will be notified';
+        disp.className = 'variance-display short'; disp.textContent = '?? Short by ' + bz(Math.abs(diff)) + ' � Manager will be notified';
     }
 }
 
 function renderEODHistory(closes) {
     const el = document.getElementById('eodHistory');
-    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>No recent closes found.</p></div>'; return; }
+    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">??</div><p>No recent closes found.</p></div>'; return; }
     el.innerHTML = [...closes].reverse().map(c => {
         const ts       = c.timestamp ? new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const date     = c.shiftDate || c.timestamp ? new Date(c.timestamp || c.shiftDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
@@ -400,18 +448,20 @@ function renderEODHistory(closes) {
         let varColor, varLabel;
         if (Math.abs(variance) < 0.01) {
             varColor = 'var(--success)';
-            varLabel = '✓ Exact';
+            varLabel = '? Exact';
         } else if (variance < 0) {
             varColor = 'var(--danger)';
-            varLabel = '⚠️ Short ' + bz(Math.abs(variance));
+            varLabel = '?? Short ' + bz(Math.abs(variance));
         } else {
-            // Over — managers see the amount, cashiers see a neutral placeholder
+            // Over � managers see the amount, cashiers see a neutral placeholder
             varColor = isManager ? 'var(--success)' : 'var(--text-dim)';
-            varLabel = isManager ? '+' + bz(variance) : '— Reviewed';
+            varLabel = isManager ? '+' + bz(variance) : '� Reviewed';
         }
         return '<div class="eod-history-item">'
-            + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + (date ? ' · ' + date : '') + '</div>'
-            + '<div style="font-size:0.72rem;color:var(--text-dim);">' + escH(ts) + (c.closedBy ? ' · ' + escH(c.closedBy) : '') + '</div></div>'
+            + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + (date ? ' � ' + date : '') + '</div>'
+            + '<div style="font-size:0.72rem;color:var(--text-dim);">' + escH(ts) + (c.closedBy ? ' � ' + escH(c.closedBy) : '') + '</div>'
+            + (c.float ? '<div style="font-size:0.72rem;color:var(--text-dim);">Float: ' + bz(c.float) + '</div>' : '')
+            + '</div>'
             + '<div style="text-align:right;"><div style="font-size:0.88rem;font-weight:800;">Net: ' + bz(c.netExpected) + '</div>'
             + '<div style="font-size:0.72rem;font-weight:700;color:' + varColor + ';">Variance: ' + varLabel + '</div></div>'
             + '</div>';
@@ -423,8 +473,15 @@ async function submitEOD() {
     const drawerVal = document.getElementById('drawerCount').value;
     if (!drawerVal) { alert('Enter the drawer count first.'); return; }
     const drawer       = parseFloat(drawerVal);
-    const variance     = drawer - net;
-    const shift        = getCurrentShift();
+    const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
+    if (_isFloatShift() && !document.getElementById('floatAmount')?.value) {
+        alert('Enter the float amount — this is required for the final shift close.');
+        document.getElementById('floatAmount')?.focus();
+        return;
+    }
+    const profit       = drawer - float_;
+    const variance     = profit - net;
+    const shiftLabel   = getEODShiftLabel();
     const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const btn          = document.getElementById('submitEODBtn');
@@ -432,27 +489,46 @@ async function submitEOD() {
     try {
         const params = new URLSearchParams({
             action: 'submitdayclose', shiftDate: getShiftDate(),
-            shift: shift ? shift.label : 'Unknown', grossSales: gross,
+            shift: shiftLabel, grossSales: gross,
             totalPayouts: payoutsTotal, netExpected: net,
-            actualDrawer: drawer, variance, closedBy: currentUser
+            actualDrawer: drawer, variance, float: float_, closedBy: currentUser
         });
         const res  = await fetch(SCRIPT_URL, { method: 'POST', body: params });
         const data = await res.json();
         if (data.success) {
             if (typeof haptic === 'function') haptic('success');
             if (variance < -0.01 && typeof sendNotification === 'function')
-                sendNotification('manageronly', '⚠️ Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
+                sendNotification('manageronly', '?? Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
             showToast('End of day submitted!', 'ok');
-            btn.textContent = '✓ Submitted';
+            btn.textContent = '? Submitted';
             document.getElementById('drawerCount').value = '';
+            document.getElementById('floatAmount').value = '';
             document.getElementById('varianceDisplay').style.display = 'none';
             printEOD();
             await loadAll();
         } else {
-            btn.disabled = false; btn.textContent = '✓ Submit End of Day';
-            alert('❌ ' + (data.error || 'Could not submit.'));
+            btn.disabled = false; btn.textContent = '? Submit End of Day';
+            alert('? ' + (data.error || 'Could not submit.'));
         }
-    } catch (e) { btn.disabled = false; btn.textContent = '✓ Submit End of Day'; alert('Connection error.'); }
+    } catch (e) { btn.disabled = false; btn.textContent = '? Submit End of Day'; alert('Connection error.'); }
+}
+
+// -- Shared single-fire print helper ------------------------------------------
+function _openAndPrint(html) {
+    const w = window.open('', '_blank', 'width=400,height=600,alwaysRaised=yes');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    let _printed = false;
+    function _doPrint() {
+        if (_printed) return;
+        _printed = true;
+        w.focus();
+        w.print();
+        setTimeout(() => { try { w.close(); } catch(_) {} }, 1500);
+    }
+    w.onload = _doPrint;
+    setTimeout(_doPrint, 300);
 }
 
 function printEOD() {
@@ -466,10 +542,12 @@ function printEOD() {
     // Net drawer = cash only (card never touches the drawer) minus payouts
     const net          = cashSales - payoutsTotal;
     const drawerRaw    = document.getElementById('drawerCount').value;
-    const drawer       = drawerRaw ? parseFloat(drawerRaw) : net;
-    const drawerLabel  = drawerRaw ? bz(drawer) : bz(net) + ' (not counted)';
-    const variance     = drawer - net;
-    const shift        = getCurrentShift();
+    const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
+    const drawer       = drawerRaw ? parseFloat(drawerRaw) : (net + float_);
+    const drawerLabel  = drawerRaw ? bz(drawer) : bz(net + float_) + ' (not counted)';
+    const profit       = drawer - float_;
+    const variance     = profit - net;
+    const shiftLabel   = getEODShiftLabel();
     const varColor     = Math.abs(variance) < 0.01 ? 'green' : variance > 0 ? 'green' : 'red';
     const varText      = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? '+' : '') + bz(variance);
     const displayDate  = _currentDateFilter || getShiftDate();
@@ -490,7 +568,7 @@ function printEOD() {
         + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
         + '<h2>SERVICELL BELIZE</h2>'
-        + '<p>' + (shift ? shift.label : 'End of Day') + ' &mdash; ' + displayDate + '</p>'
+        + '<p>' + escH(shiftLabel) + ' &mdash; ' + displayDate + '</p>'
         + '<p>Cashier: ' + escH(currentUser) + '</p>'
         + '<hr>'
         + '<table>'
@@ -502,21 +580,16 @@ function printEOD() {
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
-        + '<tr><td>Actual Drawer</td><td>' + drawerLabel + '</td></tr>'
-        + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
+        + '<tr><td>Float (Starting Cash)</td><td>' + bz(float_) + '</td></tr>'
+        + '<tr><td>Actual Drawer Total</td><td>' + drawerLabel + '</td></tr>'
+        + '<tr><td>Profit in Drawer</td><td>' + bz(profit) + '</td></tr>'
+        + '<tr class="variance"><td><strong>Variance</strong></td><td><strong style="color:' + varColor + ';">' + varText + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
-    const w = window.open('', '_blank', 'width=340,height=500');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
-    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
-}
+    _openAndPrint(html);
 
-// ── Print Sales Report ────────────────────────────────────────────────────────
+// -- Print Sales Report --------------------------------------------------------
 function printSalesReport() {
     const validSales = allSales.filter(s => s.status !== 'reversed');
     const gross = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
@@ -556,23 +629,16 @@ function printSalesReport() {
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
-    const w = window.open('', '_blank', 'width=340,height=500');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
-    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
-}
+    _openAndPrint(html);
 
-// ── Print Payouts Report ──────────────────────────────────────────────────────
+// -- Print Payouts Report ------------------------------------------------------
 function printPayoutsReport() {
     const total = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const displayDate = _currentDateFilter || getShiftDate();
     
     const payoutRows = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;">' + escH(p.takenBy || '—') + '</td><td style="text-align:right;font-size:9pt;">' + bz(p.amount) + '</td></tr>';
+        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;">' + escH(p.takenBy || '�') + '</td><td style="text-align:right;font-size:9pt;">' + bz(p.amount) + '</td></tr>';
     }).join('');
     
     const html = '<!DOCTYPE html><html><head><title>Payouts Report</title>'
@@ -600,16 +666,9 @@ function printPayoutsReport() {
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
-    const w = window.open('', '_blank', 'width=340,height=500');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
-    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
-}
+    _openAndPrint(html);
 
-// ── Print Bills Report ────────────────────────────────────────────────────────
+// -- Print Bills Report --------------------------------------------------------
 function printBillsReport() {
     const open = allBills.filter(b => b.status === 'open');
     const totalOwed = open.reduce((t, b) => t + Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0)), 0);
@@ -647,17 +706,10 @@ function printBillsReport() {
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
-    const w = window.open('', '_blank', 'width=340,height=500');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
-    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
-}
+    _openAndPrint(html);
 
-// ── SKU / Barcode Scanner ─────────────────────────────────────────────────────
-// ── Inventory Cache ───────────────────────────────────────────────────────────
+// -- SKU / Barcode Scanner -----------------------------------------------------
+// -- Inventory Cache -----------------------------------------------------------
 async function loadInventoryCache() {
     try {
         const res = await fetch(SCRIPT_URL + '?action=listinventory');
@@ -666,7 +718,7 @@ async function loadInventoryCache() {
     } catch (_) {}
 }
 
-// ── Scanner / Search ──────────────────────────────────────────────────────────
+// -- Scanner / Search ----------------------------------------------------------
 // USB scanner: fires a rapid burst of keydown events then Enter, while no input is focused.
 // Manual typing: user types in #saleScanner, dropdown narrows results, Enter adds top match.
 
@@ -698,7 +750,7 @@ function onScannerInput() {
     ).slice(0, 8);
     if (!matches.length) {
         box.style.display = 'block';
-        box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match — press Enter to add manually</div>';
+        box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match � press Enter to add manually</div>';
         return;
     }
     box.style.display = 'block';
@@ -721,10 +773,10 @@ function onScannerKey(e) {
     // Exact SKU or exact name match
     const exact = inv.find(i => String(i.sku).toLowerCase() === q.toLowerCase() || (i.name || '').toLowerCase() === q.toLowerCase());
     if (exact) { addItemFromResult(exact.sku); return; }
-    // Partial match — take the first result
+    // Partial match � take the first result
     const partial = inv.find(i => String(i.sku).toLowerCase().includes(q.toLowerCase()) || (i.name || '').toLowerCase().includes(q.toLowerCase()));
     if (partial) { addItemFromResult(partial.sku); return; }
-    // Nothing found — add as manual entry
+    // Nothing found � add as manual entry
     addItemByBarcode(q);
 }
 
@@ -746,11 +798,11 @@ function addItemByBarcode(barcode) {
     updateSaleTotal();
     document.getElementById('saleScanner').value = '';
     document.getElementById('scannerResults').style.display = 'none';
-    showToast('Unknown item — enter price manually', '');
+    showToast('Unknown item � enter price manually', '');
     document.getElementById('saleScanner').focus();
 }
 
-// ── Sale Modal ────────────────────────────────────────────────────────────────
+// -- Sale Modal ----------------------------------------------------------------
 function openSaleModal() {
     document.getElementById('saleScanner').value = '';
     document.getElementById('scannerResults').style.display = 'none';
@@ -783,7 +835,7 @@ function addSaleLine(name, qty, price, sku) {
         + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
         + '</div>'
         + '<div style="display:flex;align-items:center;gap:0;border:1px solid var(--glass-border);border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--glass);">'
-        + '<button type="button" onclick="adjustLineQty(this,-1)" style="width:30px;height:38px;border:none;background:transparent;color:var(--text-dim);font-size:1.1rem;cursor:pointer;font-weight:700;flex-shrink:0;">−</button>'
+        + '<button type="button" onclick="adjustLineQty(this,-1)" style="width:30px;height:38px;border:none;background:transparent;color:var(--text-dim);font-size:1.1rem;cursor:pointer;font-weight:700;flex-shrink:0;">-</button>'
         + '<input type="number" value="' + qty + '" min="1" style="width:36px;height:38px;border:none;border-left:1px solid var(--glass-border);border-right:1px solid var(--glass-border);border-radius:0;padding:0;text-align:center;background:transparent;color:var(--text-main);font-family:inherit;font-size:0.88rem;font-weight:700;outline:none;" oninput="updateSaleTotal()">'
         + '<button type="button" onclick="adjustLineQty(this,1)" style="width:30px;height:38px;border:none;background:transparent;color:var(--text-dim);font-size:1.1rem;cursor:pointer;font-weight:700;flex-shrink:0;">+</button>'
         + '</div>'
@@ -847,7 +899,7 @@ function updateSaleTotal() {
         total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
     });
     document.getElementById('saleTotalDisplay').textContent = bz(total);
-    // Keep tendered in sync with total for cash — unless cashier has entered more than total (giving change)
+    // Keep tendered in sync with total for cash � unless cashier has entered more than total (giving change)
     const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
     if (method === 'cash') {
         const field    = document.getElementById('saleCashTendered');
@@ -886,10 +938,10 @@ function calcSaleChange() {
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
-        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
+        disp.textContent = '?? Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = change < 0.01 ? '✓ Exact — no change' : '💵 Change: BZ$' + change.toFixed(2);
+        disp.textContent = change < 0.01 ? '? Exact � no change' : '?? Change: BZ$' + change.toFixed(2);
     }
 }
 
@@ -912,7 +964,7 @@ async function submitSale() {
         amountPaid = parseFloat(document.getElementById('salePartialAmount').value) || 0;
         if (amountPaid <= 0) { showToast('Enter the partial amount paid.', 'err'); return; }
     } else if (method === 'cash') {
-        // amountPaid is always the sale total — tendered is only used for change calculation
+        // amountPaid is always the sale total � tendered is only used for change calculation
         amountPaid = total;
     } else {
         amountPaid = total;
@@ -930,7 +982,7 @@ async function submitSale() {
         if (data.success) {
             closeModal('saleModal');
             if (typeof haptic === 'function') haptic('success');
-            // Show sale confirmation modal — use tendered for change display, not amountPaid
+            // Show sale confirmation modal � use tendered for change display, not amountPaid
             const tendered = method === 'cash' ? (parseFloat(document.getElementById('saleCashTendered').value) || total) : total;
             const change = method === 'cash' ? Math.max(0, tendered - total) : 0;
             document.getElementById('scTotal').textContent = bz(total);
@@ -945,11 +997,11 @@ async function submitSale() {
             openModal('saleConfirmModal');
             printReceipt(items, total, amountPaid, method, data.saleId, '');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('❌ ' + (data.error || 'Could not save.')); }
+        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('? ' + (data.error || 'Could not save.')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('Connection error.'); }
 }
 
-// ── Job Pickup ────────────────────────────────────────────────────────────────
+// -- Job Pickup ----------------------------------------------------------------
 function openJobPickupModal() {
     document.getElementById('jobSearch').value = '';
     document.getElementById('jobSearchResults').innerHTML = '';
@@ -981,7 +1033,7 @@ function searchJobs() {
     if (!matches.length) { results.innerHTML = '<div style="font-size:0.8rem;color:var(--text-dim);padding:8px 0;">No unpaid jobs found.</div>'; return; }
     results.innerHTML = matches.map(j =>
         '<div class="job-result-item" onclick="selectJob(\'' + escH(String(j.id)) + '\')">'
-        + '<strong>#' + escH(String(j.id)) + '</strong> — ' + escH(j.customerName || 'Walk-in') + ' · ' + escH(j.device || '—') + '</div>'
+        + '<strong>#' + escH(String(j.id)) + '</strong> � ' + escH(j.customerName || 'Walk-in') + ' � ' + escH(j.device || '�') + '</div>'
     ).join('');
 }
 
@@ -990,9 +1042,9 @@ function selectJob(id) {
     if (!j) return;
     selectedJobId = id;
     document.getElementById('jobSearchResults').innerHTML = '';
-    document.getElementById('jobSearch').value = '#' + j.id + ' — ' + (j.customerName || '');
+    document.getElementById('jobSearch').value = '#' + j.id + ' � ' + (j.customerName || '');
     const sel = document.getElementById('jobSelected');
-    sel.innerHTML = '<strong>#' + escH(String(j.id)) + '</strong> · ' + escH(j.customerName || '—') + ' · ' + escH(j.device || '—') + ' · ' + escH(j.status || '—');
+    sel.innerHTML = '<strong>#' + escH(String(j.id)) + '</strong> � ' + escH(j.customerName || '�') + ' � ' + escH(j.device || '�') + ' � ' + escH(j.status || '�');
     sel.style.display = 'block';
     
     // Display invoice items
@@ -1052,10 +1104,10 @@ function calcJobChange() {
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
-        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
+        disp.textContent = '?? Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = change < 0.01 ? '✓ Exact — no change' : '💵 Change: BZ$' + change.toFixed(2);
+        disp.textContent = change < 0.01 ? '? Exact � no change' : '?? Change: BZ$' + change.toFixed(2);
     }
 }
 
@@ -1073,10 +1125,10 @@ function calcJobBalance() {
     disp.style.display = 'block';
     if (balance <= 0.01) {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = '✓ Fully paid — device can be released';
+        disp.textContent = '? Fully paid � device can be released';
     } else {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.2);';
-        disp.textContent = 'Partial — ' + bz(balance) + ' remaining. Device stays until fully paid.';
+        disp.textContent = 'Partial � ' + bz(balance) + ' remaining. Device stays until fully paid.';
     }
 }
 
@@ -1091,7 +1143,7 @@ async function submitJobPickup() {
     if (method === 'partial') {
         amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
     } else {
-        // cash or card — amountPaid is always the invoice total, tendered is change only
+        // cash or card � amountPaid is always the invoice total, tendered is change only
         amountPaid = total;
     }
     
@@ -1103,7 +1155,7 @@ async function submitJobPickup() {
     try {
         const params = new URLSearchParams({
             action: 'createsale', customer: j ? (j.customerName || '') : '',
-            items: JSON.stringify([{ name: 'Job #' + selectedJobId + ' — ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
+            items: JSON.stringify([{ name: 'Job #' + selectedJobId + ' � ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
             total, method, amountPaid, jobId: selectedJobId,
             shiftDate: getShiftDate(), shift: getCurrentShift() ? getCurrentShift().label : 'Unknown', cashier: currentUser
         });
@@ -1115,7 +1167,7 @@ async function submitJobPickup() {
             if (balance <= 0.01) {
                 updateParams.set('status', 'resolved');
             } else {
-                showToast('⚠️ Partial payment — device stays until fully paid.', '');
+                showToast('?? Partial payment � device stays until fully paid.', '');
             }
             await fetch(SCRIPT_URL, { method: 'POST', body: updateParams });
             closeModal('jobPickupModal');
@@ -1146,11 +1198,11 @@ async function submitJobPickup() {
             );
             
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('❌ ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = '✓ Collect Payment'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = '? Collect Payment'; alert('? ' + (data.error || 'Error')); }
+    } catch (e) { btn.disabled = false; btn.textContent = '? Collect Payment'; alert('Connection error.'); }
 }
 
-// ── Payout ────────────────────────────────────────────────────────────────────
+// -- Payout --------------------------------------------------------------------
 function openPayoutModal() {
     document.getElementById('payoutAmount').value = '';
     document.getElementById('payoutReason').value = '';
@@ -1181,14 +1233,14 @@ async function submitPayout() {
             closeModal('payoutModal');
             if (typeof haptic === 'function') haptic('success');
             if (typeof sendNotification === 'function')
-                sendNotification('manageronly', '💸 Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
+                sendNotification('manageronly', '?? Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
             showToast('Payout logged!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Log Payout'; alert('❌ ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Log Payout'; alert('? ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Log Payout'; alert('Connection error.'); }
 }
 
-// ── Bills ─────────────────────────────────────────────────────────────────────
+// -- Bills ---------------------------------------------------------------------
 function openBillModal() {
     document.getElementById('billPerson').value = '';
     document.getElementById('billLineItems').innerHTML = '';
@@ -1205,7 +1257,7 @@ function addBillLine(name, qty, price) {
         '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateBillTotal()">'
-        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">✕</button>';
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">?</button>';
     document.getElementById('billLineItems').appendChild(row);
 }
 
@@ -1244,11 +1296,11 @@ async function submitBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill opened!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Open Bill'; alert('❌ ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Open Bill'; alert('? ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; alert('Connection error.'); }
 }
 
-// ── Edit Bill ─────────────────────────────────────────────────────────────────
+// -- Edit Bill -----------------------------------------------------------------
 let _editingBillId = null;
 
 function openEditBill(billId) {
@@ -1315,11 +1367,11 @@ async function submitEditBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('❌ ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('? ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
 }
 
-// ── Settle Bill ───────────────────────────────────────────────────────────────
+// -- Settle Bill ---------------------------------------------------------------
 function openSettleBill(billId) {
     const b = allBills.find(x => String(x.billId) === String(billId));
     if (!b) return;
@@ -1327,8 +1379,8 @@ function openSettleBill(billId) {
     const balance = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
     document.getElementById('settleBillInfo').innerHTML =
         '<strong>' + escH(b.personName || 'Unknown') + '</strong>'
-        + '<br>Total: ' + bz(b.totalOwed) + ' &nbsp;•&nbsp; Paid: ' + bz(b.totalPaid)
-        + ' &nbsp;•&nbsp; <strong>Remaining: ' + bz(balance) + '</strong>';
+        + '<br>Total: ' + bz(b.totalOwed) + ' &nbsp;�&nbsp; Paid: ' + bz(b.totalPaid)
+        + ' &nbsp;�&nbsp; <strong>Remaining: ' + bz(balance) + '</strong>';
     document.getElementById('settleAmount').value = balance.toFixed(2);
     document.getElementById('sm-cash').checked = true;
     document.getElementById('settleSubmitBtn').disabled = false;
@@ -1347,7 +1399,7 @@ function calcSettleBalance() {
     disp.style.display = 'block';
     if (remaining <= 0.01) {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = '✓ Bill fully settled!';
+        disp.textContent = '? Bill fully settled!';
     } else {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.2);';
         disp.textContent = bz(remaining) + ' still remaining after this payment.';
@@ -1370,11 +1422,11 @@ async function submitSettle() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill settled!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Settle'; alert('❌ ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Settle'; alert('? ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; alert('Connection error.'); }
 }
 
-// ── View Sale ─────────────────────────────────────────────────────────────────
+// -- View Sale -----------------------------------------------------------------
 let _viewedSale = null;
 
 function openViewSale(saleId) {
@@ -1382,13 +1434,13 @@ function openViewSale(saleId) {
     if (!s) return;
     _viewedSale = s;
     const items  = tryParseJSON(s.items, []);
-    const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+    const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '�';
     const change = s.method === 'cash' ? Math.max(0, (parseFloat(s.amountPaid)||0) - (parseFloat(s.total)||0)) : 0;
     const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
     const itemRows = items.map(i =>
         '<tr>'
-        + '<td style="font-weight:600;">' + escH(i.name || '—') + '</td>'
-        + '<td style="color:var(--text-dim);">×' + (i.qty || 1) + '</td>'
+        + '<td style="font-weight:600;">' + escH(i.name || '�') + '</td>'
+        + '<td style="color:var(--text-dim);">�' + (i.qty || 1) + '</td>'
         + '<td>' + bz(i.price) + '</td>'
         + '<td style="font-weight:800;">' + bz((i.qty||1) * (i.price||0)) + '</td>'
         + '</tr>'
@@ -1409,8 +1461,8 @@ function openViewSale(saleId) {
         + '<p>Receipt #<strong>' + escH(s.saleId || '') + '</strong></p>'
         + '</div>'
         + '<div class="receipt-meta">'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || '—') + '</div></div>'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || '—') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || '�') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || '�') + '</div></div>'
         + '<div class="receipt-meta-item"><div class="receipt-meta-label">Method</div><div class="receipt-meta-value">' + escH(methodDisplay) + '</div></div>'
         + statusBadgeHTML
         + '</div>'
@@ -1444,7 +1496,7 @@ function printViewedSale() {
     printHTML(html);
 }
 
-// ── Edit Sale ─────────────────────────────────────────────────────────────────
+// -- Edit Sale -----------------------------------------------------------------
 function openEditSale(saleId) {
     const s = allSales.find(x => String(x.saleId) === String(saleId));
     if (!s) return;
@@ -1467,7 +1519,7 @@ function addEditSaleLine(name, qty, price) {
         '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateEditSaleTotal()">'
-        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">✕</button>';
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">?</button>';
     document.getElementById('editSaleLineItems').appendChild(row);
 }
 
@@ -1506,11 +1558,11 @@ async function submitEditSale() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Sale updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('❌ ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('? ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
 }
 
-// ── Reverse Sale ──────────────────────────────────────────────────────────────
+// -- Reverse Sale --------------------------------------------------------------
 let _reversingSaleId = null;
 
 function reverseSale(saleId) {
@@ -1528,7 +1580,7 @@ function reverseSale(saleId) {
     document.getElementById('reverseReason').value = '';
     document.getElementById('reverseConfirmCheck').checked = false;
     document.getElementById('reverseSubmitBtn').disabled = true;
-    document.getElementById('reverseSubmitBtn').textContent = '↩️ Confirm Reversal';
+    document.getElementById('reverseSubmitBtn').textContent = '?? Confirm Reversal';
     openModal('reverseSaleModal');
     setTimeout(() => document.getElementById('reverseReason').focus(), 300);
 }
@@ -1559,7 +1611,7 @@ async function submitReverse() {
                         const params = new URLSearchParams({
                             action: 'adjuststock', sku: item.sku,
                             qty: Math.abs(Number(item.qty) || 1), type: 'add',
-                            reason: 'Reversal — ' + _reversingSaleId, updatedBy: currentUser
+                            reason: 'Reversal � ' + _reversingSaleId, updatedBy: currentUser
                         });
                         fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
                     }
@@ -1570,16 +1622,16 @@ async function submitReverse() {
             showToast('Sale reversed.', '');
             await loadAll();
         } else {
-            btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
-            alert('❌ ' + (data.error || 'Could not reverse.'));
+            btn.disabled = false; btn.textContent = '?? Confirm Reversal';
+            alert('? ' + (data.error || 'Could not reverse.'));
         }
     } catch (e) {
-        btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
+        btn.disabled = false; btn.textContent = '?? Confirm Reversal';
         alert('Connection error.');
     }
 }
 
-// ── Deduct Inventory ──────────────────────────────────────────────────────────
+// -- Deduct Inventory ----------------------------------------------------------
 async function deductInventory(sku, qty, saleId) {
     try {
         const params = new URLSearchParams({ action: 'adjuststock', sku, qty, type: 'remove', reason: 'Sale #' + saleId, saleId });
@@ -1587,7 +1639,7 @@ async function deductInventory(sku, qty, saleId) {
     } catch (e) { console.warn('Inventory deduct failed:', e); }
 }
 
-// ── Receipt Printing ──────────────────────────────────────────────────────────
+// -- Receipt Printing ----------------------------------------------------------
 function printReceipt(items, total, amountPaid, method, saleId, customer) {
     if (localStorage.getItem('scAutoPrintReceipt') !== '1') return;
     kickDrawer();
@@ -1595,7 +1647,7 @@ function printReceipt(items, total, amountPaid, method, saleId, customer) {
     printHTML(html);
 }
 
-// ── Modal Helpers ─────────────────────────────────────────────────────────────
+// -- Modal Helpers -------------------------------------------------------------
 function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.classList.add('modal-open'); }
 function closeModal(id) {
     document.getElementById(id).classList.remove('open');
@@ -1607,7 +1659,7 @@ function closeModal(id) {
 }
 function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
 
-// ── Sync State ────────────────────────────────────────────────────────────────
+// -- Sync State ----------------------------------------------------------------
 function setSyncState(state, text) {
     const dot = document.getElementById('syncDot');
     const txt = document.getElementById('syncText');
@@ -1615,7 +1667,7 @@ function setSyncState(state, text) {
     if (txt) txt.textContent = text;
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
+// -- Toast ---------------------------------------------------------------------
 let _toastTimer = null;
 function showToast(msg, type) {
     const el = document.getElementById('toastEl');
@@ -1628,7 +1680,7 @@ function showToast(msg, type) {
     _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// -- Init ----------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
     currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Cashier';
     isManager   = currentUser.toLowerCase().startsWith('manager');
@@ -1641,7 +1693,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set date filter to today by default
     const dateInput = document.getElementById('salesDateFilter');
     if (dateInput) dateInput.value = getShiftDate();
-    // Responsive tabs — use dropdown on narrow screens
+    // Responsive tabs � use dropdown on narrow screens
     function syncTabLayout() {
         const isMobile = window.innerWidth < 540;
         const bar = document.getElementById('tabBar');
@@ -1654,6 +1706,7 @@ document.addEventListener('DOMContentLoaded', function () {
     loadAll();
     updateShiftBanner();
     setInterval(updateShiftBanner, 60000);
+    initEODShiftPills();
 });
 
 window.addEventListener('sc-back-online', function () { loadAll(); });

@@ -216,13 +216,22 @@ function printHTML(htmlContent) {
 }
 
 function _windowPrint(htmlContent) {
-    const w = window.open('', '_blank', 'width=400,height=600');
+    const w = window.open('', '_blank', 'width=400,height=600,alwaysRaised=yes');
     if (!w) return;
-    w.document.write('<!DOCTYPE html><html><head></head><body>' + htmlContent + '</body></html>');
+    w.document.write(htmlContent);
     w.document.close();
-    w.focus();
-    w.onload = function() { w.print(); setTimeout(() => w.close(), 1500); };
-    setTimeout(() => { try { w.print(); setTimeout(() => w.close(), 1500); } catch(_) {} }, 800);
+    // Use a flag so only one print call fires regardless of which event arrives first
+    let _printed = false;
+    function _doPrint() {
+        if (_printed) return;
+        _printed = true;
+        w.focus();
+        w.print();
+        setTimeout(() => { try { w.close(); } catch(_) {} }, 1500);
+    }
+    w.onload = _doPrint;
+    // Fallback: if onload already fired (document was synchronously ready), trigger after a tick
+    setTimeout(_doPrint, 300);
 }
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
