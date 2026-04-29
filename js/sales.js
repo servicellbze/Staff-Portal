@@ -363,6 +363,36 @@ function initEODShiftPills() {
         }
     }
     _updateFloatVisibility();
+    // Load last shift's float for morning shift
+    if (shift && shift.label === 'Morning Shift') {
+        _loadLastShiftFloat();
+    }
+}
+
+async function _loadLastShiftFloat() {
+    try {
+        const res = await fetch(SCRIPT_URL + '?action=listdaycloses&limit=10');
+        const data = await res.json();
+        if (!data.closes || !data.closes.length) return;
+        
+        // Find the most recent Night Shift or Saturday Shift close
+        const lastFloatClose = data.closes
+            .filter(c => c.shift === 'Night Shift' || c.shift === 'Saturday Shift')
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+        
+        if (lastFloatClose && lastFloatClose.float > 0) {
+            const lastFloatEl = document.getElementById('lastShiftFloat');
+            const lastFloatSection = document.getElementById('lastFloatSection');
+            if (lastFloatEl && lastFloatSection) {
+                lastFloatEl.textContent = bz(lastFloatClose.float);
+                lastFloatSection.style.display = 'block';
+                // Store it for comparison
+                window._expectedStartingFloat = lastFloatClose.float;
+            }
+        }
+    } catch (e) {
+        console.warn('Could not load last shift float:', e);
+    }
 }
 
 function getEODShiftLabel() {
@@ -426,8 +456,27 @@ function calcVariance() {
     if (!drawerEl.value) { disp.style.display = 'none'; return; }
     const drawer   = parseFloat(drawerEl.value) || 0;
     const float_   = parseFloat(floatEl?.value) || 0;
-    // Variance = drawer vs net expected — float is NOT counted toward over/short
-    const diff     = drawer - net;
+    // When float is set, subtract it from drawer before comparing to net
+    const drawerMinusFloat = drawer - float_;
+    // Variance = (drawer - float) vs net expected
+    const diff     = drawerMinusFloat - net;
+    
+    // Check if morning shift's starting drawer matches expected float
+    const shift = getCurrentShift();
+    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat && drawer > 0 && !float_) {
+        const expectedFloat = window._expectedStartingFloat;
+        // If drawer is close to just the float (within $5), show a reminder
+        if (Math.abs(drawer - expectedFloat) < 5 && net > 10) {
+            disp.style.display = 'block';
+            disp.className = 'variance-display';
+            disp.style.background = 'rgba(251,191,36,0.1)';
+            disp.style.color = '#f59e0b';
+            disp.style.borderColor = 'rgba(251,191,36,0.3)';
+            disp.textContent = '💡 Reminder: Last shift left ' + bz(expectedFloat) + ' float. Did you start with that amount?';
+            return;
+        }
+    }
+    
     disp.style.display = 'block';
     if (Math.abs(diff) < 0.01) {
         disp.className = 'variance-display exact'; disp.textContent = '\u2713 Drawer is exact' + (float_ > 0 ? '  \u00b7  Float: ' + bz(float_) : '');
@@ -479,8 +528,10 @@ async function submitEOD() {
         return;
     }
     const drawer       = parseFloat(drawerVal);
-    // Variance = drawer vs net — float is NOT counted toward over/short
-    const variance     = drawer - net;
+    // When float is set, subtract it from drawer before comparing to net
+    const drawerMinusFloat = drawer - float_;
+    // Variance = (drawer - float) vs net expected
+    const variance     = drawerMinusFloat - net;
     const shiftLabel   = getEODShiftLabel();
     const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
@@ -550,12 +601,12 @@ function printEOD() {
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
     const drawer       = parseFloat(drawerRaw);
     const drawerLabel  = bz(drawer);
-    const profit       = float_ > 0 ? drawer - float_ : null; // profit only meaningful when float is set
-    // Variance = drawer vs net — float is NOT counted toward over/short
-    const variance     = drawer - net;
+    // When float is set, subtract it from drawer before comparing to net
+    const drawerMinusFloat = drawer - float_;
+    // Variance = (drawer - float) vs net expected
+    const variance     = drawerMinusFloat - net;
     const shiftLabel   = getEODShiftLabel();
-    const varColor     = Math.abs(variance) < 0.01 ? 'green' : variance > 0 ? 'green' : 'red';
-    const varText      = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? '+' : '') + bz(variance);
+    const varText  = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? 'OVER ' : 'SHORT ') + bz(Math.abs(variance));
     const displayDate  = _currentDateFilter || getShiftDate();
     const html = '<!DOCTYPE html><html><head><title>EOD Report</title>'
         + '<style>'
@@ -586,10 +637,10 @@ function printEOD() {
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
-        + '<tr><td>Float (Starting Cash)</td><td>' + bz(float_) + '</td></tr>'
+        + (float_ > 0 ? '<tr><td>Float (Starting Cash)</td><td>' + bz(float_) + '</td></tr>' : '')
         + '<tr><td>Actual Drawer Total</td><td>' + drawerLabel + '</td></tr>'
-        + (profit !== null ? '<tr><td>Profit in Drawer</td><td>' + bz(profit) + '</td></tr>' : '')
-        + '<tr class="variance"><td><strong>Variance</strong></td><td><strong style="color:' + varColor + ';">' + varText + '</strong></td></tr>'
+        + (float_ > 0 ? '<tr><td>Drawer minus Float</td><td>' + bz(drawerMinusFloat) + '</td></tr>' : '')
+        + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
         + '</body></html>';
