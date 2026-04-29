@@ -851,6 +851,14 @@
         <div class="eod-section">
             <h3>&#x1F3E6; Drawer Count</h3>
             <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:14px;" id="eodDrawerHint">Count all cash in the drawer and enter the total below.</p>
+            
+            <!-- Last Shift's Float (Morning Shift Only) -->
+            <div id="lastFloatSection" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:10px;">
+                <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">💰 Starting Float (from previous shift)</div>
+                <div style="font-size:1.1rem;font-weight:800;color:var(--primary);" id="lastShiftFloat">BZ$0.00</div>
+                <div style="font-size:0.7rem;color:var(--text-dim);margin-top:4px;">Verify this matches what you found in the drawer when you started.</div>
+            </div>
+            
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
                 <div id="eodFloatSection" style="display:none;">
                     <label style="display:block;font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-dim);margin-bottom:6px;">Float Left in Drawer <span style="color:var(--danger);">*</span></label>
