@@ -1,5 +1,5 @@
-// -----------------------------------------------------------------------------
-// sales.js � ServiCell Belize Sales Page
+﻿// -----------------------------------------------------------------------------
+// sales.js — ServiCell Belize Sales Page
 // -----------------------------------------------------------------------------
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
@@ -64,7 +64,7 @@ function updateShiftBanner() {
     const label     = document.getElementById('shiftLabel');
     if (!shift) {
         dot.className         = 'shift-dot off';
-        status.textContent    = new Date().getDay() === 0 ? 'Sunday � Closed' : 'Shop is closed';
+        status.textContent    = new Date().getDay() === 0 ? 'Sunday — Closed' : 'Shop is closed';
         countdown.textContent = '';
         countdown.className   = 'shift-off';
         if (label) label.textContent = 'No active shift';
@@ -83,7 +83,7 @@ function updateShiftBanner() {
     const minsLeft = Math.floor(msLeft / 60000);
     const hoursLeft = Math.floor(minsLeft / 60);
     const minsRem   = minsLeft % 60;
-    if (label) label.textContent = shift.label + ' � ' + getShiftDate();
+    if (label) label.textContent = shift.label + ' — ' + getShiftDate();
     status.textContent = shift.label;
     if (minsLeft <= 0) {
         dot.className = 'shift-dot off'; countdown.textContent = 'Shift ended'; countdown.className = 'shift-off';
@@ -128,13 +128,13 @@ async function loadAll() {
     renderEODHistory(eData.closes || []);
     const anyFailed = [sData, pData, bData, eData].some(d => !d || d.error);
     if (anyFailed) {
-        setSyncState('error', 'Some data failed to load � tap Refresh');
+        setSyncState('error', 'Some data failed to load — tap Refresh');
     } else {
         setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }
 }
 
-// Jobs are only needed for the job pickup modal � load lazily
+// Jobs are only needed for the job pickup modal — load lazily
 async function ensureJobsLoaded() {
     if (allJobs.length) return;
     try {
@@ -159,7 +159,7 @@ function renderPagination(containerId, total, page, perPage, onPage, onPerPage) 
     container.style.display = total > 0 ? 'flex' : 'none';
     container.className = 'pagination';
     container.innerHTML =
-        '<span class="pagination-info">Showing ' + start + '�' + end + ' of ' + total + '</span>'
+        '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
         + '<div class="pagination-controls">'
         + '<button class="page-btn" id="' + containerId + '_prev" ' + (page <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
         + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._cb(p);" style="width:44px;"></div><span>of ' + totalPages + '</span>'
@@ -212,7 +212,7 @@ function toggleShowSettled() {
     renderBills();
 }
 
-// Debounced search handlers � called from oninput in the HTML
+// Debounced search handlers — called from oninput in the HTML
 function onSalesSearch()  { debounce('salesSearch',  renderSales, 50); }
 function onBillsSearch()  { debounce('billsSearch',  renderBills, 50); }
 
@@ -273,7 +273,7 @@ function renderSales() {
             + '<div class="list-item-icon">??</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(desc) + '</div>'
-            +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? ' � ' + escH(s.cashier) : '') + (s.jobId ? ' � Job #' + escH(s.jobId) : '') + '</div>'
+            +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? '  ·  ' + escH(s.cashier) : '') + (s.jobId ? '  ·  Job #' + escH(s.jobId) : '') + '</div>'
             +   '<div style="margin-top:4px;display:flex;gap:6px;">' + mBadge + sBadge + '</div>'
             + '</div>'
             + '<div class="list-item-right">'
@@ -300,7 +300,7 @@ function renderPayouts() {
             + '<div class="list-item-icon">??</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(p.reason || 'Payout') + '</div>'
-            +   '<div class="list-item-meta">' + escH(ts) + (p.loggedBy ? ' � ' + escH(p.loggedBy) : '') + (p.takenBy ? ' � Taken by: ' + escH(p.takenBy) : '') + '</div>'
+            +   '<div class="list-item-meta">' + escH(ts) + (p.loggedBy ? '  ·  ' + escH(p.loggedBy) : '') + (p.takenBy ? '  ·  Taken by: ' + escH(p.takenBy) : '') + '</div>'
             + '</div>'
             + '<span class="list-item-amount red">-' + bz(p.amount) + '</span>'
             + '</div>';
@@ -338,8 +338,8 @@ function renderBills() {
             + '<div class="list-item-icon">&#x1F4CB;</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(b.personName || 'Unknown') + '</div>'
-            +   '<div class="list-item-meta">' + desc + (ts ? ' � ' + escH(ts) : '') + '</div>'
-            +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '? Settled' : 'Owes ' + bz(balance)) + '</span></div>'
+            +   '<div class="list-item-meta">' + desc + (ts ? '  ·  ' + escH(ts) : '') + '</div>'
+            +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '\u2713 Settled' : 'Owes ' + bz(balance)) + '</span></div>'
             + '</div>'
             + (!isSettled ? '<button class="btn-success-sm" onclick="openSettleBill(\'' + escH(b.billId) + '\')">Settle</button>' : '')
             + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">??</button>' : '')
@@ -402,7 +402,7 @@ function updateEOD() {
     document.getElementById('eodCard').textContent    = bz(cardSales);
     document.getElementById('eodPayouts').textContent = bz(payoutsTotal);
     document.getElementById('eodNet').textContent     = bz(net);
-    // GST line � add element if not present
+    // GST line — add element if not present
     let gstEl = document.getElementById('eodGST');
     if (!gstEl) {
         const netRow = document.getElementById('eodNet').closest('.eod-row');
@@ -426,16 +426,15 @@ function calcVariance() {
     if (!drawerEl.value) { disp.style.display = 'none'; return; }
     const drawer   = parseFloat(drawerEl.value) || 0;
     const float_   = parseFloat(floatEl?.value) || 0;
-    // Profit in drawer = total counted minus the float that was already there
-    const profit   = drawer - float_;
-    const diff     = profit - net;
+    // Variance = drawer vs net expected — float is NOT counted toward over/short
+    const diff     = drawer - net;
     disp.style.display = 'block';
     if (Math.abs(diff) < 0.01) {
-        disp.className = 'variance-display exact'; disp.textContent = '? Exact � Profit: ' + bz(profit);
+        disp.className = 'variance-display exact'; disp.textContent = '\u2713 Drawer is exact' + (float_ > 0 ? '  \u00b7  Float: ' + bz(float_) : '');
     } else if (diff > 0) {
-        disp.className = 'variance-display over'; disp.textContent = '? Over by ' + bz(diff) + ' � Profit: ' + bz(profit);
+        disp.className = 'variance-display over'; disp.textContent = '\u2191 Over by ' + bz(diff) + (float_ > 0 ? '  \u00b7  Float: ' + bz(float_) : '');
     } else {
-        disp.className = 'variance-display short'; disp.textContent = '?? Short by ' + bz(Math.abs(diff)) + ' � Manager will be notified';
+        disp.className = 'variance-display short'; disp.textContent = '\u26a0\ufe0f Short by ' + bz(Math.abs(diff)) + '  \u2014  Manager will be notified';
     }
 }
 
@@ -449,18 +448,18 @@ function renderEODHistory(closes) {
         let varColor, varLabel;
         if (Math.abs(variance) < 0.01) {
             varColor = 'var(--success)';
-            varLabel = '? Exact';
+            varLabel = '\u2713 Exact';
         } else if (variance < 0) {
             varColor = 'var(--danger)';
-            varLabel = '?? Short ' + bz(Math.abs(variance));
+            varLabel = '\u26a0\ufe0f Short ' + bz(Math.abs(variance));
         } else {
-            // Over � managers see the amount, cashiers see a neutral placeholder
+            // Over — managers see the amount, cashiers see a neutral placeholder
             varColor = isManager ? 'var(--success)' : 'var(--text-dim)';
-            varLabel = isManager ? '+' + bz(variance) : '� Reviewed';
+            varLabel = isManager ? '+' + bz(variance) : '— Reviewed';
         }
         return '<div class="eod-history-item">'
-            + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + (date ? ' � ' + date : '') + '</div>'
-            + '<div style="font-size:0.72rem;color:var(--text-dim);">' + escH(ts) + (c.closedBy ? ' � ' + escH(c.closedBy) : '') + '</div>'
+            + '<div><div style="font-size:0.88rem;font-weight:700;">' + escH(c.shift || 'Close') + (date ? '  ·  ' + date : '') + '</div>'
+            + '<div style="font-size:0.72rem;color:var(--text-dim);">' + escH(ts) + (c.closedBy ? '  ·  ' + escH(c.closedBy) : '') + '</div>'
             + (c.float ? '<div style="font-size:0.72rem;color:var(--text-dim);">Float: ' + bz(c.float) + '</div>' : '')
             + '</div>'
             + '<div style="text-align:right;"><div style="font-size:0.88rem;font-weight:800;">Net: ' + bz(c.netExpected) + '</div>'
@@ -473,15 +472,15 @@ async function submitEOD() {
     const net      = parseFloat((document.getElementById('eodNet').textContent || '').replace('BZ$', '')) || 0;
     const drawerVal = document.getElementById('drawerCount').value;
     if (!drawerVal) { alert('Enter the drawer count first.'); return; }
-    const drawer       = parseFloat(drawerVal);
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
     if (_isFloatShift() && !document.getElementById('floatAmount')?.value) {
         alert('Enter the float amount — this is required for the final shift close.');
         document.getElementById('floatAmount')?.focus();
         return;
     }
-    const profit       = drawer - float_;
-    const variance     = profit - net;
+    const drawer       = parseFloat(drawerVal);
+    // Variance = drawer vs net — float is NOT counted toward over/short
+    const variance     = drawer - net;
     const shiftLabel   = getEODShiftLabel();
     const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
@@ -501,17 +500,17 @@ async function submitEOD() {
             if (variance < -0.01 && typeof sendNotification === 'function')
                 sendNotification('manageronly', '?? Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
             showToast('End of day submitted!', 'ok');
-            btn.textContent = '? Submitted';
+            btn.textContent = '\u2713 Submitted';
             document.getElementById('drawerCount').value = '';
             document.getElementById('floatAmount').value = '';
             document.getElementById('varianceDisplay').style.display = 'none';
             printEOD();
             await loadAll();
         } else {
-            btn.disabled = false; btn.textContent = '? Submit End of Day';
-            alert('? ' + (data.error || 'Could not submit.'));
+            btn.disabled = false; btn.textContent = '\u2713 Submit End of Day';
+            alert('\u274c ' + (data.error || 'Could not submit.'));
         }
-    } catch (e) { btn.disabled = false; btn.textContent = '? Submit End of Day'; alert('Connection error.'); }
+    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Submit End of Day'; alert('Connection error.'); }
 }
 
 // -- Shared single-fire print helper ------------------------------------------
@@ -533,6 +532,12 @@ function _openAndPrint(html) {
 }
 
 function printEOD() {
+    // Both fields mandatory before printing
+    const drawerRaw = document.getElementById('drawerCount').value;
+    if (!drawerRaw) { alert('Enter the drawer count before printing.'); return; }
+    if (_isFloatShift() && !document.getElementById('floatAmount')?.value) {
+        alert('Enter the float amount before printing.'); return;
+    }
     const validSales   = allSales.filter(s => s.status !== 'reversed');
     const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
@@ -542,12 +547,11 @@ function printEOD() {
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     // Net drawer = cash only (card never touches the drawer) minus payouts
     const net          = cashSales - payoutsTotal;
-    const drawerRaw    = document.getElementById('drawerCount').value;
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
-    const drawer       = drawerRaw ? parseFloat(drawerRaw) : (net + float_);
-    const drawerLabel  = drawerRaw ? bz(drawer) : bz(net + float_) + ' (not counted)';
-    const profit       = drawer - float_;
-    const variance     = profit - net;
+    const drawer       = parseFloat(drawerRaw);
+    const drawerLabel  = bz(drawer);
+    // Variance = drawer vs net — float is NOT counted toward over/short
+    const variance     = drawer - net;
     const shiftLabel   = getEODShiftLabel();
     const varColor     = Math.abs(variance) < 0.01 ? 'green' : variance > 0 ? 'green' : 'red';
     const varText      = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? '+' : '') + bz(variance);
@@ -641,7 +645,7 @@ function printPayoutsReport() {
     
     const payoutRows = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;">' + escH(p.takenBy || '�') + '</td><td style="text-align:right;font-size:9pt;">' + bz(p.amount) + '</td></tr>';
+        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;">' + escH(p.takenBy || ' · ') + '</td><td style="text-align:right;font-size:9pt;">' + bz(p.amount) + '</td></tr>';
     }).join('');
     
     const html = '<!DOCTYPE html><html><head><title>Payouts Report</title>'
@@ -755,7 +759,7 @@ function onScannerInput() {
     ).slice(0, 8);
     if (!matches.length) {
         box.style.display = 'block';
-        box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match � press Enter to add manually</div>';
+        box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match — press Enter to add manually</div>';
         return;
     }
     box.style.display = 'block';
@@ -778,10 +782,10 @@ function onScannerKey(e) {
     // Exact SKU or exact name match
     const exact = inv.find(i => String(i.sku).toLowerCase() === q.toLowerCase() || (i.name || '').toLowerCase() === q.toLowerCase());
     if (exact) { addItemFromResult(exact.sku); return; }
-    // Partial match � take the first result
+    // Partial match — take the first result
     const partial = inv.find(i => String(i.sku).toLowerCase().includes(q.toLowerCase()) || (i.name || '').toLowerCase().includes(q.toLowerCase()));
     if (partial) { addItemFromResult(partial.sku); return; }
-    // Nothing found � add as manual entry
+    // Nothing found — add as manual entry
     addItemByBarcode(q);
 }
 
@@ -803,7 +807,7 @@ function addItemByBarcode(barcode) {
     updateSaleTotal();
     document.getElementById('saleScanner').value = '';
     document.getElementById('scannerResults').style.display = 'none';
-    showToast('Unknown item � enter price manually', '');
+    showToast('Unknown item — enter price manually', '');
     document.getElementById('saleScanner').focus();
 }
 
@@ -904,7 +908,7 @@ function updateSaleTotal() {
         total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
     });
     document.getElementById('saleTotalDisplay').textContent = bz(total);
-    // Keep tendered in sync with total for cash � unless cashier has entered more than total (giving change)
+    // Keep tendered in sync with total for cash — unless cashier has entered more than total (giving change)
     const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
     if (method === 'cash') {
         const field    = document.getElementById('saleCashTendered');
@@ -946,7 +950,7 @@ function calcSaleChange() {
         disp.textContent = '?? Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = change < 0.01 ? '? Exact � no change' : '?? Change: BZ$' + change.toFixed(2);
+        disp.textContent = change < 0.01 ? '✓ Exact  —  no change' : '💵 Change: BZ$' + change.toFixed(2);
     }
 }
 
@@ -969,7 +973,7 @@ async function submitSale() {
         amountPaid = parseFloat(document.getElementById('salePartialAmount').value) || 0;
         if (amountPaid <= 0) { showToast('Enter the partial amount paid.', 'err'); return; }
     } else if (method === 'cash') {
-        // amountPaid is always the sale total � tendered is only used for change calculation
+        // amountPaid is always the sale total — tendered is only used for change calculation
         amountPaid = total;
     } else {
         amountPaid = total;
@@ -987,7 +991,7 @@ async function submitSale() {
         if (data.success) {
             closeModal('saleModal');
             if (typeof haptic === 'function') haptic('success');
-            // Show sale confirmation modal � use tendered for change display, not amountPaid
+            // Show sale confirmation modal — use tendered for change display, not amountPaid
             const tendered = method === 'cash' ? (parseFloat(document.getElementById('saleCashTendered').value) || total) : total;
             const change = method === 'cash' ? Math.max(0, tendered - total) : 0;
             document.getElementById('scTotal').textContent = bz(total);
@@ -1002,7 +1006,7 @@ async function submitSale() {
             openModal('saleConfirmModal');
             printReceipt(items, total, amountPaid, method, data.saleId, '');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('? ' + (data.error || 'Could not save.')); }
+        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('\u274c ' + (data.error || 'Could not save.')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('Connection error.'); }
 }
 
@@ -1038,7 +1042,7 @@ function searchJobs() {
     if (!matches.length) { results.innerHTML = '<div style="font-size:0.8rem;color:var(--text-dim);padding:8px 0;">No unpaid jobs found.</div>'; return; }
     results.innerHTML = matches.map(j =>
         '<div class="job-result-item" onclick="selectJob(\'' + escH(String(j.id)) + '\')">'
-        + '<strong>#' + escH(String(j.id)) + '</strong> � ' + escH(j.customerName || 'Walk-in') + ' � ' + escH(j.device || '�') + '</div>'
+        + '<strong>#' + escH(String(j.id)) + '</strong>  ·  ' + escH(j.customerName || 'Walk-in') + '  ·  ' + escH(j.device || ' · ') + '</div>'
     ).join('');
 }
 
@@ -1047,9 +1051,9 @@ function selectJob(id) {
     if (!j) return;
     selectedJobId = id;
     document.getElementById('jobSearchResults').innerHTML = '';
-    document.getElementById('jobSearch').value = '#' + j.id + ' � ' + (j.customerName || '');
+    document.getElementById('jobSearch').value = '#' + j.id + '  ·  ' + (j.customerName || '');
     const sel = document.getElementById('jobSelected');
-    sel.innerHTML = '<strong>#' + escH(String(j.id)) + '</strong> � ' + escH(j.customerName || '�') + ' � ' + escH(j.device || '�') + ' � ' + escH(j.status || '�');
+    sel.innerHTML = '<strong>#' + escH(String(j.id)) + '</strong>  ·  ' + escH(j.customerName || ' · ') + '  ·  ' + escH(j.device || ' · ') + '  ·  ' + escH(j.status || ' · ');
     sel.style.display = 'block';
     
     // Display invoice items
@@ -1112,7 +1116,7 @@ function calcJobChange() {
         disp.textContent = '?? Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = change < 0.01 ? '? Exact � no change' : '?? Change: BZ$' + change.toFixed(2);
+        disp.textContent = change < 0.01 ? '✓ Exact  —  no change' : '💵 Change: BZ$' + change.toFixed(2);
     }
 }
 
@@ -1130,10 +1134,10 @@ function calcJobBalance() {
     disp.style.display = 'block';
     if (balance <= 0.01) {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = '? Fully paid � device can be released';
+        disp.textContent = '✓ Fully paid  —  device can be released';
     } else {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.2);';
-        disp.textContent = 'Partial � ' + bz(balance) + ' remaining. Device stays until fully paid.';
+        disp.textContent = 'Partial  —  ' + bz(balance) + ' remaining. Device stays until fully paid.';
     }
 }
 
@@ -1148,7 +1152,7 @@ async function submitJobPickup() {
     if (method === 'partial') {
         amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
     } else {
-        // cash or card � amountPaid is always the invoice total, tendered is change only
+        // cash or card — amountPaid is always the invoice total, tendered is change only
         amountPaid = total;
     }
     
@@ -1160,7 +1164,7 @@ async function submitJobPickup() {
     try {
         const params = new URLSearchParams({
             action: 'createsale', customer: j ? (j.customerName || '') : '',
-            items: JSON.stringify([{ name: 'Job #' + selectedJobId + ' � ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
+            items: JSON.stringify([{ name: 'Job #' + selectedJobId + '  ·  ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
             total, method, amountPaid, jobId: selectedJobId,
             shiftDate: getShiftDate(), shift: getCurrentShift() ? getCurrentShift().label : 'Unknown', cashier: currentUser
         });
@@ -1172,7 +1176,7 @@ async function submitJobPickup() {
             if (balance <= 0.01) {
                 updateParams.set('status', 'resolved');
             } else {
-                showToast('?? Partial payment � device stays until fully paid.', '');
+                showToast('⚠️ Partial payment — device stays until fully paid.', '');
             }
             await fetch(SCRIPT_URL, { method: 'POST', body: updateParams });
             closeModal('jobPickupModal');
@@ -1203,8 +1207,8 @@ async function submitJobPickup() {
             );
             
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = '? Collect Payment'; alert('? ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = '? Collect Payment'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; alert('\u274c ' + (data.error || 'Error')); }
+    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; alert('Connection error.'); }
 }
 
 // -- Payout --------------------------------------------------------------------
@@ -1241,7 +1245,7 @@ async function submitPayout() {
                 sendNotification('manageronly', '?? Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
             showToast('Payout logged!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Log Payout'; alert('? ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Log Payout'; alert('\u274c ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Log Payout'; alert('Connection error.'); }
 }
 
@@ -1301,7 +1305,7 @@ async function submitBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill opened!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Open Bill'; alert('? ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Open Bill'; alert('\u274c ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; alert('Connection error.'); }
 }
 
@@ -1372,7 +1376,7 @@ async function submitEditBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('? ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('\u274c ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
 }
 
@@ -1384,8 +1388,8 @@ function openSettleBill(billId) {
     const balance = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
     document.getElementById('settleBillInfo').innerHTML =
         '<strong>' + escH(b.personName || 'Unknown') + '</strong>'
-        + '<br>Total: ' + bz(b.totalOwed) + ' &nbsp;�&nbsp; Paid: ' + bz(b.totalPaid)
-        + ' &nbsp;�&nbsp; <strong>Remaining: ' + bz(balance) + '</strong>';
+        + '<br>Total: ' + bz(b.totalOwed) + ' &nbsp;·&nbsp; Paid: ' + bz(b.totalPaid)
+        + ' &nbsp;·&nbsp; <strong>Remaining: ' + bz(balance) + '</strong>';
     document.getElementById('settleAmount').value = balance.toFixed(2);
     document.getElementById('sm-cash').checked = true;
     document.getElementById('settleSubmitBtn').disabled = false;
@@ -1404,7 +1408,7 @@ function calcSettleBalance() {
     disp.style.display = 'block';
     if (remaining <= 0.01) {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = '? Bill fully settled!';
+        disp.textContent = '\u2713 Bill fully settled!';
     } else {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.2);';
         disp.textContent = bz(remaining) + ' still remaining after this payment.';
@@ -1427,7 +1431,7 @@ async function submitSettle() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill settled!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Settle'; alert('? ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Settle'; alert('\u274c ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; alert('Connection error.'); }
 }
 
@@ -1439,13 +1443,13 @@ function openViewSale(saleId) {
     if (!s) return;
     _viewedSale = s;
     const items  = tryParseJSON(s.items, []);
-    const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '�';
+    const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
     const change = s.method === 'cash' ? Math.max(0, (parseFloat(s.amountPaid)||0) - (parseFloat(s.total)||0)) : 0;
     const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
     const itemRows = items.map(i =>
         '<tr>'
-        + '<td style="font-weight:600;">' + escH(i.name || '�') + '</td>'
-        + '<td style="color:var(--text-dim);">�' + (i.qty || 1) + '</td>'
+        + '<td style="font-weight:600;">' + escH(i.name || '—') + '</td>'
+        + '<td style="color:var(--text-dim);">×' + (i.qty || 1) + '</td>'
         + '<td>' + bz(i.price) + '</td>'
         + '<td style="font-weight:800;">' + bz((i.qty||1) * (i.price||0)) + '</td>'
         + '</tr>'
@@ -1466,8 +1470,8 @@ function openViewSale(saleId) {
         + '<p>Receipt #<strong>' + escH(s.saleId || '') + '</strong></p>'
         + '</div>'
         + '<div class="receipt-meta">'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || '�') + '</div></div>'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || '�') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || ' · ') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || ' · ') + '</div></div>'
         + '<div class="receipt-meta-item"><div class="receipt-meta-label">Method</div><div class="receipt-meta-value">' + escH(methodDisplay) + '</div></div>'
         + statusBadgeHTML
         + '</div>'
@@ -1563,7 +1567,7 @@ async function submitEditSale() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Sale updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('? ' + (data.error || 'Error')); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('\u274c ' + (data.error || 'Error')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
 }
 
@@ -1616,7 +1620,7 @@ async function submitReverse() {
                         const params = new URLSearchParams({
                             action: 'adjuststock', sku: item.sku,
                             qty: Math.abs(Number(item.qty) || 1), type: 'add',
-                            reason: 'Reversal � ' + _reversingSaleId, updatedBy: currentUser
+                            reason: 'Reversal  —  ' + _reversingSaleId, updatedBy: currentUser
                         });
                         fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
                     }
@@ -1628,7 +1632,7 @@ async function submitReverse() {
             await loadAll();
         } else {
             btn.disabled = false; btn.textContent = '?? Confirm Reversal';
-            alert('? ' + (data.error || 'Could not reverse.'));
+            alert('\u274c ' + (data.error || 'Could not reverse.'));
         }
     } catch (e) {
         btn.disabled = false; btn.textContent = '?? Confirm Reversal';
@@ -1698,7 +1702,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Set date filter to today by default
     const dateInput = document.getElementById('salesDateFilter');
     if (dateInput) dateInput.value = getShiftDate();
-    // Responsive tabs � use dropdown on narrow screens
+    // Responsive tabs — use dropdown on narrow screens
     function syncTabLayout() {
         const isMobile = window.innerWidth < 540;
         const bar = document.getElementById('tabBar');
