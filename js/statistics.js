@@ -106,8 +106,10 @@ function renderKPIs(sales, reversed, payouts, jobs, bills) {
     const pTotal   = payouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const net      = gross - pTotal;
     const completed = jobs.filter(j => ['resolved','ready'].includes((j.status||'').toLowerCase()));
-    const avgRepair = completed.length
-        ? sales.filter(s => s.jobId).reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0) / (sales.filter(s => s.jobId).length || 1)
+    // Filter sales that have a valid jobId (not empty string)
+    const jobSales = sales.filter(s => s.jobId && String(s.jobId).trim() !== '');
+    const avgRepair = jobSales.length
+        ? jobSales.reduce((t, s) => t + (parseFloat(s.amountPaid) || 0), 0) / jobSales.length
         : 0;
     const openBills = bills.filter(b => b.status === 'open');
     const billsOwed = openBills.reduce((t, b) => t + Math.max(0, (parseFloat(b.totalOwed)||0) - (parseFloat(b.totalPaid)||0)), 0);
@@ -287,7 +289,8 @@ function renderTechPerf(jobs, from, to) {
     const allSales = (window._allSales || []).filter(s => s.status !== 'reversed');
     const techRevenue = {};
     allSales.forEach(s => {
-        if (!s.jobId) return;
+        // Check for valid jobId (not empty string)
+        if (!s.jobId || String(s.jobId).trim() === '') return;
         const claimer = jobClaimMap[String(s.jobId)];
         if (!claimer) return;
         techRevenue[claimer] = (techRevenue[claimer] || 0) + (parseFloat(s.amountPaid) || 0);
@@ -463,7 +466,8 @@ function exportPDF() {
     jobs.forEach(j => { if (j.claimedBy && j.id) jobClaimMap[String(j.id)] = j.claimedBy; });
     const techRevenue = {};
     sales.forEach(s => {
-        if (!s.jobId) return;
+        // Check for valid jobId (not empty string)
+        if (!s.jobId || String(s.jobId).trim() === '') return;
         const claimer = jobClaimMap[String(s.jobId)];
         if (!claimer) return;
         techRevenue[claimer] = (techRevenue[claimer] || 0) + (parseFloat(s.amountPaid)||0);

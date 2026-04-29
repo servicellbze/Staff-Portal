@@ -269,11 +269,13 @@ function renderSales() {
         const amountLine  = change > 0.01
             ? bz(saleTotal) + ' <span style="color:var(--text-dim);font-size:0.72rem;font-weight:700;">/ ' + bz(tendered) + ' tendered</span>'
             : bz(saleTotal);
+        // Icon based on payment method
+        const methodIcon = s.method === 'card' ? '💳' : s.method === 'partial' ? '⚡' : '💵';
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
-            + '<div class="list-item-icon">💸</div>'
+            + '<div class="list-item-icon">' + methodIcon + '</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(desc) + '</div>'
-            +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? '  ·  ' + escH(s.cashier) : '') + (s.jobId ? '  ·  Job #' + escH(s.jobId) : '') + '</div>'
+            +   '<div class="list-item-meta">' + escH(ts) + (s.cashier ? '  ·  ' + escH(s.cashier) : '') + (s.jobId && String(s.jobId).trim() ? '  ·  Job #' + escH(s.jobId) : '') + '</div>'
             +   '<div style="margin-top:4px;display:flex;gap:6px;">' + mBadge + sBadge + '</div>'
             + '</div>'
             + '<div class="list-item-right">'
