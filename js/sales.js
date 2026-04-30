@@ -651,9 +651,8 @@ function printEOD() {
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
-        + (float_ > 0 ? '<tr><td>Float (Starting Cash)</td><td>' + bz(float_) + '</td></tr>' : '')
+        + (float_ > 0 ? '<tr><td>Float (for tomorrow)</td><td>' + bz(float_) + '</td></tr>' : '')
         + '<tr><td>Actual Drawer Total</td><td>' + drawerLabel + '</td></tr>'
-        + (float_ > 0 ? '<tr><td>Drawer minus Float</td><td>' + bz(drawerMinusFloat) + '</td></tr>' : '')
         + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
