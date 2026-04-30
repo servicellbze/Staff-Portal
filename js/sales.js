@@ -475,10 +475,9 @@ function calcVariance() {
     if (!drawerEl.value) { disp.style.display = 'none'; return; }
     const drawer   = parseFloat(drawerEl.value) || 0;
     const float_   = parseFloat(floatEl?.value) || 0;
-    // When float is set, subtract it from drawer before comparing to net
-    const drawerMinusFloat = drawer - float_;
-    // Variance = (drawer - float) vs net expected
-    const diff     = drawerMinusFloat - net;
+    
+    // Variance = drawer vs net expected (float doesn't affect this)
+    const diff     = drawer - net;
     
     // Check if morning shift's starting drawer matches expected float
     const shift = getCurrentShift();
@@ -547,10 +546,8 @@ async function submitEOD() {
         return;
     }
     const drawer       = parseFloat(drawerVal);
-    // When float is set, subtract it from drawer before comparing to net
-    const drawerMinusFloat = drawer - float_;
-    // Variance = (drawer - float) vs net expected
-    const variance     = drawerMinusFloat - net;
+    // Variance = drawer vs net expected (float doesn't affect this)
+    const variance     = drawer - net;
     const shiftLabel   = getEODShiftLabel();
     const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
@@ -620,10 +617,8 @@ function printEOD() {
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
     const drawer       = parseFloat(drawerRaw);
     const drawerLabel  = bz(drawer);
-    // When float is set, subtract it from drawer before comparing to net
-    const drawerMinusFloat = drawer - float_;
-    // Variance = (drawer - float) vs net expected
-    const variance     = drawerMinusFloat - net;
+    // Variance = drawer vs net expected (float doesn't affect this)
+    const variance     = drawer - net;
     const shiftLabel   = getEODShiftLabel();
     const varText  = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? 'OVER ' : 'SHORT ') + bz(Math.abs(variance));
     const displayDate  = _currentDateFilter || getShiftDate();
