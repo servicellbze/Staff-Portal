@@ -1064,9 +1064,10 @@ async function submitSale() {
         amountPaid = parseFloat(document.getElementById('salePartialAmount').value) || 0;
         if (amountPaid <= 0) { showToast('Enter the partial amount paid.', 'err'); return; }
     } else if (method === 'cash') {
-        // amountPaid is always the sale total — tendered is only used for change calculation
-        amountPaid = total;
+        // For cash: amountPaid is the tendered amount (what customer gave)
+        amountPaid = parseFloat(document.getElementById('saleCashTendered').value) || total;
     } else {
+        // For card: amountPaid equals total
         amountPaid = total;
     }
     const btn = document.getElementById('saleSubmitBtn');
@@ -1242,8 +1243,11 @@ async function submitJobPickup() {
     let amountPaid = total;
     if (method === 'partial') {
         amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
+    } else if (method === 'cash') {
+        // For cash: amountPaid is the tendered amount (what customer gave)
+        amountPaid = parseFloat(document.getElementById('jobCashTendered').value) || total;
     } else {
-        // cash or card — amountPaid is always the invoice total, tendered is change only
+        // For card: amountPaid equals total
         amountPaid = total;
     }
     
