@@ -844,7 +844,7 @@ function onScannerInput() {
     ).slice(0, 8);
     if (!matches.length) {
         box.style.display = 'block';
-        box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match — press Enter to add manually</div>';
+        box.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match — press <strong>Enter</strong> to add as custom item</div>';
         return;
     }
     box.style.display = 'block';
@@ -855,7 +855,8 @@ function onScannerInput() {
         + '<span><strong>' + escH(i.name) + '</strong> <span style="color:var(--text-dim);font-size:0.75rem;">' + escH(String(i.sku)) + '</span></span>'
         + '<span style="font-weight:800;color:var(--success);">' + bz(i.salePrice) + '</span>'
         + '</div>'
-    ).join('');
+    ).join('') 
+    + '<div style="padding:8px 14px;font-size:0.72rem;color:var(--text-dim);background:rgba(37,99,235,0.04);border-top:1px solid var(--glass-border);text-align:center;"><strong>Enter</strong> = Add top match  •  <strong>Shift+Enter</strong> = Add "' + escH(q) + '" as custom</div>';
 }
 
 function onScannerKey(e) {
@@ -863,6 +864,13 @@ function onScannerKey(e) {
     e.preventDefault();
     const q = (document.getElementById('saleScanner').value || '').trim();
     if (!q) return;
+    
+    // Shift+Enter = force add as custom item (bypass search)
+    if (e.shiftKey) {
+        addItemByBarcode(q);
+        return;
+    }
+    
     const inv = window._inventoryCache || [];
     // Exact SKU or exact name match
     const exact = inv.find(i => String(i.sku).toLowerCase() === q.toLowerCase() || (i.name || '').toLowerCase() === q.toLowerCase());
@@ -888,11 +896,11 @@ function addItemFromResult(sku) {
 function addItemByBarcode(barcode) {
     const item = (window._inventoryCache || []).find(i => String(i.sku) === String(barcode));
     if (item) { addItemFromResult(item.sku); return; }
+    // Add as custom item
     addSaleLine(barcode, 1, '', barcode);
     updateSaleTotal();
     document.getElementById('saleScanner').value = '';
     document.getElementById('scannerResults').style.display = 'none';
-    showToast('Unknown item — enter price manually', '');
     document.getElementById('saleScanner').focus();
 }
 
