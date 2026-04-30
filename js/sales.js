@@ -261,24 +261,28 @@ function renderSales() {
         const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
         const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
-        // Sale total = item value (s.total). amountPaid may differ for partial sales.
-        const saleTotal   = parseFloat(s.total) || parseFloat(s.amountPaid) || 0;
-        const tendered    = parseFloat(s.amountPaid) || 0;
+        // Transaction total (goes to gross sales) vs Amount Tendered
+        const transactionTotal = parseFloat(s.total) || 0;
+        const amountTendered   = parseFloat(s.amountPaid) || 0;
+        const change           = s.method === 'cash' ? Math.max(0, amountTendered - transactionTotal) : 0;
         
-        // Build amount display: always show sale total and tendered amount
+        // Build amount display: show transaction total and tendered amount
         let amountLine = '<div style="text-align:right;">';
-        amountLine += '<div style="font-size:0.95rem;font-weight:800;">Sale: ' + bz(saleTotal) + '</div>';
+        amountLine += '<div style="font-size:0.95rem;font-weight:800;">Total: ' + bz(transactionTotal) + '</div>';
         
         // Show tendered amount for all payment methods
         if (s.method === 'partial') {
-            // For partial: show what was paid
-            amountLine += '<div style="font-size:0.72rem;color:var(--warning);font-weight:700;">Paid: ' + bz(tendered) + '</div>';
-        } else if (s.method === 'cash' && tendered !== saleTotal) {
-            // For cash: show tendered if different from total (change given)
-            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Tendered: ' + bz(tendered) + '</div>';
+            // For partial: show what was paid (less than total)
+            amountLine += '<div style="font-size:0.72rem;color:var(--warning);font-weight:700;">Paid: ' + bz(amountTendered) + '</div>';
+        } else if (s.method === 'cash') {
+            // For cash: always show tendered amount
+            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Tendered: ' + bz(amountTendered) + '</div>';
+            if (change > 0.01) {
+                amountLine += '<div style="font-size:0.68rem;color:var(--success);font-weight:700;">Change: ' + bz(change) + '</div>';
+            }
         } else if (s.method === 'card') {
-            // For card: show tendered amount
-            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Charged: ' + bz(tendered) + '</div>';
+            // For card: show charged amount
+            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Charged: ' + bz(amountTendered) + '</div>';
         }
         amountLine += '</div>';
         
@@ -1531,7 +1535,12 @@ function openViewSale(saleId) {
     _viewedSale = s;
     const items  = tryParseJSON(s.items, []);
     const ts     = s.timestamp ? new Date(s.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-    const change = s.method === 'cash' ? Math.max(0, (parseFloat(s.amountPaid)||0) - (parseFloat(s.total)||0)) : 0;
+    
+    // Transaction total (goes to gross sales) vs Amount Tendered
+    const transactionTotal = parseFloat(s.total) || 0;
+    const amountTendered   = parseFloat(s.amountPaid) || 0;
+    const change           = s.method === 'cash' ? Math.max(0, amountTendered - transactionTotal) : 0;
+    
     const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
     const itemRows = items.map(i =>
         '<tr>'
@@ -1557,8 +1566,8 @@ function openViewSale(saleId) {
         + '<p>Receipt #<strong>' + escH(s.saleId || '') + '</strong></p>'
         + '</div>'
         + '<div class="receipt-meta">'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || ' · ') + '</div></div>'
-        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || ' · ') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Cashier</div><div class="receipt-meta-value">' + escH(s.cashier || '—') + '</div></div>'
+        + '<div class="receipt-meta-item"><div class="receipt-meta-label">Shift</div><div class="receipt-meta-value">' + escH(s.shift || '—') + '</div></div>'
         + '<div class="receipt-meta-item"><div class="receipt-meta-label">Method</div><div class="receipt-meta-value">' + escH(methodDisplay) + '</div></div>'
         + statusBadgeHTML
         + '</div>'
@@ -1567,10 +1576,12 @@ function openViewSale(saleId) {
         + itemRows
         + '</table>'
         + '<div class="receipt-totals">'
-        + '<div class="receipt-total-row"><span style="color:var(--text-dim);">Subtotal</span><span>' + bz(s.total) + '</span></div>'
-        + '<div class="receipt-total-row"><span style="color:var(--text-dim);">Paid</span><span>' + bz(s.amountPaid) + '</span></div>'
-        + (change > 0 ? '<div class="receipt-total-row"><span style="color:var(--text-dim);">Change</span><span>' + bz(change) + '</span></div>' : '')
-        + '<div class="receipt-total-row main"><span>Net</span><span>' + bz(s.amountPaid) + '</span></div>'
+        + '<div class="receipt-total-row"><span style="color:var(--text-dim);">Transaction Total</span><span>' + bz(transactionTotal) + '</span></div>'
+        + (s.method === 'cash' ? '<div class="receipt-total-row"><span style="color:var(--text-dim);">Tendered</span><span>' + bz(amountTendered) + '</span></div>' : '')
+        + (s.method === 'card' ? '<div class="receipt-total-row"><span style="color:var(--text-dim);">Charged</span><span>' + bz(amountTendered) + '</span></div>' : '')
+        + (s.method === 'partial' ? '<div class="receipt-total-row"><span style="color:var(--warning);">Paid</span><span style="color:var(--warning);">' + bz(amountTendered) + '</span></div>' : '')
+        + (change > 0.01 ? '<div class="receipt-total-row"><span style="color:var(--success);">Change Given</span><span style="color:var(--success);font-weight:800;">' + bz(change) + '</span></div>' : '')
+        + '<div class="receipt-total-row main"><span>Net Sale</span><span>' + bz(transactionTotal) + '</span></div>'
         + '</div>';
     openModal('viewSaleModal');
 }
