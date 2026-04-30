@@ -914,6 +914,9 @@
             <label>Scan or Search Item</label>
             <input type="text" id="saleScanner" placeholder="Scan barcode or type item name..."
                 autocomplete="off" oninput="onScannerInput()" onkeydown="onScannerKey(event)">
+            <div class="form-hint" style="margin-top:6px;">
+                <strong>Enter</strong> = Add closest match  •  <strong>Shift+Enter</strong> = Add custom item (e.g., "Installation")
+            </div>
             <div id="scannerResults" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:200;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:var(--radius-sm);backdrop-filter:blur(16px);max-height:200px;overflow-y:auto;box-shadow:var(--shadow-md);"></div>
         </div>
         <div class="form-group">
