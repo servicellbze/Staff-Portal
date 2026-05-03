@@ -231,7 +231,8 @@ function _windowPrint(htmlContent) {
     if (!w) return;
     w.document.write(htmlContent);
     w.document.close();
-    // Use a flag so only one print call fires regardless of which event arrives first
+    
+    // Wait for all images to load before printing
     let _printed = false;
     function _doPrint() {
         if (_printed) return;
@@ -240,9 +241,37 @@ function _windowPrint(htmlContent) {
         w.print();
         setTimeout(() => { try { w.close(); } catch(_) {} }, 1500);
     }
-    w.onload = _doPrint;
-    // Fallback: if onload already fired (document was synchronously ready), trigger after a tick
-    setTimeout(_doPrint, 300);
+    
+    // Wait for images to load
+    const images = w.document.getElementsByTagName('img');
+    if (images.length === 0) {
+        // No images, print immediately
+        w.onload = _doPrint;
+        setTimeout(_doPrint, 300);
+    } else {
+        let loadedCount = 0;
+        const totalImages = images.length;
+        
+        function checkAllLoaded() {
+            loadedCount++;
+            if (loadedCount >= totalImages) {
+                // All images loaded, wait a bit more then print
+                setTimeout(_doPrint, 500);
+            }
+        }
+        
+        for (let i = 0; i < images.length; i++) {
+            if (images[i].complete) {
+                checkAllLoaded();
+            } else {
+                images[i].onload = checkAllLoaded;
+                images[i].onerror = checkAllLoaded; // Count errors too to avoid hanging
+            }
+        }
+        
+        // Fallback timeout in case something goes wrong
+        setTimeout(_doPrint, 3000);
+    }
 }
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
