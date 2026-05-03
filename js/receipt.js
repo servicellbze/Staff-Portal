@@ -3,7 +3,7 @@
 // Requires: js/qz-drawer.js loaded before this file
 
 const RECEIPT_STYLES = `
-@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } }
+@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } img { display: block !important; } }
 #printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 5px; }
@@ -14,7 +14,7 @@ const RECEIPT_STYLES = `
 .pi-dash { border: none; border-top: 1px solid #000; margin: 4px 0 3px; }
 .pi-title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 3px 0 4px; }
 .pi-meta { font-size: 9px; line-height: 1.6; margin-bottom: 3px; }
-.pi-meta-row { font-size: 9px; margin: 3px 0 4px; padding: 3px 5px; background: #f0f0f0; line-height: 1.6; }
+.pi-meta-row { font-size: 9px; margin: 3px 0 4px; padding: 3px 5px; background: transparent; border: 1px solid #000; line-height: 1.6; }
 .pi-meta-row strong { display: block; }
 .pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 2px; }
 .pi-grid { margin-bottom: 3px; }
@@ -27,8 +27,11 @@ const RECEIPT_STYLES = `
 .pi-cost-table td { padding: 3px 0; border-bottom: 1px solid #000; }
 .pi-cost-table td:last-child { text-align: right; }
 .pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 11px; font-weight: 900; padding-top: 4px; }
-.pi-payment-status { text-align: center; font-size: 9px; margin: 4px 0 5px; padding: 3px 5px; background: #f0f0f0; font-weight: 900; }
+.pi-payment-status { text-align: center; font-size: 9px; margin: 4px 0 5px; padding: 3px 5px; background: transparent; border: 1px solid #000; font-weight: 900; }
 .pi-footer { text-align: center; font-size: 9px; margin-top: 6px; border-top: 1px solid #000; padding-top: 4px; line-height: 1.6; }
+.pi-qr { text-align: center; margin-top: 8px; }
+.pi-qr img { max-width: 120px; margin: 0 auto 4px; display: block !important; }
+.pi-qr-text { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; }
 .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; text-align: center; }
 `;
@@ -90,6 +93,11 @@ function buildJobReceiptHTML(j, opts) {
         `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:7px;">Final cost after diagnostic.</span></div>`;
 
     const imgSrc = opts.imgSrc || 'img/logo.png';
+    
+    // Generate QR code URL for job tracking
+    const jobId = j.id;
+    const trackerUrl = `https://servicellbze.github.io/ServiCell/tracker.html?job=${jobId}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(trackerUrl)}`;
 
     return `<style>${RECEIPT_STYLES}</style>${RECEIPT_FONT_LINK}
 <div id="printInvoice">
@@ -133,10 +141,11 @@ function buildJobReceiptHTML(j, opts) {
     <div class="pi-section">Cost Breakdown</div>
     ${costTableHTML}
     <div class="pi-payment-status"><strong>Payment Status:</strong> ${_esc(paymentStatus)}</div>
-    <div class="pi-footer">
-        Thank you for choosing Servicell Belize!<br>
-        Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>
-        We are not responsible for data loss. Please back up your device.
+    <div class="pi-footer">Thank you for choosing Servicell Belize!<br>Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>We are not responsible for data loss. Please back up your device.</div>
+    <hr class="pi-dash">
+    <div class="pi-qr">
+        <img src="${qrCodeUrl}" alt="Track Your Repair">
+        <div class="pi-qr-text">SCAN TO TRACK YOUR REPAIR</div>
     </div>
 </div>`;
 }
@@ -236,7 +245,7 @@ function _windowPrint(htmlContent) {
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
 const A4_STYLES = `
-@media print { @page { size: A4; margin: 15mm 20mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; } body { background: white !important; } }
+@media print { @page { size: A4; margin: 15mm 20mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; } body { background: white !important; } img { display: block !important; } }
 body { font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size: 11px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
 * { box-sizing: border-box; }
 .pi-shop { text-align: center; margin-bottom: 12px; }
@@ -247,7 +256,7 @@ body { font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size: 11px; 
 .pi-dash { border: none; border-top: 1px dashed #000; margin: 8px 0 6px; }
 .pi-title { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 12px; }
 .pi-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; line-height: 1.8; }
-.pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 6px 0 10px; padding: 8px 12px; background: #f5f5f5; gap: 16px; }
+.pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 6px 0 10px; padding: 8px 12px; background: transparent; border: 1px solid #000; gap: 16px; }
 .pi-section { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; margin-top: 4px; }
 .pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 10px; }
 .pi-field-label { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
@@ -258,10 +267,14 @@ body { font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size: 11px; 
 .pi-cost-table th:last-child, .pi-cost-table td:last-child { text-align: right; }
 .pi-cost-table td { padding: 5px 0; border-bottom: 1px dashed #000; font-size: 12px; }
 .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 13px; padding-top: 8px; }
-.pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 10px 0 12px; padding: 8px 12px; background: #f0f0f0; }
+.pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 10px 0 12px; padding: 8px 12px; background: transparent; border: 1px solid #000; }
 .pi-inspection { border: 1px solid #000; padding: 8px 12px; margin: 4px 0 12px; font-size: 11px; line-height: 1.7; }
 .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
 .pi-sig { border-top: 1px solid #000; padding-top: 4px; font-size: 9px; text-align: center; }
+.pi-qr-a4 { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px dashed #000; }
+.pi-qr-a4 img { max-width: 160px; margin: 0 auto 8px; display: block !important; }
+.pi-qr-a4-title { font-size: 11px; font-weight: 900; letter-spacing: 1px; }
+.pi-qr-a4-url { font-size: 9px; margin-top: 4px; color: #666; }
 .pi-footer { text-align: center; font-size: 11px; font-weight: 700; margin-top: 20px; border-top: 1px dashed #000; padding-top: 8px; line-height: 1.6; }
 `;
 
@@ -318,6 +331,11 @@ function buildJobA4HTML(j, opts) {
         : '';
 
     const imgSrc = opts.imgSrc || 'img/logo.png';
+    
+    // Generate QR code URL for job tracking
+    const jobId = j.id;
+    const trackerUrl = `https://servicellbze.github.io/ServiCell/tracker.html?job=${jobId}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(trackerUrl)}`;
 
     return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
 <style>${A4_STYLES}</style>
@@ -364,9 +382,10 @@ ${costTableHTML}
     <div class="pi-sig">Customer Signature &amp; Date</div>
     <div class="pi-sig">Staff Signature &amp; Date</div>
 </div>
-<div class="pi-footer">
-    Thank you for choosing Servicell Belize!<br>
-    Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>
-    We are not responsible for data loss. Please back up your device.
-</div>`;
+<div class="pi-qr-a4">
+    <img src="${qrCodeUrl}" alt="Track Your Repair">
+    <div class="pi-qr-a4-title">SCAN TO TRACK YOUR REPAIR</div>
+    <div class="pi-qr-a4-url">Visit: servicellbze.github.io/ServiCell/tracker.html</div>
+</div>
+<div class="pi-footer">Thank you for choosing Servicell Belize!<br>Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>We are not responsible for data loss. Please back up your device.</div>`;
 }
