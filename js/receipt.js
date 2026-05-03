@@ -37,6 +37,7 @@ const RECEIPT_STYLES = `
 `;
 
 const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&display=swap">';
+const QR_LIBRARY = '<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>';
 
 function _esc(str) {
     if (!str) return '';
@@ -97,7 +98,8 @@ function buildJobReceiptHTML(j, opts) {
     // Generate QR code URL for job tracking
     const jobId = j.id;
     const trackerUrl = `https://servicellbze.github.io/ServiCell/tracker.html?job=${jobId}`;
-    const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(trackerUrl)}&choe=UTF-8`;
+    // Use quickchart.io - a free, reliable QR code API
+    const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(trackerUrl)}&size=150`;
 
     return `<style>${RECEIPT_STYLES}</style>${RECEIPT_FONT_LINK}
 <div id="printInvoice">
@@ -335,7 +337,8 @@ function buildJobA4HTML(j, opts) {
     // Generate QR code URL for job tracking
     const jobId = j.id;
     const trackerUrl = `https://servicellbze.github.io/ServiCell/tracker.html?job=${jobId}`;
-    const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(trackerUrl)}&choe=UTF-8`;
+    // Use quickchart.io - a free, reliable QR code API
+    const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(trackerUrl)}&size=200`;
 
     return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
 <style>${A4_STYLES}</style>
