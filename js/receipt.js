@@ -97,7 +97,7 @@ function buildJobReceiptHTML(j, opts) {
     // Generate QR code URL for job tracking
     const jobId = j.id;
     const trackerUrl = `https://servicellbze.github.io/ServiCell/tracker.html?job=${jobId}`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(trackerUrl)}`;
+    const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=150x150&chl=${encodeURIComponent(trackerUrl)}&choe=UTF-8`;
 
     return `<style>${RECEIPT_STYLES}</style>${RECEIPT_FONT_LINK}
 <div id="printInvoice">
@@ -335,7 +335,7 @@ function buildJobA4HTML(j, opts) {
     // Generate QR code URL for job tracking
     const jobId = j.id;
     const trackerUrl = `https://servicellbze.github.io/ServiCell/tracker.html?job=${jobId}`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(trackerUrl)}`;
+    const qrCodeUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(trackerUrl)}&choe=UTF-8`;
 
     return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
 <style>${A4_STYLES}</style>
