@@ -219,10 +219,53 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
 // ── Unified print entry point ─────────────────────────────────────────────────
 // Tries QZ Tray first, falls back to window.print()
 function printHTML(htmlContent) {
-    if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
-        printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
+    // Extract QR code URL from HTML to preload it
+    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
+    
+    if (qrMatch) {
+        // Preload QR code image before printing
+        const qrUrl = qrMatch[0];
+        const preloadImg = new Image();
+        
+        preloadImg.onload = function() {
+            // QR code loaded, now print
+            if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
+                printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
+            } else {
+                _windowPrint(htmlContent);
+            }
+        };
+        
+        preloadImg.onerror = function() {
+            // QR code failed to load, print anyway
+            console.warn('QR code failed to preload, printing anyway');
+            if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
+                printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
+            } else {
+                _windowPrint(htmlContent);
+            }
+        };
+        
+        preloadImg.src = qrUrl;
+        
+        // Fallback timeout
+        setTimeout(function() {
+            if (!preloadImg.complete) {
+                console.warn('QR code preload timeout, printing anyway');
+                if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
+                    printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
+                } else {
+                    _windowPrint(htmlContent);
+                }
+            }
+        }, 3000);
     } else {
-        _windowPrint(htmlContent);
+        // No QR code found, print normally
+        if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
+            printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
+        } else {
+            _windowPrint(htmlContent);
+        }
     }
 }
 
@@ -242,16 +285,34 @@ function _windowPrint(htmlContent) {
         setTimeout(() => { try { w.close(); } catch(_) {} }, 1500);
     }
     
-    // Wait for images to load
-    const images = w.document.getElementsByTagName('img');
-    if (images.length === 0) {
-        // No images, print immediately
-        w.onload = _doPrint;
-        setTimeout(_doPrint, 300);
-    } else {
+    // Wait for window to load first, then check images
+    w.addEventListener('load', function() {
+        const images = w.document.getElementsByTagName('img');
+        
+        if (images.length === 0) {
+            // No images, print immediately
+            setTimeout(_doPrint, 300);
+            return;
+        }
+        
         let loadedCount = 0;
         const totalImages = images.length;
+        let allLoaded = true;
         
+        // Check if any images are still loading
+        for (let i = 0; i < images.length; i++) {
+            if (!images[i].complete || images[i].naturalWidth === 0) {
+                allLoaded = false;
+            }
+        }
+        
+        if (allLoaded) {
+            // All images already loaded
+            setTimeout(_doPrint, 500);
+            return;
+        }
+        
+        // Wait for images to load
         function checkAllLoaded() {
             loadedCount++;
             if (loadedCount >= totalImages) {
@@ -261,17 +322,17 @@ function _windowPrint(htmlContent) {
         }
         
         for (let i = 0; i < images.length; i++) {
-            if (images[i].complete) {
+            if (images[i].complete && images[i].naturalWidth > 0) {
                 checkAllLoaded();
             } else {
-                images[i].onload = checkAllLoaded;
-                images[i].onerror = checkAllLoaded; // Count errors too to avoid hanging
+                images[i].addEventListener('load', checkAllLoaded);
+                images[i].addEventListener('error', checkAllLoaded);
             }
         }
         
-        // Fallback timeout in case something goes wrong
-        setTimeout(_doPrint, 3000);
-    }
+        // Fallback timeout in case something goes wrong (5 seconds)
+        setTimeout(_doPrint, 5000);
+    });
 }
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
