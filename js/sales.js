@@ -38,15 +38,15 @@ function getCurrentShift() {
     const now = new Date();
     const day = now.getDay();
     const h   = now.getHours() + now.getMinutes() / 60;
-    if (day === 0) return null;
+    if (day === 0) return null; // Sunday - Closed
     if (day === 6) {
         // Saturday - single shift 9am to 7pm
         if (h >= 9 && h < 19) return { label: 'Saturday Shift', start: 9, end: 19 };
         return null;
     }
-    // Weekdays: Morning 8-4, Night 4pm-8am (wraps past midnight)
-    if (h >= 8 && h < 16) return { label: 'Morning Shift', start: 8, end: 16 };
-    return { label: 'Night Shift', start: 16, end: 32 }; // Night covers 4pm-8am next day
+    // Weekdays: Morning 8am-5pm, Night 5pm-8am (wraps past midnight)
+    if (h >= 8 && h < 17) return { label: 'Morning Shift', start: 8, end: 17 };
+    return { label: 'Night Shift', start: 17, end: 32 }; // Night covers 5pm-8am next day
 }
 
 function getShiftDate() {
@@ -220,7 +220,7 @@ function onBillsSearch()  { debounce('billsSearch',  renderBills, 50); }
 function renderSales() {
     const q      = (document.getElementById('salesSearch')?.value || '').trim().toLowerCase();
     const active = allSales.filter(s => s.status !== 'reversed');
-    const gross  = active.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const gross  = active.reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
     document.getElementById('sumGross').textContent    = bz(gross);
     document.getElementById('sumCount').textContent    = active.length;
     document.getElementById('sumPartial').textContent  = active.filter(s => s.method === 'partial').length;
@@ -254,17 +254,17 @@ function renderSales() {
         const items   = tryParseJSON(s.items, []);
         const desc    = items.map(i => i.name).join(', ') || s.customer || 'Sale';
         const ts      = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
-        const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
-        const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
-            : (s.method === 'partial' ? '<span class="badge badge-partial">Partial</span>' : '<span class="badge badge-paid">Paid</span>');
-        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
-        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
-        const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         // Transaction total (goes to gross sales) vs Amount Tendered
         const transactionTotal = parseFloat(s.total) || 0;
         const amountTendered   = parseFloat(s.amountPaid) || 0;
         const change           = s.method === 'cash' ? Math.max(0, amountTendered - transactionTotal) : 0;
+        const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
+        const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
+        const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
+            : (s.method === 'partial' ? '<span class="badge badge-partial">Balance Due: ' + bz(Math.max(0, transactionTotal - amountTendered)) + '</span>' : '<span class="badge badge-paid">Paid</span>');
+        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
+        const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
+        const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
         
         // Build amount display: show transaction total and tendered amount
         let amountLine = '<div style="text-align:right;">';
@@ -432,16 +432,23 @@ function _updateFloatVisibility() {
     const isFloat      = _isFloatShift();
     if (floatSection) floatSection.style.display = isFloat ? '' : 'none';
     if (!isFloat && floatInput) floatInput.value = '';
-    if (hint) hint.textContent = isFloat
-        ? 'Enter the float (cash left in drawer for tomorrow), then count the full drawer total.'
-        : 'Count all cash in the drawer and enter the total below.';
+    if (hint) {
+        const shift = getCurrentShift();
+        if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
+            hint.innerHTML = '<strong>Instructions:</strong> You started with ' + bz(window._expectedStartingFloat) + ' float. Count all cash in the drawer below. The system will automatically subtract your starting float to calculate variance.';
+        } else if (isFloat) {
+            hint.innerHTML = '<strong>Instructions:</strong><br>1. Count ALL cash in the drawer<br>2. Enter the float amount to leave for tomorrow<br>3. System will calculate your deposit amount (drawer - float) and compare to expected net';
+        } else {
+            hint.textContent = 'Count all cash in the drawer and enter the total below.';
+        }
+    }
     calcVariance();
 }
 function updateEOD() {
     const validSales   = allSales.filter(s => s.status !== 'reversed');
-    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
-    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
-    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
+    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
+    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     // Net drawer = cash/partial sales only (card never touches the drawer) minus payouts
@@ -472,36 +479,75 @@ function calcVariance() {
     const drawerEl = document.getElementById('drawerCount');
     const floatEl  = document.getElementById('floatAmount');
     const disp     = document.getElementById('varianceDisplay');
-    if (!drawerEl.value) { disp.style.display = 'none'; return; }
+    const depositDisp = document.getElementById('depositDisplay');
+    
+    if (!drawerEl.value) { 
+        disp.style.display = 'none'; 
+        if (depositDisp) depositDisp.style.display = 'none';
+        return; 
+    }
+    
     const drawer   = parseFloat(drawerEl.value) || 0;
     const float_   = parseFloat(floatEl?.value) || 0;
+    const shift    = getCurrentShift();
     
-    // Variance = drawer vs net expected (float doesn't affect this)
-    const diff     = drawer - net;
+    // For morning shift: subtract starting float to get actual sales cash
+    let actualCash = drawer;
+    let startingFloat = 0;
     
-    // Check if morning shift's starting drawer matches expected float
-    const shift = getCurrentShift();
-    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat && drawer > 0 && !float_) {
-        const expectedFloat = window._expectedStartingFloat;
-        // If drawer is close to just the float (within $5), show a reminder
-        if (Math.abs(drawer - expectedFloat) < 5 && net > 10) {
+    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
+        startingFloat = window._expectedStartingFloat;
+        actualCash = drawer - startingFloat;
+        
+        // Show reminder if drawer seems to only contain the starting float
+        if (drawer > 0 && Math.abs(drawer - startingFloat) < 5 && net > 10) {
             disp.style.display = 'block';
             disp.className = 'variance-display';
             disp.style.background = 'rgba(251,191,36,0.1)';
             disp.style.color = '#f59e0b';
             disp.style.borderColor = 'rgba(251,191,36,0.3)';
-            disp.textContent = '💡 Reminder: Last shift left ' + bz(expectedFloat) + ' float. Did you start with that amount?';
+            disp.textContent = '💡 Reminder: You started with ' + bz(startingFloat) + ' float. Current drawer should include sales cash too.';
+            if (depositDisp) depositDisp.style.display = 'none';
             return;
         }
     }
     
+    // For night/saturday shift: subtract float to get deposit amount
+    let depositAmount = actualCash;
+    if (_isFloatShift() && float_ > 0) {
+        depositAmount = actualCash - float_;
+    }
+    
+    // Calculate variance: deposit/sales cash vs expected net
+    const diff = depositAmount - net;
+    
+    // Show deposit amount for float shifts
+    if (depositDisp && _isFloatShift()) {
+        depositDisp.style.display = 'block';
+        depositDisp.innerHTML = '<div style="padding:10px 16px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:8px;margin-bottom:10px;">'
+            + '<div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">Deposit to Bank</div>'
+            + '<div style="font-size:1.3rem;font-weight:800;color:var(--primary);">' + bz(depositAmount) + '</div>'
+            + '<div style="font-size:0.68rem;color:var(--text-dim);margin-top:2px;">Drawer ' + bz(drawer) + ' - Float ' + bz(float_) + '</div>'
+            + '</div>';
+    } else if (depositDisp) {
+        depositDisp.style.display = 'none';
+    }
+    
+    // Show variance
     disp.style.display = 'block';
     if (Math.abs(diff) < 0.01) {
-        disp.className = 'variance-display exact'; disp.textContent = '\u2713 Drawer is exact' + (float_ > 0 ? '  \u00b7  Float: ' + bz(float_) : '');
+        disp.className = 'variance-display exact';
+        disp.textContent = '\u2713 Drawer is exact';
+        if (startingFloat > 0) disp.textContent += '  \u00b7  Started with ' + bz(startingFloat);
+        if (float_ > 0) disp.textContent += '  \u00b7  Float: ' + bz(float_);
     } else if (diff > 0) {
-        disp.className = 'variance-display over'; disp.textContent = '\u2191 Over by ' + bz(diff) + (float_ > 0 ? '  \u00b7  Float: ' + bz(float_) : '');
+        disp.className = 'variance-display over';
+        disp.textContent = '\u2191 Over by ' + bz(diff);
+        if (startingFloat > 0) disp.textContent += '  \u00b7  Started with ' + bz(startingFloat);
+        if (float_ > 0) disp.textContent += '  \u00b7  Float: ' + bz(float_);
     } else {
-        disp.className = 'variance-display short'; disp.textContent = '\u26a0\ufe0f Short by ' + bz(Math.abs(diff)) + '  \u2014  Manager will be notified';
+        disp.className = 'variance-display short';
+        disp.textContent = '\u26a0\ufe0f Short by ' + bz(Math.abs(diff)) + '  \u2014  Manager will be notified';
     }
 }
 
@@ -546,10 +592,28 @@ async function submitEOD() {
         return;
     }
     const drawer       = parseFloat(drawerVal);
-    // Variance = drawer vs net expected (float doesn't affect this)
-    const variance     = drawer - net;
+    const shift        = getCurrentShift();
+    
+    // Calculate actual cash and variance properly
+    let actualCash = drawer;
+    let startingFloat = 0;
+    
+    // For morning shift: subtract starting float
+    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
+        startingFloat = window._expectedStartingFloat;
+        actualCash = drawer - startingFloat;
+    }
+    
+    // For float shifts: subtract float to get deposit amount
+    let depositAmount = actualCash;
+    if (_isFloatShift() && float_ > 0) {
+        depositAmount = actualCash - float_;
+    }
+    
+    // Variance = deposit/sales cash vs expected net
+    const variance     = depositAmount - net;
     const shiftLabel   = getEODShiftLabel();
-    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const btn          = document.getElementById('submitEODBtn');
     btn.disabled = true; btn.textContent = 'Submitting...';
@@ -558,7 +622,9 @@ async function submitEOD() {
             action: 'submitdayclose', shiftDate: getShiftDate(),
             shift: shiftLabel, grossSales: gross,
             totalPayouts: payoutsTotal, netExpected: net,
-            actualDrawer: drawer, variance, float: float_, closedBy: currentUser
+            actualDrawer: drawer, variance, float: float_, 
+            startingFloat: startingFloat, depositAmount: depositAmount,
+            closedBy: currentUser
         });
         const res  = await fetch(SCRIPT_URL, { method: 'POST', body: params });
         const data = await res.json();
@@ -569,8 +635,10 @@ async function submitEOD() {
             showToast('End of day submitted!', 'ok');
             btn.textContent = '\u2713 Submitted';
             document.getElementById('drawerCount').value = '';
-            document.getElementById('floatAmount').value = '';
+            if (document.getElementById('floatAmount')) document.getElementById('floatAmount').value = '';
             document.getElementById('varianceDisplay').style.display = 'none';
+            const depositDisp = document.getElementById('depositDisplay');
+            if (depositDisp) depositDisp.style.display = 'none';
             printEOD();
             await loadAll();
         } else {
@@ -606,9 +674,9 @@ function printEOD() {
         alert('Enter the float amount before printing.'); return;
     }
     const validSales   = allSales.filter(s => s.status !== 'reversed');
-    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
-    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
-    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
+    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
+    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
     const gstCollected = gross * 12.5 / 112.5;
     const preTax       = gross - gstCollected;
     const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
@@ -616,9 +684,26 @@ function printEOD() {
     const net          = cashSales - payoutsTotal;
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
     const drawer       = parseFloat(drawerRaw);
-    const drawerLabel  = bz(drawer);
-    // Variance = drawer vs net expected (float doesn't affect this)
-    const variance     = drawer - net;
+    const shift        = getCurrentShift();
+    
+    // Calculate actual cash and variance properly (same as submitEOD)
+    let actualCash = drawer;
+    let startingFloat = 0;
+    
+    // For morning shift: subtract starting float
+    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
+        startingFloat = window._expectedStartingFloat;
+        actualCash = drawer - startingFloat;
+    }
+    
+    // For float shifts: subtract float to get deposit amount
+    let depositAmount = actualCash;
+    if (_isFloatShift() && float_ > 0) {
+        depositAmount = actualCash - float_;
+    }
+    
+    // Variance = deposit/sales cash vs expected net
+    const variance     = depositAmount - net;
     const shiftLabel   = getEODShiftLabel();
     const varText  = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? 'OVER ' : 'SHORT ') + bz(Math.abs(variance));
     const displayDate  = _currentDateFilter || getShiftDate();
@@ -651,8 +736,10 @@ function printEOD() {
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
-        + (float_ > 0 ? '<tr><td>Float (for tomorrow)</td><td>' + bz(float_) + '</td></tr>' : '')
-        + '<tr><td>Actual Drawer Total</td><td>' + drawerLabel + '</td></tr>'
+        + '<tr><td>Actual Drawer Total</td><td>' + bz(drawer) + '</td></tr>'
+        + (startingFloat > 0 ? '<tr><td>&nbsp;&nbsp;Less: Starting Float</td><td>-' + bz(startingFloat) + '</td></tr>' : '')
+        + (float_ > 0 ? '<tr><td>&nbsp;&nbsp;Less: Float (for tomorrow)</td><td>-' + bz(float_) + '</td></tr>' : '')
+        + (_isFloatShift() && float_ > 0 ? '<tr><td><strong>Deposit to Bank</strong></td><td><strong>' + bz(depositAmount) + '</strong></td></tr>' : '')
         + '<tr class="variance"><td><strong>Variance</strong></td><td><strong>' + varText + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
