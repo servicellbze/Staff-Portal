@@ -1186,9 +1186,42 @@ async function submitSale() {
             }
             openModal('saleConfirmModal');
             printReceipt(items, total, amountPaid, method, data.saleId, '');
+            // Store last receipt data for reprinting
+            window._lastReceipt = { items, total, amountPaid, method, saleId: data.saleId, customer: '' };
             await loadAll();
         } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('\u274c ' + (data.error || 'Could not save.')); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('Connection error.'); }
+}
+
+// -- Reprint Last Receipt -----------------------------------------------------
+function reprintLastReceipt() {
+    if (!window._lastReceipt) {
+        showToast('❌ No receipt to reprint', 'err');
+        return;
+    }
+    
+    try {
+        const { items, total, amountPaid, method, saleId, customer } = window._lastReceipt;
+        
+        // Check if required functions exist
+        if (typeof buildSaleReceiptHTML !== 'function' || typeof printHTML !== 'function') {
+            showToast('❌ Print functions not loaded', 'err');
+            console.error('Receipt functions not found');
+            return;
+        }
+        
+        // Bypass auto-print check and print directly
+        if (typeof kickDrawer === 'function') kickDrawer();
+        
+        const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, currentUser);
+        printHTML(html);
+        
+        showToast('🖨️ Printing receipt...', 'ok');
+        if (typeof haptic === 'function') haptic('light');
+    } catch (error) {
+        console.error('Reprint error:', error);
+        showToast('❌ Failed to print receipt', 'err');
+    }
 }
 
 // -- Job Pickup ----------------------------------------------------------------
