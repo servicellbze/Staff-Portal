@@ -104,15 +104,33 @@
             border: 1px solid var(--glass-border);
             cursor: pointer;
             backdrop-filter: blur(12px);
-            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             font-size: 1.2rem;
             color: var(--text-main);
+            position: relative;
         }
 
-        .refresh-btn:hover {
+        .refresh-btn:hover:not(.loading):not(.success) {
             border-color: var(--primary);
-            transform: rotate(180deg) scale(1.05);
+            transform: scale(1.05);
             box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .refresh-btn.loading {
+            pointer-events: none;
+            border-color: var(--warning);
+            animation: spin 1s linear infinite;
+        }
+
+        .refresh-btn.success {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         /* ── Stats ── */
@@ -731,6 +749,169 @@
             margin-top: 3px;
         }
 
+        /* ── Call Status Badge ── */
+        .call-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 99px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-top: 4px;
+            white-space: nowrap;
+        }
+        .call-status-badge.not-called {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .call-status-badge.called {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .call-status-badge.picked-up {
+            background: rgba(100, 116, 139, 0.15);
+            color: #64748b;
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
+        /* ── Mark Called Modal ── */
+        .mark-called-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            padding: 20px;
+        }
+        .mark-called-modal.open {
+            display: flex;
+        }
+        .mark-called-box {
+            background: var(--glass-strong);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 420px;
+            padding: 24px;
+            animation: modalIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+        .mark-called-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .mark-called-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .mark-called-title {
+            flex: 1;
+        }
+        .mark-called-title h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+        .mark-called-title p {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+        .mark-called-job-info {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+        }
+        .mark-called-job-info strong {
+            color: var(--primary);
+            font-weight: 800;
+        }
+        .mark-called-notes {
+            margin-bottom: 20px;
+        }
+        .mark-called-notes label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        .mark-called-notes textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+        .mark-called-notes textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .mark-called-notes textarea::placeholder {
+            color: var(--text-light);
+        }
+        .mark-called-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .mark-called-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mark-called-cancel {
+            background: var(--glass);
+            color: var(--text-dim);
+            border: 1px solid var(--glass-border);
+        }
+        .mark-called-cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+        .mark-called-confirm {
+            background: var(--success);
+            color: white;
+        }
+        .mark-called-confirm:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        .mark-called-confirm:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         /* Delete Modal specifics */
         .delete-body {
             padding: 28px;
@@ -1067,6 +1248,60 @@
 
             .edit-pills {
                 gap: 6px;
+            }
+
+            /* ── Mark Called Modal Mobile ── */
+            .mark-called-modal {
+                align-items: flex-end;
+                padding: 0;
+            }
+
+            .mark-called-box {
+                border-radius: 28px 28px 0 0;
+                max-width: 100%;
+                width: 100%;
+                max-height: 85vh;
+                padding: 20px;
+                animation: modalSlideUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1) both;
+            }
+
+            .mark-called-header {
+                margin-bottom: 14px;
+            }
+
+            .mark-called-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+
+            .mark-called-title h3 {
+                font-size: 0.95rem;
+            }
+
+            .mark-called-title p {
+                font-size: 0.72rem;
+            }
+
+            .mark-called-notes textarea {
+                min-height: 100px;
+                font-size: 0.9rem;
+            }
+
+            .mark-called-actions {
+                gap: 8px;
+            }
+
+            .mark-called-actions button {
+                padding: 14px;
+                font-size: 0.88rem;
+            }
+
+            /* ── Call Status Badge Mobile ── */
+            .call-status-badge {
+                font-size: 0.62rem;
+                padding: 3px 7px;
+            }
             }
 
             .delete-body {
@@ -1724,7 +1959,7 @@
                 <option value="unsuccessful">Unsuccessful</option>
                 <option value="abandoned">Abandoned</option>
             </select>
-            <button class="refresh-btn" onclick="loadJobs()" title="Sync Spreadsheet">🔄</button>
+            <button class="refresh-btn" id="refreshBtn" onclick="refreshJobs()" title="Sync Spreadsheet">🔄</button>
             <button id="archiveToggleBtn" onclick="toggleArchiveView()" title="Search archived jobs" style="height:50px;padding:0 16px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--text-dim);white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:6px;">📦 Archives</button>
         </div>
 
@@ -1863,6 +2098,7 @@
                 <button class="mf-btn mf-print" onclick="printFromView()">🖨️ Print</button>
                 <button class="mf-btn mf-claim" id="claimBtn" onclick="claimCurrentJob()" style="display:none;">🔒 Claim Job</button>
                 <button class="mf-btn mf-unclaim" id="unclaimBtn" onclick="unclaimCurrentJob()" style="display:none;">🔓 Reassign</button>
+                <button class="mf-btn" id="markCalledBtnView" onclick="openMarkCalledModal(currentViewId)" style="display:none;background:#10b981;color:#fff;">📞 Mark as Called</button>
                 <button class="mf-btn" id="editPhotosBtn" onclick="openPhotoEditor(currentViewId)" style="display:none;">📷 Edit Photos</button>
                 <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
             </div>
@@ -2139,6 +2375,32 @@
         </div>
     </div>
 
+    <!-- ══════════════════════════════════════════
+         MARK CUSTOMER CALLED MODAL
+    ══════════════════════════════════════════ -->
+    <div class="mark-called-modal" id="markCalledModal">
+        <div class="mark-called-box">
+            <div class="mark-called-header">
+                <div class="mark-called-icon">📞</div>
+                <div class="mark-called-title">
+                    <h3>Mark Customer as Called</h3>
+                    <p>Record that you've contacted the customer</p>
+                </div>
+            </div>
+            <div class="mark-called-job-info" id="markCalledJobInfo">
+                <strong>Job #<span id="mcJobId">—</span></strong> · <span id="mcCustomer">—</span> · <span id="mcDevice">—</span>
+            </div>
+            <div class="mark-called-notes">
+                <label>Call Notes (Optional)</label>
+                <textarea id="callNotesInput" placeholder="e.g., Left voicemail, Customer will pick up tomorrow at 2 PM, Spoke to customer..."></textarea>
+            </div>
+            <div class="mark-called-actions">
+                <button class="mark-called-cancel" onclick="closeMarkCalledModal()">Cancel</button>
+                <button class="mark-called-confirm" id="markCalledBtn" onclick="confirmMarkCalled()">📞 Mark as Called</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/components.js"></script>
     <script src="js/qz-drawer.js"></script>
     <script src="js/receipt.js"></script>
@@ -2170,6 +2432,23 @@
                 month: 'short', day: 'numeric', year: 'numeric',
                 timeZone: 'UTC'
             });
+        }
+
+        function formatTimeAgo(dateStr) {
+            if (!dateStr) return '';
+            const now = new Date();
+            const date = new Date(dateStr);
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'just now';
+            if (diffMins < 60) return diffMins + 'm ago';
+            if (diffHours < 24) return diffHours + 'h ago';
+            if (diffDays === 1) return 'yesterday';
+            if (diffDays < 7) return diffDays + 'd ago';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
         function classifyStatus(job) {
@@ -2277,6 +2556,20 @@
                 const claimedChip = j.claimedBy
                     ? `<span class="claimed-chip">🔒 ${j.claimedBy}</span>`
                     : (stat.class === 'received' ? `<div style="font-size:0.65rem;opacity:0.4;margin-top:2px;">Unclaimed</div>` : '');
+                
+                // Call status badge for ready jobs
+                let callBadge = '';
+                if (stat.class === 'ready') {
+                    const callStatus = j.calledStatus || 'not_called';
+                    if (callStatus === 'not_called') {
+                        callBadge = '<span class="call-status-badge not-called">📞 Not Called</span>';
+                    } else if (callStatus === 'called' && j.calledDate) {
+                        const timeAgo = formatTimeAgo(j.calledDate);
+                        const calledBy = j.calledBy || 'Staff';
+                        callBadge = `<span class="call-status-badge called" title="Called by ${calledBy}${j.callNotes ? ': ' + j.callNotes : ''}">✓ Called ${timeAgo}</span>`;
+                    }
+                }
+                
                 return `
         <div class="job-row status-${stat.class}" style="${j._archived ? 'opacity:0.55;filter:grayscale(0.4);' : ''}">
             <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
@@ -2289,7 +2582,7 @@
             <div><span class="job-type-badge">${j.jobType || 'Repair'}</span></div>
             <div><span class="priority-badge ${priorityClass}">${priorityLabel}</span></div>
             <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
-            <div style="font-size:0.85rem;">${storage}</div>
+            <div style="font-size:0.85rem;">${storage}${callBadge ? '<br>' + callBadge : ''}</div>
             <div class="action-btns">
                 <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
                 ${j._archived ? '' : `<button class="action-btn" title="Edit Entry" onclick="openEditModal('${j.id}')">✏️</button>
@@ -2406,6 +2699,43 @@
             }
         }
 
+        // Refresh with visual feedback
+        async function refreshJobs() {
+            const btn = document.getElementById('refreshBtn');
+            if (!btn || btn.classList.contains('loading')) return;
+
+            // Add loading state
+            btn.classList.add('loading');
+            btn.textContent = '⏳';
+            if (typeof haptic === 'function') haptic('light');
+
+            try {
+                await loadJobs();
+                
+                // Success state
+                btn.classList.remove('loading');
+                btn.classList.add('success');
+                btn.textContent = '✓';
+                if (typeof haptic === 'function') haptic('success');
+
+                // Reset after 1.5 seconds
+                setTimeout(() => {
+                    btn.classList.remove('success');
+                    btn.textContent = '🔄';
+                }, 1500);
+            } catch (error) {
+                // Error state
+                btn.classList.remove('loading');
+                btn.textContent = '✕';
+                if (typeof haptic === 'function') haptic('error');
+                
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    btn.textContent = '🔄';
+                }, 2000);
+            }
+        }
+
         function checkStaleJobs(jobs) {
             const STALE_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
             const SKIP_STATUSES = ['abandoned', 'unsuccessful', 'resolved', 'ready'];
@@ -2433,6 +2763,99 @@
             });
 
             localStorage.setItem('sc_stale_checked', JSON.stringify(checked));
+        }
+
+        // ── MARK CUSTOMER CALLED ──────────────────────────────────────────────
+        let _markCalledJobId = null;
+
+        function openMarkCalledModal(jobId) {
+            const j = getJob(jobId);
+            if (!j) return;
+            
+            // Only allow marking ready jobs as called
+            const stat = classifyStatus(j);
+            if (stat.class !== 'ready') {
+                showToast('⚠️ Can only mark "Ready for Pickup" jobs as called', 'err');
+                return;
+            }
+            
+            _markCalledJobId = jobId;
+            document.getElementById('mcJobId').textContent = j.id;
+            document.getElementById('mcCustomer').textContent = j.customerName || 'Walk-in';
+            document.getElementById('mcDevice').textContent = j.device || '—';
+            document.getElementById('callNotesInput').value = '';
+            document.getElementById('markCalledModal').classList.add('open');
+            
+            // Focus on notes input
+            setTimeout(() => document.getElementById('callNotesInput').focus(), 300);
+        }
+
+        function closeMarkCalledModal() {
+            document.getElementById('markCalledModal').classList.remove('open');
+            _markCalledJobId = null;
+        }
+
+        // Close modal when clicking outside (mobile-friendly)
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('markCalledModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeMarkCalledModal();
+                    }
+                });
+            }
+        });
+
+        async function confirmMarkCalled() {
+            if (!_markCalledJobId) return;
+            
+            const btn = document.getElementById('markCalledBtn');
+            const notes = document.getElementById('callNotesInput').value.trim();
+            const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Staff';
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Marking...';
+            
+            try {
+                const params = new URLSearchParams({
+                    action: 'markcalled',
+                    id: _markCalledJobId,
+                    username: scUser,
+                    callNotes: notes
+                });
+                
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    closeMarkCalledModal();
+                    showToast('✅ Customer marked as called', 'ok');
+                    if (typeof haptic === 'function') haptic('success');
+                    
+                    // Reload jobs to show updated status
+                    await loadJobs();
+                    
+                    // If view modal is open for this job, refresh it
+                    if (currentViewId === _markCalledJobId) {
+                        openViewModal(_markCalledJobId);
+                    }
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to mark as called'), 'err');
+                    if (typeof haptic === 'function') haptic('error');
+                }
+            } catch (error) {
+                showToast('❌ Connection error', 'err');
+                if (typeof haptic === 'function') haptic('error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📞 Mark as Called';
+            }
         }
 
         // Auto-reload when connection is restored
@@ -2728,6 +3151,14 @@
             } else {
                 invoiceSection.style.display = 'none';
                 paymentBadgeEl.style.display = 'none';
+            }
+
+            // Show "Mark as Called" button only for ready jobs that haven't been called
+            const markCalledBtn = document.getElementById('markCalledBtnView');
+            if (markCalledBtn) {
+                const isReady = stat.class === 'ready';
+                const notCalled = !j.calledStatus || j.calledStatus === 'not_called';
+                markCalledBtn.style.display = (isReady && notCalled) ? '' : 'none';
             }
 
             openModal('viewModal');
