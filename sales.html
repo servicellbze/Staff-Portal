@@ -414,6 +414,19 @@
 
         /* -- Line Items ---------------------------------- */
         .line-items { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+        .line-items-header {
+            display: grid;
+            grid-template-columns: 1fr 96px 80px 28px;
+            gap: 6px;
+            padding: 0 0 6px 0;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-dim);
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 4px;
+        }
         .line-item-row {
             display: grid;
             grid-template-columns: 1fr 96px 80px 28px;
@@ -922,6 +935,12 @@
         </div>
         <div class="form-group">
             <label>Line Items</label>
+            <div class="line-items-header">
+                <div>Item Description</div>
+                <div style="text-align:center;">Qty</div>
+                <div style="text-align:right;">Price (BZ$)</div>
+                <div></div>
+            </div>
             <div class="line-items" id="saleLineItems"></div>
         </div>
         <div class="line-total-row">
@@ -1060,6 +1079,12 @@
         </div>
         <div class="form-group">
             <label>Items</label>
+            <div class="line-items-header">
+                <div>Item Description</div>
+                <div style="text-align:center;">Qty</div>
+                <div style="text-align:right;">Price (BZ$)</div>
+                <div></div>
+            </div>
             <div class="line-items" id="billLineItems"></div>
             <button class="btn-secondary" style="width:100%;justify-content:center;margin-top:4px;" onclick="addBillLine()">+ Add Item</button>
         </div>
@@ -1120,6 +1145,12 @@
         </div>
         <div class="form-group">
             <label>Items</label>
+            <div class="line-items-header">
+                <div>Item Description</div>
+                <div style="text-align:center;">Qty</div>
+                <div style="text-align:right;">Price (BZ$)</div>
+                <div></div>
+            </div>
             <div class="line-items" id="editBillLineItems"></div>
             <button class="btn-secondary" style="width:100%;justify-content:center;margin-top:4px;" onclick="addEditBillLine()">+ Add Item</button>
         </div>
@@ -1191,6 +1222,12 @@
         </div>
         <div class="form-group">
             <label>Line Items</label>
+            <div class="line-items-header">
+                <div>Item Description</div>
+                <div style="text-align:center;">Qty</div>
+                <div style="text-align:right;">Price (BZ$)</div>
+                <div></div>
+            </div>
             <div class="line-items" id="editSaleLineItems"></div>
             <button class="btn-secondary" style="width:100%;justify-content:center;margin-top:4px;" onclick="addEditSaleLine()">+ Add Item</button>
         </div>

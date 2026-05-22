@@ -1947,7 +1947,7 @@
         <div class="search-section">
             <div class="search-box">
                 <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Search by ID, name, device, or phone...">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search jobs (ID, name, device, phone, technician, notes...)">
             </div>
             <select id="statusFilter" class="filter-dropdown">
                 <option value="all">All Shop Activity</option>
@@ -2621,16 +2621,37 @@
         }
 
         function filterAndRender() {
-            const term = document.getElementById('searchInput').value.toLowerCase();
+            const term = document.getElementById('searchInput').value.toLowerCase().trim();
             const filter = document.getElementById('statusFilter').value;
             const sourceJobs = _viewingArchive
                 ? archivedJobs.map(j => ({ ...j, _archived: true }))
                 : allJobs;
+            
             _filteredJobs = sourceJobs.filter(j => {
-                const matchSearch = String(j.id).includes(term) || (j.customerName || '').toLowerCase().includes(term) || (j.device || '').toLowerCase().includes(term) || (j.customerPhone || '').replace(/\D/g,'').includes(term.replace(/\D/g,''));
+                // Search across multiple fields
+                const searchableFields = [
+                    String(j.id),                           // Job ID
+                    j.customerName || '',                   // Customer name
+                    j.device || '',                         // Device type
+                    j.customerPhone || '',                  // Phone (with formatting)
+                    (j.customerPhone || '').replace(/\D/g, ''), // Phone (digits only)
+                    j.technician || '',                     // Technician name
+                    j.notes || '',                          // Job notes
+                    j.status || '',                         // Status
+                    j.jobType || ''                         // Job type
+                ];
+                
+                // Check if term matches any field (case-insensitive)
+                const matchSearch = term === '' || searchableFields.some(field => 
+                    String(field).toLowerCase().includes(term)
+                );
+                
+                // Check status filter
                 const matchFilter = _viewingArchive || filter === 'all' || classifyStatus(j).class === filter;
+                
                 return matchSearch && matchFilter;
             });
+            
             _jobsPage = 1;
             renderJobs(_filteredJobs);
         }
@@ -2817,6 +2838,25 @@
             btn.disabled = true;
             btn.textContent = '⏳ Marking...';
             
+            // OPTIMISTIC UPDATE: Update UI immediately
+            const job = allJobs.find(j => String(j.id) === String(_markCalledJobId));
+            const originalCallStatus = job ? job.callStatus : null;
+            const originalCallNotes = job ? job.callNotes : null;
+            
+            if (job) {
+                job.callStatus = 'called';
+                job.callNotes = notes;
+            }
+            
+            closeMarkCalledModal();
+            showToast('📞 Marking as called...', '');
+            filterAndRender();
+            
+            // If view modal is open for this job, refresh it immediately
+            if (currentViewId === _markCalledJobId) {
+                openViewModal(_markCalledJobId);
+            }
+            
             try {
                 const params = new URLSearchParams({
                     action: 'markcalled',
@@ -2834,11 +2874,10 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    closeMarkCalledModal();
                     showToast('✅ Customer marked as called', 'ok');
                     if (typeof haptic === 'function') haptic('success');
                     
-                    // Reload jobs to show updated status
+                    // Reload jobs to sync with backend
                     await loadJobs();
                     
                     // If view modal is open for this job, refresh it
@@ -2846,12 +2885,30 @@
                         openViewModal(_markCalledJobId);
                     }
                 } else {
+                    // REVERT: Backend failed
+                    if (job) {
+                        job.callStatus = originalCallStatus;
+                        job.callNotes = originalCallNotes;
+                    }
                     showToast('❌ ' + (data.error || 'Failed to mark as called'), 'err');
                     if (typeof haptic === 'function') haptic('error');
+                    filterAndRender();
+                    if (currentViewId === _markCalledJobId) {
+                        openViewModal(_markCalledJobId);
+                    }
                 }
             } catch (error) {
+                // REVERT: Network error
+                if (job) {
+                    job.callStatus = originalCallStatus;
+                    job.callNotes = originalCallNotes;
+                }
                 showToast('❌ Connection error', 'err');
                 if (typeof haptic === 'function') haptic('error');
+                filterAndRender();
+                if (currentViewId === _markCalledJobId) {
+                    openViewModal(_markCalledJobId);
+                }
             } finally {
                 btn.disabled = false;
                 btn.textContent = '📞 Mark as Called';
@@ -2891,28 +2948,50 @@
             // If stored role doesn't match username prefix, trust the prefix
             const effectiveRole = (role === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : role;
             const claimBtn = document.getElementById('claimBtn');
+            
+            // OPTIMISTIC UPDATE: Update UI immediately for instant feedback
+            const originalClaimedBy = j.claimedBy;
+            const originalClaimedAt = j.claimedAt;
+            
             claimBtn.disabled = true;
             claimBtn.textContent = 'Claiming…';
+            
+            // Update local cache immediately
+            j.claimedBy = scUser;
+            j.claimedAt = new Date().toISOString();
+            
+            // Update UI immediately
+            filterAndRender();
+            openViewModal(currentViewId);
+            
             try {
                 const params = new URLSearchParams({ action: 'claimjob', id: currentViewId, username: scUser, role: effectiveRole });
                 const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
                 const data = await res.json();
                 if (data.success) {
-                        // Update local cache — no full reload needed
-                        const job = allJobs.find(j => String(j.id) === String(currentViewId));
-                        if (job) { job.claimedBy = scUser; job.claimedAt = data.claimedAt || new Date().toISOString(); }
+                        // Backend confirmed - update with server timestamp if provided
+                        if (data.claimedAt) {
+                            j.claimedAt = data.claimedAt;
+                        }
                         showToast('✅ Job claimed!', 'ok');
+                        // Refresh UI one more time with server data
                         filterAndRender();
                         openViewModal(currentViewId);
                 } else {
+                    // REVERT: Backend failed, restore original state
+                    j.claimedBy = originalClaimedBy;
+                    j.claimedAt = originalClaimedAt;
                     showToast('❌ ' + (data.error || 'Could not claim job'), 'err');
-                    claimBtn.disabled = false;
-                    claimBtn.textContent = '🔒 Claim Job';
+                    filterAndRender();
+                    openViewModal(currentViewId);
                 }
             } catch(e) {
+                // REVERT: Network error, restore original state
+                j.claimedBy = originalClaimedBy;
+                j.claimedAt = originalClaimedAt;
                 showToast('❌ Network error', 'err');
-                claimBtn.disabled = false;
-                claimBtn.textContent = '🔒 Claim Job';
+                filterAndRender();
+                openViewModal(currentViewId);
             }
         }
 
@@ -2925,22 +3004,44 @@
             openModal('reassignModal');
             document.getElementById('reassignConfirmBtn').onclick = async function() {
                 closeModal('reassignModal');
+                
+                const j = getJob(currentViewId);
+                if (!j) return;
+                
+                // OPTIMISTIC UPDATE: Store original state for potential revert
+                const originalClaimedBy = j.claimedBy;
+                const originalClaimedAt = j.claimedAt;
+                
+                // Update UI immediately
+                j.claimedBy = '';
+                j.claimedAt = '';
+                filterAndRender();
+                openViewModal(currentViewId);
+                
                 try {
                     const params = new URLSearchParams({ action: 'unclaim', id: currentViewId, username: scUser, role: effectiveRole });
                     const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
                     const data = await res.json();
                     if (data.success) {
-                        // Update local cache — no full reload needed
-                        const job = allJobs.find(j => String(j.id) === String(currentViewId));
-                        if (job) { job.claimedBy = ''; job.claimedAt = ''; }
                         showToast('🔓 Job reassigned', 'ok');
+                        // Already updated UI, just confirm success
                         filterAndRender();
                         openViewModal(currentViewId);
                     } else {
+                        // REVERT: Backend failed, restore original state
+                        j.claimedBy = originalClaimedBy;
+                        j.claimedAt = originalClaimedAt;
                         showToast('❌ ' + (data.error || 'Could not unclaim'), 'err');
+                        filterAndRender();
+                        openViewModal(currentViewId);
                     }
                 } catch(e) {
+                    // REVERT: Network error, restore original state
+                    j.claimedBy = originalClaimedBy;
+                    j.claimedAt = originalClaimedAt;
                     showToast('❌ Network error', 'err');
+                    filterAndRender();
+                    openViewModal(currentViewId);
                 }
             };
         }
@@ -3453,6 +3554,36 @@
             document.getElementById('saveBtnText').style.display = 'none';
             document.getElementById('saveSpinner').style.display = 'block';
 
+            // OPTIMISTIC UPDATE: Store original state and update UI immediately
+            const job = allJobs.find(j => String(j.id) === String(currentEditId));
+            const originalState = job ? {
+                status: job.status,
+                priority: job.priority,
+                notes: job.notes,
+                dateCompleted: job.dateCompleted,
+                estimatedCompletion: job.estimatedCompletion,
+                payment: job.payment,
+                invoiceItems: job.invoiceItems
+            } : null;
+
+            // Update local cache immediately
+            if (job) {
+                job.status = status;
+                job.priority = priority;
+                job.notes = notes;
+                job.dateCompleted = dateCompleted;
+                job.estimatedCompletion = estimatedCompletion;
+                job.payment = payment;
+                job.invoiceItems = invoiceItemsJSON;
+                currentJobData = job;
+            }
+
+            // Update UI immediately
+            closeModal('editModal');
+            showToast('💾 Saving changes...', '');
+            filterAndRender();
+            updateStats(allJobs);
+
             try {
                 const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
                 const params = new URLSearchParams({
@@ -3471,26 +3602,26 @@
                 const saveRes = await fetch(`${SCRIPT_URL}?${params.toString()}`, { method: 'POST' });
                 let saveData = {};
                 try { saveData = await saveRes.json(); } catch(_) {}
+                
                 if (saveData.locked) {
+                    // REVERT: Job is locked by another user
+                    if (job && originalState) {
+                        Object.assign(job, originalState);
+                        currentJobData = job;
+                    }
                     showToast('🔒 ' + saveData.error, 'err');
                     haptic('error');
+                    filterAndRender();
+                    updateStats(allJobs);
                     btn.disabled = false;
                     document.getElementById('saveBtnText').style.display = 'inline';
                     document.getElementById('saveSpinner').style.display = 'none';
                     return;
                 }
 
-                const job = allJobs.find(j => String(j.id) === String(currentEditId));
-                if (job) {
-                    job.status = status;
-                    job.priority = priority;
-                    job.notes = notes;
-                    job.dateCompleted = dateCompleted;
-                    job.estimatedCompletion = estimatedCompletion;
-                    job.payment = payment;
-                    job.invoiceItems = invoiceItemsJSON;
-                    currentJobData = job;
-                }
+                // Backend confirmed - show success
+                showToast('✅ Job updated successfully', 'ok');
+                haptic('success');
 
                 // ── Push notifications on key status changes ──
                 if (status === 'ready') {
@@ -3507,11 +3638,6 @@
                         `#${currentEditId} — ${j?.device || 'Device'} is now: ${status}.`);
                 }
 
-                closeModal('editModal');
-                showToast('✅ Job updated successfully', 'ok');
-                haptic('success');
-                filterAndRender();
-                updateStats(allJobs);
                 // Upload any new photos in the background
                 if (_editPhotos.filter(Boolean).length > 0) {
                     uploadEditPhotos(currentEditId);
@@ -3519,7 +3645,15 @@
                 setTimeout(loadJobs, 2000);
 
             } catch (err) {
+                // REVERT: Network error, restore original state
+                if (job && originalState) {
+                    Object.assign(job, originalState);
+                    currentJobData = job;
+                }
                 showToast('❌ Could not reach the server.', 'err');
+                haptic('error');
+                filterAndRender();
+                updateStats(allJobs);
                 console.error(err);
             } finally {
                 btn.disabled = false;
@@ -3547,7 +3681,16 @@
 
         async function deleteJob(id) {
             closeModal('deleteModal');
-            showToast('⏳ Processing deletion...', '');
+            
+            // OPTIMISTIC UPDATE: Remove from UI immediately
+            const originalJobs = [...allJobs];
+            const deletedJob = allJobs.find(j => String(j.id) === String(id));
+            
+            allJobs = allJobs.filter(j => String(j.id) !== String(id));
+            
+            showToast('🗑️ Deleting job #' + id + '...', '');
+            filterAndRender();
+            updateStats(allJobs);
 
             try {
                 const params = new URLSearchParams({
@@ -3555,19 +3698,36 @@
                     id: id
                 });
 
-                await fetch(`${SCRIPT_URL}?${params.toString()}`, { mode: 'no-cors' });
+                const res = await fetch(`${SCRIPT_URL}?${params.toString()}`, { method: 'POST' });
+                
+                // Check if deletion was successful (if response is parseable)
+                try {
+                    const data = await res.json();
+                    if (data.success === false) {
+                        // REVERT: Backend rejected deletion
+                        allJobs = originalJobs;
+                        showToast('❌ ' + (data.error || 'Could not delete job'), 'err');
+                        haptic('error');
+                        filterAndRender();
+                        updateStats(allJobs);
+                        return;
+                    }
+                } catch(_) {
+                    // no-cors mode or no JSON response, assume success
+                }
 
-                allJobs = allJobs.filter(j => String(j.id) !== String(id));
-
-                showToast('🗑️ Job #' + id + ' removed successfully.', 'ok');
+                showToast('✅ Job #' + id + ' removed successfully.', 'ok');
                 haptic('warning');
-                filterAndRender();
-                updateStats(allJobs);
 
                 setTimeout(loadJobs, 2000);
 
             } catch (err) {
+                // REVERT: Network error, restore original state
+                allJobs = originalJobs;
                 showToast('❌ Connection failed.', 'err');
+                haptic('error');
+                filterAndRender();
+                updateStats(allJobs);
                 console.error(err);
             }
         }

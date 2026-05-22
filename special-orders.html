@@ -890,27 +890,51 @@
         // ── Update status (manager only) ──────────────────────────────────────
         async function updateStatus(orderNumber, newStatus) {
             if (!isManager) return;
+            
+            // OPTIMISTIC UPDATE: Store original state and update UI immediately
+            const order = allOrders.find(o => o.orderNumber === orderNumber);
+            const originalStatus = order ? order.status : null;
+            const originalDateUpdated = order ? order.dateUpdated : null;
+            const originalUpdatedBy = order ? order.updatedBy : null;
+            
+            if (order) {
+                order.status = newStatus;
+                order.dateUpdated = new Date().toISOString();
+                order.updatedBy = currentUser;
+            }
+            
+            // Update UI immediately
+            renderOrders();
             setSyncState('loading', 'Saving…');
+            
             try {
                 const url = `${SCRIPT_URL}?action=updateorder&orderNumber=${encodeURIComponent(orderNumber)}&status=${encodeURIComponent(newStatus)}&updatedBy=${encodeURIComponent(currentUser)}`;
                 const res = await fetch(url, { method: 'POST' });
                 const data = await res.json();
+                
                 if (data.success) {
-                    // Update locally without full reload
-                    const order = allOrders.find(o => o.orderNumber === orderNumber);
-                    if (order) {
-                        order.status = newStatus;
-                        order.dateUpdated = new Date().toISOString();
-                        order.updatedBy = currentUser;
-                    }
-                    renderOrders();
+                    // Backend confirmed
                     setSyncState('ok', 'Saved ✓');
                     setTimeout(() => setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })), 1500);
                 } else {
+                    // REVERT: Backend failed
+                    if (order) {
+                        order.status = originalStatus;
+                        order.dateUpdated = originalDateUpdated;
+                        order.updatedBy = originalUpdatedBy;
+                    }
+                    renderOrders();
                     setSyncState('error', 'Save failed');
                     loadOrders(); // Reload to get true state
                 }
             } catch (err) {
+                // REVERT: Network error
+                if (order) {
+                    order.status = originalStatus;
+                    order.dateUpdated = originalDateUpdated;
+                    order.updatedBy = originalUpdatedBy;
+                }
+                renderOrders();
                 setSyncState('error', 'Connection error');
                 loadOrders();
                 console.error(err);
@@ -954,6 +978,26 @@
             btn.disabled = true;
             btn.textContent = 'Submitting…';
 
+            // OPTIMISTIC UPDATE: Create temporary order and add to UI immediately
+            const tempOrderNumber = 'TEMP-' + Date.now();
+            const tempOrder = {
+                orderNumber: tempOrderNumber,
+                item,
+                quantity: qty,
+                customer,
+                notes,
+                status: 'pending',
+                requestedBy: currentUser,
+                dateCreated: new Date().toISOString(),
+                dateUpdated: new Date().toISOString(),
+                updatedBy: currentUser,
+                _isTemp: true
+            };
+            
+            allOrders.unshift(tempOrder);
+            closeNewOrderModal();
+            renderOrders();
+
             try {
                 const params = new URLSearchParams({
                     action: 'createorder',
@@ -968,17 +1012,23 @@
                 const data = await res.json();
 
                 if (data.success) {
-                    closeNewOrderModal();
+                    // Backend confirmed - reload to get real order number
                     await loadOrders();
                 } else {
+                    // REVERT: Backend failed
+                    allOrders = allOrders.filter(o => o.orderNumber !== tempOrderNumber);
+                    renderOrders();
+                    alert('❌ Could not submit order. Please try again.');
                     btn.disabled = false;
                     btn.textContent = 'Submit Order';
-                    alert('❌ Could not submit order. Please try again.');
                 }
             } catch (err) {
+                // REVERT: Network error
+                allOrders = allOrders.filter(o => o.orderNumber !== tempOrderNumber);
+                renderOrders();
+                alert('Connection error. Please try again.');
                 btn.disabled = false;
                 btn.textContent = 'Submit Order';
-                alert('Connection error. Please try again.');
                 console.error(err);
             }
         }

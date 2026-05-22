@@ -371,10 +371,10 @@
                 <div class="form-group">
                     <label>SKU / Barcode *</label>
                     <div class="sku-wrap">
-                        <input type="text" id="iSku" placeholder="e.g. SCR-IP14P-BLK" style="padding-right:44px;">
+                        <input type="text" id="iSku" placeholder="e.g. SCR-IP14P-BLK or A0123456" style="padding-right:44px;">
                         <button class="sku-scan-btn" onclick="openCameraScanner('iSku')" title="Scan barcode">⌖</button>
                     </div>
-                    <div class="form-hint">Scan your barcode scanner here or tap ⌖ to scan with camera</div>
+                    <div class="form-hint">⚠️ Avoid barcodes starting with '0' (use A0123456 instead of 0123456)</div>
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -398,13 +398,14 @@
             </div>
             <div class="form-row-3">
                 <div class="form-group">
-                    <label style="color:var(--text-dim);">Quantity</label>
+                    <label style="color:var(--text-dim);">Quantity (Qty)</label>
                     <input type="number" id="iQty" min="0" value="0" disabled style="opacity:0.45;cursor:not-allowed;">
                     <div class="form-hint">Use the <strong>± Adjust Stock</strong> button to change quantity</div>
                 </div>
                 <div class="form-group">
-                    <label>Min Qty (alert)</label>
-                    <input type="number" id="iMinQty" min="0" value="1">
+                    <label>Min Qty (Alert)</label>
+                    <input type="number" id="iMinQty" min="0" value="1" placeholder="1">
+                    <div class="form-hint">Alert when stock falls below this</div>
                 </div>
                 <div class="form-group">
                     <label>Location</label>
@@ -413,12 +414,14 @@
             </div>
             <div class="form-row" id="costPriceRow">
                 <div class="form-group">
-                    <label>Cost Price (BZD)</label>
+                    <label>Cost Price (BZ$)</label>
                     <input type="number" id="iCost" min="0" step="0.01" placeholder="0.00">
+                    <div class="form-hint">What you paid for this item</div>
                 </div>
                 <div class="form-group">
-                    <label>Sale Price (BZD)</label>
+                    <label>Sale Price (BZ$)</label>
                     <input type="number" id="iSalePrice" min="0" step="0.01" placeholder="0.00">
+                    <div class="form-hint">What customers pay</div>
                 </div>
             </div>
             <div class="form-row">
@@ -463,12 +466,14 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Quantity *</label>
+                    <label>Quantity (Qty) *</label>
                     <input type="text" id="adjQty" min="1" value="1" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="if(!this.value||this.value==='0')this.value='1'" onkeydown="if(event.key==='Enter'){this.blur();}">
+                    <div class="form-hint">Number of units to add/remove/set</div>
                 </div>
                 <div class="form-group">
                     <label>Linked Job ID</label>
                     <input type="text" id="adjJobId" placeholder="Optional — e.g. 1042">
+                    <div class="form-hint">Link to repair job (optional)</div>
                 </div>
             </div>
             <div class="form-group">
@@ -890,6 +895,7 @@
         }
         const btn = document.getElementById('itemSubmitBtn');
         btn.disabled = true; btn.textContent = 'Saving…';
+        
         const payload = {
             action:    editingSku ? 'updateitem' : 'createitem',
             sku, name,
@@ -905,18 +911,64 @@
             updatedBy: currentUser,
             cashierEdit: (!isManager && !!editingSku) ? '1' : '0'
         };
+        
+        // OPTIMISTIC UPDATE: Store original state and update UI immediately
+        let originalItem = null;
+        const existingIndex = allItems.findIndex(i => i.sku === sku);
+        
+        if (editingSku) {
+            // Editing existing item - store original
+            originalItem = existingIndex >= 0 ? { ...allItems[existingIndex] } : null;
+            if (existingIndex >= 0) {
+                allItems[existingIndex] = { ...allItems[existingIndex], ...payload };
+            }
+        } else {
+            // Creating new item - add to array
+            const newItem = { ...payload, sku, name };
+            allItems.push(newItem);
+        }
+        
+        // Update UI immediately
+        closeModal('itemModal');
+        renderInventory();
+        renderStats();
+        haptic('success');
+        
         try {
             const res  = await fetch(`${SCRIPT_URL}?${new URLSearchParams(payload)}`, { method: 'POST' });
             const data = await res.json();
+            
             if (data.success) {
-                closeModal('itemModal');
-                haptic('success');
-                // Remember last used category for next add
+                // Backend confirmed - remember last used category
                 localStorage.setItem('sc_last_category', payload.category || 'Screens');
                 sendNotification('received', '📦 Inventory Updated', `${name} has been ${editingSku ? 'updated' : 'added'}.`);
-                await loadInventory();
-            } else { btn.disabled = false; btn.textContent = editingSku ? 'Save Changes' : 'Save Item'; alert('❌ ' + (data.error || 'Could not save.')); }
-        } catch (e) { btn.disabled = false; btn.textContent = editingSku ? 'Save Changes' : 'Save Item'; alert('Connection error.'); }
+                await loadInventory(); // Sync with backend
+            } else {
+                // REVERT: Backend failed
+                if (editingSku && originalItem && existingIndex >= 0) {
+                    allItems[existingIndex] = originalItem;
+                } else if (!editingSku) {
+                    allItems = allItems.filter(i => i.sku !== sku);
+                }
+                renderInventory();
+                renderStats();
+                alert('❌ ' + (data.error || 'Could not save.'));
+                btn.disabled = false;
+                btn.textContent = editingSku ? 'Save Changes' : 'Save Item';
+            }
+        } catch (e) {
+            // REVERT: Network error
+            if (editingSku && originalItem && existingIndex >= 0) {
+                allItems[existingIndex] = originalItem;
+            } else if (!editingSku) {
+                allItems = allItems.filter(i => i.sku !== sku);
+            }
+            renderInventory();
+            renderStats();
+            alert('Connection error.');
+            btn.disabled = false;
+            btn.textContent = editingSku ? 'Save Changes' : 'Save Item';
+        }
     }
 
     // ── Stock Adjustment Modal ────────────────────────────────────────────────
@@ -981,16 +1033,58 @@
         const jobId  = document.getElementById('adjJobId').value.trim();
         const btn    = document.getElementById('adjSubmitBtn');
         btn.disabled = true; btn.textContent = 'Applying…';
+        
+        // OPTIMISTIC UPDATE: Store original state and update UI immediately
+        const item = allItems.find(i => i.sku === adjSelectedSku);
+        const originalQty = item ? item.qty : 0;
+        
+        if (item) {
+            // Update quantity immediately
+            if (type === 'add') {
+                item.qty = parseInt(item.qty || 0) + qty;
+            } else if (type === 'remove') {
+                item.qty = Math.max(0, parseInt(item.qty || 0) - qty);
+            } else if (type === 'set') {
+                item.qty = qty;
+            }
+        }
+        
+        // Update UI immediately
+        closeModal('adjustModal');
+        renderInventory();
+        renderStats();
+        haptic('success');
+        
         try {
             const params = new URLSearchParams({ action: 'adjuststock', sku: adjSelectedSku, type, qty, reason, jobId, updatedBy: currentUser });
             const res  = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
             const data = await res.json();
+            
             if (data.success) {
-                closeModal('adjustModal');
-                haptic('success');
+                // Backend confirmed - reload to sync movements
                 await loadInventory();
-            } else { btn.disabled = false; btn.textContent = 'Apply'; alert('❌ ' + (data.error || 'Could not adjust.')); }
-        } catch (e) { btn.disabled = false; btn.textContent = 'Apply'; alert('Connection error.'); }
+            } else {
+                // REVERT: Backend failed
+                if (item) {
+                    item.qty = originalQty;
+                }
+                renderInventory();
+                renderStats();
+                alert('❌ ' + (data.error || 'Could not adjust.'));
+                btn.disabled = false;
+                btn.textContent = 'Apply';
+            }
+        } catch (e) {
+            // REVERT: Network error
+            if (item) {
+                item.qty = originalQty;
+            }
+            renderInventory();
+            renderStats();
+            alert('Connection error.');
+            btn.disabled = false;
+            btn.textContent = 'Apply';
+        }
     }
 
     // ── View Modal ────────────────────────────────────────────────────────────
@@ -1062,12 +1156,42 @@
         if (!pendingDeleteSku || (!isManager && !window.canDelete)) return;
         const btn = document.getElementById('deleteConfirmBtn');
         btn.disabled = true; btn.textContent = 'Deleting…';
+        
+        // OPTIMISTIC UPDATE: Store original state and remove from UI immediately
+        const originalItems = [...allItems];
+        const deletedItem = allItems.find(i => i.sku === pendingDeleteSku);
+        
+        allItems = allItems.filter(i => i.sku !== pendingDeleteSku);
+        closeModal('deleteModal');
+        renderInventory();
+        renderStats();
+        haptic('warning');
+        
         try {
             const res  = await fetch(`${SCRIPT_URL}?action=deleteitem&sku=${encodeURIComponent(pendingDeleteSku)}&deletedBy=${encodeURIComponent(currentUser)}`, { method: 'POST' });
             const data = await res.json();
-            if (data.success) { allItems = allItems.filter(i => i.sku !== pendingDeleteSku); closeModal('deleteModal'); haptic('warning'); renderInventory(); renderStats(); }
-            else { btn.disabled = false; btn.textContent = 'Delete Item'; alert('❌ ' + (data.error || 'Could not delete.')); }
-        } catch (e) { btn.disabled = false; btn.textContent = 'Delete Item'; alert('Connection error.'); }
+            
+            if (data.success) {
+                // Backend confirmed - deletion successful
+                // Item already removed from UI
+            } else {
+                // REVERT: Backend failed
+                allItems = originalItems;
+                renderInventory();
+                renderStats();
+                alert('❌ ' + (data.error || 'Could not delete.'));
+                btn.disabled = false;
+                btn.textContent = 'Delete Item';
+            }
+        } catch (e) {
+            // REVERT: Network error
+            allItems = originalItems;
+            renderInventory();
+            renderStats();
+            alert('Connection error.');
+            btn.disabled = false;
+            btn.textContent = 'Delete Item';
+        }
     }
 
     // ── Barcode Scanner (USB keyboard wedge) ──────────────────────────────────
