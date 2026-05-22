@@ -475,12 +475,14 @@ function updateEOD() {
 }
 
 function calcVariance() {
+    // Get expected net cash from EOD summary
     const net      = parseFloat((document.getElementById('eodNet').textContent || '').replace('BZ$', '')) || 0;
     const drawerEl = document.getElementById('drawerCount');
     const floatEl  = document.getElementById('floatAmount');
     const disp     = document.getElementById('varianceDisplay');
     const depositDisp = document.getElementById('depositDisplay');
     
+    // Don't show variance until drawer count is entered
     if (!drawerEl.value) { 
         disp.style.display = 'none'; 
         if (depositDisp) depositDisp.style.display = 'none';
@@ -491,7 +493,12 @@ function calcVariance() {
     const float_   = parseFloat(floatEl?.value) || 0;
     const shift    = getCurrentShift();
     
-    // For morning shift: subtract starting float to get actual sales cash
+    // MORNING SHIFT LOGIC:
+    // - Drawer count INCLUDES the starting float from previous night
+    // - To get actual sales cash, subtract the starting float
+    // - Expected = starting float + cash sales - payouts
+    // - Actual = drawer count
+    // - Variance = actual - expected
     let actualCash = drawer;
     let startingFloat = 0;
     
@@ -512,7 +519,12 @@ function calcVariance() {
         }
     }
     
-    // For night/saturday shift: subtract float to get deposit amount
+    // NIGHT/SATURDAY SHIFT LOGIC:
+    // - Drawer count is total cash
+    // - Float amount is what stays in drawer for next shift
+    // - Deposit = drawer count - float left
+    // - Expected net = cash sales - payouts
+    // - Variance = deposit - expected net
     let depositAmount = actualCash;
     if (_isFloatShift() && float_ > 0) {
         depositAmount = actualCash - float_;
@@ -521,11 +533,11 @@ function calcVariance() {
     // Calculate variance: deposit/sales cash vs expected net
     const diff = depositAmount - net;
     
-    // Show deposit amount for float shifts
+    // Show deposit amount for float shifts (night/saturday)
     if (depositDisp && _isFloatShift()) {
         depositDisp.style.display = 'block';
         depositDisp.innerHTML = '<div style="padding:10px 16px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:8px;margin-bottom:10px;">'
-            + '<div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">Deposit to Bank</div>'
+            + '<div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">💰 Deposit to Bank</div>'
             + '<div style="font-size:1.3rem;font-weight:800;color:var(--primary);">' + bz(depositAmount) + '</div>'
             + '<div style="font-size:0.68rem;color:var(--text-dim);margin-top:2px;">Drawer ' + bz(drawer) + ' - Float ' + bz(float_) + '</div>'
             + '</div>';
@@ -533,7 +545,7 @@ function calcVariance() {
         depositDisp.style.display = 'none';
     }
     
-    // Show variance
+    // Show variance result
     disp.style.display = 'block';
     if (Math.abs(diff) < 0.01) {
         disp.className = 'variance-display exact';
@@ -1019,7 +1031,7 @@ function addSaleLine(name, qty, price, sku) {
     const dropId = 'ac-' + Date.now() + Math.random().toString(36).slice(2);
     row.innerHTML =
         '<div style="position:relative;flex:1;">'
-        + '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" autocomplete="off"'
+        + '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" autocomplete="off"'
         + ' oninput="saleLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
         + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
         + '</div>'
@@ -1088,13 +1100,12 @@ function updateSaleTotal() {
         total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
     });
     document.getElementById('saleTotalDisplay').textContent = bz(total);
-    // Keep tendered in sync with total for cash — unless cashier has entered more than total (giving change)
+    // Keep tendered in sync with total for cash
     const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
     if (method === 'cash') {
-        const field    = document.getElementById('saleCashTendered');
-        const tendered = parseFloat(field?.value) || 0;
-        // Only auto-update if tendered equals the previous total (i.e. cashier hasn't overridden it)
-        if (field && (tendered === 0 || tendered <= total)) {
+        const field = document.getElementById('saleCashTendered');
+        // Always auto-update tendered to match total (cashier can override if needed)
+        if (field) {
             field.value = total > 0 ? total.toFixed(2) : '';
         }
         calcSaleChange();
@@ -1473,18 +1484,61 @@ function openBillModal() {
     document.getElementById('billSubmitBtn').disabled = false;
     document.getElementById('billSubmitBtn').textContent = 'Open Bill';
     addBillLine(); updateBillTotal(); openModal('billModal');
+    if (!window._inventoryCache) loadInventoryCache();
 }
 
-function addBillLine(name, qty, price) {
-    name = name || ''; qty = qty || 1; price = price || '';
+function addBillLine(name, qty, price, sku) {
+    name = name || ''; qty = qty || 1; price = price || ''; sku = sku || '';
     const row = document.createElement('div');
     row.className = 'line-item-row';
+    row.dataset.sku = sku; // Track SKU for inventory deduction
+    const dropId = 'bill-ac-' + Date.now() + Math.random().toString(36).slice(2);
     row.innerHTML =
-        '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateBillTotal()">'
+        '<div style="position:relative;flex:1;">'
+        + '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" autocomplete="off"'
+        + ' oninput="billLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
+        + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
+        + '</div>'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateBillTotal()">'
         + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">✕</button>';
     document.getElementById('billLineItems').appendChild(row);
+}
+
+// Autocomplete for bill line items (same as sales)
+function billLineAutocomplete(el, dropId) {
+    const q = el.value.toLowerCase().trim();
+    const drop = document.getElementById(dropId);
+    if (!q || q.length < 2) { drop.style.display = 'none'; return; }
+    const matches = (window._inventoryCache || []).filter(i =>
+        (i.name || '').toLowerCase().includes(q) || (i.sku || '').toLowerCase().includes(q)
+    ).slice(0, 8);
+    if (!matches.length) { drop.style.display = 'none'; return; }
+    drop.style.display = 'block';
+    drop.innerHTML = matches.map(i => {
+        const stock = parseInt(i.qty) || 0;
+        const stockColor = stock <= 0 ? 'var(--danger)' : stock <= (parseInt(i.minQty) || 0) ? 'var(--warning)' : 'var(--success)';
+        return '<div onclick="selectBillItem(this,\'' + escH(i.sku) + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--glass-border);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(37,99,235,0.08)\'" onmouseout="this.style.background=\'transparent\'">'
+            + '<div style="font-weight:700;font-size:0.85rem;">' + escH(i.name) + '</div>'
+            + '<div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;">'
+            + escH(i.sku) + ' · BZ$' + (parseFloat(i.salePrice) || 0).toFixed(2)
+            + ' · <span style="color:' + stockColor + ';font-weight:700;">' + stock + ' in stock</span>'
+            + '</div></div>';
+    }).join('');
+}
+
+function selectBillItem(el, sku) {
+    const item = (window._inventoryCache || []).find(i => String(i.sku) === String(sku));
+    if (!item) return;
+    const row = el.closest('.line-item-row').parentElement.parentElement;
+    if (!row) return;
+    row.dataset.sku = sku;
+    const inputs = row.querySelectorAll('input');
+    inputs[0].value = item.name || '';
+    inputs[2].value = parseFloat(item.salePrice) || 0;
+    updateBillTotal();
+    const drop = el.parentElement;
+    if (drop) drop.style.display = 'none';
 }
 
 function updateBillTotal() {
@@ -1504,7 +1558,8 @@ async function submitBill() {
     rows.forEach(r => {
         const i = r.querySelectorAll('input');
         const name = i[0].value.trim(); const qty = parseFloat(i[1].value) || 1; const price = parseFloat(i[2].value) || 0;
-        if (name) items.push({ name, qty, price, total: qty * price });
+        const sku = r.dataset.sku || ''; // Get SKU from row dataset
+        if (name) items.push({ name, qty, price, total: qty * price, sku });
     });
     if (!items.length) { alert('Add at least one item.'); return; }
     const total = items.reduce((t, i) => t + i.total, 0);
@@ -1538,22 +1593,65 @@ function openEditBill(billId) {
     document.getElementById('editBillSubmitBtn').disabled = false;
     document.getElementById('editBillSubmitBtn').textContent = 'Save Changes';
     const items = tryParseJSON(b.items, []);
-    if (items.length) items.forEach(i => addEditBillLine(i.name, i.qty, i.price));
+    if (items.length) items.forEach(i => addEditBillLine(i.name, i.qty, i.price, i.sku));
     else addEditBillLine();
     updateEditBillTotal();
     openModal('editBillModal');
+    if (!window._inventoryCache) loadInventoryCache();
 }
 
-function addEditBillLine(name, qty, price) {
-    name = name || ''; qty = qty || 1; price = price || '';
+function addEditBillLine(name, qty, price, sku) {
+    name = name || ''; qty = qty || 1; price = price || ''; sku = sku || '';
     const row = document.createElement('div');
     row.className = 'line-item-row';
+    row.dataset.sku = sku; // Track SKU for inventory deduction
+    const dropId = 'edit-bill-ac-' + Date.now() + Math.random().toString(36).slice(2);
     row.innerHTML =
-        '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateEditBillTotal()">'
+        '<div style="position:relative;flex:1;">'
+        + '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" autocomplete="off"'
+        + ' oninput="editBillLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
+        + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
+        + '</div>'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateEditBillTotal()">'
         + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditBillTotal()">&#x2715;</button>';
     document.getElementById('editBillLineItems').appendChild(row);
+}
+
+// Autocomplete for edit bill line items (same as new bill)
+function editBillLineAutocomplete(el, dropId) {
+    const q = el.value.toLowerCase().trim();
+    const drop = document.getElementById(dropId);
+    if (!q || q.length < 2) { drop.style.display = 'none'; return; }
+    const matches = (window._inventoryCache || []).filter(i =>
+        (i.name || '').toLowerCase().includes(q) || (i.sku || '').toLowerCase().includes(q)
+    ).slice(0, 8);
+    if (!matches.length) { drop.style.display = 'none'; return; }
+    drop.style.display = 'block';
+    drop.innerHTML = matches.map(i => {
+        const stock = parseInt(i.qty) || 0;
+        const stockColor = stock <= 0 ? 'var(--danger)' : stock <= (parseInt(i.minQty) || 0) ? 'var(--warning)' : 'var(--success)';
+        return '<div onclick="selectEditBillItem(this,\'' + escH(i.sku) + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--glass-border);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(37,99,235,0.08)\'" onmouseout="this.style.background=\'transparent\'">'
+            + '<div style="font-weight:700;font-size:0.85rem;">' + escH(i.name) + '</div>'
+            + '<div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;">'
+            + escH(i.sku) + ' · BZ$' + (parseFloat(i.salePrice) || 0).toFixed(2)
+            + ' · <span style="color:' + stockColor + ';font-weight:700;">' + stock + ' in stock</span>'
+            + '</div></div>';
+    }).join('');
+}
+
+function selectEditBillItem(el, sku) {
+    const item = (window._inventoryCache || []).find(i => String(i.sku) === String(sku));
+    if (!item) return;
+    const row = el.closest('.line-item-row').parentElement.parentElement;
+    if (!row) return;
+    row.dataset.sku = sku;
+    const inputs = row.querySelectorAll('input');
+    inputs[0].value = item.name || '';
+    inputs[2].value = parseFloat(item.salePrice) || 0;
+    updateEditBillTotal();
+    const drop = el.parentElement;
+    if (drop) drop.style.display = 'none';
 }
 
 function updateEditBillTotal() {
@@ -1574,7 +1672,8 @@ async function submitEditBill() {
     rows.forEach(r => {
         const i = r.querySelectorAll('input');
         const name = i[0].value.trim(); const qty = parseFloat(i[1].value) || 1; const price = parseFloat(i[2].value) || 0;
-        if (name) items.push({ name, qty, price, total: qty * price });
+        const sku = r.dataset.sku || ''; // Get SKU from row dataset
+        if (name) items.push({ name, qty, price, total: qty * price, sku });
     });
     if (!items.length) { alert('Add at least one item.'); return; }
     const total = items.reduce((t, i) => t + i.total, 0);
@@ -1644,6 +1743,35 @@ async function submitSettle() {
         const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
         const data = await res.json();
         if (data.success) {
+            // Deduct inventory for items with SKUs when bill is fully settled
+            const bill = allBills.find(b => String(b.billId) === String(settlingBillId));
+            if (bill) {
+                const balance = Math.max(0, (parseFloat(bill.totalOwed) || 0) - (parseFloat(bill.totalPaid) || 0));
+                const isFullySettled = balance - amount <= 0.01; // Check if this payment settles the bill
+                
+                if (isFullySettled) {
+                    const items = tryParseJSON(bill.items, []);
+                    // Deduct inventory for each item with a SKU
+                    items.forEach(item => {
+                        if (item.sku && String(item.sku).trim()) {
+                            const qty = Math.abs(Number(item.qty) || 1);
+                            const adjustParams = new URLSearchParams({
+                                action: 'adjuststock',
+                                sku: item.sku,
+                                qty: qty,
+                                type: 'remove',
+                                reason: 'Bill settled - ' + settlingBillId,
+                                updatedBy: currentUser
+                            });
+                            // Fire and forget - don't block settlement if inventory fails
+                            fetch(SCRIPT_URL, { method: 'POST', body: adjustParams }).catch(e => {
+                                console.warn('Inventory deduction failed for SKU ' + item.sku + ':', e);
+                            });
+                        }
+                    });
+                }
+            }
+            
             closeModal('settleBillModal');
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill settled!', 'ok');
@@ -1749,7 +1877,7 @@ function addEditSaleLine(name, qty, price) {
     const row = document.createElement('div');
     row.className = 'line-item-row';
     row.innerHTML =
-        '<input class="line-input" type="text" placeholder="Item name..." value="' + escH(name) + '" oninput="updateEditSaleTotal()">'
+        '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateEditSaleTotal()">'
         + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">✕</button>';
