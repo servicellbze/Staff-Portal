@@ -1938,6 +1938,7 @@
         .per-page-select { padding: 5px 10px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.75rem; font-weight: 700; outline: none; cursor: pointer; }
     </style>
     <script src="js/theme-init.js"></script>
+    <script src="js/api.js"></script>
     <script src="js/auth-guard.js"></script>
 </head>
 
@@ -2416,37 +2417,8 @@
             { label: 'Labour', price: 40 },
         ];
 
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
-        
-        // ── Standardized API Helper Functions ────────────────────────────────────
-        async function apiPost(params) {
-            if (!(params instanceof URLSearchParams)) {
-                params = new URLSearchParams(params);
-            }
-            
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params.toString()
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            return response.json();
-        }
-
-        async function apiGet(params) {
-            const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            return response.json();
-        }
+        // SCRIPT_URL and API functions (apiGet, apiPost, apiPostAsync, apiUpload) are now
+        // provided globally by js/api.js - no need to redefine them here
         // ──────────────────────────────────────────────────────────────────────────
         
         let allJobs = [];
@@ -2896,13 +2868,7 @@
                     callNotes: notes
                 });
                 
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params.toString()
-                });
-                
-                const data = await res.json();
+                const data = await apiPost(params);
                 
                 if (data.success) {
                     showToast('✅ Customer marked as called', 'ok');
@@ -3503,12 +3469,7 @@
                         mimeType: 'image/jpeg',
                         imageIndex: existingCount + i + 1
                     });
-                    await fetch(SCRIPT_URL, { 
-                        method: 'POST', 
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-                        body: params.toString() 
-                    }).catch(e => console.warn('Edit photo upload error:', e));
+                    await apiUpload(params).catch(e => console.warn('Edit photo upload error:', e));
                 } catch(e) { console.warn('Edit photo upload failed', e); }
             }
             if (status) { status.textContent = `✅ ${images.length} photo${images.length > 1 ? 's' : ''} uploaded`; }
@@ -4199,12 +4160,7 @@
                             mimeType: 'image/jpeg',
                             imageIndex: existingCount + i + 1
                         });
-                        await fetch(SCRIPT_URL, { 
-                            method: 'POST', 
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-                            body: params.toString() 
-                        }).catch(e => console.warn('Photo upload error:', e));
+                        await apiUpload(params).catch(e => console.warn('Photo upload error:', e));
                     } catch(e) { console.warn('Upload photo failed', e); }
                 }
             }
