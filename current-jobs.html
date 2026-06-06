@@ -2418,6 +2418,38 @@
         ];
 
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+        
+        // ── Standardized API Helper Functions ────────────────────────────────────
+        async function apiPost(params) {
+            if (!(params instanceof URLSearchParams)) {
+                params = new URLSearchParams(params);
+            }
+            
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        }
+
+        async function apiGet(params) {
+            const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        }
+        // ──────────────────────────────────────────────────────────────────────────
+        
         let allJobs = [];
         let currentEditId = null;
         let currentViewId = null;
@@ -2672,12 +2704,12 @@
                 if (!archivedJobs.length) {
                     btn.innerHTML = '⏳ Loading…';
                     try {
-                        const res = await fetch(SCRIPT_URL + '?action=listarchived');
-                        const data = await res.json();
+                        const data = await apiGet({ action: 'listarchived' });
                         archivedJobs = data.jobs || [];
                         btn.innerHTML = '📦 Archives <span style="font-size:0.65rem;background:var(--primary);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
                         if (!archivedJobs.length) showToast('No archived jobs found.', '');
                     } catch(e) {
+                        console.error('toggleArchiveView error:', e);
                         showToast('❌ Could not load archives', 'err');
                         _viewingArchive = false;
                         btn.style.background  = '';
@@ -2697,17 +2729,18 @@
             }
             filterAndRender();
         }
+        }
 
         async function loadJobs() {
             try {
-                const response = await fetch(SCRIPT_URL + '?action=list');
-                const data = await response.json();
+                const data = await apiGet({ action: 'list' });
                 allJobs = data.jobs || [];
                 localStorage.setItem('sc_cache_jobs', JSON.stringify(allJobs));
                 filterAndRender();
                 updateStats(allJobs);
                 checkStaleJobs(allJobs);
             } catch (error) {
+                console.error('loadJobs error:', error);
                 const cached = localStorage.getItem('sc_cache_jobs');
                 if (cached) {
                     allJobs = JSON.parse(cached);
@@ -2965,9 +2998,7 @@
             openViewModal(currentViewId);
             
             try {
-                const params = new URLSearchParams({ action: 'claimjob', id: currentViewId, username: scUser, role: effectiveRole });
-                const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
-                const data = await res.json();
+                const data = await apiPost({ action: 'claimjob', id: currentViewId, username: scUser, role: effectiveRole });
                 if (data.success) {
                         // Backend confirmed - update with server timestamp if provided
                         if (data.claimedAt) {
@@ -2986,6 +3017,7 @@
                     openViewModal(currentViewId);
                 }
             } catch(e) {
+                console.error('claimCurrentJob error:', e);
                 // REVERT: Network error, restore original state
                 j.claimedBy = originalClaimedBy;
                 j.claimedAt = originalClaimedAt;
@@ -3019,9 +3051,7 @@
                 openViewModal(currentViewId);
                 
                 try {
-                    const params = new URLSearchParams({ action: 'unclaim', id: currentViewId, username: scUser, role: effectiveRole });
-                    const res = await fetch(SCRIPT_URL + '?' + params, { method: 'POST' });
-                    const data = await res.json();
+                    const data = await apiPost({ action: 'unclaim', id: currentViewId, username: scUser, role: effectiveRole });
                     if (data.success) {
                         showToast('🔓 Job reassigned', 'ok');
                         // Already updated UI, just confirm success
@@ -3036,6 +3066,7 @@
                         openViewModal(currentViewId);
                     }
                 } catch(e) {
+                    console.error('unclaimCurrentJob error:', e);
                     // REVERT: Network error, restore original state
                     j.claimedBy = originalClaimedBy;
                     j.claimedAt = originalClaimedAt;
@@ -3599,9 +3630,7 @@
                     invoiceItems: invoiceItemsJSON
                 });
 
-                const saveRes = await fetch(`${SCRIPT_URL}?${params.toString()}`, { method: 'POST' });
-                let saveData = {};
-                try { saveData = await saveRes.json(); } catch(_) {}
+                const saveData = await apiPost(params);
                 
                 if (saveData.locked) {
                     // REVERT: Job is locked by another user
