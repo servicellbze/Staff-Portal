@@ -912,7 +912,6 @@ async function loadInventoryCache() {
         console.error('loadInventoryCache error:', e);
     }
 }
-}
 
 // -- Scanner / Search ----------------------------------------------------------
 // USB scanner: fires a rapid burst of keydown events then Enter, while no input is focused.
