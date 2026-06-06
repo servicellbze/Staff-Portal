@@ -3505,7 +3505,12 @@
                         mimeType: 'image/jpeg',
                         imageIndex: existingCount + i + 1
                     });
-                    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+                    await fetch(SCRIPT_URL, { 
+                        method: 'POST', 
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                        body: params.toString() 
+                    }).catch(e => console.warn('Edit photo upload error:', e));
                 } catch(e) { console.warn('Edit photo upload failed', e); }
             }
             if (status) { status.textContent = `✅ ${images.length} photo${images.length > 1 ? 's' : ''} uploaded`; }
@@ -4176,8 +4181,7 @@
                 status.textContent = `🗑️ Removing ${toRemove.length} photo${toRemove.length > 1 ? 's' : ''}…`;
                 for (const url of toRemove) {
                     try {
-                        const params = new URLSearchParams({ action: 'removeimage', repairId: _peJobId, imageUrl: url });
-                        await fetch(SCRIPT_URL, { method: 'POST', body: params });
+                        await apiPost({ action: 'removeimage', repairId: _peJobId, imageUrl: url });
                     } catch(e) { console.warn('Remove photo failed', e); }
                 }
             }
@@ -4197,7 +4201,12 @@
                             mimeType: 'image/jpeg',
                             imageIndex: existingCount + i + 1
                         });
-                        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params.toString() });
+                        await fetch(SCRIPT_URL, { 
+                            method: 'POST', 
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
+                            body: params.toString() 
+                        }).catch(e => console.warn('Photo upload error:', e));
                     } catch(e) { console.warn('Upload photo failed', e); }
                 }
             }
