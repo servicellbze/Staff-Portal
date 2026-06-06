@@ -364,8 +364,7 @@ async function checkRevoked() {
     const url = (typeof window.SCRIPT_URL !== 'undefined' && window.SCRIPT_URL)
         || 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
     try {
-        const res  = await fetch(`${url}?action=checkrole&username=${encodeURIComponent(username)}`);
-        const data = await res.json();
+        const data = await apiGet({ action: 'checkrole', username });
         if (data.revoked) {
             localStorage.clear();
             sessionStorage.clear();
@@ -439,8 +438,7 @@ const InAppNotif = {
         const role = deriveRole(getLoggedInUser());
         const username = getLoggedInUser();
         try {
-            const res   = await fetch(`${url}?action=getpending&role=${encodeURIComponent(role)}&username=${encodeURIComponent(username)}`);
-            const data  = await res.json();
+            const data = await apiGet({ action: 'getpending', role, username });
             const notifs = data.notifications || [];
             if (!notifs.length) return;
 

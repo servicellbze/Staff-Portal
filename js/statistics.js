@@ -54,16 +54,16 @@ async function loadStats() {
 
     const [salesAllData, salesData, payoutsData, jobsData, invData, movData, closesData, billsData, custData] = await Promise.all([
         // All sales (including reversed) for reversal rate
-        fetch(SCRIPT_URL + '?action=listsales&from=' + from + '&to=' + to).then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listsales&from=' + from + '&to=' + to).then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listpayouts&from=' + from + '&to=' + to).then(r => r.json()).catch(() => ({})),
+        apiGet({ action: 'listsales', from, to }).catch(() => ({})),
+        apiGet({ action: 'listsales', from, to }).catch(() => ({})),
+        apiGet({ action: 'listpayouts', from, to }).catch(() => ({})),
         // Jobs: pass date range so GAS can filter when we add that support
-        fetch(SCRIPT_URL + '?action=list').then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listinventory').then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listmovements&limit=1000').then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listdaycloses&from=' + from + '&to=' + to).then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listbills').then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listcustomers').then(r => r.json()).catch(() => ({}))
+        apiGet({ action: 'list' }).catch(() => ({})),
+        apiGet({ action: 'listinventory' }).catch(() => ({})),
+        apiGet({ action: 'listmovements', limit: 1000 }).catch(() => ({})),
+        apiGet({ action: 'listdaycloses', from, to }).catch(() => ({})),
+        apiGet({ action: 'listbills' }).catch(() => ({})),
+        apiGet({ action: 'listcustomers' }).catch(() => ({}))
     ]);
 
     const allSalesRaw = salesAllData.sales || [];

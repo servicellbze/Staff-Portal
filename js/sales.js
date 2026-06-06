@@ -1986,7 +1986,7 @@ async function submitReverse() {
 async function deductInventory(sku, qty, saleId) {
     try {
         const params = new URLSearchParams({ action: 'adjuststock', sku, qty, type: 'remove', reason: 'Sale #' + saleId, saleId });
-        await fetch(SCRIPT_URL, { method: 'POST', body: params });
+        await apiPostAsync(params);
     } catch (e) { console.warn('Inventory deduct failed:', e); }
 }
 
