@@ -2665,7 +2665,7 @@
                     j.customerName || '',                   // Customer name
                     j.device || '',                         // Device type
                     j.customerPhone || '',                  // Phone (with formatting)
-                    (j.customerPhone || '').replace(/\D/g, ''), // Phone (digits only)
+                    String(j.customerPhone || '').replace(/\D/g, ''), // Phone (digits only)
                     j.technician || '',                     // Technician name
                     j.notes || '',                          // Job notes
                     j.status || '',                         // Status
