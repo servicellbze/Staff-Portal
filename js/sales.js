@@ -425,8 +425,7 @@ function initEODShiftPills() {
 
 async function _loadLastShiftFloat() {
     try {
-        const res = await fetch(SCRIPT_URL + '?action=listdaycloses&limit=10');
-        const data = await res.json();
+        const data = await apiGet({ action: 'listdaycloses', limit: 10 });
         if (!data.closes || !data.closes.length) return;
         
         // Find the most recent Night Shift or Saturday Shift close
@@ -665,7 +664,7 @@ async function submitEOD() {
     const btn          = document.getElementById('submitEODBtn');
     btn.disabled = true; btn.textContent = 'Submitting...';
     try {
-        const params = new URLSearchParams({
+        const data = await apiPost({
             action: 'submitdayclose', shiftDate: getShiftDate(),
             shift: shiftLabel, grossSales: gross,
             totalPayouts: payoutsTotal, netExpected: net,
@@ -673,8 +672,6 @@ async function submitEOD() {
             startingFloat: startingFloat, depositAmount: depositAmount,
             closedBy: currentUser
         });
-        const res  = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
         if (data.success) {
             if (typeof haptic === 'function') haptic('success');
             if (variance < -0.01 && typeof sendNotification === 'function')
@@ -940,10 +937,12 @@ function printBillsReport() {
 // -- Inventory Cache -----------------------------------------------------------
 async function loadInventoryCache() {
     try {
-        const res = await fetch(SCRIPT_URL + '?action=listinventory');
-        const data = await res.json();
+        const data = await apiGet({ action: 'listinventory' });
         window._inventoryCache = data.items || [];
-    } catch (_) {}
+    } catch (e) {
+        console.error('loadInventoryCache error:', e);
+    }
+}
 }
 
 // -- Scanner / Search ----------------------------------------------------------
@@ -1208,13 +1207,11 @@ async function submitSale() {
     const btn = document.getElementById('saleSubmitBtn');
     btn.disabled = true; btn.textContent = 'Processing...';
     try {
-        const params = new URLSearchParams({
+        const data = await apiPost({
             action: 'createsale',
             items: JSON.stringify(items), total, method, amountPaid,
             shiftDate: getShiftDate(), shift: getCurrentShift() ? getCurrentShift().label : 'Unknown', cashier: currentUser
         });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
         if (data.success) {
             closeModal('saleModal');
             if (typeof haptic === 'function') haptic('success');
@@ -1425,23 +1422,21 @@ async function submitJobPickup() {
     const btn = document.getElementById('jobPickupBtn');
     btn.disabled = true; btn.textContent = 'Processing...';
     try {
-        const params = new URLSearchParams({
+        const data = await apiPost({
             action: 'createsale', customer: j ? (j.customerName || '') : '',
             items: JSON.stringify([{ name: 'Job #' + selectedJobId + '  ·  ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
             total, method, amountPaid, jobId: selectedJobId,
             shiftDate: getShiftDate(), shift: getCurrentShift() ? getCurrentShift().label : 'Unknown', cashier: currentUser
         });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
         if (data.success) {
             const payStatus = balance <= 0.01 ? 'paid' : 'partial';
-            const updateParams = new URLSearchParams({ action: 'update', id: selectedJobId, payStatus, username: currentUser });
+            const updateParams = { action: 'update', id: selectedJobId, payStatus, username: currentUser };
             if (balance <= 0.01) {
-                updateParams.set('status', 'resolved');
+                updateParams.status = 'resolved';
             } else {
                 showToast('⚠️ Partial payment — device stays until fully paid.', '');
             }
-            await fetch(SCRIPT_URL, { method: 'POST', body: updateParams });
+            await apiPost(updateParams);
             closeModal('jobPickupModal');
             if (typeof haptic === 'function') haptic('success');
             
