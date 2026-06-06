@@ -1934,9 +1934,7 @@
 
         async function fetchUserRole(username) {
             try {
-                const url = `${SCRIPT_URL}?action=checkrole&username=${encodeURIComponent(username)}`;
-                const res = await fetch(url);
-                const data = await res.json();
+                const data = await apiGet({ action: 'checkrole', username });
 
                 if (data.success && data.role) {
                     localStorage.setItem(getUserRoleKey(username), data.role);
@@ -2237,22 +2235,15 @@
             }
 
             // Use simple GET request - most reliable with GAS
-            const params = new URLSearchParams({
+            const params = {
                 action: 'changepassword',
                 username: username,
                 currentPassword: currentPassword,
                 newPassword: newPassword
-            });
-
-            const url = `${SCRIPT_URL}?${params.toString()}`;
-            console.log('Fetching:', url.replace(currentPassword, '***').replace(newPassword, '***'));
+            };
 
             try {
-                const response = await fetch(url);
-                const text = await response.text();
-                console.log('Response text:', text);
-
-                const data = JSON.parse(text);
+                const data = await apiGet(params);
 
                 if (data.success) {
                     showFormMessage('Password updated! ✅', 'success');
@@ -2366,8 +2357,7 @@
         const currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
         el.innerHTML = '<div style="font-size:0.82rem;color:var(--text-dim);">Loading...</div>';
         try {
-            const res  = await fetch(SCRIPT_URL_SETTINGS + '?action=listusers');
-            const data = await res.json();
+            const data = await apiGet({ action: 'listusers' });
             const users = (data.users || []).filter(u => u.username !== currentUser);
             if (!users.length) { el.innerHTML = '<div style="font-size:0.82rem;color:var(--text-dim);">No other staff found.</div>'; return; }
             el.innerHTML = users.map(u => {

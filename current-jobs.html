@@ -3691,22 +3691,17 @@
                     id: id
                 });
 
-                const res = await fetch(`${SCRIPT_URL}?${params.toString()}`, { method: 'POST' });
+                const data = await apiPost(params);
                 
-                // Check if deletion was successful (if response is parseable)
-                try {
-                    const data = await res.json();
-                    if (data.success === false) {
-                        // REVERT: Backend rejected deletion
-                        allJobs = originalJobs;
-                        showToast('❌ ' + (data.error || 'Could not delete job'), 'err');
-                        haptic('error');
-                        filterAndRender();
-                        updateStats(allJobs);
-                        return;
-                    }
-                } catch(_) {
-                    // no-cors mode or no JSON response, assume success
+                // Check if deletion was successful
+                if (data.success === false) {
+                    // REVERT: Backend rejected deletion
+                    allJobs = originalJobs;
+                    showToast('❌ ' + (data.error || 'Could not delete job'), 'err');
+                    haptic('error');
+                    filterAndRender();
+                    updateStats(allJobs);
+                    return;
                 }
 
                 showToast('✅ Job #' + id + ' removed successfully.', 'ok');

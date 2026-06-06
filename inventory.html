@@ -687,12 +687,10 @@
     async function loadInventory() {
         setSyncState('loading', 'Syncing…');
         try {
-            const [invRes, movRes] = await Promise.all([
-                fetch(`${SCRIPT_URL}?action=listinventory`),
-                fetch(`${SCRIPT_URL}?action=listmovements&limit=500`)
+            const [invData, movData] = await Promise.all([
+                apiGet({ action: 'listinventory' }),
+                apiGet({ action: 'listmovements', limit: 500 })
             ]);
-            const invData = await invRes.json();
-            const movData = await movRes.json();
             allItems     = invData.items     || [];
             allMovements = movData.movements || [];
             localStorage.setItem('sc_cache_inventory', JSON.stringify(allItems));
@@ -936,8 +934,7 @@
         haptic('success');
         
         try {
-            const res  = await fetch(`${SCRIPT_URL}?${new URLSearchParams(payload)}`, { method: 'POST' });
-            const data = await res.json();
+            const data = await apiPost(payload);
             
             if (data.success) {
                 // Backend confirmed - remember last used category
@@ -1058,8 +1055,7 @@
         
         try {
             const params = new URLSearchParams({ action: 'adjuststock', sku: adjSelectedSku, type, qty, reason, jobId, updatedBy: currentUser });
-            const res  = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
-            const data = await res.json();
+            const data = await apiPost(params);
             
             if (data.success) {
                 // Backend confirmed - reload to sync movements
@@ -1169,8 +1165,11 @@
         haptic('warning');
         
         try {
-            const res  = await fetch(`${SCRIPT_URL}?action=deleteitem&sku=${encodeURIComponent(pendingDeleteSku)}&deletedBy=${encodeURIComponent(currentUser)}`, { method: 'POST' });
-            const data = await res.json();
+            const data = await apiPost({ 
+                action: 'deleteitem', 
+                sku: pendingDeleteSku, 
+                deletedBy: currentUser 
+            });
             
             if (data.success) {
                 // Backend confirmed - deletion successful

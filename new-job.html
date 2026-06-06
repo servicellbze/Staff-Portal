@@ -1307,8 +1307,7 @@
         async function fetchLastId() {
             const hint = document.getElementById('idHint');
             try {
-                const res = await fetch(SCRIPT_URL + '?action=lastId');
-                const data = await res.json();
+                const data = await apiGet({ action: 'lastid' });
                 const next = (Number(data.lastId) || 100) + 1;
                 document.getElementById('repairId').value = next;
                 hint.textContent = `Last used: ${data.lastId} — next is ${next}`;
@@ -1462,13 +1461,8 @@
             currentJobData = lastJobData;
 
             try {
-                const params = new URLSearchParams(sheetData).toString();
-                await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: params
-                });
+                const params = new URLSearchParams(sheetData);
+                await apiUpload(params);
 
                 showSuccess(repairId);
                 // Upload inspection images to Drive in the background
@@ -1739,12 +1733,7 @@
                     params.append('imageData', imageData);
                     params.append('mimeType', mimeType);
                     params.append('imageIndex', i + 1);
-                    await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: params.toString()
-                    });
+                    await apiUpload(params);
                 } catch (e) {
                     console.warn('Image upload failed for index ' + i, e);
                 }

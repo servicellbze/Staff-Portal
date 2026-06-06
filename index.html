@@ -1027,8 +1027,7 @@
         async function loadDashboard() {
             setSyncState('loading', 'Syncing…');
             try {
-                const res = await fetch(SCRIPT_URL + '?action=list');
-                const data = await res.json();
+                const data = await apiGet({ action: 'list' });
                 const jobs = data.jobs || [];
                 localStorage.setItem('sc_cache_jobs', JSON.stringify(jobs));
                 renderStats(jobs);

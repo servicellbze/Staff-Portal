@@ -791,8 +791,7 @@
         async function loadOrders() {
             setSyncState('loading', 'Syncing…');
             try {
-                const res = await fetch(`${SCRIPT_URL}?action=listorders`);
-                const data = await res.json();
+                const data = await apiGet({ action: 'listorders' });
                 allOrders = data.orders || [];
                 populateUserFilter();
                 renderOrders();
@@ -910,8 +909,7 @@
             
             try {
                 const url = `${SCRIPT_URL}?action=updateorder&orderNumber=${encodeURIComponent(orderNumber)}&status=${encodeURIComponent(newStatus)}&updatedBy=${encodeURIComponent(currentUser)}`;
-                const res = await fetch(url, { method: 'POST' });
-                const data = await res.json();
+                const data = await apiPost({ action: 'updateorder', orderNumber, status: newStatus, updatedBy: currentUser });
                 
                 if (data.success) {
                     // Backend confirmed
@@ -1009,8 +1007,7 @@
                     requestedBy: currentUser
                 });
 
-                const res = await fetch(`${SCRIPT_URL}?${params}`, { method: 'POST' });
-                const data = await res.json();
+                const data = await apiPost(params);
 
                 if (data.success) {
                     // Backend confirmed - reload to get real order number
