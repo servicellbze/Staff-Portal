@@ -1298,7 +1298,7 @@
             });
         });
 
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+        // SCRIPT_URL is provided globally by js/api.js
         let isSubmitting = false;
         let lastJobData = {};
         let currentJobData = lastJobData;
@@ -1377,31 +1377,28 @@
                 const completionMode = document.querySelector('input[name="completionMode"]:checked')?.value || 'day';
 
                 if (completionMode === 'hour') {
-                    const [hours, minutes] = completionInput.split(':');
-                    const date = new Date();
-                    date.setHours(parseInt(hours), parseInt(minutes));
-
-                    estimatedCompletion = date.toLocaleTimeString('en-US', {
+                    // datetime-local format is "YYYY-MM-DDTHH:MM" — parse correctly
+                    const completionDate = new Date(completionInput);
+                    estimatedCompletion = completionDate.toLocaleTimeString('en-US', {
                         hour: 'numeric',
                         minute: '2-digit',
                         hour12: true
                     });
                 } else {
                     const completionDate = new Date(completionInput);
-
                     const datePart = completionDate.toLocaleDateString('en-US', {
                         month: 'numeric',
                         day: 'numeric',
                         year: 'numeric'
                     });
-
                     const timePart = completionDate.toLocaleTimeString('en-US', {
                         hour: 'numeric',
                         minute: '2-digit',
                         hour12: true
                     });
-
-                    estimatedCompletion = `${datePart} @ ${timePart}`;
+                    estimatedCompletion = completionMode === 'day'
+                        ? datePart
+                        : `${datePart} @ ${timePart}`;
                 }
             }
 
@@ -1462,8 +1459,10 @@
 
             try {
                 const params = new URLSearchParams(sheetData);
-                await apiUpload(params);
-
+                const result = await apiPost(params);
+                if (result && result.success === false) {
+                    throw new Error(result.error || 'Server rejected the job');
+                }
                 showSuccess(repairId);
                 // Upload inspection images to Drive in the background
                 uploadInspectionImages(repairId);
