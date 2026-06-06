@@ -4,6 +4,37 @@
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
 
+// -- Standardized API Helper ---------------------------------------------------
+async function apiPost(params) {
+    // Ensure params is a URLSearchParams object
+    if (!(params instanceof URLSearchParams)) {
+        params = new URLSearchParams(params);
+    }
+    
+    const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
+async function apiGet(params) {
+    const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return response.json();
+}
+
 // -- State ---------------------------------------------------------------------
 let currentUser    = '';
 let isManager      = false;
@@ -115,11 +146,10 @@ async function loadAll() {
     setSyncState('loading', 'Syncing...');
     const date = getShiftDate();
     const [sData, pData, bData, eData] = await Promise.all([
-        fetch(SCRIPT_URL + '?action=listsales&date='     + date).then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listpayouts&date='   + date).then(r => r.json()).catch(() => ({})),
-        fetch(SCRIPT_URL + '?action=listbills')           .then(r => r.json()).catch(() => ({})),
-        // Load recent closes without date filter to show last week's activity
-        fetch(SCRIPT_URL + '?action=listdaycloses').then(r => r.json()).catch(() => ({}))
+        apiGet({ action: 'listsales', date }).catch(() => ({})),
+        apiGet({ action: 'listpayouts', date }).catch(() => ({})),
+        apiGet({ action: 'listbills' }).catch(() => ({})),
+        apiGet({ action: 'listdaycloses' }).catch(() => ({}))
     ]);
     allSales   = sData.sales   || [];
     allPayouts = pData.payouts || [];
@@ -138,9 +168,12 @@ async function loadAll() {
 async function ensureJobsLoaded() {
     if (allJobs.length) return;
     try {
-        const d = await fetch(SCRIPT_URL + '?action=list').then(r => r.json());
+        const d = await apiGet({ action: 'list' });
         allJobs = d.jobs || [];
-    } catch (_) {}
+    } catch (e) {
+        console.error('Failed to load jobs:', e);
+    }
+}
 }
 
 // -- Date Filter & Show Settled ------------------------------------------------
@@ -183,10 +216,9 @@ function onSalesDateChange() {
         setSyncState('loading', 'Loading...');
         const date = _currentDateFilter;
         Promise.all([
-            fetch(SCRIPT_URL + '?action=listsales&date=' + date).then(r => r.json()).catch(() => ({})),
-            fetch(SCRIPT_URL + '?action=listpayouts&date=' + date).then(r => r.json()).catch(() => ({})),
-            // Load recent closes without date filter to show last week's activity
-            fetch(SCRIPT_URL + '?action=listdaycloses').then(r => r.json()).catch(() => ({}))
+            apiGet({ action: 'listsales', date }).catch(() => ({})),
+            apiGet({ action: 'listpayouts', date }).catch(() => ({})),
+            apiGet({ action: 'listdaycloses' }).catch(() => ({}))
         ]).then(([sData, pData, eData]) => {
             allSales = sData.sales || [];
             allPayouts = pData.payouts || [];
@@ -195,7 +227,10 @@ function onSalesDateChange() {
             updateEOD();
             renderEODHistory(eData.closes || []);
             setSyncState('ok', 'Showing: ' + _currentDateFilter);
-        }).catch(() => setSyncState('error', 'Failed to load'));
+        }).catch((e) => {
+            console.error('Date filter failed:', e);
+            setSyncState('error', 'Failed to load');
+        });
     } else {
         _currentDateFilter = '';
         loadAll();
