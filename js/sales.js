@@ -144,7 +144,6 @@ async function ensureJobsLoaded() {
         console.error('Failed to load jobs:', e);
     }
 }
-}
 
 // -- Date Filter & Show Settled ------------------------------------------------
 let _currentDateFilter = ''; // Shared across all tabs
