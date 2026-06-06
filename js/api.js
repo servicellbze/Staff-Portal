@@ -73,12 +73,9 @@ async function apiPost(params) {
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
     
     try {
-        // Send params BOTH in the URL and in the body.
-        // - URL params → always land in e.parameter (GAS parses these reliably)
-        // - Body → fallback, handled by server-side postData parsing
-        // - No custom Content-Type header → avoids CORS preflight entirely
-        const url = SCRIPT_URL + '?' + params.toString();
-        const response = await fetch(url, {
+        // POST with body only. No custom Content-Type header to avoid CORS preflight.
+        // The server (code.gs) manually parses the URL-encoded body via e.postData.contents.
+        const response = await fetch(SCRIPT_URL, {
             method: 'POST',
             body: params.toString(),
             signal: controller.signal
