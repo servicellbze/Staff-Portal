@@ -73,11 +73,11 @@ async function apiPost(params) {
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
     
     try {
+        // NOTE: No custom Content-Type header — this avoids CORS preflight.
+        // Google Apps Script receives the body via e.postData.contents and
+        // also parses URL-encoded params into e.parameter automatically.
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
             body: params.toString(),
             signal: controller.signal
         });
