@@ -2,38 +2,8 @@
 // sales.js — ServiCell Belize Sales Page
 // -----------------------------------------------------------------------------
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
-
-// -- Standardized API Helper ---------------------------------------------------
-async function apiPost(params) {
-    // Ensure params is a URLSearchParams object
-    if (!(params instanceof URLSearchParams)) {
-        params = new URLSearchParams(params);
-    }
-    
-    const response = await fetch(SCRIPT_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-    });
-    
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    return response.json();
-}
-
-async function apiGet(params) {
-    const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    return response.json();
-}
+// SCRIPT_URL and API functions (apiGet, apiPost, apiPostAsync) are now provided by js/api.js
+// No need to redefine them here - they are globally available
 
 // -- State ---------------------------------------------------------------------
 let currentUser    = '';
@@ -1494,8 +1464,7 @@ async function submitPayout() {
             loggedBy: currentUser, shiftDate: getShiftDate(),
             shift: getCurrentShift() ? getCurrentShift().label : 'Unknown'
         });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
+        const data = await apiPost(params);
         if (data.success) {
             closeModal('payoutModal');
             if (typeof haptic === 'function') haptic('success');
@@ -1600,8 +1569,7 @@ async function submitBill() {
             action: 'createbill', personName: person, items: JSON.stringify(items),
             totalOwed: total, cashier: currentUser, shiftDate: getShiftDate()
         });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
+        const data = await apiPost(params);
         if (data.success) {
             closeModal('billModal');
             if (typeof haptic === 'function') haptic('success');
@@ -1715,8 +1683,7 @@ async function submitEditBill() {
             personName: person, items: JSON.stringify(items),
             totalOwed: total, cashier: currentUser
         });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
+        const data = await apiPost(params);
         if (data.success) {
             closeModal('editBillModal');
             if (typeof haptic === 'function') haptic('success');
@@ -1770,8 +1737,7 @@ async function submitSettle() {
     btn.disabled = true; btn.textContent = 'Settling...';
     try {
         const params = new URLSearchParams({ action: 'settlebill', billId: settlingBillId, amount, payMethod: method, cashier: currentUser });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
+        const data = await apiPost(params);
         if (data.success) {
             // Deduct inventory for items with SKUs when bill is fully settled
             const bill = allBills.find(b => String(b.billId) === String(settlingBillId));
@@ -1794,9 +1760,7 @@ async function submitSettle() {
                                 updatedBy: currentUser
                             });
                             // Fire and forget - don't block settlement if inventory fails
-                            fetch(SCRIPT_URL, { method: 'POST', body: adjustParams }).catch(e => {
-                                console.warn('Inventory deduction failed for SKU ' + item.sku + ':', e);
-                            });
+                            apiPostAsync(adjustParams);
                         }
                     });
                 }
@@ -1942,8 +1906,7 @@ async function submitEditSale() {
             customer: document.getElementById('editSaleCustomer').value.trim(),
             items: JSON.stringify(items), total, cashier: currentUser
         });
-        const res = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
+        const data = await apiPost(params);
         if (data.success) {
             closeModal('editSaleModal');
             if (typeof haptic === 'function') haptic('success');
@@ -1990,8 +1953,7 @@ async function submitReverse() {
     btn.disabled = true; btn.textContent = 'Reversing...';
     try {
         const params = new URLSearchParams({ action: 'reversesale', saleId: _reversingSaleId, reason, cashier: currentUser });
-        const res  = await fetch(SCRIPT_URL, { method: 'POST', body: params });
-        const data = await res.json();
+        const data = await apiPost(params);
         if (data.success) {
             // Restore inventory for any SKU-linked items
             const s = allSales.find(x => String(x.saleId) === String(_reversingSaleId));
@@ -2004,7 +1966,7 @@ async function submitReverse() {
                             qty: Math.abs(Number(item.qty) || 1), type: 'add',
                             reason: 'Reversal  —  ' + _reversingSaleId, updatedBy: currentUser
                         });
-                        fetch(SCRIPT_URL, { method: 'POST', body: params }).catch(() => {});
+                        apiPostAsync(params);
                     }
                 });
             }
