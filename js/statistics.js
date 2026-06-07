@@ -2,7 +2,10 @@
 // statistics.js — ServiCell Belize Statistics Page (Manager only)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
+// ─────────────────────────────────────────────────────────────────────────────
+// statistics.js — ServiCell Belize Statistics Page
+// SCRIPT_URL is provided globally by js/api.js
+// ─────────────────────────────────────────────────────────────────────────────
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 function bz(n) { return 'BZ$' + (parseFloat(n) || 0).toFixed(2); }
