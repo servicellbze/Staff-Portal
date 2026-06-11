@@ -1788,7 +1788,16 @@
                     params.append('imageData', imageData);
                     params.append('mimeType', mimeType);
                     params.append('imageIndex', i + 1);
-                    await apiUpload(params);
+                    const result = await apiUpload(params);
+                    // Save the returned Drive URL back to the job record in Supabase
+                    const driveUrl = result && (result.url || result.fileUrl || result.viewUrl);
+                    if (driveUrl) {
+                        await apiPost({ action: 'addimage', repairId, imageUrl: driveUrl }).catch(e => {
+                            console.warn('[Upload] Could not save image URL to job:', e);
+                        });
+                    } else {
+                        console.warn('[Upload] Worker returned no URL for image', i, result);
+                    }
                 } catch (e) {
                     console.warn('Image upload failed for index ' + i, e);
                 }

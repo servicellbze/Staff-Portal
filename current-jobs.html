@@ -3197,7 +3197,7 @@
                 const archived = j._archived ? 'opacity:0.55;filter:grayscale(0.4);' : '';
 
                 const imgHtml = firstImg
-                    ? `<img class="photo-card-img" src="${firstImg}" alt="" loading="lazy">`
+                    ? `<img class="photo-card-img" src="${firstImg}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'photo-card-placeholder\\'><svg width=\\'32\\' height=\\'32\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\' stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><polyline points=\\'21 15 16 10 5 21\\'/></svg><span>No photos</span></div>'">`
                     : `<div class="photo-card-placeholder">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                             <span>No photos</span>
@@ -4033,7 +4033,11 @@
                         mimeType: 'image/jpeg',
                         imageIndex: existingCount + i + 1
                     });
-                    await apiUpload(params).catch(e => console.warn('Edit photo upload error:', e));
+                    const result = await apiUpload(params).catch(e => { console.warn('Edit photo upload error:', e); return null; });
+                    const driveUrl = result && (result.url || result.fileUrl || result.viewUrl);
+                    if (driveUrl) {
+                        await apiPost({ action: 'addimage', repairId, imageUrl: driveUrl }).catch(e => console.warn('[Upload] Could not save image URL:', e));
+                    }
                 } catch(e) { console.warn('Edit photo upload failed', e); }
             }
             if (status) { status.textContent = `✅ ${images.length} photo${images.length > 1 ? 's' : ''} uploaded`; }
@@ -4719,7 +4723,11 @@
                             mimeType: 'image/jpeg',
                             imageIndex: existingCount + i + 1
                         });
-                        await apiUpload(params).catch(e => console.warn('Photo upload error:', e));
+                        const result = await apiUpload(params).catch(e => { console.warn('Photo upload error:', e); return null; });
+                        const driveUrl = result && (result.url || result.fileUrl || result.viewUrl);
+                        if (driveUrl) {
+                            await apiPost({ action: 'addimage', repairId: _peJobId, imageUrl: driveUrl }).catch(e => console.warn('[Upload] Could not save image URL:', e));
+                        }
                     } catch(e) { console.warn('Upload photo failed', e); }
                 }
             }
