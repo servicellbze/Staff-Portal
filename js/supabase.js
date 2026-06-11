@@ -78,14 +78,44 @@ const Auth = {
 
 // ── JOBS ──────────────────────────────────────────────────────────────────────
 const Jobs = {
+  _map(j) {
+    return {
+      id:                  j.id,
+      customerName:        j.customer_name,
+      device:              j.device,
+      status:              j.status,
+      dateReceived:        j.date_received,
+      dateCompleted:       j.date_completed,
+      customerPhone:       j.customer_phone,
+      notes:               j.notes,
+      issue:               j.issue,
+      jobType:             j.job_type,
+      priority:            j.priority,
+      invoiceItems:        j.invoice_items,
+      payment:             j.payment,
+      payStatus:           j.payment,
+      technician:          j.technician,
+      estimatedCompletion: j.estimated_completion,
+      inspection:          j.inspection,
+      inspectionImages:    j.inspection_images ? String(j.inspection_images).split(',').map(s => s.trim()).filter(Boolean) : [],
+      claimedBy:           j.claimed_by,
+      claimedAt:           j.claimed_at,
+      calledStatus:        j.called_status,
+      calledDate:          j.called_date,
+      calledBy:            j.called_by,
+      callNotes:           j.call_notes,
+      archived:            j.archived
+    };
+  },
+
   async list() {
     const rows = await sbGet('jobs', 'archived=eq.false&order=id.desc');
-    return { jobs: rows };
+    return { jobs: rows.map(Jobs._map) };
   },
 
   async listArchived() {
     const rows = await sbGet('jobs', 'archived=eq.true&order=id.desc');
-    return { jobs: rows.map(j => ({ ...j, archived: true })) };
+    return { jobs: rows.map(j => ({ ...Jobs._map(j), archived: true })) };
   },
 
   async lastId() {
@@ -208,7 +238,19 @@ const Jobs = {
 const SpecialOrders = {
   async list() {
     const rows = await sbGet('special_orders', 'order=date_requested.desc');
-    return { orders: rows };
+    return { orders: rows.map(o => ({
+      orderNumber:   o.order_number,
+      customer:      o.customer,
+      dateRequested: o.date_requested,
+      item:          o.item,
+      quantity:      o.quantity,
+      status:        o.status,
+      notes:         o.notes,
+      updatedBy:     o.updated_by,
+      dateUpdated:   o.date_updated,
+      phone:         o.phone,
+      requestedBy:   o.requested_by
+    })) };
   },
 
   async create(data) {
@@ -253,13 +295,30 @@ const SpecialOrders = {
 const Inventory = {
   async list() {
     const rows = await sbGet('inventory', 'order=name');
-    return { items: rows };
+    return { items: rows.map(Inventory._map) };
+  },
+
+  _map(i) {
+    return {
+      sku:         i.sku,
+      name:        i.name,
+      category:    i.category,
+      qty:         i.qty,
+      minQty:      i.min_qty,
+      costPrice:   i.cost_price,
+      salePrice:   i.sale_price,
+      supplier:    i.supplier,
+      location:    i.location,
+      compat:      i.compat,
+      notes:       i.notes,
+      lastUpdated: i.last_updated,
+      updatedBy:   i.updated_by
+    };
   },
 
   async lowStock() {
-    // Filter client-side to avoid complex SQL via REST
     const { items } = await Inventory.list();
-    return { items: items.filter(i => i.qty <= i.min_qty) };
+    return { items: items.filter(i => i.qty <= i.minQty) };
   },
 
   async create(data) {
@@ -355,7 +414,18 @@ const Inventory = {
     let query = `order=timestamp.desc&limit=${data.limit || 500}`;
     if (data.sku) query += `&sku=eq.${encodeURIComponent(data.sku)}`;
     const rows = await sbGet('stock_movements', query);
-    return { movements: rows };
+    return { movements: rows.map(m => ({
+      timestamp: m.timestamp,
+      sku:       m.sku,
+      itemName:  m.item_name,
+      type:      m.type,
+      qty:       m.qty,
+      qtyBefore: m.qty_before,
+      qtyAfter:  m.qty_after,
+      jobId:     m.job_id,
+      reason:    m.reason,
+      updatedBy: m.updated_by
+    })) };
   },
 
   async _logMovement(sku, itemName, type, qty, qtyBefore, qtyAfter, jobId, reason, updatedBy) {
@@ -373,9 +443,22 @@ const Sales = {
     let query = 'order=timestamp.desc';
     if (data.date)              query += `&shift_date=eq.${data.date}`;
     else if (data.from && data.to) query += `&shift_date=gte.${data.from}&shift_date=lte.${data.to}`;
-    query += '&status=eq.paid';
+    query += '&status=neq.reversed';
     const rows = await sbGet('sales', query);
-    return { sales: rows };
+    return { sales: rows.map(s => ({
+      saleId:     s.sale_id,
+      timestamp:  s.timestamp,
+      shiftDate:  s.shift_date,
+      shift:      s.shift,
+      cashier:    s.cashier,
+      customer:   s.customer,
+      items:      typeof s.items === 'string' ? s.items : JSON.stringify(s.items),
+      total:      s.total,
+      method:     s.method,
+      amountPaid: s.amount_paid,
+      jobId:      s.job_id,
+      status:     s.status
+    })) };
   },
 
   async create(data) {
@@ -435,7 +518,17 @@ const Payouts = {
     let query = 'order=timestamp.desc';
     if (data.date)                 query += `&shift_date=eq.${data.date}`;
     else if (data.from && data.to) query += `&shift_date=gte.${data.from}&shift_date=lte.${data.to}`;
-    return { payouts: await sbGet('payouts', query) };
+    const rows = await sbGet('payouts', query);
+    return { payouts: rows.map(p => ({
+      payoutId:  p.payout_id,
+      timestamp: p.timestamp,
+      shiftDate: p.shift_date,
+      shift:     p.shift,
+      loggedBy:  p.logged_by,
+      takenBy:   p.taken_by,
+      amount:    p.amount,
+      reason:    p.reason
+    })) };
   },
 
   async create(data) {
@@ -460,7 +553,18 @@ const Payouts = {
 // ── BILLS ─────────────────────────────────────────────────────────────────────
 const Bills = {
   async list() {
-    return { bills: await sbGet('bills', 'order=created_at.desc') };
+    const rows = await sbGet('bills', 'order=created_at.desc');
+    return { bills: rows.map(b => ({
+      billId:     b.bill_id,
+      createdAt:  b.created_at,
+      shiftDate:  b.shift_date,
+      personName: b.person_name,
+      items:      typeof b.items === 'string' ? b.items : JSON.stringify(b.items),
+      totalOwed:  b.total_owed,
+      totalPaid:  b.total_paid,
+      status:     b.status,
+      cashier:    b.cashier
+    })) };
   },
 
   async create(data) {
@@ -518,7 +622,20 @@ const DayCloses = {
     if (data.date)                 query += `&shift_date=eq.${data.date}`;
     else if (data.from && data.to) query += `&shift_date=gte.${data.from}&shift_date=lte.${data.to}`;
     if (data.limit)                query += `&limit=${data.limit}`;
-    return { closes: await sbGet('day_closes', query) };
+    const rows = await sbGet('day_closes', query);
+    return { closes: rows.map(c => ({
+      closeId:      c.close_id,
+      timestamp:    c.timestamp,
+      shiftDate:    c.shift_date,
+      shift:        c.shift,
+      closedBy:     c.closed_by,
+      grossSales:   c.gross_sales,
+      totalPayouts: c.total_payouts,
+      netExpected:  c.net_expected,
+      actualDrawer: c.actual_drawer,
+      variance:     c.variance,
+      float:        c.float
+    })) };
   },
 
   async submit(data) {
