@@ -33,7 +33,27 @@
             overflow-x: hidden;
         }
 
+        /* ── Background depth blobs ── */
+        .bg-blobs {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.35;
+        }
+        .bg-blob-1 { width:500px; height:500px; background:rgba(var(--primary-rgb),0.18); top:-120px; left:-100px; }
+        .bg-blob-2 { width:400px; height:400px; background:rgba(16,185,129,0.12); bottom:10%; right:-80px; }
+        .bg-blob-3 { width:300px; height:300px; background:rgba(245,158,11,0.09); top:50%; left:55%; }
+
         main {
+            position: relative;
+            z-index: 1;
             max-width: 1350px;
             margin: 0 auto;
             padding: calc(60px + var(--space-xl)) var(--space-md) var(--space-xl);
@@ -114,7 +134,7 @@
         .refresh-btn:hover:not(.loading):not(.success) {
             border-color: var(--primary);
             transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
         }
 
         .refresh-btn.loading {
@@ -137,7 +157,7 @@
         /* ── Stats ── */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 30px;
         }
@@ -145,25 +165,67 @@
         .stat-card {
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            border-radius: 18px;
-            padding: 20px;
-            text-align: center;
-            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 18px 16px 16px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: currentColor;
+            opacity: 0.5;
+        }
+
+        .stat-card-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .stat-card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: currentColor;
+            opacity: 1;
+            flex-shrink: 0;
+        }
+
+        .stat-card-icon svg {
+            display: block;
+            opacity: 0.9;
         }
 
         .stat-value {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 800;
             line-height: 1;
         }
 
+        .stat-value.zero { opacity: 0.3; }
+
         .stat-label {
-            font-size: 0.6rem;
-            font-weight: 800;
-            opacity: 0.5;
+            font-size: 0.68rem;
+            font-weight: 700;
             text-transform: uppercase;
-            margin-top: 8px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
+            color: var(--text-dim);
+            margin-top: 4px;
         }
 
         /* ── Jobs Table ── */
@@ -171,21 +233,21 @@
             background: var(--glass);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             overflow: hidden;
         }
 
         .jobs-header {
             display: grid;
             grid-template-columns: 70px 1.2fr 1.1fr 110px 110px 170px 130px 130px;
-            padding: 18px 24px;
+            padding: 14px 24px;
             border-bottom: 1px solid var(--glass-border);
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: var(--primary);
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-dim);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(255, 255, 255, 0.02);
+            letter-spacing: 0.8px;
+            background: rgba(255,255,255,0.03);
         }
 
         .jobs-header,
@@ -216,8 +278,7 @@
         }
 
         .job-row:hover {
-            background: rgba(255, 255, 255, 0.03);
-            transform: translateX(5px);
+            background: rgba(var(--primary-rgb), 0.03);
         }
 
         @media (max-width: 1100px) {
@@ -269,56 +330,50 @@
         }
 
         .status-badge {
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 11px;
+            border-radius: 99px;
+            font-size: 0.68rem;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.4px;
         }
 
         .status-badge.received {
-            background: rgba(59, 130, 246, 0.2);
-            color: #60a5fa;
+            background: rgba(var(--primary-rgb), 0.12);
+            color: var(--primary);
         }
 
         .status-badge.fixing {
-            background: rgba(248, 113, 113, 0.2);
-            color: #f87171;
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
         }
 
         .status-badge.testing {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
         }
 
         .status-badge.ready {
-            background: rgba(34, 197, 94, 0.2);
-            color: #4ade80;
+            background: rgba(16, 185, 129, 0.15);
+            color: #059669;
         }
 
         .status-badge.resolved {
             background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            /* Medium green — visible in both light and dark */
-            border: 1px solid rgba(16, 185, 129, 0.4);
-            /* The Outline */
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
         }
 
         .status-badge.unsuccessful {
-            background: rgba(71, 85, 105, 0.3);
-            color: #535a62;
+            background: rgba(100, 116, 139, 0.15);
+            color: #475569;
         }
 
         .status-badge.abandoned {
-            background: rgba(128, 0, 0, 0.4);
-            color: #fca5a5;
+            background: rgba(153, 27, 27, 0.15);
+            color: #b91c1c;
         }
 
         /* ── Action Buttons ── */
@@ -328,32 +383,108 @@
         }
 
         .action-btn {
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--glass);
             border: 1px solid var(--glass-border);
             border-radius: 10px;
             cursor: pointer;
-            font-size: 1rem;
             transition: 0.2s;
-            color: var(--text-main);
+            color: var(--text-dim);
         }
+
+        .action-btn svg { display: block; flex-shrink: 0; }
 
         .action-btn:hover {
             background: var(--primary);
             border-color: var(--primary);
+            color: white;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);
         }
 
         .btn-delete:hover {
             background: #ef4444 !important;
             border-color: #ef4444 !important;
+            box-shadow: 0 4px 12px rgba(239,68,68,0.25) !important;
         }
 
-        /* ── Modal Base ── */
+        /* ── Archive Toggle Button ── */
+        .archive-btn {
+            height: 50px;
+            padding: 0 18px;
+            border-radius: 14px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-family);
+            backdrop-filter: blur(12px);
+        }
+
+        .archive-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .archive-btn svg { display: block; flex-shrink: 0; }
+
+        /* ── Search icon ── */
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+            display: flex;
+        }
+
+        /* ── Filter active state ── */
+        .filter-dropdown.active {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ── Refresh btn SVG ── */
+        .refresh-btn svg { display: block; }
+
+        /* ── Delete modal icon ── */
+        .delete-icon-wrap {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: #ef4444;
+        }
+
+        /* ── Mark-called icon ── */
+        .mark-called-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mark-called-icon svg { display: block; }
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -446,8 +577,8 @@
         /* ── View Modal ── */
         .view-id-tag {
             display: inline-block;
-            background: rgba(37, 99, 235, 0.15);
-            border: 1px solid rgba(37, 99, 235, 0.3);
+            background: rgba(var(--primary-rgb), 0.15);
+            border: 1px solid rgba(var(--primary-rgb), 0.3);
             border-radius: 10px;
             padding: 4px 12px;
             font-size: 0.8rem;
@@ -558,7 +689,7 @@
         .edit-pill.ep-received input:checked+label {
             background: #2563eb;
             border-color: #2563eb;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.4);
         }
 
         .edit-pill.ep-inqueue input:checked+label {
@@ -683,7 +814,7 @@
         .mf-save:hover {
             background: var(--primary-dark);
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
         }
 
         .mf-save:disabled {
@@ -807,16 +938,6 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 16px;
-        }
-        .mark-called-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            background: rgba(16, 185, 129, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
         }
         .mark-called-title {
             flex: 1;
@@ -1303,14 +1424,14 @@
                 font-size: 0.62rem;
                 padding: 3px 7px;
             }
-            }
 
             .delete-body {
                 padding: 20px;
             }
 
-            .delete-icon {
-                font-size: 2.5rem;
+            .delete-icon-wrap {
+                width: 52px;
+                height: 52px;
             }
 
             .mf-btn {
@@ -1360,7 +1481,7 @@
         .repair-id {
             font-family: monospace;
             font-weight: 800;
-            background: rgba(37, 99, 235, 0.2);
+            background: rgba(var(--primary-rgb), 0.2);
             color: var(--primary);
             padding: 2px 8px;
             border-radius: 4px;
@@ -1481,7 +1602,7 @@
             background: #1d4ed8;
             border-color: #3b82f6;
             color: #fff;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.4);
         }
 
         .priority-pill.pp-high input:checked+label {
@@ -1598,8 +1719,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 14px;
-            background: rgba(37, 99, 235, 0.08);
-            border: 1px solid rgba(37, 99, 235, 0.2);
+            background: rgba(var(--primary-rgb), 0.08);
+            border: 1px solid rgba(var(--primary-rgb), 0.2);
             border-radius: 10px;
             font-weight: 800;
             font-size: 0.95rem;
@@ -1657,8 +1778,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 16px;
-            background: rgba(37, 99, 235, 0.1);
-            border: 1px solid rgba(37, 99, 235, 0.25);
+            background: rgba(var(--primary-rgb), 0.1);
+            border: 1px solid rgba(var(--primary-rgb), 0.25);
             border-radius: 12px;
             margin-top: 12px;
         }
@@ -1875,7 +1996,7 @@
 
         .paper-choice-btn:hover {
             border-color: var(--primary);
-            background: rgba(37, 99, 235, 0.08);
+            background: rgba(var(--primary-rgb), 0.08);
             color: var(--primary);
             transform: translateY(-2px);
         }
@@ -1926,6 +2047,242 @@
             letter-spacing: 1px;
         }
 
+        /* ── View Toggle ── */
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        .view-toggle-btn {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 9px;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.18s ease;
+        }
+
+        .view-toggle-btn svg { display: block; }
+
+        .view-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.35);
+        }
+
+        .view-toggle-btn:not(.active):hover {
+            background: rgba(var(--primary-rgb), 0.08);
+            color: var(--primary);
+        }
+
+        /* ── Photo Grid ── */
+        .photo-grid {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .photo-grid.active { display: grid; }
+
+        .photo-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        }
+
+        /* Photo fill */
+        .photo-card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .photo-card:hover .photo-card-img {
+            transform: scale(1.04);
+        }
+
+        /* No-photo placeholder */
+        .photo-card-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(var(--primary-rgb),0.05), rgba(var(--primary-rgb),0.02));
+            color: var(--text-light);
+        }
+
+        .photo-card-placeholder svg { opacity: 0.35; }
+
+        .photo-card-placeholder span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            opacity: 0.5;
+        }
+
+        /* Bottom overlay — always visible */
+        .photo-card-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+            padding: 36px 14px 12px;
+            transition: padding 0.25s ease;
+        }
+
+        .photo-card:hover .photo-card-overlay {
+            padding: 48px 14px 12px;
+        }
+
+        .photo-card-id {
+            font-size: 0.65rem;
+            font-weight: 800;
+            font-family: monospace;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 3px;
+        }
+
+        .photo-card-device {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .photo-card-customer {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.7);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Expanded detail row — slides up on hover */
+        .photo-card-details {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.25s ease, opacity 0.2s ease;
+        }
+
+        .photo-card:hover .photo-card-details {
+            max-height: 40px;
+            opacity: 1;
+        }
+
+        /* Status badge on photo card — uses existing badge colours */
+        .photo-card-badge {
+            padding: 3px 9px;
+            border-radius: 99px;
+            font-size: 0.62rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            flex-shrink: 0;
+        }
+
+        .photo-card-meta {
+            font-size: 0.68rem;
+            color: rgba(255,255,255,0.55);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Multi-photo dot indicator */
+        .photo-card-dots {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .photo-card-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.7);
+        }
+
+        .photo-card-dot.more {
+            background: white;
+            width: auto;
+            height: auto;
+            border-radius: 99px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            padding: 1px 5px;
+        }
+
+        /* Priority pip */
+        .photo-card-priority {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255,255,255,0.6);
+        }
+
+        .photo-card-priority.high { background: var(--danger); }
+        .photo-card-priority.low  { background: transparent; }
+
+        /* Empty photo grid state */
+        .photo-grid-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive photo grid */
+        @media (max-width: 1000px) {
+            .photo-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 540px) {
+            .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
+            .photo-card-device { font-size: 0.78rem; }
+        }
+
+        @media (max-width: 380px) {
+            .photo-grid { grid-template-columns: 1fr; }
+        }
+
         /* ── Pagination ── */
         .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); backdrop-filter: blur(10px); flex-wrap: wrap; }
         .pagination-info { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
@@ -1945,11 +2302,18 @@
 </head>
 
 <body>
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="bg-blob bg-blob-1"></div>
+        <div class="bg-blob bg-blob-2"></div>
+        <div class="bg-blob bg-blob-3"></div>
+    </div>
     <div id="nav-placeholder"></div>
     <main>
         <div class="search-section">
             <div class="search-box">
-                <span style="position:absolute;left:16px;top:15px;opacity:0.4;">🔍</span>
+                <span class="search-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
                 <input type="text" id="searchInput" class="search-input" placeholder="Search jobs (ID, name, device, phone, technician, notes...)">
             </div>
             <select id="statusFilter" class="filter-dropdown">
@@ -1962,40 +2326,84 @@
                 <option value="unsuccessful">Unsuccessful</option>
                 <option value="abandoned">Abandoned</option>
             </select>
-            <button class="refresh-btn" id="refreshBtn" onclick="refreshJobs()" title="Sync Spreadsheet">🔄</button>
-            <button id="archiveToggleBtn" onclick="toggleArchiveView()" title="Search archived jobs" style="height:50px;padding:0 16px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--text-dim);white-space:nowrap;transition:all 0.2s;display:flex;align-items:center;gap:6px;">📦 Archives</button>
+            <button class="refresh-btn" id="refreshBtn" onclick="refreshJobs()" title="Sync Spreadsheet">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+            <button id="archiveToggleBtn" class="archive-btn" onclick="toggleArchiveView()" title="Search archived jobs">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                Archives
+            </button>
+            <!-- View Toggle -->
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" id="viewListBtn" onclick="setView('list')" title="List view">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                </button>
+                <button class="view-toggle-btn" id="viewPhotoBtn" onclick="setView('photo')" title="Photo view">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                </button>
+            </div>
         </div>
 
         <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-value" id="statTotal" style="color:var(--primary)">0</div>
+            <div class="stat-card" style="color:var(--primary)">
+                <div class="stat-card-inner">
+                    <div class="stat-card-icon" style="background:rgba(var(--primary-rgb),0.12);color:var(--primary)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="statTotal">0</div>
                 <div class="stat-label">Total Jobs</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statReceived" style="color:#3b82f6">0</div>
+            <div class="stat-card" style="color:#3b82f6">
+                <div class="stat-card-inner">
+                    <div class="stat-card-icon" style="background:rgba(59,130,246,0.12);color:#3b82f6">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="statReceived">0</div>
                 <div class="stat-label">Received</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statFixing" style="color:#f87171">0</div>
+            <div class="stat-card" style="color:var(--danger)">
+                <div class="stat-card-inner">
+                    <div class="stat-card-icon" style="background:rgba(239,68,68,0.12);color:var(--danger)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="statFixing">0</div>
                 <div class="stat-label">Repairing</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statTesting" style="color:#fbbf24">0</div>
+            <div class="stat-card" style="color:var(--warning)">
+                <div class="stat-card-inner">
+                    <div class="stat-card-icon" style="background:rgba(245,158,11,0.12);color:var(--warning)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-4m-6 0h6"/></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="statTesting">0</div>
                 <div class="stat-label">Testing</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statReady" style="color:#22c55e">0</div>
+            <div class="stat-card" style="color:var(--success)">
+                <div class="stat-card-inner">
+                    <div class="stat-card-icon" style="background:rgba(16,185,129,0.12);color:var(--success)">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="statReady">0</div>
                 <div class="stat-label">Ready</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-value" id="statAbandoned" style="color:#800000">0</div>
+            <div class="stat-card" style="color:#b91c1c">
+                <div class="stat-card-inner">
+                    <div class="stat-card-icon" style="background:rgba(153,27,27,0.12);color:#b91c1c">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+                <div class="stat-value" id="statAbandoned">0</div>
                 <div class="stat-label">Abandoned</div>
             </div>
         </div>
 
         <div class="jobs-container">
-            <div id="archiveBanner" style="display:none;padding:12px 20px;background:rgba(37,99,235,0.08);border-bottom:1px solid rgba(37,99,235,0.15);font-size:0.8rem;font-weight:700;color:var(--primary);display:none;align-items:center;justify-content:space-between;">
-                <span>📦 Viewing archived jobs — these have been removed from the active list.</span>
+            <div id="archiveBanner" style="display:none;padding:12px 20px;background:rgba(var(--primary-rgb),0.08);border-bottom:1px solid rgba(var(--primary-rgb),0.15);font-size:0.8rem;font-weight:700;color:var(--primary);align-items:center;justify-content:space-between;">
+                <span>Viewing archived jobs — these have been removed from the active list.</span>
                 <button onclick="toggleArchiveView()" style="background:none;border:none;cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--primary);font-family:inherit;text-decoration:underline;">Back to Active</button>
             </div>
             <div class="jobs-header">
@@ -2010,6 +2418,7 @@
             </div>
             <div id="jobsList"></div>
             <div id="jobsPagination"></div>
+            <div class="photo-grid" id="photoGrid"></div>
         </div>
     </main>
 
@@ -2023,7 +2432,10 @@
     <div class="modal-overlay" id="viewModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h2>👁️ Job Details</h2>
+                <h2>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Job Details
+                    </h2>
                 <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
             </div>
             <div class="modal-body">
@@ -2078,11 +2490,11 @@
                         <div class="view-notes-box" id="view-notes">No notes.</div>
                     </div>
                     <div class="view-field full" id="view-inspection-section">
-                        <div class="view-field-label">🔍 Inspection Checklist</div>
+                        <div class="view-field-label">Inspection Checklist</div>
                         <div class="view-notes-box" id="view-inspection">No damage noted.</div>
                     </div>
                     <div class="view-field full" id="view-images-section" style="display:none;">
-                        <div class="view-field-label">📷 Inspection Photos</div>
+                        <div class="view-field-label">Inspection Photos</div>
                         <div id="view-inspection-images" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;"></div>
                     </div>
                     <div class="view-field full" id="view-invoice-section" style="display:none;">
@@ -2098,12 +2510,24 @@
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('viewModal')">Close</button>
-                <button class="mf-btn mf-print" onclick="printFromView()">🖨️ Print</button>
-                <button class="mf-btn mf-claim" id="claimBtn" onclick="claimCurrentJob()" style="display:none;">🔒 Claim Job</button>
-                <button class="mf-btn mf-unclaim" id="unclaimBtn" onclick="unclaimCurrentJob()" style="display:none;">🔓 Reassign</button>
-                <button class="mf-btn" id="markCalledBtnView" onclick="openMarkCalledModal(currentViewId)" style="display:none;background:#10b981;color:#fff;">📞 Mark as Called</button>
-                <button class="mf-btn" id="editPhotosBtn" onclick="openPhotoEditor(currentViewId)" style="display:none;">📷 Edit Photos</button>
-                <button class="mf-btn mf-save" onclick="switchToEdit()">✏️ Edit This Job</button>
+                <button class="mf-btn mf-print" onclick="printFromView()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print
+                </button>
+                <button class="mf-btn mf-claim" id="claimBtn" onclick="claimCurrentJob()" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Claim Job
+                </button>
+                <button class="mf-btn mf-unclaim" id="unclaimBtn" onclick="unclaimCurrentJob()" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>Reassign
+                </button>
+                <button class="mf-btn" id="markCalledBtnView" onclick="openMarkCalledModal(currentViewId)" style="display:none;background:#10b981;color:#fff;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Mark as Called
+                </button>
+                <button class="mf-btn" id="editPhotosBtn" onclick="openPhotoEditor(currentViewId)" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Edit Photos
+                </button>
+                <button class="mf-btn mf-save" onclick="switchToEdit()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit This Job
+                </button>
             </div>
         </div>
     </div>
@@ -2112,7 +2536,10 @@
     <div class="modal-overlay" id="unsavedModal" style="z-index:3200;">
         <div class="modal-box" style="max-width:360px;">
             <div class="modal-header">
-                <h2>⚠️ Unsaved Changes</h2>
+                <h2>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--warning);flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Unsaved Changes
+                    </h2>
                 <button class="modal-close" onclick="closeModal('unsavedModal')">✕</button>
             </div>
             <div class="modal-body" style="padding-top:8px;">
@@ -2129,7 +2556,10 @@
     <div class="modal-overlay" id="reassignModal" style="z-index:3100;">
         <div class="modal-box" style="max-width:360px;">
             <div class="modal-header">
-                <h2>🔓 Reassign Job</h2>
+                <h2>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:#0891b2;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                        Reassign Job
+                    </h2>
                 <button class="modal-close" onclick="closeModal('reassignModal')">✕</button>
             </div>
             <div class="modal-body" style="padding-top:8px;">
@@ -2137,7 +2567,9 @@
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('reassignModal')">Cancel</button>
-                <button class="mf-btn mf-save" id="reassignConfirmBtn" style="background:#0891b2;">🔓 Yes, Reassign</button>
+                <button class="mf-btn mf-save" id="reassignConfirmBtn" style="background:#0891b2;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>Yes, Reassign
+                </button>
             </div>
         </div>
     </div>
@@ -2153,7 +2585,10 @@
     <div class="modal-overlay" id="photoEditorModal" style="z-index:3100;">
         <div class="modal-box" style="max-width:560px;">
             <div class="modal-header">
-                <h2>📷 Edit Photos</h2>
+                <h2>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        Edit Photos
+                    </h2>
                 <div style="font-size:0.72rem;color:var(--text-dim);font-weight:600;" id="photoEditorJobLabel"></div>
             </div>
 
@@ -2189,7 +2624,7 @@
 
     <!-- ── Photo Editor Webcam Overlay ── -->
     <div id="photoEditorWebcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10001;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">📷 Take a Photo</div>
+        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">Take a Photo</div>
         <select id="photoEditorWebcamSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="photoEditorWebcamSwitch()"></select>
         <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
             <video id="photoEditorWebcamVideo" autoplay playsinline style="width:min(90vw,480px);height:min(60vw,320px);object-fit:cover;display:block;"></video>
@@ -2208,8 +2643,10 @@
     <div class="modal-overlay" id="editModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h2>✏️ Edit Job <span id="edit-id-tag"
-                        style="font-family:monospace;color:var(--primary);font-size:0.9rem;"></span></h2>
+                <h2>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary);flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        Edit Job <span id="edit-id-tag" style="font-family:monospace;color:var(--primary);font-size:0.9rem;"></span>
+                    </h2>
                 <button class="modal-close" onclick="tryCloseEdit()">✕</button>
             </div>
             <div class="modal-body">
@@ -2217,27 +2654,27 @@
                 <div class="edit-pills">
                     <div class="edit-pill ep-received">
                         <input type="radio" name="editStatus" id="es-received" value="received">
-                        <label for="es-received">✅ Received</label>
+                        <label for="es-received">Received</label>
                     </div>
                     <div class="edit-pill ep-fixing">
                         <input type="radio" name="editStatus" id="es-fixing" value="fixing">
-                        <label for="es-fixing">🔧 Fixing</label>
+                        <label for="es-fixing">Fixing</label>
                     </div>
                     <div class="edit-pill ep-testing">
                         <input type="radio" name="editStatus" id="es-testing" value="testing">
-                        <label for="es-testing">🧪 Testing</label>
+                        <label for="es-testing">Testing</label>
                     </div>
                     <div class="edit-pill ep-ready">
                         <input type="radio" name="editStatus" id="es-ready" value="ready">
-                        <label for="es-ready">🎉 Ready</label>
+                        <label for="es-ready">Ready</label>
                     </div>
                     <div class="edit-pill ep-resolved">
                         <input type="radio" name="editStatus" id="es-resolved" value="resolved">
-                        <label for="es-resolved">🤝 Picked Up</label>
+                        <label for="es-resolved">Picked Up</label>
                     </div>
                     <div class="edit-pill ep-unsuccessful">
                         <input type="radio" name="editStatus" id="es-unsuccessful" value="unsuccessful">
-                        <label for="es-unsuccessful">❌ Unsuccessful</label>
+                        <label for="es-unsuccessful">Unsuccessful</label>
                     </div>
                 </div>
 
@@ -2245,11 +2682,11 @@
                 <div class="priority-pills">
                     <div class="priority-pill pp-low">
                         <input type="radio" name="editPriority" id="ep-low" value="low" checked>
-                        <label for="ep-low">🔵 Low — Normal</label>
+                        <label for="ep-low">Low — Normal</label>
                     </div>
                     <div class="priority-pill pp-high">
                         <input type="radio" name="editPriority" id="ep-high" value="high">
-                        <label for="ep-high">🔴 High — Urgent</label>
+                        <label for="ep-high">High — Urgent</label>
                     </div>
                 </div>
 
@@ -2268,7 +2705,7 @@
                 <span class="edit-label" style="margin-top:20px;">Invoice / Pricing <span
                         style="font-weight:400;opacity:0.5;text-transform:none;letter-spacing:0;">— BZD</span></span>
                 <div class="inv-add-row">
-                    <button class="inv-template-btn" onclick="toggleTemplatePicker()">⚡ Quick Templates</button>
+                    <button class="inv-template-btn" onclick="toggleTemplatePicker()">⚡ Templates</button>
                     <button class="inv-add-line-btn" onclick="addInvoiceLine()">＋ Add Line Item</button>
                 </div>
                 <div class="template-picker" id="templatePicker"></div>
@@ -2282,27 +2719,27 @@
                 <div class="priority-pills" style="margin-bottom:12px;">
                     <div class="priority-pill pp-low">
                         <input type="radio" name="editPayment" id="pay-unpaid" value="unpaid" checked>
-                        <label for="pay-unpaid">🔴 Unpaid</label>
+                        <label for="pay-unpaid">Unpaid</label>
                     </div>
                     <div class="priority-pill pp-high" style="--paid-color:#059669;">
                         <input type="radio" name="editPayment" id="pay-paid" value="paid" onchange="toggleMethodRow()">
-                        <label for="pay-paid" class="pay-paid-label">✅ Paid</label>
+                        <label for="pay-paid" class="pay-paid-label">Paid</label>
                     </div>
                 </div>
                 <div class="priority-pills" id="payment-method-row" style="display:none;margin-bottom:20px;">
                     <div class="priority-pill pp-method">
                         <input type="radio" name="payMethod" id="pay-cash" value="cash" checked>
-                        <label for="pay-cash">💵 Cash</label>
+                        <label for="pay-cash">Cash</label>
                     </div>
                     <div class="priority-pill pp-method">
                         <input type="radio" name="payMethod" id="pay-card" value="card">
-                        <label for="pay-card">💳 Card</label>
+                        <label for="pay-card">Card</label>
                     </div>
                 </div>
 
                 <!-- ── Add Photos (technician/manager only) ── -->
                 <div id="editPhotoSection" style="display:none;margin-top:20px;">
-                    <span class="edit-label">📷 Add Photos</span>
+                    <span class="edit-label">Add Photos</span>
                     <div id="editPhotoPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
                     <div style="display:flex;gap:8px;">
                         <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1.5px dashed var(--glass-border);cursor:pointer;font-size:0.82rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
@@ -2316,9 +2753,13 @@
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="tryCloseEdit()">Cancel</button>
-                <button class="mf-btn mf-print" onclick="printFromEdit()">🖨️ Print</button>
+                <button class="mf-btn mf-print" onclick="printFromEdit()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Print
+                </button>
                 <button class="mf-btn mf-save" id="saveBtn" onclick="saveEdit()">
-                    <span id="saveBtnText">💾 Save</span>
+                    <span id="saveBtnText">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save
+                    </span>
                     <div class="save-spinner" id="saveSpinner"></div>
                 </button>
             </div>
@@ -2331,11 +2772,16 @@
     <div class="modal-overlay" id="deleteModal">
         <div class="modal-box">
             <div class="modal-header">
-                <h2>🗑️ Delete Job</h2>
+                <h2>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--danger);flex-shrink:0;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                        Delete Job
+                    </h2>
                 <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
             </div>
             <div class="delete-body">
-                <div class="delete-icon">⚠️</div>
+                <div class="delete-icon-wrap">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
                 <h2>Are you sure?</h2>
                 <p style="color:var(--text-dim);font-size:0.88rem;">This will permanently remove the record from the
                     spreadsheet.</p>
@@ -2345,11 +2791,13 @@
                     <div class="delete-info-row"><span>Device</span><span id="del-device">—</span></div>
                     <div class="delete-info-row"><span>Status</span><span id="del-status">—</span></div>
                 </div>
-                <p class="delete-warning">⚠️ This action cannot be undone.</p>
+                <p class="delete-warning">This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
                 <button class="mf-btn mf-cancel" onclick="closeModal('deleteModal')">Go Back</button>
-                <button class="mf-btn mf-delete" id="confirmDeleteBtn">🗑️ Delete Job</button>
+                <button class="mf-btn mf-delete" id="confirmDeleteBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Delete Job
+                </button>
             </div>
         </div>
     </div>
@@ -2359,7 +2807,7 @@
     ══════════════════════════════════════════ -->
     <div class="paper-modal-overlay" id="paperModal">
         <div class="paper-modal-box">
-            <h3>🖨️ Choose Paper Size</h3>
+            <h3>Choose Paper Size</h3>
             <p>Select the paper size for your printer</p>
             <div class="paper-choices">
                 <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
@@ -2384,7 +2832,9 @@
     <div class="mark-called-modal" id="markCalledModal">
         <div class="mark-called-box">
             <div class="mark-called-header">
-                <div class="mark-called-icon">📞</div>
+                <div class="mark-called-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </div>
                 <div class="mark-called-title">
                     <h3>Mark Customer as Called</h3>
                     <p>Record that you've contacted the customer</p>
@@ -2399,7 +2849,9 @@
             </div>
             <div class="mark-called-actions">
                 <button class="mark-called-cancel" onclick="closeMarkCalledModal()">Cancel</button>
-                <button class="mark-called-confirm" id="markCalledBtn" onclick="confirmMarkCalled()">📞 Mark as Called</button>
+                <button class="mark-called-confirm" id="markCalledBtn" onclick="confirmMarkCalled()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Mark as Called
+                </button>
             </div>
         </div>
     </div>
@@ -2501,7 +2953,11 @@
                 if (s[c] !== undefined) s[c]++;
             });
             ['Total', 'Received', 'Fixing', 'Testing', 'Ready', 'Abandoned'].forEach(k => {
-                document.getElementById(`stat${k}`).innerText = s[k.toLowerCase()];
+                const el = document.getElementById(`stat${k}`);
+                if (!el) return;
+                const val = s[k.toLowerCase()];
+                el.innerText = val;
+                el.classList.toggle('zero', val === 0);
             });
         }
 
@@ -2589,9 +3045,15 @@
             <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
             <div style="font-size:0.85rem;">${storage}${callBadge ? '<br>' + callBadge : ''}</div>
             <div class="action-btns">
-                <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">👁️</button>
-                ${j._archived ? '' : `<button class="action-btn" title="Edit Entry" onclick="openEditModal('${j.id}')">✏️</button>
-                <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">🗑️</button>`}
+                <button class="action-btn" title="View Full Info" onclick="openViewModal('${j.id}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                ${j._archived ? '' : `<button class="action-btn" title="Edit Entry" onclick="openEditModal('${j.id}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="action-btn btn-delete" title="Delete Job" onclick="openDeleteModal('${j.id}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </button>`}
             </div>
         </div>`;
             }).join('');
@@ -2659,17 +3121,104 @@
             
             _jobsPage = 1;
             renderJobs(_filteredJobs);
+            if (_currentView === 'photo') renderPhotoGrid(_filteredJobs);
         }
 
-        let _viewingArchive = false;
-        let archivedJobs = [];
+        // ── View Mode ────────────────────────────────────────────────────────
+        let _currentView = 'list';
+
+        function setView(mode) {
+            _currentView = mode;
+            const listBtn  = document.getElementById('viewListBtn');
+            const photoBtn = document.getElementById('viewPhotoBtn');
+            const jobsList = document.getElementById('jobsList');
+            const jobsPag  = document.getElementById('jobsPagination');
+            const jobsHdr  = document.querySelector('.jobs-header');
+            const photoGrid = document.getElementById('photoGrid');
+
+            if (mode === 'photo') {
+                listBtn.classList.remove('active');
+                photoBtn.classList.add('active');
+                jobsList.style.display  = 'none';
+                jobsPag.style.display   = 'none';
+                if (jobsHdr) jobsHdr.style.display = 'none';
+                photoGrid.classList.add('active');
+                renderPhotoGrid(_filteredJobs);
+            } else {
+                photoBtn.classList.remove('active');
+                listBtn.classList.add('active');
+                jobsList.style.display  = '';
+                jobsPag.style.display   = '';
+                if (jobsHdr) jobsHdr.style.display = '';
+                photoGrid.classList.remove('active');
+            }
+        }
+
+        // Status → badge colours (mirrors CSS classes but for inline use on dark bg)
+        const _photoBadgeStyle = {
+            received:     'background:rgba(37,99,235,0.75);color:#fff',
+            fixing:       'background:rgba(220,38,38,0.85);color:#fff',
+            testing:      'background:rgba(217,119,6,0.85);color:#fff',
+            ready:        'background:rgba(5,150,105,0.85);color:#fff',
+            resolved:     'background:rgba(5,150,105,0.65);color:#fff',
+            unsuccessful: 'background:rgba(71,85,105,0.75);color:#fff',
+            abandoned:    'background:rgba(153,27,27,0.85);color:#fff'
+        };
+
+        function renderPhotoGrid(jobs) {
+            const grid = document.getElementById('photoGrid');
+            if (!jobs.length) {
+                grid.innerHTML = '<div class="photo-grid-empty">No jobs match your current filter.</div>';
+                return;
+            }
+
+            grid.innerHTML = jobs.map(j => {
+                const stat     = classifyStatus(j);
+                const photos   = Array.isArray(j.inspectionImages) ? j.inspectionImages.filter(Boolean) : [];
+                const firstImg = photos[0] || null;
+                const extra    = photos.length > 1 ? photos.length - 1 : 0;
+                const priority = (j.priority || 'low').toLowerCase();
+                const badgeStyle = _photoBadgeStyle[stat.class] || _photoBadgeStyle.received;
+                const techText = j.claimedBy ? `By ${j.claimedBy}` : (j.technician ? j.technician : '');
+                const archived = j._archived ? 'opacity:0.55;filter:grayscale(0.4);' : '';
+
+                const imgHtml = firstImg
+                    ? `<img class="photo-card-img" src="${firstImg}" alt="${j.device || 'Device'}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"photo-card-placeholder\\"><svg width=\\"32\\" height=\\"32\\" viewBox=\\"0 0 24 24\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"1.5\\"><rect x=\\"3\\" y=\\"3\\" width=\\"18\\" height=\\"18\\" rx=\\"2\\"/><circle cx=\\"8.5\\" cy=\\"8.5\\" r=\\"1.5\\"/><polyline points=\\"21 15 16 10 5 21\\"/></svg><span>Image unavailable</span></div>'">`
+                    : `<div class="photo-card-placeholder">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>No photos</span>
+                        </div>`;
+
+                const dotsHtml = extra > 0
+                    ? `<div class="photo-card-dots">
+                            <span class="photo-card-dot more">+${extra}</span>
+                        </div>`
+                    : '';
+
+                return `
+                <div class="photo-card" style="${archived}" onclick="openViewModal('${j.id}')">
+                    ${imgHtml}
+                    <div class="photo-card-priority ${priority}"></div>
+                    ${dotsHtml}
+                    <div class="photo-card-overlay">
+                        <div class="photo-card-id">#${j.id}</div>
+                        <div class="photo-card-device">${j.device || '—'}</div>
+                        <div class="photo-card-customer">${j.customerName || 'Walk-in'}</div>
+                        <div class="photo-card-details">
+                            <span class="photo-card-badge" style="${badgeStyle}">${stat.label}</span>
+                            ${techText ? `<span class="photo-card-meta">${techText}</span>` : ''}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
 
         async function toggleArchiveView() {
             _viewingArchive = !_viewingArchive;
             const btn    = document.getElementById('archiveToggleBtn');
             const banner = document.getElementById('archiveBanner');
             if (_viewingArchive) {
-                btn.style.background   = 'rgba(37,99,235,0.15)';
+                btn.style.background   = 'rgba(var(--primary-rgb),0.15)';
                 btn.style.borderColor  = 'var(--primary)';
                 btn.style.color        = 'var(--primary)';
                 btn.innerHTML          = '📦 Archives <span style="font-size:0.65rem;background:var(--primary);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
@@ -3937,7 +4486,7 @@
 
     <!-- ── Webcam Overlay ── -->
     <div id="editWebcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">📷 Take a Photo</div>
+        <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">Take a Photo</div>
         <select id="editWebcamDeviceSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="editWebcamSwitchDevice()"></select>
         <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
             <video id="editWebcamVideo" autoplay playsinline style="width:min(90vw,480px);height:min(60vw,320px);object-fit:cover;display:block;"></video>
