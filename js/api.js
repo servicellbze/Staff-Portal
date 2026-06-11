@@ -1,110 +1,82 @@
 /**
  * ServiCell API Module
- * Central interface for all server communication
- * 
- * ⚠️ CRITICAL RULE: DO NOT call fetch() directly anywhere else in the codebase.
- * ALL server requests MUST go through these functions to ensure:
- * - Consistent Content-Type headers
- * - Proper error handling
- * - Request timeout management
- * - Centralized logging and debugging
+ * Routes all requests through the Supabase layer (js/supabase.js).
+ *
+ * The public interface is IDENTICAL to the old GAS version —
+ * all existing callers work without modification.
+ *
+ * ⚠️ IMPORTANT: Set SUPABASE_URL and SUPABASE_ANON in js/supabase.js
+ *    before going live.
  */
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
-
-// Request timeout (15 seconds - GAS can be slow)
+// Legacy timeout constant kept for any code that references it
 const API_TIMEOUT = 15000;
 
+// Kept for any code that still references SCRIPT_URL (logs, etc.)
+const SCRIPT_URL = '[migrated to Supabase — see js/supabase.js]';
+
 /**
- * GET request - for reading data (list, load, fetch operations)
- * 
- * @param {Object} params - Query parameters as key-value pairs
- * @returns {Promise<Object>} JSON response from server
- * 
+ * GET-style read operations.
+ * Accepts the same { action, ...params } object as before.
+ *
+ * @param {Object} params
+ * @returns {Promise<Object>}
+ *
  * @example
- * const jobs = await apiGet({ action: 'list' });
- * const item = await apiGet({ action: 'listinventory' });
+ * const { jobs } = await apiGet({ action: 'list' });
  */
 async function apiGet(params) {
-    const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-    
+    const { action, id, repairId, orderNumber, ...rest } = params;
+    const resolvedId = id || repairId || orderNumber;
     try {
-        const response = await fetch(url, {
-            method: 'GET',
-            signal: controller.signal,
-            cache: 'no-cache'
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
+        return await handleAction(
+            (action || '').toLowerCase().trim(),
+            resolvedId,
+            { ...params }
+        );
     } catch (error) {
-        if (error.name === 'AbortError') {
-            throw new Error('Request timeout - server took too long to respond');
-        }
+        console.error('[API] GET error:', error.message, params);
         throw error;
     }
 }
 
 /**
- * POST request - for creating/updating/deleting data
- * 
- * @param {Object|URLSearchParams} params - Request parameters
- * @returns {Promise<Object>} JSON response from server
- * 
+ * POST-style write operations.
+ * Accepts either a plain object or URLSearchParams.
+ *
+ * @param {Object|URLSearchParams} params
+ * @returns {Promise<Object>}
+ *
  * @example
- * const result = await apiPost({ action: 'create', name: 'John', device: 'iPhone' });
- * const sale = await apiPost({ action: 'createsale', items: JSON.stringify(items) });
+ * await apiPost({ action: 'create', customerName: 'John', device: 'iPhone' });
  */
 async function apiPost(params) {
-    // Normalize to URLSearchParams if plain object
-    if (!(params instanceof URLSearchParams)) {
-        params = new URLSearchParams(params);
+    // Normalize URLSearchParams → plain object
+    if (params instanceof URLSearchParams) {
+        const obj = {};
+        params.forEach((v, k) => { obj[k] = v; });
+        params = obj;
     }
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-    
+
+    const { action, id, repairId, orderNumber, ...rest } = params;
+    const resolvedId = id || repairId || orderNumber;
     try {
-        // POST with body only. No custom Content-Type header to avoid CORS preflight.
-        // The server (code.gs) manually parses the URL-encoded body via e.postData.contents.
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: params.toString(),
-            signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
+        return await handleAction(
+            (action || '').toLowerCase().trim(),
+            resolvedId,
+            { ...params }
+        );
     } catch (error) {
-        if (error.name === 'AbortError') {
-            throw new Error('Request timeout - server took too long to respond');
-        }
+        console.error('[API] POST error:', error.message, params);
         throw error;
     }
 }
 
 /**
- * Fire-and-forget POST - for non-critical background operations
- * Does not wait for response, logs errors to console
- * 
- * @param {Object|URLSearchParams} params - Request parameters
- * 
- * @example
- * // Don't block UI for inventory adjustments
- * apiPostAsync({ action: 'adjuststock', sku: 'ABC123', qty: 1, type: 'remove' });
+ * Fire-and-forget POST — non-critical background operations.
+ * Errors are logged but not thrown.
+ *
+ * @param {Object|URLSearchParams} params
  */
 function apiPostAsync(params) {
     apiPost(params).catch(error => {
@@ -113,40 +85,27 @@ function apiPostAsync(params) {
 }
 
 /**
- * Upload file/image with base64 encoding
- * Special handling for large payloads (images)
- * 
- * @param {Object} params - Must include base64Data and mimeType
- * @returns {Promise<Object>} JSON response
- * 
- * @example
- * const result = await apiUpload({
- *     action: 'uploadimage',
- *     jobId: '12345',
- *     base64Data: imageBase64,
- *     mimeType: 'image/jpeg',
- *     imageIndex: 1
- * });
+ * Image upload — still routed through the Cloudflare Worker / Drive.
+ * Kept for backwards compatibility.
+ *
+ * @param {Object} params
+ * @returns {Promise<Object>}
  */
 async function apiUpload(params) {
-    // Use standard POST but with mode: 'no-cors' for large uploads
     if (!(params instanceof URLSearchParams)) {
         params = new URLSearchParams(params);
     }
-    
     try {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Required for large base64 payloads
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: params.toString()
-        });
-        
-        // no-cors mode doesn't allow reading response
-        // Assume success if no error thrown
-        return { success: true };
+        const response = await fetch(
+            'https://servicell-push.ericsonchee33.workers.dev/upload',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params.toString()
+            }
+        );
+        if (!response.ok) throw new Error(`Upload HTTP ${response.status}`);
+        return await response.json();
     } catch (error) {
         console.error('[API] Upload failed:', error);
         throw error;
@@ -154,49 +113,33 @@ async function apiUpload(params) {
 }
 
 /**
- * Retry wrapper - automatically retries failed requests
- * Useful for flaky network conditions
- * 
- * @param {Function} apiFunction - apiGet or apiPost
- * @param {Object} params - Request parameters
- * @param {number} maxRetries - Maximum retry attempts (default: 3)
- * @returns {Promise<Object>} JSON response
- * 
- * @example
- * const data = await apiRetry(apiPost, { action: 'create', name: 'John' }, 3);
+ * Retry wrapper — unchanged from the original.
+ *
+ * @param {Function} apiFunction
+ * @param {Object}   params
+ * @param {number}   maxRetries
+ * @returns {Promise<Object>}
  */
 async function apiRetry(apiFunction, params, maxRetries = 3) {
     let lastError;
-    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             return await apiFunction(params);
         } catch (error) {
             lastError = error;
             console.warn(`[API] Attempt ${attempt}/${maxRetries} failed:`, error.message);
-            
             if (attempt < maxRetries) {
-                // Exponential backoff: 1s, 2s, 4s
                 const delay = Math.pow(2, attempt - 1) * 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
     }
-    
     throw new Error(`Failed after ${maxRetries} attempts: ${lastError.message}`);
 }
 
-// Export for ES6 modules (if needed)
+// ES6 module export (Node / bundlers)
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { 
-        apiGet, 
-        apiPost, 
-        apiPostAsync, 
-        apiUpload, 
-        apiRetry, 
-        SCRIPT_URL 
-    };
+    module.exports = { apiGet, apiPost, apiPostAsync, apiUpload, apiRetry, SCRIPT_URL };
 }
 
-// Log initialization
-console.log('[API] ServiCell API module loaded. All requests will use standardized communication.');
+console.log('[API] ServiCell API module loaded — powered by Supabase.');

@@ -361,8 +361,6 @@ async function checkRevoked() {
     // Skip on login page — check both pathname and hash
     const path = window.location.pathname + window.location.href;
     if (path.includes('index.html') && !localStorage.getItem('isLoggedIn') && !sessionStorage.getItem('isLoggedIn')) return;
-    const url = (typeof window.SCRIPT_URL !== 'undefined' && window.SCRIPT_URL)
-        || 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
     try {
         const data = await apiGet({ action: 'checkrole', username });
         if (data.revoked) {
@@ -430,9 +428,6 @@ const InAppNotif = {
 
     // Sync pending notifications from GAS — makes bell cross-device
     async syncFromServer() {
-        // Use page-level SCRIPT_URL if available, otherwise fall back to hardcoded
-        const url = (typeof window.SCRIPT_URL !== 'undefined' && window.SCRIPT_URL)
-            || 'https://script.google.com/macros/s/AKfycbyLNGR6L75MieV_R-s9yyjTfzpAAut_HIwhbZBBNyPxj9WDzRLNWics0FZ1ZayI3imx/exec';
         if (!navigator.onLine) return;
         if (localStorage.getItem('scNotif') === '0') return;
         const role = deriveRole(getLoggedInUser());
@@ -470,6 +465,8 @@ const InAppNotif = {
                 localStorage.setItem(this.KEY, JSON.stringify(existing.slice(0, this.MAX)));
                 this._updateBadge();
                 this._animateBell();
+                // Do NOT play sound here — this is a background poll with no user gesture.
+                // Sound is played only via InAppNotif.add() which is called from direct user-triggered events.
             }
 
             // Mark delivered for THIS user only — use GET params to avoid CORS preflight
