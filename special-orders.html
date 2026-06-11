@@ -3,9 +3,11 @@
 
 <head>
     <script src="js/theme-init.js"></script>
+    <script src="js/supabase.js"></script>
     <script src="js/api.js"></script>
     <script src="js/auth-guard.js"></script>
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.png">
     <meta charset="UTF-8">
     <meta name="theme-color" content="#0f172a">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -908,7 +910,6 @@
             setSyncState('loading', 'Saving…');
             
             try {
-                const url = `${SCRIPT_URL}?action=updateorder&orderNumber=${encodeURIComponent(orderNumber)}&status=${encodeURIComponent(newStatus)}&updatedBy=${encodeURIComponent(currentUser)}`;
                 const data = await apiPost({ action: 'updateorder', orderNumber, status: newStatus, updatedBy: currentUser });
                 
                 if (data.success) {
