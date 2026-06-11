@@ -545,7 +545,7 @@ const Payouts = {
     }, 'return=minimal');
     await Audit.log('PAYOUT_CREATE', `${data.loggedBy} | ${payoutId} | BZ$${Number(data.amount).toFixed(2)}`);
     Notifications.push('manageronly', '💸 Payout Logged',
-      `${data.loggedBy} logged a BZ$${Number(data.amount).toFixed(2)} payout: ${data.reason}`).catch(e => console.warn(\'[Notify]\', e));
+      `${data.loggedBy} logged a BZ$${Number(data.amount).toFixed(2)} payout: ${data.reason}`).catch(e => console.warn('[Notify]', e));
     return { success: true, payoutId };
   }
 };
@@ -655,7 +655,7 @@ const DayCloses = {
     }, 'return=minimal');
     if (variance < -0.01) {
       Notifications.push('manageronly', '⚠️ Cashier Short',
-        `${data.closedBy} is short BZ$${Math.abs(variance).toFixed(2)} on ${data.shiftDate || 'today'}.`).catch(e => console.warn(\'[Notify]\', e));
+        `${data.closedBy} is short BZ$${Math.abs(variance).toFixed(2)} on ${data.shiftDate || 'today'}.`).catch(e => console.warn('[Notify]', e));
     }
     return { success: true, closeId };
   }
