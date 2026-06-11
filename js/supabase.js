@@ -664,7 +664,12 @@ const DayCloses = {
 // ── CUSTOMERS ─────────────────────────────────────────────────────────────────
 const Customers = {
   async list() {
-    return { customers: await sbGet('customers', 'order=name') };
+    const rows = await sbGet('customers', 'order=name');
+    return { customers: rows.map(c => ({
+      name:     c.name,
+      phone:    c.phone,
+      lastSeen: c.last_seen
+    })) };
   },
 
   async save(name, phone) {
