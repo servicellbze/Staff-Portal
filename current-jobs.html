@@ -2095,12 +2095,30 @@
 
         .photo-grid.active { display: grid; }
 
+        /* Processing banner */
+        .photo-processing-banner {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 16px;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+
+        .photo-processing-banner svg { flex-shrink: 0; color: var(--warning); }
+
         .photo-card {
             position: relative;
             border-radius: 16px;
             overflow: hidden;
             aspect-ratio: 4/3;
-            background: var(--glass);
+            background: rgba(var(--primary-rgb),0.06);
             border: 1px solid var(--glass-border);
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -2108,10 +2126,9 @@
 
         .photo-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.18);
         }
 
-        /* Photo fill */
         .photo-card-img {
             width: 100%;
             height: 100%;
@@ -2124,7 +2141,6 @@
             transform: scale(1.04);
         }
 
-        /* No-photo placeholder */
         .photo-card-placeholder {
             width: 100%;
             height: 100%;
@@ -2133,41 +2149,37 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            background: linear-gradient(135deg, rgba(var(--primary-rgb),0.05), rgba(var(--primary-rgb),0.02));
             color: var(--text-light);
         }
 
-        .photo-card-placeholder svg { opacity: 0.35; }
+        .photo-card-placeholder svg { opacity: 0.3; }
 
         .photo-card-placeholder span {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 700;
-            opacity: 0.5;
+            opacity: 0.45;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        /* Bottom overlay — always visible */
+        /* Overlay — always visible, expands on hover */
         .photo-card-overlay {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
-            padding: 36px 14px 12px;
-            transition: padding 0.25s ease;
-        }
-
-        .photo-card:hover .photo-card-overlay {
-            padding: 48px 14px 12px;
+            background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%);
+            padding: 40px 13px 12px;
         }
 
         .photo-card-id {
-            font-size: 0.65rem;
+            font-size: 0.62rem;
             font-weight: 800;
             font-family: monospace;
-            color: rgba(255,255,255,0.6);
-            margin-bottom: 3px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 2px;
         }
 
         .photo-card-device {
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 700;
             color: white;
             white-space: nowrap;
@@ -2176,91 +2188,82 @@
         }
 
         .photo-card-customer {
-            font-size: 0.72rem;
-            color: rgba(255,255,255,0.7);
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.65);
             margin-top: 2px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Expanded detail row — slides up on hover */
+        /* Detail row — hidden by default, slides in on hover */
         .photo-card-details {
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-top: 8px;
+            margin-top: 7px;
             max-height: 0;
             overflow: hidden;
             opacity: 0;
-            transition: max-height 0.25s ease, opacity 0.2s ease;
+            transition: max-height 0.22s ease, opacity 0.18s ease, margin-top 0.2s ease;
         }
 
         .photo-card:hover .photo-card-details {
-            max-height: 40px;
+            max-height: 28px;
             opacity: 1;
         }
 
-        /* Status badge on photo card — uses existing badge colours */
         .photo-card-badge {
-            padding: 3px 9px;
+            padding: 3px 8px;
             border-radius: 99px;
-            font-size: 0.62rem;
+            font-size: 0.6rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.4px;
             flex-shrink: 0;
+            white-space: nowrap;
         }
 
         .photo-card-meta {
-            font-size: 0.68rem;
-            color: rgba(255,255,255,0.55);
+            font-size: 0.67rem;
+            color: rgba(255,255,255,0.5);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Multi-photo dot indicator */
+        /* Multi-photo counter */
         .photo-card-dots {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            gap: 4px;
-        }
-
-        .photo-card-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.7);
+            top: 9px;
+            right: 9px;
         }
 
         .photo-card-dot.more {
-            background: white;
-            width: auto;
-            height: auto;
+            background: rgba(0,0,0,0.55);
+            color: white;
             border-radius: 99px;
             font-size: 0.6rem;
             font-weight: 800;
-            padding: 1px 5px;
+            padding: 2px 7px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         /* Priority pip */
         .photo-card-priority {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            width: 8px;
-            height: 8px;
+            top: 9px;
+            left: 9px;
+            width: 9px;
+            height: 9px;
             border-radius: 50%;
-            border: 1.5px solid rgba(255,255,255,0.6);
+            border: 1.5px solid rgba(255,255,255,0.5);
         }
 
-        .photo-card-priority.high { background: var(--danger); }
-        .photo-card-priority.low  { background: transparent; }
+        .photo-card-priority.high { background: var(--danger); border-color: rgba(255,255,255,0.7); }
+        .photo-card-priority.low  { display: none; }
 
-        /* Empty photo grid state */
         .photo-grid-empty {
             grid-column: 1 / -1;
             text-align: center;
@@ -2269,7 +2272,6 @@
             font-size: 0.9rem;
         }
 
-        /* Responsive photo grid */
         @media (max-width: 1000px) {
             .photo-grid { grid-template-columns: repeat(2, 1fr); }
         }
@@ -2277,6 +2279,7 @@
         @media (max-width: 540px) {
             .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 12px; }
             .photo-card-device { font-size: 0.78rem; }
+            .photo-card-overlay { padding: 32px 10px 10px; }
         }
 
         @media (max-width: 380px) {
@@ -3174,33 +3177,39 @@
                 return;
             }
 
-            grid.innerHTML = jobs.map(j => {
+            // Show processing banner if any jobs have photos (they may still be uploading)
+            const hasAnyPhotos = jobs.some(j => Array.isArray(j.inspectionImages) && j.inspectionImages.filter(Boolean).length > 0);
+            const banner = hasAnyPhotos
+                ? `<div class="photo-processing-banner">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        Some images may still be processing — check again later if a photo appears missing.
+                   </div>`
+                : '';
+
+            const cards = jobs.map(j => {
                 const stat     = classifyStatus(j);
                 const photos   = Array.isArray(j.inspectionImages) ? j.inspectionImages.filter(Boolean) : [];
                 const firstImg = photos[0] || null;
                 const extra    = photos.length > 1 ? photos.length - 1 : 0;
                 const priority = (j.priority || 'low').toLowerCase();
                 const badgeStyle = _photoBadgeStyle[stat.class] || _photoBadgeStyle.received;
-                const techText = j.claimedBy ? `By ${j.claimedBy}` : (j.technician ? j.technician : '');
+                const techText = j.claimedBy ? 'By ' + j.claimedBy : (j.technician || '');
                 const archived = j._archived ? 'opacity:0.55;filter:grayscale(0.4);' : '';
 
                 const imgHtml = firstImg
-                    ? `<img class="photo-card-img" src="${firstImg}" alt="${j.device || 'Device'}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\"photo-card-placeholder\\"><svg width=\\"32\\" height=\\"32\\" viewBox=\\"0 0 24 24\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"1.5\\"><rect x=\\"3\\" y=\\"3\\" width=\\"18\\" height=\\"18\\" rx=\\"2\\"/><circle cx=\\"8.5\\" cy=\\"8.5\\" r=\\"1.5\\"/><polyline points=\\"21 15 16 10 5 21\\"/></svg><span>Image unavailable</span></div>'">`
+                    ? `<img class="photo-card-img" src="${firstImg}" alt="" loading="lazy">`
                     : `<div class="photo-card-placeholder">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                             <span>No photos</span>
-                        </div>`;
+                       </div>`;
 
                 const dotsHtml = extra > 0
-                    ? `<div class="photo-card-dots">
-                            <span class="photo-card-dot more">+${extra}</span>
-                        </div>`
+                    ? `<div class="photo-card-dots"><span class="photo-card-dot more">+${extra}</span></div>`
                     : '';
 
-                return `
-                <div class="photo-card" style="${archived}" onclick="openViewModal('${j.id}')">
+                return `<div class="photo-card" style="${archived}" onclick="openViewModal('${j.id}')">
                     ${imgHtml}
-                    <div class="photo-card-priority ${priority}"></div>
+                    ${priority === 'high' ? '<div class="photo-card-priority high"></div>' : ''}
                     ${dotsHtml}
                     <div class="photo-card-overlay">
                         <div class="photo-card-id">#${j.id}</div>
@@ -3208,11 +3217,13 @@
                         <div class="photo-card-customer">${j.customerName || 'Walk-in'}</div>
                         <div class="photo-card-details">
                             <span class="photo-card-badge" style="${badgeStyle}">${stat.label}</span>
-                            ${techText ? `<span class="photo-card-meta">${techText}</span>` : ''}
+                            ${techText ? '<span class="photo-card-meta">' + techText + '</span>' : ''}
                         </div>
                     </div>
                 </div>`;
             }).join('');
+
+            grid.innerHTML = banner + cards;
         }
 
         async function toggleArchiveView() {
