@@ -140,8 +140,8 @@ const Jobs = {
       inspection:       data.inspection || 'No damage noted'
     }, 'return=minimal');
     await Customers.save(data.customerName, data.customerPhone);
-    await Notifications.push('received', '📦 New Job Received',
-      `Job #${id} — ${data.device} for ${data.customerName}`);
+    Notifications.push('received', '📦 New Job Received',
+      `Job #${id} — ${data.device} for ${data.customerName}`).catch(e => console.warn('[Notify]', e));
     return { success: true };
   },
 
@@ -166,11 +166,11 @@ const Jobs = {
     await sbPatch('jobs', `id=eq.${id}`, patch);
 
     if (updates.status === 'ready') {
-      await Notifications.push('ready', '✅ Device Ready for Pickup', `Job #${id} is ready for pickup.`);
+      Notifications.push('ready', '✅ Device Ready for Pickup', `Job #${id} is ready for pickup.`).catch(e => console.warn('[Notify]', e));
     } else if (updates.status === 'abandoned') {
-      await Notifications.push('abandoned', '⚠️ Abandoned Device', `Job #${id} has been marked abandoned.`);
+      Notifications.push('abandoned', '⚠️ Abandoned Device', `Job #${id} has been marked abandoned.`).catch(e => console.warn('[Notify]', e));
     } else if (updates.status) {
-      await Notifications.push('jobstatus', '🔧 Job Status Updated', `Job #${id} is now: ${updates.status}.`);
+      Notifications.push('jobstatus', '🔧 Job Status Updated', `Job #${id} is now: ${updates.status}.`).catch(e => console.warn('[Notify]', e));
     }
     return { success: true };
   },
@@ -267,7 +267,7 @@ const SpecialOrders = {
       phone:          data.phone || '',
       requested_by:   data.requestedBy || 'Unknown'
     }, 'return=minimal');
-    await Notifications.push('specialorder', '🛒 New Special Order', `${data.requestedBy} requested: ${data.item}`);
+    Notifications.push('specialorder', '🛒 New Special Order', `${data.requestedBy} requested: ${data.item}`).catch(e => console.warn('[Notify]', e));
     return { success: true, orderNumber, status: 'Pending', dateRequested: now };
   },
 
@@ -383,9 +383,9 @@ const Inventory = {
     await Inventory._logMovement(data.sku, item.name, type, adj, item.qty, newQty, data.jobId || '', data.reason || '', data.updatedBy || 'Unknown');
 
     if (newQty <= 0) {
-      await Notifications.push('manageronly', `🔴 Out of Stock: ${item.name}`, `${item.name} is now out of stock.`);
+      Notifications.push('manageronly', `🔴 Out of Stock: ${item.name}`, `${item.name} is now out of stock.`).catch(e => console.warn('[Notify]', e));
     } else if (newQty <= item.min_qty) {
-      await Notifications.push('manageronly', `🟡 Low Stock: ${item.name}`, `${item.name} has only ${newQty} units left (min: ${item.min_qty}).`);
+      Notifications.push('manageronly', `🟡 Low Stock: ${item.name}`, `${item.name} has only ${newQty} units left (min: ${item.min_qty}).`).catch(e => console.warn('[Notify]', e));
     }
     return { success: true, sku: data.sku, newQty, qtyBefore: item.qty };
   },
@@ -544,8 +544,8 @@ const Payouts = {
       reason:     data.reason
     }, 'return=minimal');
     await Audit.log('PAYOUT_CREATE', `${data.loggedBy} | ${payoutId} | BZ$${Number(data.amount).toFixed(2)}`);
-    await Notifications.push('manageronly', '💸 Payout Logged',
-      `${data.loggedBy} logged a BZ$${Number(data.amount).toFixed(2)} payout: ${data.reason}`);
+    Notifications.push('manageronly', '💸 Payout Logged',
+      `${data.loggedBy} logged a BZ$${Number(data.amount).toFixed(2)} payout: ${data.reason}`).catch(e => console.warn(\'[Notify]\', e));
     return { success: true, payoutId };
   }
 };
@@ -654,8 +654,8 @@ const DayCloses = {
       float:         Number(data.float) || 0
     }, 'return=minimal');
     if (variance < -0.01) {
-      await Notifications.push('manageronly', '⚠️ Cashier Short',
-        `${data.closedBy} is short BZ$${Math.abs(variance).toFixed(2)} on ${data.shiftDate || 'today'}.`);
+      Notifications.push('manageronly', '⚠️ Cashier Short',
+        `${data.closedBy} is short BZ$${Math.abs(variance).toFixed(2)} on ${data.shiftDate || 'today'}.`).catch(e => console.warn(\'[Notify]\', e));
     }
     return { success: true, closeId };
   }
