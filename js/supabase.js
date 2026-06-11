@@ -180,6 +180,26 @@ const Jobs = {
     return { success: true };
   },
 
+  async addImage(repairId, url) {
+    if (!repairId || !url) return { success: false, error: 'repairId and url required' };
+    const rows = await sbGet('jobs', `id=eq.${repairId}&select=inspection_images`);
+    if (!rows.length) return { success: false, error: 'Job not found' };
+    const current = rows[0].inspection_images || '';
+    const updated = current ? current + ',' + url : url;
+    await sbPatch('jobs', `id=eq.${repairId}`, { inspection_images: updated, updated_at: new Date().toISOString() });
+    return { success: true, url };
+  },
+
+  async removeImage(repairId, imageUrl) {
+    if (!repairId || !imageUrl) return { success: false, error: 'repairId and imageUrl required' };
+    const rows = await sbGet('jobs', `id=eq.${repairId}&select=inspection_images`);
+    if (!rows.length) return { success: false, error: 'Job not found' };
+    const current = rows[0].inspection_images || '';
+    const updated = current.split(',').map(s => s.trim()).filter(u => u && u !== imageUrl.trim()).join(',');
+    await sbPatch('jobs', `id=eq.${repairId}`, { inspection_images: updated, updated_at: new Date().toISOString() });
+    return { success: true };
+  },
+
   async claim(id, username, role) {
     const allowed = ['manager', 'technician'];
     if (!allowed.includes(role)) return { success: false, error: 'Only managers and technicians can claim jobs' };
@@ -796,6 +816,8 @@ async function handleAction(action, id, data) {
     case 'claimjob':       return Jobs.claim(id, data.username, data.role);
     case 'unclaim':        return Jobs.unclaim(id, data.username);
     case 'markcalled':     return Jobs.markCalled(id, data.username, data.callNotes);
+    case 'addimage':       return Jobs.addImage(data.repairId || id, data.url || data.imageUrl);
+    case 'removeimage':    return Jobs.removeImage(data.repairId || id, data.imageUrl);
 
     case 'listorders':     return SpecialOrders.list();
     case 'createorder':    return SpecialOrders.create(data);
