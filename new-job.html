@@ -35,10 +35,18 @@
             min-height: 100vh;
         }
 
+        /* ── Background depth blobs ── */
+        .bg-blobs { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
+        .bg-blob { position:absolute;border-radius:50%;filter:blur(90px);opacity:0.35; }
+        .bg-blob-1 { width:500px;height:500px;background:rgba(var(--primary-rgb),0.18);top:-120px;left:-100px; }
+        .bg-blob-2 { width:400px;height:400px;background:rgba(16,185,129,0.12);bottom:10%;right:-80px; }
+        .bg-blob-3 { width:300px;height:300px;background:rgba(245,158,11,0.09);top:50%;left:55%; }
+
         main {
             max-width: 780px;
             margin: 0 auto;
             padding: calc(56px + var(--space-xl)) var(--space-sm) var(--space-xl);
+            position:relative; z-index:1;
         }
 
         .page-header {
@@ -64,7 +72,7 @@
         .card {
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
+            border-radius: 20px;
             padding: var(--space-lg);
             box-shadow: var(--shadow-md);
             margin-bottom: var(--space-sm);
@@ -97,7 +105,7 @@
             width: 34px;
             height: 34px;
             border-radius: var(--radius-sm);
-            background: rgba(37, 99, 235, 0.08);
+            background: rgba(var(--primary-rgb), 0.08);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -106,11 +114,10 @@
         }
 
         .card-title {
-            font-size: 0.75rem;
+            font-size: 0.88rem;
             font-weight: var(--font-bold);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--primary);
+            color: var(--text-main);
+            letter-spacing: -0.1px;
         }
 
         .card-subtitle {
@@ -155,11 +162,10 @@
         }
 
         .form-group label {
-            font-size: 0.75rem;
-            font-weight: var(--font-bold);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-dim);
+            letter-spacing: 0.2px;
         }
 
         .form-input,
@@ -167,7 +173,7 @@
             width: 100%;
             padding: 0.85rem 1rem;
             border-radius: var(--radius-sm);
-            border: 1.5px solid rgba(37, 99, 235, 0.12);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.12);
             background: var(--white-alt);
             font-family: var(--font-family);
             font-size: 0.95rem;
@@ -180,7 +186,7 @@
             outline: none;
             border-color: var(--primary);
             background: var(--white-alt);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
         }
 
         .form-input::placeholder,
@@ -264,7 +270,7 @@
         .status-pill label:hover {
             border-color: var(--primary);
             color: var(--primary);
-            background: rgba(37, 99, 235, 0.04);
+            background: rgba(var(--primary-rgb), 0.04);
             transform: translateY(-1px);
         }
 
@@ -299,8 +305,8 @@
         }
 
         .status-pill.testing input:checked+label {
-            background: #e1ed8b;
-            border-color: #b2b40e;
+            background: #059669;
+            border-color: #059669;
             box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
         }
 
@@ -432,7 +438,7 @@
         }
 
         .success-banner .success-icon {
-            font-size: 3rem;
+            display:flex;align-items:center;justify-content:center;
             margin-bottom: 8px;
         }
 
@@ -444,8 +450,8 @@
 
         .repair-id-tag {
             display: inline-block;
-            background: rgba(37, 99, 235, 0.07);
-            border: 1.5px solid rgba(37, 99, 235, 0.2);
+            background: rgba(var(--primary-rgb), 0.07);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.2);
             border-radius: var(--radius-sm);
             padding: 10px 24px;
             font-size: 1.6rem;
@@ -814,7 +820,7 @@
         .completion-mode-pill label:hover {
             border-color: var(--primary);
             color: var(--primary);
-            background: rgba(37, 99, 235, 0.04);
+            background: rgba(var(--primary-rgb), 0.04);
             transform: translateY(-1px);
         }
 
@@ -822,7 +828,7 @@
             background: var(--primary);
             border-color: var(--primary);
             color: #fff;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
             transform: translateY(-1px);
         }
 
@@ -895,10 +901,9 @@
         .checklist-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--glass-border); transition: background 0.15s; border-radius: 8px; padding-left: 8px; padding-right: 8px; }
         .checklist-item:last-child { border-bottom: none; }
         .checklist-item input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--danger); cursor: pointer; flex-shrink: 0; }
-        .checklist-item label { font-size: 0.9rem; font-weight: 600; color: var(--success); cursor: pointer; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; }
-        .checklist-item label::before { content: '✅'; font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
-        .checklist-item input:checked + label { color: var(--danger); }
-        .checklist-item input:checked + label::before { content: '❌'; }
+        .checklist-item label { font-size: 0.9rem; font-weight: 600; color: var(--text-main); cursor: pointer; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; }
+        .checklist-item label::before { content: ''; display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--success); background: rgba(16,185,129,0.1); flex-shrink: 0; margin-top: 3px; transition: all 0.15s; }
+        .checklist-item input:checked + label::before { background: var(--danger); border-color: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
         .checklist-item label span { display: block; font-size: 0.75rem; font-weight: 400; color: var(--text-dim); margin-top: 2px; }
         .checklist-other { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
         .checklist-other input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
@@ -919,21 +924,36 @@
 </head>
 
 <body>
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="bg-blob bg-blob-1"></div>
+        <div class="bg-blob bg-blob-2"></div>
+        <div class="bg-blob bg-blob-3"></div>
+    </div>
     <div id="nav-placeholder"></div>
     <main>
         <div class="page-header">
-            <h1>🔧 New Repair Job</h1>
+            <h1>
+                    <span style="width:36px;height:36px;border-radius:10px;background:rgba(var(--primary-rgb),0.1);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    </span>
+                    New Repair Job
+                </h1>
             <p>Log a new device repair. Customer info is stored in the Customers sheet.</p>
         </div>
 
         <!-- Success Banner -->
         <div class="success-banner" id="successBanner">
-            <div class="success-icon">✅</div>
+            <div class="success-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="20 6 9 17 4 12" stroke-width="2.5"/></svg>
+            </div>
             <h2>Job Logged!</h2>
             <div class="repair-id-tag" id="repairIdDisplay">—</div>
             <p>Added to the spreadsheet including the Customers sheet.</p>
             <div class="success-actions">
-                <button class="btn-print" onclick="openPaperModal()">🖨️ Print Receipt</button>
+                <button class="btn-print" onclick="openPaperModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Print Receipt
+                </button>
                 <button class="btn-new" onclick="resetForm()">+ New Job</button>
                 <a href="index.html" class="btn-dash">← Dashboard</a>
             </div>
@@ -945,7 +965,9 @@
             <!-- Card 1: Repair ID -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon">🔖</div>
+                    <div class="card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    </div>
                     <span class="card-title">Repair ID</span>
                     <span class="card-subtitle">Auto-incremented · editable</span>
                 </div>
@@ -962,7 +984,9 @@
             <!-- Card 2: Customer Info -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon">👤</div>
+                    <div class="card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </div>
                     <span class="card-title">Customer Info</span>
                     <span class="card-subtitle">↑ Sent to Customers sheet</span>
                 </div>
@@ -995,8 +1019,10 @@
             <!-- Card 3: Device & Status -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon">📱</div>
-                    <span class="card-title">Device & Status</span>
+                    <div class="card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                    </div>
+                    <span class="card-title">Device &amp; Status</span>
                     <span class="card-subtitle">↑ Sent to Database</span>
                 </div>
                 <div class="form-row" style="margin-bottom:var(--space-sm)">
@@ -1016,19 +1042,19 @@
                     <div class="job-type-pills">
                         <div class="job-type-pill">
                             <input type="radio" name="jobType" id="jt-backglass" value="Back-Glass Repair" checked>
-                            <label for="jt-backglass">🔧 Back-Glass Repair</label>
+                            <label for="jt-backglass">Back-Glass Repair</label>
                         </div>
                         <div class="job-type-pill">
                             <input type="radio" name="jobType" id="jt-screen" value="Screen Replacement">
-                            <label for="jt-screen">📱 Screen Replacement</label>
+                            <label for="jt-screen">Screen Replacement</label>
                         </div>
                         <div class="job-type-pill">
                             <input type="radio" name="jobType" id="jt-unlock" value="Unlocking">
-                            <label for="jt-unlock">🔓 Unlocking</label>
+                            <label for="jt-unlock">Unlocking</label>
                         </div>
                         <div class="job-type-pill">
                             <input type="radio" name="jobType" id="jt-other" value="other">
-                            <label for="jt-other">✏️ Other…</label>
+                            <label for="jt-other">Other…</label>
                         </div>
                     </div>
                     <input type="text" id="jobTypeOther" class="other-type-input" placeholder="Describe the job type…"
@@ -1039,11 +1065,11 @@
                     <div class="job-type-pills">
                         <div class="job-type-pill">
                             <input type="radio" name="priority" id="pr-low" value="low" checked>
-                            <label for="pr-low" style="border-color:rgba(59,130,246,0.2);">🔵 Low — Normal</label>
+                            <label for="pr-low" style="border-color:rgba(59,130,246,0.2);">Low — Normal</label>
                         </div>
                         <div class="job-type-pill">
                             <input type="radio" name="priority" id="pr-high" value="high">
-                            <label for="pr-high" style="border-color:rgba(239,68,68,0.2);">🔴 High — Urgent</label>
+                            <label for="pr-high" style="border-color:rgba(239,68,68,0.2);">High — Urgent</label>
                         </div>
                     </div>
                 </div>
@@ -1052,19 +1078,19 @@
                     <div class="status-pills">
                         <div class="status-pill received">
                             <input type="radio" name="status" id="s-received" value="received" checked>
-                            <label for="s-received">✅ Received</label>
+                            <label for="s-received">Received</label>
                         </div>
                         <div class="status-pill fixing">
                             <input type="radio" name="status" id="s-fixing" value="fixing">
-                            <label for="s-fixing">🔧 Fixing</label>
+                            <label for="s-fixing">Fixing</label>
                         </div>
                         <div class="status-pill testing">
                             <input type="radio" name="status" id="s-testing" value="testing">
-                            <label for="s-testing">🧪 Testing</label>
+                            <label for="s-testing">Testing</label>
                         </div>
                         <div class="status-pill ready">
                             <input type="radio" name="status" id="s-ready" value="ready">
-                            <label for="s-ready">🎉 Ready</label>
+                            <label for="s-ready">Ready</label>
                         </div>
                     </div>
                     <div class="form-group" style="margin-bottom:0">
@@ -1073,11 +1099,11 @@
                             <div class="completion-mode-pills">
                                 <div class="completion-mode-pill">
                                     <input type="radio" name="completionMode" id="cm-day" value="day" checked>
-                                    <label for="cm-day">📅 Day</label>
+                                    <label for="cm-day">Day</label>
                                 </div>
                                 <div class="completion-mode-pill">
                                     <input type="radio" name="completionMode" id="cm-hour" value="hour">
-                                    <label for="cm-hour">🕐 Hour</label>
+                                    <label for="cm-hour">Hour</label>
                                 </div>
                             </div>
                             <input type="date" id="estimatedCompletion" class="form-input completion-input"
@@ -1093,9 +1119,11 @@
             <!-- Card 4: Device Inspection Checklist -->
             <div class="card">
                 <div class="card-header">
-                    <div class="card-icon">🔍</div>
+                    <div class="card-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
                     <span class="card-title">Device Inspection</span>
-                    <span class="card-subtitle">Note any accessories the customer brought in · 📷 Front &amp; back photos required</span>
+                    <span class="card-subtitle">Note any accessories the customer brought in · Front &amp; back photos required</span>
                 </div>
 
                 <div class="checklist-item">
@@ -1133,8 +1161,9 @@
 
                 <!-- Image Attachments -->
                 <div style="margin-top:16px;">
-                    <button type="button" onclick="openPhotoModal()" style="width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--glass-border);background:none;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
-                        📷 Add Inspection Photos
+                    <button type="button" onclick="openPhotoModal()" style="width:100%;padding:12px;border-radius:12px;border:1.5px dashed var(--glass-border);background:none;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:700;color:var(--text-dim);transition:border-color 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--glass-border)'">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        Add Inspection Photos
                     </button>
                     <div id="photoModalSummary" style="display:none;margin-top:8px;font-size:0.75rem;color:var(--text-dim);"></div>
                 </div>
@@ -1143,10 +1172,14 @@
             <!-- Submit -->
             <div class="submit-area">
                 <button class="btn-submit" id="submitBtn" onclick="submitJob()">
-                    <span class="btn-text">✚ &nbsp;Log Repair Job</span>
+                    <span class="btn-text">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log Repair Job
+                    </span>
                     <div class="btn-spinner"></div>
                 </button>
-                <a href="index.html" class="btn-back">← Back to Dashboard</a>
+                <a href="index.html" class="btn-back">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px;"><polyline points="15 18 9 12 15 6"/></svg>Back to Dashboard
+                </a>
             </div>
 
         </div>
@@ -1160,8 +1193,13 @@
     <div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:20px;">
         <div style="background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.5);scrollbar-width:none;">
             <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--glass-border);position:sticky;top:0;background:var(--glass-strong);z-index:1;">
-                <span style="font-weight:800;font-size:1rem;color:var(--text-main);">📷 Inspection Photos</span>
-                <button onclick="closePhotoModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(100,116,139,0.15);color:var(--text-dim);font-size:1rem;cursor:pointer;">✕</button>
+                <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:1rem;color:var(--text-main);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Inspection Photos
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button onclick="closePhotoModal()" style="width:30px;height:30px;border-radius:50%;border:none;background:rgba(100,116,139,0.15);color:var(--text-dim);font-size:1rem;cursor:pointer;">✕</button>
+                </div>
             </div>
             <div style="padding:18px 22px;display:flex;flex-direction:column;gap:16px;">
                 <p style="font-size:0.82rem;color:var(--text-dim);line-height:1.6;margin:0;">Front and back photos are required. Accessories are optional.</p>
@@ -1169,39 +1207,39 @@
                 <!-- Slot 1: Front -->
                 <div>
                     <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">Front of Device <span style="color:var(--danger);">*</span></div>
-                    <div id="slot-front" onclick="triggerSlot('front')" style="height:120px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('front')">
-                        <span style="font-size:0.82rem;color:var(--text-dim);">📱 Tap to add</span>
+                    <div id="slot-front" onclick="triggerSlot('front')" style="height:180px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('front')">
+                        <span style="font-size:0.82rem;color:var(--text-dim);">Tap to add</span>
                     </div>
                     <input type="file" id="input-front" accept="image/*" style="display:none;" onchange="handleSlot('front',event)">
                     <div style="display:flex;gap:6px;margin-top:6px;">
-                        <button type="button" onclick="triggerSlot('front')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📁 File</button>
-                        <button type="button" onclick="webcamOpen('front')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📷 Camera</button>
+                        <button type="button" onclick="triggerSlot('front')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">File</button>
+                        <button type="button" onclick="webcamOpen('front')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">Camera</button>
                     </div>
                 </div>
 
                 <!-- Slot 2: Back -->
                 <div>
                     <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">Back of Device <span style="color:var(--danger);">*</span></div>
-                    <div id="slot-back" onclick="triggerSlot('back')" style="height:120px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('back')">
-                        <span style="font-size:0.82rem;color:var(--text-dim);">🔙 Tap to add</span>
+                    <div id="slot-back" onclick="triggerSlot('back')" style="height:180px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('back')">
+                        <span style="font-size:0.82rem;color:var(--text-dim);">Tap to add</span>
                     </div>
                     <input type="file" id="input-back" accept="image/*" style="display:none;" onchange="handleSlot('back',event)">
                     <div style="display:flex;gap:6px;margin-top:6px;">
-                        <button type="button" onclick="triggerSlot('back')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📁 File</button>
-                        <button type="button" onclick="webcamOpen('back')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📷 Camera</button>
+                        <button type="button" onclick="triggerSlot('back')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">File</button>
+                        <button type="button" onclick="webcamOpen('back')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">Camera</button>
                     </div>
                 </div>
 
                 <!-- Slot 3: Accessories -->
                 <div>
                     <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);margin-bottom:6px;">Accessories / Other Items <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">(optional)</span></div>
-                    <div id="slot-accessories" onclick="triggerSlot('accessories')" style="height:120px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('accessories')">
-                        <span style="font-size:0.82rem;color:var(--text-dim);">🎒 Tap to add</span>
+                    <div id="slot-accessories" onclick="triggerSlot('accessories')" style="height:180px;border-radius:12px;border:2px dashed var(--glass-border);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="updateSlotBorder('accessories')">
+                        <span style="font-size:0.82rem;color:var(--text-dim);">Tap to add</span>
                     </div>
                     <input type="file" id="input-accessories" accept="image/*" style="display:none;" onchange="handleSlot('accessories',event)">
                     <div style="display:flex;gap:6px;margin-top:6px;">
-                        <button type="button" onclick="triggerSlot('accessories')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📁 File</button>
-                        <button type="button" onclick="webcamOpen('accessories')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">📷 Camera</button>
+                        <button type="button" onclick="triggerSlot('accessories')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">File</button>
+                        <button type="button" onclick="webcamOpen('accessories')" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.75rem;font-weight:700;cursor:pointer;">Camera</button>
                     </div>
                 </div>
 
@@ -1210,14 +1248,14 @@
                     <div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:6px;">Additional Photos <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></div>
                     <div id="slot-extra-grid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
                     <label style="display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:10px;border:1.5px dashed var(--glass-border);cursor:pointer;font-size:0.78rem;font-weight:700;color:var(--text-dim);">
-                        ＋ Add More
+                        + Add More
                         <input type="file" id="input-extra" accept="image/*" multiple style="display:none;" onchange="handleExtraSlot(event)">
                     </label>
                 </div>
             </div>
             <div style="padding:0 22px 22px;display:flex;gap:10px;">
                 <button onclick="closePhotoModal()" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-dim);font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
-                <button onclick="confirmPhotos()" id="photoConfirmBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">✓ Done</button>
+                <button onclick="confirmPhotos()" id="photoConfirmBtn" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Done</button>
             </div>
         </div>
     </div>
@@ -1226,28 +1264,43 @@
     <div id="webcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
         <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);" id="webcamSlotLabel">Taking photo…</div>
         <select id="webcamDeviceSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="webcamSwitchDevice()"></select>
-        <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
-            <video id="webcamVideo" autoplay playsinline style="width:min(90vw,480px);height:min(60vw,320px);object-fit:cover;display:block;"></video>
+        <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);" id="webcamVideoWrap">
+            <video id="webcamVideo" autoplay playsinline style="width:min(90vw,360px);height:min(80vw,480px);object-fit:cover;display:block;transition:width 0.2s,height 0.2s;"></video>
             <canvas id="webcamCanvas" style="display:none;"></canvas>
         </div>
+        <!-- Orientation toggle -->
+        <div style="display:flex;gap:8px;">
+            <button id="orientPortraitBtn" onclick="setWebcamOrientation('portrait')" style="padding:8px 18px;border-radius:99px;border:2px solid rgba(255,255,255,0.8);background:rgba(255,255,255,0.15);color:#fff;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.18s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/></svg>
+                Portrait
+            </button>
+            <button id="orientLandscapeBtn" onclick="setWebcamOrientation('landscape')" style="padding:8px 18px;border-radius:99px;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.18s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+                Landscape
+            </button>
+        </div>
         <div style="display:flex;gap:12px;">
-            <button onclick="webcamSnap()" style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">📸 Snap</button>
+            <button onclick="webcamSnap()" style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">Snap</button>
             <button onclick="webcamClose()" style="padding:14px 24px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
         </div>
         <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);">Tap Snap or press Space</div>
     </div>
     <div class="paper-modal-overlay" id="paperModal">
         <div class="paper-modal-box">
-            <h3>🖨️ Choose Paper Size</h3>
+            <h3>Choose Paper Size</h3>
             <p>Select the paper size for your printer</p>
             <div class="paper-choices">
                 <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
-                    <span class="choice-icon">🧾</span>
+                    <span class="choice-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </span>
                     <span class="choice-label">Receipt Paper</span>
                     <span class="choice-sub">72mm Thermal Roll</span>
                 </button>
                 <button class="paper-choice-btn" onclick="printJobInvoice('regular')">
-                    <span class="choice-icon">📄</span>
+                    <span class="choice-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+                    </span>
                     <span class="choice-label">Regular Paper</span>
                     <span class="choice-sub">A4 / Letter</span>
                 </button>
@@ -1531,6 +1584,8 @@
             label.textContent = labels[slot] || 'Taking photo…';
             overlay.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            // Reset to portrait AFTER overlay is visible so buttons exist in DOM
+            setWebcamOrientation('portrait');
 
             // Enumerate cameras and populate selector
             try {
@@ -1845,6 +1900,28 @@
                 }, 800);
             }, randomDuration);
         });
+    </script>
+
+    <script>
+        // ── Webcam orientation toggle ──────────────────────────────────────
+        let _webcamOrientation = 'portrait'; // default portrait
+        function setWebcamOrientation(mode) {
+            _webcamOrientation = mode;
+            const video = document.getElementById('webcamVideo');
+            const portraitBtn   = document.getElementById('orientPortraitBtn');
+            const landscapeBtn  = document.getElementById('orientLandscapeBtn');
+            const activeStyle   = 'padding:8px 18px;border-radius:99px;border:2px solid rgba(255,255,255,0.8);background:rgba(255,255,255,0.15);color:#fff;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.18s;';
+            const inactiveStyle = 'padding:8px 18px;border-radius:99px;border:2px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.18s;';
+            if (mode === 'portrait') {
+                if (video) { video.style.width = 'min(90vw,360px)'; video.style.height = 'min(80vw,480px)'; }
+                if (portraitBtn)  portraitBtn.style.cssText  = activeStyle;
+                if (landscapeBtn) landscapeBtn.style.cssText = inactiveStyle;
+            } else {
+                if (video) { video.style.width = 'min(90vw,480px)'; video.style.height = 'min(60vw,280px)'; }
+                if (portraitBtn)  portraitBtn.style.cssText  = inactiveStyle;
+                if (landscapeBtn) landscapeBtn.style.cssText = activeStyle;
+            }
+        }
     </script>
 
 </body>
