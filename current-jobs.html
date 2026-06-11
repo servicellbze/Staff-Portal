@@ -3126,6 +3126,8 @@
 
         // ── View Mode ────────────────────────────────────────────────────────
         let _currentView = 'list';
+        let _viewingArchive = false;
+        let archivedJobs = [];
 
         function setView(mode) {
             _currentView = mode;
