@@ -656,9 +656,9 @@ async function submitEOD() {
             await loadAll();
         } else {
             btn.disabled = false; btn.textContent = '\u2713 Submit End of Day';
-            alert('\u274c ' + (data.error || 'Could not submit.'));
+            showToast('❌ ' + (data.error || 'Could not submit.'), 'err');
         }
-    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Submit End of Day'; alert('Connection error.'); }
+    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Submit End of Day'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Shared single-fire print helper ------------------------------------------
@@ -1200,8 +1200,8 @@ async function submitSale() {
             // Store last receipt data for reprinting
             window._lastReceipt = { items, total, amountPaid, method, saleId: data.saleId, customer: '' };
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('\u274c ' + (data.error || 'Could not save.')); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast('❌ ' + (data.error || 'Could not save.'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Reprint Last Receipt -----------------------------------------------------
@@ -1433,8 +1433,8 @@ async function submitJobPickup() {
             );
             
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; alert('\u274c ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Payout --------------------------------------------------------------------
@@ -1470,8 +1470,8 @@ async function submitPayout() {
                 sendNotification('manageronly', '💸 Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
             showToast('Payout logged!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Log Payout'; alert('\u274c ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Log Payout'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = 'Log Payout'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Log Payout'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Bills ---------------------------------------------------------------------
@@ -1573,8 +1573,8 @@ async function submitBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill opened!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Open Bill'; alert('\u274c ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = 'Open Bill'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Edit Bill -----------------------------------------------------------------
@@ -1687,8 +1687,8 @@ async function submitEditBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('\u274c ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Settle Bill ---------------------------------------------------------------
@@ -1768,8 +1768,8 @@ async function submitSettle() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill settled!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Settle'; alert('\u274c ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = 'Settle'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- View Sale -----------------------------------------------------------------
@@ -1910,8 +1910,8 @@ async function submitEditSale() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Sale updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; alert('\u274c ' + (data.error || 'Error')); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; alert('Connection error.'); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ Connection error.', 'err'); }
 }
 
 // -- Reverse Sale --------------------------------------------------------------
@@ -1974,11 +1974,11 @@ async function submitReverse() {
             await loadAll();
         } else {
             btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
-            alert('\u274c ' + (data.error || 'Could not reverse.'));
+            showToast('❌ ' + (data.error || 'Could not reverse.'), 'err');
         }
     } catch (e) {
         btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
-        alert('Connection error.');
+        showToast('❌ Connection error.', 'err');
     }
 }
 

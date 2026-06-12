@@ -27,9 +27,11 @@ async function sbFetch(path, opts = {}) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(`Supabase ${res.status}: ${err.message || err.hint || res.statusText}`);
   }
-  // 204 No Content returns no body
-  if (res.status === 204) return { success: true };
-  return res.json();
+  // 204 No Content, or 201/200 with return=minimal (empty body)
+  if (res.status === 204 || res.status === 201) return { success: true };
+  const text = await res.text();
+  if (!text) return { success: true };
+  return JSON.parse(text);
 }
 
 function sbGet(table, query = '')    { return sbFetch(`${table}?${query}`); }
