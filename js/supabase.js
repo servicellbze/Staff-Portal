@@ -718,7 +718,7 @@ const Notifications = {
     const rows = await sbGet('notifications',
       `type=in.(${allowed.join(',')})&delivered_to=not.cs.{${username}}&order=timestamp.desc&limit=50`
     );
-    return { notifications: rows.map(r => ({ id: r.id, type: r.type, title: r.title, body: r.body })) };
+    return { notifications: rows.map(r => ({ id: r.id, type: r.type, title: r.title, body: r.body, timestamp: r.timestamp })) };
   },
 
   async markDelivered(ids, username) {

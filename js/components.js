@@ -323,7 +323,7 @@ function renderNotifPanel() {
         </div>`;
         return;
     }
-    list.innerHTML = notifs.map(n => `
+    list.innerHTML = notifs.map((n, idx) => `
         <div class="notif-item ${n.read ? '' : 'unread'}">
             <div class="notif-icon">${InAppNotif.typeIcon(n.type)}</div>
             <div class="notif-content">
@@ -331,6 +331,7 @@ function renderNotifPanel() {
                 <div class="notif-body">${n.body}</div>
                 <div class="notif-time">${InAppNotif.timeAgo(n.time)}</div>
             </div>
+            <button class="notif-dismiss" onclick="InAppNotif.dismiss(${idx});renderNotifPanel();" title="Dismiss">✕</button>
         </div>`).join('');
 }
 window.toggleNotifPanel = toggleNotifPanel;
@@ -351,8 +352,10 @@ if (document.readyState === 'loading') {
     }, 800);
 }
 
-// Poll every 30 seconds for new notifications from other devices
-setInterval(() => InAppNotif.syncFromServer(), 30000);
+// Poll every 30 seconds for new notifications — paused when tab is hidden
+setInterval(() => {
+    if (document.visibilityState !== 'hidden') InAppNotif.syncFromServer();
+}, 30000);
 
 // ── Revoke check — runs every 60s ────────────────────────────────────────────
 async function checkRevoked() {
@@ -456,7 +459,7 @@ const InAppNotif = {
                     type:     n.type,
                     title:    n.title,
                     body:     n.body,
-                    time:     Date.now(),
+                    time:     n.timestamp ? new Date(n.timestamp).getTime() : Date.now(),
                     read:     false
                 });
             });
@@ -469,13 +472,12 @@ const InAppNotif = {
                 // Sound is played only via InAppNotif.add() which is called from direct user-triggered events.
             }
 
-            // Mark delivered for THIS user only — use GET params to avoid CORS preflight
-            const deliverParams = new URLSearchParams({
+            // Mark delivered for THIS user via apiPost (Supabase)
+            await apiPost({
                 action: 'markdelivered',
                 username,
                 ids: notifs.map(n => n.id).join(',')
-            });
-            await fetch(url + '?' + deliverParams.toString(), { method: 'POST' });
+            }).catch(() => {});
         } catch (_) {
             // Silent fail — offline or GAS unavailable
         }
@@ -517,9 +519,17 @@ const InAppNotif = {
             specialorder: '🛒',
             update:       '🚀',
             jobstatus:    '🔧',
+            manageronly:  '🔒',
             general:      '🔔'
         };
         return icons[type] || '🔔';
+    },
+
+    dismiss(idx) {
+        const list = this.get();
+        list.splice(idx, 1);
+        localStorage.setItem(this.KEY, JSON.stringify(list));
+        this._updateBadge();
     }
 };
 window.InAppNotif = InAppNotif;
