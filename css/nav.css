@@ -678,6 +678,34 @@ a {
   font-weight: 600;
 }
 
+.notif-dismiss {
+  flex-shrink: 0;
+  align-self: flex-start;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  margin-top: 1px;
+}
+
+.notif-item:hover .notif-dismiss {
+  opacity: 1;
+}
+
+.notif-dismiss:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger);
+}
+
 /* Mobile — panel goes full width */
 @media (max-width: 480px) {
   .notif-panel {
