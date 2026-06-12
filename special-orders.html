@@ -41,7 +41,16 @@
             min-height: 100vh;
         }
 
+        /* ── Background depth blobs ── */
+        .bg-blobs { position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden; }
+        .bg-blob { position:absolute;border-radius:50%;filter:blur(90px);opacity:0.35; }
+        .bg-blob-1 { width:500px;height:500px;background:rgba(var(--primary-rgb),0.18);top:-120px;left:-100px; }
+        .bg-blob-2 { width:400px;height:400px;background:rgba(16,185,129,0.12);bottom:10%;right:-80px; }
+        .bg-blob-3 { width:300px;height:300px;background:rgba(245,158,11,0.09);top:50%;left:55%; }
+
         main {
+            position: relative;
+            z-index: 1;
             max-width: 1100px;
             margin: 0 auto;
             padding: 140px var(--space-md) var(--space-xl);
