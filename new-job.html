@@ -1770,35 +1770,67 @@
         }
 
         // ── Upload inspection images to Google Drive (background) ─────────────
-        async function uploadInspectionImages(repairId) {
-            const images = _inspectionImages.filter(Boolean);
-            if (!images.length) return;
-            for (let i = 0; i < images.length; i++) {
-                try {
-                    const compressed = await compressImage(images[i], 1200, 0.8);
-                    const mimeType   = 'image/jpeg';
-                    const imageData  = compressed.replace(/^data:[^;]+;base64,/, '');
-                    const params = new URLSearchParams();
-                    params.append('action', 'uploadimage');
-                    params.append('repairId', repairId);
-                    params.append('imageData', imageData);
-                    params.append('mimeType', mimeType);
-                    params.append('imageIndex', i + 1);
-                    const result = await apiUpload(params);
-                    // Save the returned Drive URL back to the job record in Supabase
-                    const driveUrl = result && (result.url || result.fileUrl || result.viewUrl);
-                    if (driveUrl) {
-                        await apiPost({ action: 'addimage', repairId, imageUrl: driveUrl }).catch(e => {
-                            console.warn('[Upload] Could not save image URL to job:', e);
-                        });
-                    } else {
-                        console.warn('[Upload] Worker returned no URL for image', i, result);
-                    }
-                } catch (e) {
-                    console.warn('Image upload failed for index ' + i, e);
-                }
+        // ── Upload inspection images to Supabase Storage and link to Database ──
+async function uploadInspectionImages(repairId) {
+    const images = _inspectionImages.filter(Boolean);
+    if (!images.length) return;
+
+    // Mapping slots or indexes to descriptive stages/labels
+    const stages = ['front', 'back', 'accessories'];
+
+    for (let i = 0; i < images.length; i++) {
+        try {
+            // 1. Compress the raw image
+            const compressed = await compressImage(images[i], 1200, 0.8);
+            
+            // 2. Convert base64 DataURL back into a Blob that Supabase Storage accepts
+            const response = await fetch(compressed);
+            const blob = await response.blob();
+
+            // 3. Create a unique, clean filename
+            const stageLabel = stages[i] || `additional-${i}`;
+            const fileName = `job-${repairId}-${stageLabel}-${Date.now()}.jpg`;
+
+            // 4. Upload the image file to your Supabase public bucket
+            const { data: storageData, error: storageError } = await supabase.storage
+                .from('repair-photos')
+                .upload(fileName, blob, { contentType: 'image/jpeg' });
+
+            if (storageError) {
+                console.warn(`[Supabase Storage] Upload failed for index ${i}:`, storageError.message);
+                continue;
             }
+
+            // 5. Retrieve the public web asset URL
+            const { data: publicUrlData } = supabase.storage
+                .from('repair-photos')
+                .getPublicUrl(fileName);
+
+            const publicImageUrl = publicUrlData.publicUrl;
+
+            // 6. Insert the photo entry linked directly to your job id
+            const { error: dbError } = await supabase
+                .from('job_inspection_images')
+                .insert([
+                    { 
+                        job_id: repairId, 
+                        image_url: publicImageUrl, 
+                        stage: stageLabel,
+                        notes: `Logged on ticket creation for item index ${i+1}`
+                    }
+                ]);
+
+            if (dbError) {
+                console.warn(`[Supabase DB] Failed to link image record for index ${i}:`, dbError.message);
+            } else {
+                console.log(`[Supabase] Image ${i+1} (${stageLabel}) uploaded and linked successfully!`);
+            }
+
+        } catch (e) {
+            console.warn('Image upload pipeline failed for index ' + i, e);
         }
+    }
+}
 
         function openPaperModal() {
             document.getElementById('paperModal').classList.add('open');
