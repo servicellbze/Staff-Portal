@@ -5149,22 +5149,24 @@
                 status.textContent = `🗑️ Removing ${toRemove.length} photo${toRemove.length > 1 ? 's' : ''}…`;
 
                 try {
-                    // 1. Fetch current array from your Supabase DB
+                    // 1. Fetch current comma-separated string from the 'jobs' table
                     let { data: job } = await supabase
-                        .from('repairs')
-                        .select('inspectionImages')
+                        .from('jobs')
+                        .select('inspection_images')
                         .eq('id', _peJobId)
                         .single();
 
-                    let currentImages = job.inspectionImages || [];
+                    let currentImages = job.inspection_images
+                        ? String(job.inspection_images).split(',').map(s => s.trim()).filter(Boolean)
+                        : [];
 
-                    // 2. Filter out the marked URLs from the database array
+                    // 2. Filter out the marked URLs
                     currentImages = currentImages.filter(url => !toRemove.includes(url));
 
-                    // 3. Save the updated array back to Supabase DB
+                    // 3. Save back as a comma-separated string (matches Jobs._map format)
                     await supabase
-                        .from('repairs')
-                        .update({ inspectionImages: currentImages })
+                        .from('jobs')
+                        .update({ inspection_images: currentImages.join(',') })
                         .eq('id', _peJobId);
 
                     // 4. Delete the physical image assets from your Supabase storage bucket
@@ -5208,20 +5210,22 @@
 
                     const publicUrl = urlData.publicUrl;
 
-                    // 3. Update the array in your PostgreSQL database
+                    // 3. Update the comma-separated string in the 'jobs' table
                     // Fetch current images first, then append the new one
                     let { data: job } = await supabase
-                        .from('repairs')
-                        .select('inspectionImages')
+                        .from('jobs')
+                        .select('inspection_images')
                         .eq('id', _peJobId)
                         .single();
 
-                    let currentImages = job.inspectionImages || [];
+                    let currentImages = job.inspection_images
+                        ? String(job.inspection_images).split(',').map(s => s.trim()).filter(Boolean)
+                        : [];
                     currentImages.push(publicUrl);
 
                     await supabase
-                        .from('repairs')
-                        .update({ inspectionImages: currentImages })
+                        .from('jobs')
+                        .update({ inspection_images: currentImages.join(',') })
                         .eq('id', _peJobId);
                 }
             }
