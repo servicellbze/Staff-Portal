@@ -11,6 +11,20 @@
 const SUPABASE_URL    = 'https://lakusziubvqhqhrlkdhd.supabase.co';
 const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxha3Vzeml1YnZxaHFocmxrZGhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExODMxMjMsImV4cCI6MjA5Njc1OTEyM30.gPlBwVd3sLmgRT7Dq7MB4vVRyvdaG4-e77wsdGm02pc';       // long JWT from Settings → API
 
+// ── Real Supabase client (needed for Storage uploads — the sbFetch/sbGet helpers
+//    below only cover database tables, not file storage) ─────────────────────
+//    Requires the CDN script tag to be loaded BEFORE this file:
+//    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+//    That tag creates window.supabase as the LIBRARY namespace ({ createClient }).
+//    We immediately overwrite window.supabase with the actual CLIENT INSTANCE,
+//    since the rest of the app (new-job.html, current-jobs.html) calls
+//    supabase.storage.from(...) expecting `supabase` to BE the client.
+if (typeof supabase !== 'undefined' && supabase.createClient) {
+  window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+} else {
+  console.error('[Supabase] SDK not loaded — add the CDN <script> tag before js/supabase.js');
+}
+
 // ── Low-level fetch wrapper ───────────────────────────────────────────────────
 async function sbFetch(path, opts = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
