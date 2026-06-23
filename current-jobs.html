@@ -4164,21 +4164,36 @@
             const imgsSection = document.getElementById('view-images-section');
             const imgsGrid = document.getElementById('view-inspection-images');
             imgsGrid.innerHTML = '';
+
+            // --- CHIP IN: Convert your j.photos string into the array the UI expects ---
+            if (j.photos && (!j.inspectionImages || j.inspectionImages.length === 0)) {
+                const rawPhotos = typeof j.photos === 'string' ? j.photos.split(',') : j.photos;
+                j.inspectionImages = rawPhotos.map(item => {
+                    const trimmed = String(item).trim();
+                    if (!trimmed) return null;
+                    if (trimmed.startsWith('http')) return trimmed;
+
+                    // Encodes "20260622_173053 (1).jpg" safely into the URL string
+                    return `https://lakusziubvqhqhrlkdhd.supabase.co/storage/v1/object/public/repair-photos/${encodeURIComponent(trimmed)}`;
+                }).filter(url => url !== null);
+            }
+
             if (j.inspectionImages && j.inspectionImages.length) {
                 imgsSection.style.display = '';
                 j.inspectionImages.forEach((url, idx) => {
                     const thumb = document.createElement('div');
                     thumb.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--glass-border);cursor:pointer;flex-shrink:0;';
                     thumb.onclick = () => openLightbox(j.inspectionImages, idx);
+
                     const img = document.createElement('img');
                     img.src = url;
                     img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
                     img.onerror = () => { thumb.style.display = 'none'; };
+
                     thumb.appendChild(img);
                     imgsGrid.appendChild(thumb);
                 });
             } else if (j.inspection && j.inspection !== 'No damage noted') {
-                // Job has inspection data but images haven't uploaded yet
                 imgsSection.style.display = '';
                 imgsGrid.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--warning);font-weight:700;padding:6px 0;">⚠️ Photos Pending — still uploading to Drive</div>';
             } else {
