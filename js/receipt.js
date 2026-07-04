@@ -79,6 +79,35 @@ const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis
 const PO_FONT_LINK = RECEIPT_FONT_LINK;
 const QR_LIBRARY = '<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>';
 
+let _cachedLogoDataUrl = null;
+
+function _receiptLogoSrc(fallback) {
+    return _cachedLogoDataUrl || fallback || 'img/logo.png';
+}
+
+function _preloadReceiptLogo() {
+    const img = new Image();
+    img.onload = function() {
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            _cachedLogoDataUrl = canvas.toDataURL('image/png');
+        } catch (_) {}
+    };
+    img.src = new URL('img/logo.png', window.location.href).href;
+}
+
+if (typeof document !== 'undefined') {
+    const _startLogoPreload = function() { _preloadReceiptLogo(); };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _startLogoPreload);
+    } else {
+        _startLogoPreload();
+    }
+}
+
 function _esc(str) {
     if (!str) return '';
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -133,7 +162,7 @@ function buildJobReceiptHTML(j, opts) {
         </table>` :
         `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:7px;">Final cost after diagnostic.</span></div>`;
 
-    const imgSrc = opts.imgSrc || 'img/logo.png';
+    const imgSrc = opts.imgSrc || _receiptLogoSrc();
     
     // Generate QR code URL for job tracking
     const jobId = j.id;
@@ -235,7 +264,7 @@ td { padding:3px 0; border-bottom:1px solid #000; }
 .gst-row td { border-bottom:1px solid #000; font-size:9px; }
 .footer { text-align:center; font-size:9px; margin-top:6px; border-top:1px solid #000; padding-top:4px; line-height:1.6; }
 </style>${RECEIPT_FONT_LINK}
-<img src="img/logo.png" alt="Servicell Belize">
+<img src="${_receiptLogoSrc()}" alt="Servicell Belize">
 <h2>SERVICELL BELIZE</h2>
 <p>#7 Douglas Jones, Belize City</p>
 <p>Tel: +501 615-3388</p>
@@ -465,6 +494,7 @@ function printHTML(htmlContent) {
     function _dispatchPrint() {
         if (useQZ) {
             printReceiptQZ(htmlContent, function() {
+                console.warn('[Print] QZ Tray unavailable — using browser print (slower). Ensure QZ Tray is running.');
                 _windowPrint(htmlContent, _releasePrintLock);
             }).then(function(ok) {
                 if (ok) _releasePrintLock();
@@ -501,6 +531,46 @@ function printHTML(htmlContent) {
     _dispatchPrint();
 }
 
+function _waitForPrintImages(doc, maxMs) {
+    return new Promise(function(resolve) {
+        const images = Array.from(doc.getElementsByTagName('img'));
+        if (!images.length) {
+            resolve();
+            return;
+        }
+
+        let pending = 0;
+        images.forEach(function(img) {
+            if (!img.complete || img.naturalWidth === 0) pending++;
+        });
+
+        if (pending === 0) {
+            resolve();
+            return;
+        }
+
+        let settled = false;
+        function finish() {
+            if (settled) return;
+            settled = true;
+            resolve();
+        }
+
+        function oneDone() {
+            pending--;
+            if (pending <= 0) finish();
+        }
+
+        images.forEach(function(img) {
+            if (img.complete && img.naturalWidth > 0) return;
+            img.addEventListener('load', oneDone, { once: true });
+            img.addEventListener('error', oneDone, { once: true });
+        });
+
+        setTimeout(finish, maxMs);
+    });
+}
+
 function _windowPrint(htmlContent, onDone) {
     const w = window.open('', '_blank', 'width=400,height=600,alwaysRaised=yes');
     if (!w) {
@@ -510,56 +580,23 @@ function _windowPrint(htmlContent, onDone) {
     w.document.write(htmlContent);
     w.document.close();
 
-    let _printed = false;
-    function _doPrint() {
-        if (_printed) return;
-        _printed = true;
+    let printed = false;
+    function triggerPrint() {
+        if (printed) return;
+        printed = true;
         w.focus();
-        w.print();
+        // Defer w.print() so load/timer handlers return immediately (avoids Chrome violation warnings)
         setTimeout(function() {
-            try { w.close(); } catch(_) {}
-            if (typeof onDone === 'function') onDone();
-        }, 600);
+            w.print();
+            setTimeout(function() {
+                try { w.close(); } catch(_) {}
+                if (typeof onDone === 'function') onDone();
+            }, 600);
+        }, 0);
     }
 
     w.addEventListener('load', function() {
-        const images = w.document.getElementsByTagName('img');
-
-        if (images.length === 0) {
-            _doPrint();
-            return;
-        }
-
-        let loadedCount = 0;
-        const totalImages = images.length;
-        let allLoaded = true;
-
-        for (let i = 0; i < images.length; i++) {
-            if (!images[i].complete || images[i].naturalWidth === 0) {
-                allLoaded = false;
-            }
-        }
-
-        if (allLoaded) {
-            _doPrint();
-            return;
-        }
-
-        function checkAllLoaded() {
-            loadedCount++;
-            if (loadedCount >= totalImages) _doPrint();
-        }
-
-        for (let i = 0; i < images.length; i++) {
-            if (images[i].complete && images[i].naturalWidth > 0) {
-                checkAllLoaded();
-            } else {
-                images[i].addEventListener('load', checkAllLoaded);
-                images[i].addEventListener('error', checkAllLoaded);
-            }
-        }
-
-        setTimeout(_doPrint, 2000);
+        _waitForPrintImages(w.document, 400).then(triggerPrint);
     });
 }
 
@@ -650,7 +687,7 @@ function buildJobA4HTML(j, opts) {
            <div class="pi-inspection">${_esc(j.inspection).replace(/;/g, '<br>')}</div>`
         : '';
 
-    const imgSrc = opts.imgSrc || 'img/logo.png';
+    const imgSrc = opts.imgSrc || _receiptLogoSrc();
     
     // Generate QR code URL for job tracking
     const jobId = j.id;

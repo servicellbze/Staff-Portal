@@ -8,9 +8,8 @@ const QZ_PRINTER_NAME = 'LR2000';
 // ESC/POS drawer kick: ESC p 0 25 250
 const DRAWER_KICK_BYTES = '\x1B\x70\x00\x19\xFA';
 
-// Desktop-only guard — drawer not available on mobile/tablet
-const IS_DESKTOP = !(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent))
-                   && window.innerWidth >= 1024;
+// Desktop-only guard — drawer/thermal print not available on mobile/tablet
+const IS_DESKTOP = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
 
 // ── PASTE YOUR private-key.pem CONTENTS HERE ─────────────────────────────────
 // Open private-key.pem in Notepad and paste the full contents below.
