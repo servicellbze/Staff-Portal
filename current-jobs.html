@@ -2222,6 +2222,35 @@
             color: var(--primary);
         }
 
+        .photo-filter-toggle {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 0 12px;
+            height: 46px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .photo-filter-toggle.show { display: inline-flex; }
+
+        .photo-filter-toggle input {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .photo-filter-toggle span { white-space: nowrap; }
+
         /* ── Photo Grid ── */
         .photo-grid {
             display: none;
@@ -2625,6 +2654,10 @@
                     </svg>
                 </button>
             </div>
+            <label id="photoFilterWrap" class="photo-filter-toggle" title="Hide jobs without inspection photos">
+                <input type="checkbox" id="photoHideEmpty" checked onchange="togglePhotoHideEmpty(this.checked)">
+                <span>With photos only</span>
+            </label>
         </div>
 
         <div class="stats-row">
@@ -3298,7 +3331,8 @@
         </div>
     </div>
 
-    <script src="js/components.js"></script>
+    <script src="js/icons.js"></script>
+<script src="js/components.js"></script>
     <script src="js/qz-drawer.js"></script>
     <script src="js/receipt.js"></script>
     <script>
@@ -3318,6 +3352,12 @@
         // ──────────────────────────────────────────────────────────────────────────
 
         let allJobs = [];
+
+        function escH(s) {
+            const d = document.createElement('div');
+            d.textContent = String(s || '');
+            return d.innerHTML;
+        }
         let currentEditId = null;
         let currentViewId = null;
         let currentJobData = {};
@@ -3457,7 +3497,7 @@
                 const priorityClass = (j.priority || 'low').toLowerCase() === 'high' ? 'high' : 'low';
                 const priorityLabel = priorityClass === 'high' ? '🔴 Urgent' : '🔵 Normal';
                 const claimedChip = j.claimedBy
-                    ? `<span class="claimed-chip">🔒 ${j.claimedBy}</span>`
+                    ? `<span class="claimed-chip">🔒 ${escH(j.claimedBy)}</span>`
                     : (stat.class === 'received' ? `<div style="font-size:0.65rem;opacity:0.4;margin-top:2px;">Unclaimed</div>` : '');
 
                 // Call status badge for ready jobs
@@ -3468,8 +3508,9 @@
                         callBadge = '<span class="call-status-badge not-called">📞 Not Called</span>';
                     } else if (callStatus === 'called' && j.calledDate) {
                         const timeAgo = formatTimeAgo(j.calledDate);
-                        const calledBy = j.calledBy || 'Staff';
-                        callBadge = `<span class="call-status-badge called" title="Called by ${calledBy}${j.callNotes ? ': ' + j.callNotes : ''}">✓ Called ${timeAgo}</span>`;
+                        const calledBy = escH(j.calledBy || 'Staff');
+                        const callNotes = j.callNotes ? escH(j.callNotes) : '';
+                        callBadge = `<span class="call-status-badge called" title="Called by ${calledBy}${callNotes ? ': ' + callNotes : ''}">✓ Called ${timeAgo}</span>`;
                     }
                 }
 
@@ -3477,11 +3518,11 @@
         <div class="job-row status-${stat.class}" style="${j._archived ? 'opacity:0.55;filter:grayscale(0.4);' : ''}">
             <div style="font-weight:800;font-family:monospace;color:var(--primary);">#${j.id}</div>
             <div>
-                <div style="font-weight:700;">${j.customerName || 'Walk-in'}</div>
-                <div style="font-size:0.7rem;opacity:0.5;">${j.customerPhone || ''}</div>
+                <div style="font-weight:700;">${escH(j.customerName || 'Walk-in')}</div>
+                <div style="font-size:0.7rem;opacity:0.5;">${escH(j.customerPhone || '')}</div>
                 ${claimedChip}
             </div>
-            <div style="font-size:0.85rem;opacity:0.8;">${j.device || '—'}<br><span style="font-size:0.75rem;opacity:0.6;">${j.issue || ''}</span></div>
+            <div style="font-size:0.85rem;opacity:0.8;">${escH(j.device || '—')}<br><span style="font-size:0.75rem;opacity:0.6;">${escH(j.issue || '')}</span></div>
             <div><span class="job-type-badge">${j.jobType || 'Repair'}</span></div>
             <div><span class="priority-badge ${priorityClass}">${priorityLabel}</span></div>
             <div><span class="status-badge ${stat.class}">${stat.label}</span></div>
@@ -3569,7 +3610,22 @@
         // ── View Mode ────────────────────────────────────────────────────────
         let _currentView = 'list';
         let _viewingArchive = false;
+        let _hidePhotoless = true;
         let archivedJobs = [];
+
+        function jobHasPhotos(j) {
+            if (Array.isArray(j.inspectionImages) && j.inspectionImages.filter(Boolean).length > 0) return true;
+            if (j.photos) {
+                const raw = typeof j.photos === 'string' ? j.photos.split(',') : j.photos;
+                return raw.some(p => p && String(p).trim());
+            }
+            return false;
+        }
+
+        function togglePhotoHideEmpty(checked) {
+            _hidePhotoless = checked;
+            if (_currentView === 'photo') renderPhotoGrid(_filteredJobs);
+        }
 
         function setView(mode) {
             _currentView = mode;
@@ -3579,6 +3635,7 @@
             const jobsPag = document.getElementById('jobsPagination');
             const jobsHdr = document.querySelector('.jobs-header');
             const photoGrid = document.getElementById('photoGrid');
+            const photoFilterWrap = document.getElementById('photoFilterWrap');
 
             if (mode === 'photo') {
                 listBtn.classList.remove('active');
@@ -3587,6 +3644,7 @@
                 jobsPag.style.display = 'none';
                 if (jobsHdr) jobsHdr.style.display = 'none';
                 photoGrid.classList.add('active');
+                if (photoFilterWrap) photoFilterWrap.classList.add('show');
                 renderPhotoGrid(_filteredJobs);
             } else {
                 photoBtn.classList.remove('active');
@@ -3595,6 +3653,7 @@
                 jobsPag.style.display = '';
                 if (jobsHdr) jobsHdr.style.display = '';
                 photoGrid.classList.remove('active');
+                if (photoFilterWrap) photoFilterWrap.classList.remove('show');
             }
         }
 
@@ -3611,13 +3670,18 @@
 
         function renderPhotoGrid(jobs) {
             const grid = document.getElementById('photoGrid');
-            if (!jobs.length) {
-                grid.innerHTML = '<div class="photo-grid-empty">No jobs match your current filter.</div>';
+            let list = jobs;
+            if (_hidePhotoless) list = jobs.filter(jobHasPhotos);
+
+            if (!list.length) {
+                grid.innerHTML = '<div class="photo-grid-empty">' + (jobs.length && _hidePhotoless
+                    ? 'No jobs with photos match your current filter.'
+                    : 'No jobs match your current filter.') + '</div>';
                 return;
             }
 
             // Show processing banner if any jobs have photos (they may still be uploading)
-            const hasAnyPhotos = jobs.some(j => Array.isArray(j.inspectionImages) && j.inspectionImages.filter(Boolean).length > 0);
+            const hasAnyPhotos = list.some(j => jobHasPhotos(j));
             const banner = hasAnyPhotos
                 ? `<div class="photo-processing-banner">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -3625,7 +3689,7 @@
                    </div>`
                 : '';
 
-            const cards = jobs.map(j => {
+            const cards = list.map(j => {
                 const stat = classifyStatus(j);
                 const photos = Array.isArray(j.inspectionImages) ? j.inspectionImages.filter(Boolean) : [];
                 const firstImg = photos[0] || null;
@@ -3652,8 +3716,8 @@
                     ${dotsHtml}
                     <div class="photo-card-overlay">
                         <div class="photo-card-id">#${j.id}</div>
-                        <div class="photo-card-device">${j.device || '—'}</div>
-                        <div class="photo-card-customer">${j.customerName || 'Walk-in'}</div>
+                        <div class="photo-card-device">${escH(j.device || '—')}</div>
+                        <div class="photo-card-customer">${escH(j.customerName || 'Walk-in')}</div>
                         <div class="photo-card-details">
                             <span class="photo-card-badge" style="${badgeStyle}">${stat.label}</span>
                             ${techText ? '<span class="photo-card-meta">' + techText + '</span>' : ''}
@@ -4069,7 +4133,7 @@
             const claimedByEl = document.getElementById('view-claimed-by');
 
             if (j.claimedBy) {
-                claimedByEl.innerHTML = `<span class="claimed-chip">🔒 ${j.claimedBy}</span>`;
+                claimedByEl.innerHTML = `<span class="claimed-chip">🔒 ${escH(j.claimedBy)}</span>`;
                 claimBtn.style.display = 'none';
                 unclaimBtn.style.display = canUnclaim ? '' : 'none';
             } else {
@@ -4155,7 +4219,7 @@
             otherItems.forEach(o => {
                 rows.push(`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:0.85rem;">
                     <span style="font-size:1rem;flex-shrink:0;">❌</span>
-                    <span style="color:var(--danger);font-weight:600;">${o}</span>
+                    <span style="color:var(--danger);font-weight:600;">${escH(o)}</span>
                 </div>`);
             });
             inspEl.innerHTML = rows.join('');
@@ -4195,7 +4259,7 @@
                 });
             } else if (j.inspection && j.inspection !== 'No damage noted') {
                 imgsSection.style.display = '';
-                imgsGrid.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--warning);font-weight:700;padding:6px 0;">⚠️ Photos Pending — still uploading to Drive</div>';
+                imgsGrid.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--warning);font-weight:700;padding:6px 0;">⚠️ Photos still processing — refresh in a moment if they don\'t appear.</div>';
             } else {
                 imgsSection.style.display = 'none';
             }
@@ -4474,27 +4538,29 @@
             if (!images.length) return;
             const status = document.getElementById('editPhotoUploadStatus');
             if (status) { status.style.display = 'block'; status.textContent = `⏳ Uploading ${images.length} photo${images.length > 1 ? 's' : ''}…`; }
-            // Get current image count so we don't overwrite existing ones
-            const job = getJob(repairId);
-            const existingCount = (job && job.inspectionImages) ? job.inspectionImages.length : 0;
+            let uploaded = 0;
             for (let i = 0; i < images.length; i++) {
                 try {
                     const compressed = await compressImageEdit(images[i], 1200, 0.8);
-                    const params = new URLSearchParams({
-                        action: 'uploadimage',
-                        repairId,
-                        imageData: compressed.replace(/^data:[^;]+;base64,/, ''),
-                        mimeType: 'image/jpeg',
-                        imageIndex: existingCount + i + 1
-                    });
-                    const result = await apiUpload(params).catch(e => { console.warn('Edit photo upload error:', e); return null; });
-                    const driveUrl = result && (result.url || result.fileUrl || result.viewUrl);
-                    if (driveUrl) {
-                        await apiPost({ action: 'addimage', repairId, imageUrl: driveUrl }).catch(e => console.warn('[Upload] Could not save image URL:', e));
+                    const blob = await fetch(compressed).then(r => r.blob());
+                    const fileName = `${repairId}/${Date.now()}-${i}.jpg`;
+                    const { error: uploadError } = await supabase.storage
+                        .from('repair-photos')
+                        .upload(fileName, blob, { contentType: 'image/jpeg' });
+                    if (uploadError) {
+                        console.warn('Edit photo upload error:', uploadError.message);
+                        continue;
                     }
+                    const { data: urlData } = supabase.storage.from('repair-photos').getPublicUrl(fileName);
+                    const result = await apiPost({ action: 'addimage', repairId, imageUrl: urlData.publicUrl });
+                    if (result && result.success !== false) uploaded++;
                 } catch (e) { console.warn('Edit photo upload failed', e); }
             }
-            if (status) { status.textContent = `✅ ${images.length} photo${images.length > 1 ? 's' : ''} uploaded`; }
+            if (status) {
+                status.textContent = uploaded
+                    ? `✅ ${uploaded} photo${uploaded > 1 ? 's' : ''} uploaded`
+                    : '⚠️ Upload failed — try again or use Edit Photos';
+            }
             _editPhotos = [];
         }
 
@@ -5186,7 +5252,8 @@
 
                     // 4. Delete the physical image assets from your Supabase storage bucket
                     for (const url of toRemove) {
-                        const filePath = url.split('/storage/v1/object/public/repair-photos/')[1];
+                        const rawPath = url.split('/storage/v1/object/public/repair-photos/')[1];
+                        const filePath = rawPath ? decodeURIComponent(rawPath) : '';
                         if (filePath) {
                             await supabase.storage
                                 .from('repair-photos')
@@ -5203,15 +5270,16 @@
                 const j = getJob(_peJobId);
                 const existingCount = j && j.inspectionImages ? j.inspectionImages.filter(u => !toRemove.includes(u)).length : 0;
                 status.textContent = `⏳ Uploading ${newPhotos.length} photo${newPhotos.length > 1 ? 's' : ''}…`;
-                //  NEW LOGIC: Uploading directly to Supabase Storage
-                for (let file of _peNewPhotos) {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${_peJobId}/${Date.now()}.${fileExt}`; // Unique path per repair
+                // Upload base64 previews (from file picker / webcam) to Supabase Storage
+                for (const dataUrl of newPhotos) {
+                    const compressed = await _peCompress(dataUrl, 1200, 0.8);
+                    const blob = await fetch(compressed).then(r => r.blob());
+                    const fileName = `${_peJobId}/${Date.now()}.jpg`;
 
                     // 1. Upload file to Supabase bucket
-                    const { data: uploadData, error: uploadError } = await supabase.storage
+                    const { error: uploadError } = await supabase.storage
                         .from('repair-photos')
-                        .upload(fileName, file);
+                        .upload(fileName, blob, { contentType: 'image/jpeg' });
 
                     if (uploadError) {
                         console.error("Upload failed:", uploadError.message);

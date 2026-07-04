@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="js/theme-init.js"></script>
@@ -24,19 +24,38 @@
         body { font-family: var(--font-family); background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; }
         main { max-width: 1200px; margin: 0 auto; padding: 130px var(--space-md) var(--space-xl); }
 
-        /* ── Page header ── */
+        /* -- Page header -- */
         .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: var(--space-lg); animation: fadeInUp 0.4s ease both; flex-wrap: wrap; }
         .page-header-left h1 { font-size: 1.9rem; font-weight: var(--font-bold); letter-spacing: -0.5px; }
         .page-header-left p { color: var(--text-dim); font-size: 0.92rem; margin-top: 4px; }
         .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-        /* ── Buttons ── */
+        /* -- Buttons -- */
         .btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 11px 20px; background: var(--primary); color: white; border: none; border-radius: var(--radius-full); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: var(--shadow-md); transition: transform var(--transition-fast), box-shadow var(--transition-fast); white-space: nowrap; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
         .btn-secondary { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; background: var(--glass); color: var(--text-main); border: 1px solid var(--glass-border); border-radius: var(--radius-full); font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px); transition: border-color var(--transition-fast), background var(--transition-fast); white-space: nowrap; }
-        .btn-secondary:hover { border-color: var(--primary); background: rgba(37,99,235,0.06); }
+        .btn-secondary:hover { border-color: var(--primary); background: rgba(var(--primary-rgb), 0.06); }
 
-        /* ── Stats row ── */
+        /* -- Inventory check banner -- */
+        .inv-check-banner { display: none; margin-bottom: 16px; padding: 14px 18px; border-radius: 14px; border: 1px solid rgba(var(--primary-rgb), 0.25); background: rgba(var(--primary-rgb), 0.06); font-size: 0.85rem; line-height: 1.6; }
+        .inv-check-banner-inner { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .inv-check-banner-body { flex: 1; min-width: 200px; }
+        .inv-check-banner-title { font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+        .inv-check-banner-msg { color: var(--text-dim); }
+        .inv-check-banner-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+        .inv-check-dismiss { background: none; border: none; cursor: pointer; color: var(--text-dim); padding: 2px 6px; display: flex; align-items: center; }
+
+        /* -- Bulk edit -- */
+        .bulk-bar { display: none; align-items: center; gap: 10px; margin-bottom: 12px; padding: 10px 16px; background: rgba(var(--primary-rgb), 0.08); border: 1px solid rgba(var(--primary-rgb), 0.2); border-radius: var(--radius-full); font-size: 0.82rem; animation: fadeInUp 0.2s ease both; }
+        .bulk-bar.show { display: flex; flex-wrap: wrap; }
+        .bulk-count { font-weight: 700; color: var(--primary); flex: 1; min-width: 120px; }
+        .inv-table-wrap.bulk-mode .inv-header,
+        .inv-table-wrap.bulk-mode .inv-row { grid-template-columns: 36px 2fr 1fr 80px 110px 160px 80px; }
+        .inv-col-bulk { display: flex; align-items: center; justify-content: center; }
+        .inv-col-bulk input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+        .inv-row.selected { background: rgba(var(--primary-rgb), 0.06); }
+
+        /* -- Stats row -- */
         .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: var(--space-lg); animation: fadeInUp 0.4s ease 0.05s both; }
         .stat-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 18px 20px; }
         .stat-label { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 8px; }
@@ -46,7 +65,7 @@
         .stat-card.warning .stat-value { color: var(--warning); }
         .stat-card.success .stat-value { color: var(--success); }
 
-        /* ── Toolbar ── */
+        /* -- Toolbar -- */
         .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; animation: fadeInUp 0.4s ease 0.08s both; }
         .search-wrap { flex: 1; position: relative; min-width: 220px; }
         .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; pointer-events: none; opacity: 0.5; }
@@ -56,12 +75,12 @@
         .filter-select { height: 46px; padding: 0 36px 0 14px; border-radius: var(--radius-full); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.88rem; font-weight: 600; cursor: pointer; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; transition: border-color var(--transition-fast); }
         .filter-select:focus { border-color: var(--primary); }
 
-        /* ── Scan indicator ── */
+        /* -- Scan indicator -- */
         .scan-indicator { display: none; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; color: #059669; animation: fadeInUp 0.2s ease both; }
         .scan-indicator.show { display: flex; }
         .scan-pulse { width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse 1s infinite; }
 
-        /* ── Inventory table ── */
+        /* -- Inventory table -- */
         .inv-section { animation: fadeInUp 0.4s ease 0.1s both; }
         .inv-table-wrap { background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-md); backdrop-filter: blur(10px); overflow: hidden; }
         .inv-header { display: grid; grid-template-columns: 2fr 1fr 80px 110px 160px 80px; padding: 14px 20px; border-bottom: 1px solid var(--glass-border); font-size: 0.68rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; background: rgba(255,255,255,0.02); }
@@ -82,14 +101,14 @@
 
         .item-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
         .item-sku { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; font-family: monospace; }
-        .category-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.68rem; font-weight: 700; background: rgba(37,99,235,0.1); color: var(--primary); }
+        .category-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: var(--radius-full); font-size: 0.68rem; font-weight: 700; background: rgba(var(--primary-rgb), 0.1); color: var(--primary); }
         .qty-cell { font-weight: 800; font-size: 1rem; }
         .qty-cell.low { color: var(--warning); }
         .qty-cell.out { color: var(--danger); }
         .qty-cell.ok { color: var(--success); }
         .price-cell { font-size: 0.88rem; font-weight: 600; color: var(--text-main); }
         .stock-bar-wrap { display: flex; align-items: center; gap: 8px; }
-        /* Stock bar — ensure it fills properly */
+        /* Stock bar ? ensure it fills properly */
         .stock-bar { flex: 1; height: 5px; background: var(--glass-border); border-radius: 3px; overflow: hidden; }
         .stock-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
         .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
@@ -97,15 +116,15 @@
         .row-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
         .row-btn.danger:hover { background: var(--danger); border-color: var(--danger); }
 
-        /* ── Empty / loading ── */
+        /* -- Empty / loading -- */
         .state-box { padding: 48px 24px; text-align: center; }
         .state-box .state-icon { font-size: 2.5rem; margin-bottom: 12px; }
         .state-box p { color: var(--text-dim); font-size: 0.9rem; }
 
-        /* ── Sync bar ── */
+        /* -- Sync bar -- */
         .sync-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); font-size: 0.7rem; font-weight: 700; color: var(--text-dim); animation: fadeInUp 0.4s ease 0.15s both; }
 
-        /* ── Pagination ── */
+        /* -- Pagination -- */
         .pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; padding: 10px 16px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-full); flex-wrap: wrap; }
         .pagination-info { font-size: 0.75rem; font-weight: 700; color: var(--text-dim); white-space: nowrap; }
         .pagination-controls { display: flex; align-items: center; gap: 6px; }
@@ -120,7 +139,7 @@
         .sync-dot.loading { background: var(--warning); }
         .sync-dot.error { background: var(--danger); animation: none; }
 
-        /* ── Modal base ── */
+        /* -- Modal base -- */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: var(--z-modal); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal-card { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); backdrop-filter: blur(20px); padding: 28px 28px 24px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); transform: translateY(16px) scale(0.98); transition: transform 0.25s cubic-bezier(0.175,0.885,0.32,1.275); scrollbar-width: none; }
@@ -132,36 +151,40 @@
         .modal-close:hover { background: rgba(100,116,139,0.2); }
         .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
 
-        /* ── Form ── */
+        /* -- Form -- */
         .form-group { margin-bottom: 14px; }
         .form-group label { display: block; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); margin-bottom: 6px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 11px 14px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass); color: var(--text-main); font-family: var(--font-family); font-size: 0.9rem; outline: none; transition: border-color var(--transition-fast); }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1); }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .form-hint { font-size: 0.72rem; color: var(--text-dim); margin-top: 4px; font-style: italic; }
 
-        /* ── SKU scan field ── */
+        /* -- SKU scan field -- */
         .sku-wrap { position: relative; }
-        .sku-scan-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(37,99,235,0.08); color: var(--primary); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .sku-scan-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(var(--primary-rgb), 0.08); color: var(--primary); font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .sku-scan-btn:hover { background: var(--primary); color: white; }
 
-        /* ── Adjustment modal ── */
+        /* -- Adjustment modal -- */
         .adj-type-pills { display: flex; gap: 8px; margin-bottom: 16px; }
         .adj-pill input[type="radio"] { display: none; }
         .adj-pill label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-full); border: 1.5px solid var(--glass-border); background: var(--glass); font-size: 0.82rem; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: all 0.2s; }
         .adj-pill.add input:checked + label { background: rgba(16,185,129,0.15); border-color: #10b981; color: #059669; }
         .adj-pill.remove input:checked + label { background: rgba(239,68,68,0.12); border-color: var(--danger); color: var(--danger); }
-        .adj-pill.set input:checked + label { background: rgba(37,99,235,0.12); border-color: var(--primary); color: var(--primary); }
+        .adj-pill.set input:checked + label { background: rgba(var(--primary-rgb), 0.12); border-color: var(--primary); color: var(--primary); }
+        .bulk-section-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: var(--primary); margin: 16px 0 10px; padding-top: 14px; border-top: 1px solid var(--glass-border); }
+        .bulk-hint { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+        .bulk-selected-list { max-height: 100px; overflow-y: auto; font-size: 0.75rem; color: var(--text-dim); margin-bottom: 12px; padding: 8px 10px; background: rgba(var(--primary-rgb), 0.04); border: 1px solid var(--glass-border); border-radius: 8px; }
+        .adj-selected-item { margin-top: 8px; padding: 10px 14px; background: rgba(var(--primary-rgb), 0.08); border: 1px solid rgba(var(--primary-rgb), 0.2); border-radius: 10px; font-size: 0.85rem; font-weight: 700; color: var(--primary); }
 
-        /* ── View modal ── */
+        /* -- View modal -- */
         .view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
         .view-field { display: flex; flex-direction: column; gap: 4px; }
         .view-field.full { grid-column: span 2; }
         .view-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); opacity: 0.7; }
         .view-value { font-size: 0.92rem; font-weight: 600; color: var(--text-main); }
 
-        /* ── Movement history ── */
+        /* -- Movement history -- */
         .movement-list { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; }
         .movement-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 10px; font-size: 0.82rem; }
         .movement-icon { font-size: 1rem; flex-shrink: 0; }
@@ -172,7 +195,7 @@
         .movement-qty.in { color: var(--success); }
         .movement-qty.out { color: var(--danger); }
 
-        /* ── Delete confirm ── */
+        /* -- Delete confirm -- */
         .delete-body { text-align: center; padding: 8px 0 4px; }
         .delete-icon { font-size: 2.8rem; margin-bottom: 10px; }
         .delete-info { background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.18); border-radius: var(--radius-sm); padding: 14px 16px; margin: 14px 0 6px; text-align: left; font-size: 0.85rem; }
@@ -184,7 +207,7 @@
         .btn-danger { padding: 11px 24px; border-radius: var(--radius-full); border: none; background: var(--danger); color: white; font-family: var(--font-family); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: transform var(--transition-fast); }
         .btn-danger:hover { transform: translateY(-1px); background: #dc2626; }
 
-        /* ── Camera scan overlay ── */
+        /* -- Camera scan overlay -- */
         .camera-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: calc(var(--z-modal) + 10); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
         .camera-overlay.open { opacity: 1; pointer-events: auto; }
         #cameraFeed { width: min(90vw, 400px); height: min(60vw, 300px); border-radius: 16px; object-fit: cover; border: 2px solid var(--primary); }
@@ -192,11 +215,11 @@
         .camera-hint { color: white; font-size: 0.85rem; font-weight: 600; text-align: center; }
         .camera-close-btn { padding: 10px 24px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-full); color: white; font-family: var(--font-family); font-weight: 700; cursor: pointer; font-size: 0.88rem; }
 
-        /* ── Animations ── */
+        /* -- Animations -- */
         @keyframes fadeInUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
 
-        /* ── Responsive ── */
+        /* -- Responsive -- */
         @media (max-width: 900px) {
             .inv-header { display: none; }
             .inv-table-wrap { background: transparent; border: none; box-shadow: none; }
@@ -227,17 +250,17 @@
             .inv-col-name > div { flex: 1; min-width: 0; }
             .status-badge { white-space: nowrap; flex-shrink: 0; }
 
-            /* Meta strip: category · qty · price */
+            /* Meta strip: category ? qty ? price */
             .inv-col-cat, .inv-col-qty, .inv-col-price { padding: 0 16px 10px; }
-            .inv-col-cat::after  { content: '·'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
-            .inv-col-qty::after  { content: '·'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
+            .inv-col-cat::after  { content: '\00b7'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
+            .inv-col-qty::after  { content: '\00b7'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
             .inv-col-cat, .inv-col-qty, .inv-col-price { display: inline-flex; align-items: center; }
             /* Put cat/qty/price on one line */
             .inv-col-cat  { padding-bottom: 0; }
             .inv-col-qty  { padding-bottom: 0; }
             .inv-col-price { padding-bottom: 10px; }
 
-            /* Hide status col — shown in name row instead */
+            /* Hide status col ? shown in name row instead */
             .inv-col-status { display: none; }
 
             /* Move status badge into name row */
@@ -251,6 +274,10 @@
                 gap: 8px;
             }
             .inv-row .row-btn { width: 36px; height: 36px; border-radius: 10px; font-size: 0.9rem; }
+
+            .inv-table-wrap.bulk-mode .inv-row { position: relative; }
+            .inv-table-wrap.bulk-mode .inv-col-bulk { position: absolute; top: 12px; left: 10px; z-index: 1; }
+            .inv-table-wrap.bulk-mode .inv-col-name { padding-left: 28px !important; }
 
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .form-row, .form-row-3 { grid-template-columns: 1fr; }
@@ -277,42 +304,46 @@
         <!-- Header -->
         <div class="page-header">
             <div class="page-header-left">
-                <h1>📦 Inventory</h1>
+                <h1 data-icon="package">Inventory</h1>
                 <p>Track parts, stock levels, and movements. Scan barcodes to find items instantly.</p>
             </div>
             <div class="header-actions">
-                <button class="btn-secondary" onclick="openCameraScanner()" id="cameraScanBtn">📷 Scan</button>
-                <button class="btn-secondary" onclick="openAdjustModal(null)" id="adjustBtn">± Adjust Stock</button>
-                <button class="btn-secondary" id="importCsvBtn" onclick="document.getElementById('csvFileInput').click()">&#x1F4C2; Import CSV</button>
+                <button class="btn-secondary" onclick="openCameraScanner()" id="cameraScanBtn" data-icon="camera">Scan</button>
+                <button class="btn-secondary" onclick="openAdjustModal(null)" id="adjustBtn" data-icon="plus">Adjust Stock</button>
+                <button class="btn-secondary" id="bulkEditBtn" onclick="openBulkModal()" style="display:none;" data-icon="edit">Bulk Edit</button>
+                <button class="btn-secondary" id="importCsvBtn" onclick="document.getElementById('csvFileInput').click()" data-icon="file">Import CSV</button>
                 <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="handleCSVFile(event)">
-                <button class="btn-primary" id="addItemBtn" onclick="openItemModal(null)" style="display:none;">＋ Add Item</button>
+                <button class="btn-primary" id="addItemBtn" onclick="openItemModal(null)" style="display:none;">+ Add Item</button>
             </div>
         </div>
 
-        <!-- Inventory Accuracy Alert -->
-        <div id="invAccuracyAlert" style="display:none;margin-bottom:16px;padding:14px 18px;border-radius:14px;border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.08);font-size:0.85rem;line-height:1.6;">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-                <div>
-                    <div style="font-weight:800;color:var(--warning);margin-bottom:4px;">⚠️ Inventory Accuracy Warning</div>
-                    <div id="invAccuracyMsg" style="color:var(--text-dim);"></div>
+        <!-- Inventory check reminder -->
+        <div id="invCheckBanner" class="inv-check-banner">
+            <div class="inv-check-banner-inner">
+                <div class="inv-check-banner-body">
+                    <div class="inv-check-banner-title" data-icon="clipboard">Inventory Check</div>
+                    <div id="invCheckMsg" class="inv-check-banner-msg"></div>
                 </div>
-                <button onclick="document.getElementById('invAccuracyAlert').style.display='none'" style="flex-shrink:0;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-dim);padding:2px 6px;">✕</button>
+                <div class="inv-check-banner-actions">
+                    <button class="btn-primary" id="invCheckDoneBtn" onclick="markInventoryCheckDone()" style="padding:8px 16px;font-size:0.78rem;" data-icon="check">Record Check</button>
+                    <button class="inv-check-dismiss" onclick="dismissInventoryCheckBanner()" title="Dismiss for today" data-icon="x" data-icon-size="18" aria-label="Dismiss"></button>
+                </div>
             </div>
         </div>
 
         <!-- Stats -->
         <div class="stats-row" id="statsRow">
-            <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">unique SKUs</div></div>
-            <div class="stat-card warning" id="statLowCard"><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">—</div><div class="stat-sub">below minimum</div></div>
-            <div class="stat-card danger" id="statOutCard"><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">—</div><div class="stat-sub">qty = 0</div></div>
-            <div class="stat-card" id="statValueCard"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">—</div><div class="stat-sub">at cost price</div></div>
+            <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">?</div><div class="stat-sub">unique SKUs</div></div>
+            <div class="stat-card warning" id="statLowCard"><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">?</div><div class="stat-sub">below minimum</div></div>
+            <div class="stat-card danger" id="statOutCard"><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">?</div><div class="stat-sub">qty = 0</div></div>
+            <div class="stat-card" id="statValueCard"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">?</div><div class="stat-sub">at cost price</div></div>
         </div>
 
         <!-- Toolbar -->
         <div class="toolbar">
             <div class="search-wrap">
-                <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search name, SKU, or scan barcode…" oninput="debouncedRender()">
+                <span class="search-icon" data-icon="search" data-icon-size="18"></span>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search name, SKU, or scan barcode?" oninput="debouncedRender()">
             </div>
             <select class="filter-select" id="filterCategory" onchange="renderInventory()">
                 <option value="">All Categories</option>
@@ -325,14 +356,22 @@
             </select>
             <div class="scan-indicator" id="scanIndicator">
                 <div class="scan-pulse"></div>
-                <span id="scanText">Scanning…</span>
+                <span id="scanText">Scanning?</span>
             </div>
+        </div>
+
+        <!-- Bulk selection bar -->
+        <div id="bulkBar" class="bulk-bar">
+            <span class="bulk-count" id="bulkCount">0 selected</span>
+            <button class="btn-primary" onclick="openBulkModal()" style="padding:8px 16px;font-size:0.78rem;" data-icon="edit">Edit Selected</button>
+            <button class="btn-secondary" onclick="clearBulkSelection()" style="padding:8px 16px;font-size:0.78rem;">Clear</button>
         </div>
 
         <!-- Table -->
         <div class="inv-section">
             <div class="inv-table-wrap" id="invTableWrap">
                 <div class="inv-header" id="invHeader">
+                    <div class="inv-col-bulk" id="invBulkHead" style="display:none;"><input type="checkbox" id="bulkSelectPage" title="Select all on page" onchange="toggleBulkSelectPage(this.checked)"></div>
                     <div>Item</div>
                     <div>Category</div>
                     <div>Qty</div>
@@ -341,7 +380,7 @@
                     <div></div>
                 </div>
                 <div id="invBody">
-                    <div class="state-box"><div class="state-icon">⏳</div><p>Loading inventory…</p></div>
+                    <div class="state-box"><div class="state-icon">?</div><p>Loading inventory?</p></div>
                 </div>
             </div>
         </div>
@@ -353,18 +392,18 @@
         <div class="sync-bar">
             <div style="display:flex;align-items:center;gap:8px;">
                 <div class="sync-dot loading" id="syncDot"></div>
-                <span id="syncText">Connecting…</span>
+                <span id="syncText">Connecting?</span>
             </div>
-            <button onclick="loadInventory()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">↻ Refresh</button>
+            <button onclick="loadInventory()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);" data-icon="refresh">Refresh</button>
         </div>
     </main>
 
-    <!-- ── Add/Edit Item Modal ── -->
+    <!-- -- Add/Edit Item Modal -- -->
     <div class="modal-overlay" id="itemModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h2 id="itemModalTitle">➕ Add Item</h2>
-                <button class="modal-close" onclick="closeModal('itemModal')">✕</button>
+                <h2 id="itemModalTitle" data-icon="plus">Add Item</h2>
+                <button class="modal-close" onclick="closeModal('itemModal')" data-icon="x" aria-label="Close"></button>
             </div>
             <div class="form-group">
                 <label>Item Name *</label>
@@ -375,9 +414,9 @@
                     <label>SKU / Barcode *</label>
                     <div class="sku-wrap">
                         <input type="text" id="iSku" placeholder="e.g. SCR-IP14P-BLK or A0123456" style="padding-right:44px;">
-                        <button class="sku-scan-btn" onclick="openCameraScanner('iSku')" title="Scan barcode">⌖</button>
+                        <button class="sku-scan-btn" onclick="openCameraScanner('iSku')" title="Scan barcode" data-icon="camera" data-icon-size="16" aria-label="Scan"></button>
                     </div>
-                    <div class="form-hint">⚠️ Avoid barcodes starting with '0' (use A0123456 instead of 0123456)</div>
+                    <div class="form-hint">Avoid barcodes starting with '0' (use A0123456 instead of 0123456)</div>
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -401,9 +440,9 @@
             </div>
             <div class="form-row-3">
                 <div class="form-group">
-                    <label style="color:var(--text-dim);">Quantity (Qty)</label>
-                    <input type="number" id="iQty" min="0" value="0" disabled style="opacity:0.45;cursor:not-allowed;">
-                    <div class="form-hint">Use the <strong>± Adjust Stock</strong> button to change quantity</div>
+                    <label id="iQtyLabel">Quantity (Qty)</label>
+                    <input type="number" id="iQty" min="0" value="0">
+                    <div class="form-hint">Starting quantity for new items; use Adjust Stock after saving.</div>
                 </div>
                 <div class="form-group">
                     <label>Min Qty (Alert)</label>
@@ -433,11 +472,11 @@
                     <input type="text" id="iCompat" placeholder="e.g. iPhone 14 Pro">
                 </div>
             </div>
-            <!-- hidden supplier field — value preserved for GAS but not shown -->
+            <!-- hidden supplier field ? value preserved for GAS but not shown -->
             <input type="hidden" id="iSupplier" value="">
             <div class="form-group">
                 <label>Notes</label>
-                <input type="text" id="iNotes" placeholder="Any extra details…">
+                <input type="text" id="iNotes" placeholder="Any extra details?">
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal('itemModal')">Cancel</button>
@@ -446,25 +485,25 @@
         </div>
     </div>
 
-    <!-- ── Stock Adjustment Modal ── -->
+    <!-- -- Stock Adjustment Modal -- -->
     <div class="modal-overlay" id="adjustModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h2>± Adjust Stock</h2>
-                <button class="modal-close" onclick="closeModal('adjustModal')">✕</button>
+                <h2 data-icon="plus">Adjust Stock</h2>
+                <button class="modal-close" onclick="closeModal('adjustModal')" data-icon="x" aria-label="Close"></button>
             </div>
             <div class="form-group">
                 <label>Item *</label>
                 <div class="sku-wrap">
-                    <input type="text" id="adjSearch" placeholder="Search name or scan SKU…" oninput="filterAdjItems()" style="padding-right:44px;">
-                    <button class="sku-scan-btn" onclick="focusScanToField('adjSearch')" title="Scan barcode">⌖</button>
+                    <input type="text" id="adjSearch" placeholder="Search name or scan SKU" oninput="filterAdjItems()" style="padding-right:44px;">
+                    <button class="sku-scan-btn" onclick="focusScanToField('adjSearch')" title="Scan barcode" data-icon="camera" data-icon-size="16" aria-label="Scan"></button>
                 </div>
                 <div id="adjItemList" style="margin-top:8px;display:none;"></div>
-                <div id="adjSelectedItem" style="display:none; margin-top:8px; padding:10px 14px; background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2); border-radius:10px; font-size:0.85rem; font-weight:700; color:var(--primary);"></div>
+                <div id="adjSelectedItem" class="adj-selected-item" style="display:none;"></div>
             </div>
             <div class="adj-type-pills">
-                <div class="adj-pill add"><input type="radio" name="adjType" id="adj-add" value="add" checked><label for="adj-add">➕ Add Stock</label></div>
-                <div class="adj-pill remove"><input type="radio" name="adjType" id="adj-remove" value="remove"><label for="adj-remove">➖ Remove</label></div>
+                <div class="adj-pill add"><input type="radio" name="adjType" id="adj-add" value="add" checked><label for="adj-add" data-icon="plus">Add Stock</label></div>
+                <div class="adj-pill remove"><input type="radio" name="adjType" id="adj-remove" value="remove"><label for="adj-remove" data-icon="minus">Remove</label></div>
                 <div class="adj-pill set"><input type="radio" name="adjType" id="adj-set" value="set"><label for="adj-set">= Set Exact</label></div>
             </div>
             <div class="form-row">
@@ -475,7 +514,7 @@
                 </div>
                 <div class="form-group">
                     <label>Linked Job ID</label>
-                    <input type="text" id="adjJobId" placeholder="Optional — e.g. 1042">
+                    <input type="text" id="adjJobId" placeholder="Optional ? e.g. 1042">
                     <div class="form-hint">Link to repair job (optional)</div>
                 </div>
             </div>
@@ -490,37 +529,37 @@
         </div>
     </div>
 
-    <!-- ── View Item Modal ── -->
+    <!-- -- View Item Modal -- -->
     <div class="modal-overlay" id="viewModal" onclick="handleOverlay(event,'viewModal')">
         <div class="modal-card">
             <div class="modal-header">
-                <h2>📋 Item Details</h2>
-                <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+                <h2 data-icon="clipboard">Item Details</h2>
+                <button class="modal-close" onclick="closeModal('viewModal')" data-icon="x" aria-label="Close"></button>
             </div>
             <div id="viewBody"></div>
             <div style="margin-top:16px;">
                 <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:10px;">Recent Movements</div>
                 <div class="movement-list" id="movementList">
-                    <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">Loading…</div>
+                    <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">Loading?</div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal('viewModal')">Close</button>
-                <button class="btn-secondary" onclick="openAdjustFromView()" style="padding:11px 18px;">± Adjust</button>
-                <button class="btn-submit" id="viewEditBtn" onclick="openEditFromView()">✏️ Edit</button>
+                <button class="btn-secondary" onclick="openAdjustFromView()" style="padding:11px 18px;" data-icon="plus">Adjust</button>
+                <button class="btn-submit" id="viewEditBtn" onclick="openEditFromView()" data-icon="edit">Edit</button>
             </div>
         </div>
     </div>
 
-    <!-- ── Delete Confirm Modal ── -->
+    <!-- -- Delete Confirm Modal -- -->
     <div class="modal-overlay" id="deleteModal" onclick="handleOverlay(event,'deleteModal')">
         <div class="modal-card" style="max-width:420px;">
             <div class="modal-header">
-                <h2>🗑️ Delete Item</h2>
-                <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+                <h2 data-icon="trash">Delete Item</h2>
+                <button class="modal-close" onclick="closeModal('deleteModal')" data-icon="x" aria-label="Close"></button>
             </div>
             <div class="delete-body">
-                <div class="delete-icon">⚠️</div>
+                <div class="delete-icon" data-icon="warning"></div>
                 <p style="color:var(--text-dim);font-size:0.9rem;">This will permanently remove the item and all its stock movement history.</p>
                 <div class="delete-info" id="deleteInfo"></div>
             </div>
@@ -531,21 +570,94 @@
         </div>
     </div>
 
-    <!-- ── Camera Scanner Overlay ── -->
+    <!-- -- Bulk Edit Modal -- -->
+    <div class="modal-overlay" id="bulkModal" onclick="handleOverlay(event,'bulkModal')">
+        <div class="modal-card" style="max-width:520px;">
+            <div class="modal-header">
+                <h2 data-icon="edit">Bulk Edit</h2>
+                <button class="modal-close" onclick="closeModal('bulkModal')" data-icon="x" aria-label="Close"></button>
+            </div>
+            <p class="bulk-hint">Leave a field blank to leave it unchanged on selected items. Stock adjustments apply to every selected item.</p>
+            <div class="bulk-selected-list" id="bulkSelectedList"></div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="bulkCategory">
+                    <option value="">? No change ?</option>
+                    <option value="Screens">Screens</option>
+                    <option value="Batteries">Batteries</option>
+                    <option value="Back Glass">Back Glass</option>
+                    <option value="Charging Ports">Charging Ports</option>
+                    <option value="Cameras">Cameras</option>
+                    <option value="Screen Protectors">Screen Protectors</option>
+                    <option value="Cases & Covers">Cases &amp; Covers</option>
+                    <option value="Cables & Chargers">Cables &amp; Chargers</option>
+                    <option value="Earphones & Speakers">Earphones &amp; Speakers</option>
+                    <option value="Buttons & Flex">Buttons &amp; Flex</option>
+                    <option value="Adhesives & Consumables">Adhesives &amp; Consumables</option>
+                    <option value="Tools">Tools</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Min Qty (Alert)</label>
+                    <input type="number" id="bulkMinQty" min="0" placeholder="Leave blank">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="bulkLocation" placeholder="Leave blank">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" id="bulkCostGroup">
+                    <label>Cost Price (BZ$)</label>
+                    <input type="number" id="bulkCost" min="0" step="0.01" placeholder="Leave blank">
+                </div>
+                <div class="form-group">
+                    <label>Sale Price (BZ$)</label>
+                    <input type="number" id="bulkSalePrice" min="0" step="0.01" placeholder="Leave blank">
+                </div>
+            </div>
+            <div class="bulk-section-label">Stock adjustment (optional)</div>
+            <div class="adj-type-pills">
+                <div class="adj-pill"><input type="radio" name="bulkAdjType" id="bulk-adj-none" value="none" checked><label for="bulk-adj-none">None</label></div>
+                <div class="adj-pill add"><input type="radio" name="bulkAdjType" id="bulk-adj-add" value="add"><label for="bulk-adj-add" data-icon="plus">Add</label></div>
+                <div class="adj-pill remove"><input type="radio" name="bulkAdjType" id="bulk-adj-remove" value="remove"><label for="bulk-adj-remove" data-icon="minus">Remove</label></div>
+                <div class="adj-pill set"><input type="radio" name="bulkAdjType" id="bulk-adj-set" value="set"><label for="bulk-adj-set">Set to</label></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="bulkAdjQty" min="0" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Reason</label>
+                    <input type="text" id="bulkAdjReason" placeholder="Bulk adjustment">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('bulkModal')">Cancel</button>
+                <button class="btn-submit" id="bulkSubmitBtn" onclick="submitBulkEdit()">Apply Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- -- Camera Scanner Overlay -- -->
     <div class="camera-overlay" id="cameraOverlay">
         <video id="cameraFeed" autoplay playsinline muted></video>
         <div class="camera-aim"></div>
-        <div class="camera-hint">Point camera at barcode — hold steady</div>
-        <button class="camera-close-btn" onclick="closeCameraScanner()">✕ Cancel</button>
+        <div class="camera-hint">Point camera at barcode ? hold steady</div>
+        <button class="camera-close-btn" onclick="closeCameraScanner()" data-icon="x">Cancel</button>
     </div>
 
     <div id="footer-placeholder"></div>
 
-    <!-- ── CSV Import Modal ── -->
+    <!-- -- CSV Import Modal -- -->
     <div class="modal-overlay" id="csvImportModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);z-index:10001;align-items:center;justify-content:center;padding:20px;">
         <div style="background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:26px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-                <h2 style="font-size:1.05rem;font-weight:800;">&#x1F4C2; Import CSV</h2>
+                <h2 style="font-size:1.05rem;font-weight:800;" data-icon="file">Import CSV</h2>
                 <button onclick="closeCSVModal()" style="width:28px;height:28px;border-radius:50%;border:none;background:rgba(100,116,139,0.1);color:var(--text-dim);cursor:pointer;font-size:0.9rem;">&#x2715;</button>
             </div>
 
@@ -553,7 +665,7 @@
             <div id="csvStep1">
                 <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:16px;">Map your CSV columns to inventory fields. Leave blank to skip a field.</p>
                 <div id="csvMappingGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"></div>
-                <div style="padding:10px 14px;background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.15);border-radius:10px;font-size:0.78rem;color:var(--text-dim);margin-bottom:16px;">
+                <div style="padding:10px 14px;background:rgba(var(--primary-rgb), 0.06);border:1px solid rgba(var(--primary-rgb), 0.15);border-radius:10px;font-size:0.78rem;color:var(--text-dim);margin-bottom:16px;">
                     <strong style="color:var(--primary);">Required:</strong> SKU and Name must be mapped. All others are optional.
                 </div>
                 <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -574,20 +686,36 @@
         </div>
     </div>
 
-    <script src="js/components.js"></script>
+    <script src="js/icons.js"></script>
+<script src="js/components.js"></script>
 
     <script>
     // SCRIPT_URL is provided globally by js/api.js
 
-    // ── Perf: reuse a single element for HTML escaping ────────────────────────
+    // -- Perf: reuse a single element for HTML escaping ------------------------
     const _escDiv = document.createElement('div');
     function escH(s) { _escDiv.textContent = String(s || ''); return _escDiv.innerHTML; }
 
-    // ── Perf: debounce search so it only fires after typing pauses ────────────
+    // -- Perf: debounce search so it only fires after typing pauses ------------
     let _searchTimer = null;
     function debouncedRender() {
         clearTimeout(_searchTimer);
         _searchTimer = setTimeout(renderInventory, 120);
+    }
+
+    function showToast(msg, type) {
+        let el = document.getElementById('invToast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'invToast';
+            el.style.cssText = 'position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(100px);padding:12px 22px;border-radius:99px;font-size:0.88rem;font-weight:600;box-shadow:0 20px 40px rgba(0,0,0,0.35);z-index:99999;transition:transform 0.35s ease;color:#fff;background:#1e293b;';
+            document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.background = type === 'ok' ? '#059669' : type === 'err' ? '#dc2626' : '#1e293b';
+        el.style.transform = 'translateX(-50%) translateY(0)';
+        clearTimeout(el._t);
+        el._t = setTimeout(() => { el.style.transform = 'translateX(-50%) translateY(100px)'; }, 3000);
     }
 
     let allItems     = [];
@@ -600,17 +728,22 @@
     let cameraStream     = null;
     let barcodeDetector  = null;
 
-    // ── Init ──────────────────────────────────────────────────────────────────
+    // -- Init ------------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', () => {
         currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-        isManager   = currentUser.toLowerCase().startsWith('manager');
-        const isCashier = currentUser.toLowerCase().startsWith('cashier');
+        const role = typeof getEffectiveRole === 'function' ? getEffectiveRole(currentUser) : deriveRole(currentUser);
+        isManager = role === 'manager';
+        const isCashier = role === 'cashier';
         window.canDelete = isManager || isCashier;
         loadInventory();
+        updateInventoryCheckBanner();
         initBarcodeScanner();
-        // Cashiers and managers can add items
-        if (isManager || isCashier) {
+        window.canBulkEdit = isManager || isCashier;
+        if (window.canBulkEdit) {
             document.getElementById('addItemBtn').style.display = 'inline-flex';
+            document.getElementById('bulkEditBtn').style.display = 'inline-flex';
+            document.getElementById('invTableWrap').classList.add('bulk-mode');
+            document.getElementById('invBulkHead').style.display = '';
         }
         if (!isManager) {
             const card = document.getElementById('statValueCard');
@@ -622,72 +755,63 @@
         }
     });
 
-    window.addEventListener('sc-back-online', loadInventory);
+    function getShiftDate() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
 
-    // ── Inventory Accuracy Check ──────────────────────────────────────────────
-    function checkInventoryAccuracy(items, movements) {
-        const issues = [];
+    const INV_CHECK_KEY = 'sc_inv_last_check';
+    const INV_CHECK_DISMISS_KEY = 'sc_inv_check_dismiss';
 
-        // 1. No movements in 7+ days
-        const STALE_MS = 7 * 24 * 60 * 60 * 1000;
-        if (movements.length > 0) {
-            const latest = movements.reduce((max, m) => {
-                const t = m.timestamp ? new Date(m.timestamp).getTime() : 0;
-                return t > max ? t : max;
-            }, 0);
-            if (latest && (Date.now() - latest) > STALE_MS) {
-                const days = Math.floor((Date.now() - latest) / 86400000);
-                issues.push(`No stock movements recorded in ${days} days — a manual count is recommended.`);
-            }
-        } else {
-            issues.push('No stock movement history found — inventory counts may not be verified.');
+    function getDaysSinceInventoryCheck() {
+        const last = localStorage.getItem(INV_CHECK_KEY);
+        if (!last) return null;
+        return Math.floor((Date.now() - new Date(last).getTime()) / 86400000);
+    }
+
+    function markInventoryCheckDone() {
+        localStorage.setItem(INV_CHECK_KEY, new Date().toISOString());
+        localStorage.removeItem(INV_CHECK_DISMISS_KEY);
+        updateInventoryCheckBanner();
+        showToast('Inventory check recorded', 'ok');
+        if (typeof haptic === 'function') haptic('success');
+    }
+
+    function dismissInventoryCheckBanner() {
+        localStorage.setItem(INV_CHECK_DISMISS_KEY, getShiftDate());
+        updateInventoryCheckBanner();
+    }
+
+    function updateInventoryCheckBanner() {
+        const banner = document.getElementById('invCheckBanner');
+        const msg    = document.getElementById('invCheckMsg');
+        if (!banner || !msg) return;
+
+        if (localStorage.getItem(INV_CHECK_DISMISS_KEY) === getShiftDate()) {
+            banner.style.display = 'none';
+            return;
         }
 
-        // 2. Discrepancy check — reconstruct expected qty from movements (oldest first)
-        const skuMap = {};
-        const sortedMovements = [...movements].sort((a, b) => {
-            const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-            const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-            return ta - tb;
-        });
-        sortedMovements.forEach(m => {
-            const sku = String(m.sku || '').trim().toLowerCase();
-            if (!sku) return;
-            if (!skuMap[sku]) skuMap[sku] = 0;
-            const qty = parseInt(m.qty) || 0;
-            if (m.type === 'add')         skuMap[sku] += qty;
-            else if (m.type === 'remove') skuMap[sku] -= qty;
-            else if (m.type === 'set')    skuMap[sku]  = qty;
-        });
-        const discrepancies = [];
-        items.forEach(item => {
-            const key      = String(item.sku || '').trim().toLowerCase();
-            const expected = skuMap[key];
-            if (expected === undefined) return;
-            const actual = parseInt(item.qty) || 0;
-            if (Math.abs(actual - expected) > 0) {
-                discrepancies.push(`${item.name} (expected ${expected}, actual ${actual})`);
-            }
-        });
-        if (discrepancies.length > 0) {
-            const shown = discrepancies.slice(0, 3);
-            const extra = discrepancies.length - shown.length;
-            issues.push(`Possible discrepancies detected in: ${shown.join(', ')}${extra > 0 ? ` and ${extra} more` : ''}.`);
+        const days = getDaysSinceInventoryCheck();
+        const isFriday = new Date().getDay() === 5;
+        const shouldShow = isFriday || days === null || days >= 7;
+
+        if (!shouldShow) {
+            banner.style.display = 'none';
+            return;
         }
 
-        const alert = document.getElementById('invAccuracyAlert');
-        const msg   = document.getElementById('invAccuracyMsg');
-        if (issues.length > 0) {
-            msg.innerHTML = issues.map(i => `• ${i}`).join('<br>');
-            alert.style.display = 'block';
+        banner.style.display = 'block';
+        if (days === null) {
+            msg.textContent = 'No inventory check recorded.';
         } else {
-            alert.style.display = 'none';
+            msg.textContent = 'Last inventory check recorded ' + days + ' day' + (days === 1 ? '' : 's') + ' ago.';
         }
     }
 
-    // ── Load ──────────────────────────────────────────────────────────────────
+    // -- Load ------------------------------------------------------------------
     async function loadInventory() {
-        setSyncState('loading', 'Syncing…');
+        setSyncState('loading', 'Syncing?');
         try {
             const [invData, movData] = await Promise.all([
                 apiGet({ action: 'listinventory' }),
@@ -700,18 +824,18 @@
             populateCategoryFilter();
             renderInventory();
             renderStats();
-            checkInventoryAccuracy(allItems, allMovements);
+            updateInventoryCheckBanner();
             setSyncState('ok', 'Last sync: ' + new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }));
         } catch (err) {
             const ci = localStorage.getItem('sc_cache_inventory');
             const cm = localStorage.getItem('sc_cache_movements');
-            if (ci) { allItems = JSON.parse(ci); allMovements = cm ? JSON.parse(cm) : []; populateCategoryFilter(); renderInventory(); renderStats(); setSyncState('error', 'Offline — cached data'); }
-            else { setSyncState('error', 'Sync failed'); document.getElementById('invBody').innerHTML = `<div class="state-box"><div class="state-icon">⚠️</div><p>Could not load inventory.</p></div>`; }
+            if (ci) { allItems = JSON.parse(ci); allMovements = cm ? JSON.parse(cm) : []; populateCategoryFilter(); renderInventory(); renderStats(); setSyncState('error', 'Offline ? cached data'); }
+            else { setSyncState('error', 'Sync failed'); document.getElementById('invBody').innerHTML = `<div class="state-box"><div class="state-icon" data-icon="warning"></div><p>Could not load inventory.</p></div>`; if (typeof initDataIcons === 'function') initDataIcons(document.getElementById('invBody')); }
             console.error(err);
         }
     }
 
-    // ── Stats ─────────────────────────────────────────────────────────────────
+    // -- Stats -----------------------------------------------------------------
     function renderStats() {
         const total = allItems.length;
         const low   = allItems.filter(i => i.qty > 0 && i.qty <= i.minQty).length;
@@ -723,7 +847,7 @@
         document.getElementById('statValue').textContent = 'BZ$' + value.toFixed(2);
     }
 
-    // ── Category filter ───────────────────────────────────────────────────────
+    // -- Category filter -------------------------------------------------------
     function populateCategoryFilter() {
         const cats = [...new Set(allItems.map(i => i.category).filter(Boolean))].sort();
         const sel  = document.getElementById('filterCategory');
@@ -732,7 +856,7 @@
             cats.map(c => `<option value="${c}" ${c === cur ? 'selected' : ''}>${c}</option>`).join('');
     }
 
-    // ── Pagination state ──────────────────────────────────────────────────────
+    // -- Pagination state ------------------------------------------------------
     let _invPage    = 1;
     let _invPerPage = 10;
     let _invDebounceTimer = null;
@@ -742,24 +866,7 @@
     }
 
     function renderInventory() {
-        const q    = document.getElementById('searchInput').value.trim().toLowerCase();
-        const cat  = document.getElementById('filterCategory').value;
-        const stk  = document.getElementById('filterStock').value;
-
-        const filtered = allItems.filter(i => {
-            const matchCat = !cat || i.category === cat;
-            const qty = parseInt(i.qty) || 0;
-            const min = parseInt(i.minQty) || 0;
-            const matchStk = !stk ||
-                (stk === 'out' && qty <= 0) ||
-                (stk === 'low' && qty > 0 && qty <= min) ||
-                (stk === 'ok'  && qty > min);
-            const matchQ = !q ||
-                (i.name   || '').toLowerCase().includes(q) ||
-                (i.sku    || '').toLowerCase().includes(q) ||
-                (i.compat || '').toLowerCase().includes(q);
-            return matchCat && matchStk && matchQ;
-        });
+        const filtered = getFilteredItems();
 
         // Reset to page 1 when filters change
         const totalPages = Math.max(1, Math.ceil(filtered.length / _invPerPage));
@@ -770,8 +877,10 @@
 
         const body = document.getElementById('invBody');
         if (!filtered.length) {
-            body.innerHTML = `<div class="state-box"><div class="state-icon">📭</div><p>${allItems.length ? 'No items match your filters.' : 'No inventory yet. Add your first item!'}</p></div>`;
+            body.innerHTML = `<div class="state-box"><div class="state-icon" data-icon="inbox"></div><p>${allItems.length ? 'No items match your filters.' : 'No inventory yet. Add your first item!'}</p></div>`;
+            if (typeof initDataIcons === 'function') initDataIcons(body);
             document.getElementById('invPagination').style.display = 'none';
+            syncBulkSelectPageCheckbox();
             return;
         }
         body.innerHTML = paged.map(i => buildRow(i)).join('');
@@ -779,9 +888,10 @@
             (p) => { _invPage = p; renderInventory(); },
             (pp) => { _invPerPage = pp; _invPage = 1; renderInventory(); }
         );
+        syncBulkSelectPageCheckbox();
     }
 
-    // ── Reusable pagination renderer ─────────────────────────────────────────
+    // -- Reusable pagination renderer -----------------------------------------
     function renderPagination(containerId, total, page, perPage, onPage, onPerPage) {
         const container  = document.getElementById(containerId);
         if (!container) return;
@@ -791,7 +901,7 @@
         container.style.display = total > 0 ? 'flex' : 'none';
         container.className = 'pagination';
         container.innerHTML =
-            '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
+            '<span class="pagination-info">Showing ' + start + '\u2013' + end + ' of ' + total + '</span>'
             + '<div class="pagination-controls">'
             + '<button class="page-btn" onclick="' + onPage.toString().replace(/"/g,"'") + '" id="' + containerId + '_prev" ' + (page <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
             + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._onPage(p);" style="width:44px;"></input><span>of ' + totalPages + '</span></div>'
@@ -818,19 +928,25 @@
         const rowCls = isOut ? 'out-of-stock' : isLow ? 'low-stock' : '';
         const qtyCls = isOut ? 'out' : isLow ? 'low' : 'ok';
         const sale   = parseFloat(i.salePrice) || 0;
+        const selected = _selectedSkus.has(i.sku) ? ' selected' : '';
 
-        // Stock status badge — use CSS classes instead of inline styles
-        const statusLabel = isOut ? '🔴 Out of Stock' : isLow ? '🟡 Low Stock' : '🟢 In Stock';
+        // Stock status badge
+        const statusLabel = isOut ? 'Out of Stock' : isLow ? 'Low Stock' : 'In Stock';
         const statusCls   = isOut ? 'badge-out' : isLow ? 'badge-low' : 'badge-ok';
 
+        const bulkCol = window.canBulkEdit
+            ? `<div class="inv-col-bulk" onclick="event.stopPropagation()"><input type="checkbox" ${_selectedSkus.has(i.sku) ? 'checked' : ''} onchange="toggleBulkSku('${escH(i.sku)}', this.checked)" aria-label="Select ${escH(i.name || i.sku)}"></div>`
+            : '';
+
         return `
-        <div class="inv-row ${rowCls}" onclick="openViewModal('${escH(i.sku)}')">
+        <div class="inv-row ${rowCls}${selected}" onclick="openViewModal('${escH(i.sku)}')">
+            ${bulkCol}
             <div class="inv-col-name">
-                <div class="item-name">${escH(i.name || '—')}</div>
-                <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
+                <div class="item-name">${escH(i.name || '?')}</div>
+                <div class="item-sku">${escH(i.sku || '?')}${i.compat ? ' ? ' + escH(i.compat) : ''}</div>
             </div>
             <div class="inv-col-cat"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
-            <div class="inv-col-qty"><span class="qty-cell ${qtyCls}">${qty}</span><span class="qty-min"> / ${min}</span></div>
+            <div class="inv-col-qty"><span class="qty-cell ${qtyCls}">${qty}</span><span class="qty-min"> / ${min}</span></div>
             <div class="inv-col-price"><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
             <div class="inv-col-status">
                 <span class="status-badge ${statusCls}">${statusLabel}</span>
@@ -843,17 +959,186 @@
         </div>`;
     }
     let editingSku = null;
+    const _selectedSkus = new Set();
+
+    function updateBulkBar() {
+        const bar = document.getElementById('bulkBar');
+        const countEl = document.getElementById('bulkCount');
+        const n = _selectedSkus.size;
+        if (!bar || !countEl) return;
+        bar.classList.toggle('show', n > 0);
+        countEl.textContent = n + ' item' + (n === 1 ? '' : 's') + ' selected';
+    }
+
+    function toggleBulkSku(sku, checked) {
+        if (checked) _selectedSkus.add(sku);
+        else _selectedSkus.delete(sku);
+        updateBulkBar();
+        syncBulkSelectPageCheckbox();
+    }
+
+    function toggleBulkSelectPage(checked) {
+        const filtered = getFilteredItems();
+        const start = (_invPage - 1) * _invPerPage;
+        const paged = filtered.slice(start, start + _invPerPage);
+        paged.forEach(i => {
+            if (checked) _selectedSkus.add(i.sku);
+            else _selectedSkus.delete(i.sku);
+        });
+        renderInventory();
+        updateBulkBar();
+    }
+
+    function syncBulkSelectPageCheckbox() {
+        const cb = document.getElementById('bulkSelectPage');
+        if (!cb) return;
+        const filtered = getFilteredItems();
+        const start = (_invPage - 1) * _invPerPage;
+        const paged = filtered.slice(start, start + _invPerPage);
+        cb.checked = paged.length > 0 && paged.every(i => _selectedSkus.has(i.sku));
+        cb.indeterminate = !cb.checked && paged.some(i => _selectedSkus.has(i.sku));
+    }
+
+    function clearBulkSelection() {
+        _selectedSkus.clear();
+        const cb = document.getElementById('bulkSelectPage');
+        if (cb) { cb.checked = false; cb.indeterminate = false; }
+        renderInventory();
+        updateBulkBar();
+    }
+
+    function openBulkModal() {
+        const skus = [..._selectedSkus];
+        if (!skus.length) {
+            showToast('Select items to edit first.', 'err');
+            return;
+        }
+        const list = document.getElementById('bulkSelectedList');
+        if (list) {
+            list.textContent = skus.map(s => {
+                const item = allItems.find(i => i.sku === s);
+                return (item?.name || s) + ' (' + s + ')';
+            }).join(' ? ');
+        }
+        document.getElementById('bulkCategory').value = '';
+        document.getElementById('bulkMinQty').value = '';
+        document.getElementById('bulkLocation').value = '';
+        document.getElementById('bulkCost').value = '';
+        document.getElementById('bulkSalePrice').value = '';
+        document.getElementById('bulkAdjQty').value = '';
+        document.getElementById('bulkAdjReason').value = 'Bulk adjustment';
+        document.getElementById('bulk-adj-none').checked = true;
+        const costGroup = document.getElementById('bulkCostGroup');
+        if (costGroup) costGroup.style.display = isManager ? '' : 'none';
+        document.getElementById('bulkSubmitBtn').disabled = false;
+        document.getElementById('bulkSubmitBtn').textContent = 'Apply Changes';
+        openModal('bulkModal');
+        if (typeof initDataIcons === 'function') initDataIcons(document.getElementById('bulkModal'));
+    }
+
+    async function submitBulkEdit() {
+        const skus = [..._selectedSkus];
+        if (!skus.length) return;
+
+        const category  = document.getElementById('bulkCategory').value;
+        const minQtyRaw = document.getElementById('bulkMinQty').value.trim();
+        const location  = document.getElementById('bulkLocation').value.trim();
+        const costRaw   = document.getElementById('bulkCost').value.trim();
+        const saleRaw   = document.getElementById('bulkSalePrice').value.trim();
+        const adjType   = document.querySelector('input[name="bulkAdjType"]:checked')?.value || 'none';
+        const adjQty    = parseFloat(document.getElementById('bulkAdjQty').value) || 0;
+        const adjReason = document.getElementById('bulkAdjReason').value.trim() || 'Bulk adjustment';
+
+        const hasMeta = category || minQtyRaw !== '' || location || saleRaw !== '' || (isManager && costRaw !== '');
+        const hasAdj  = adjType !== 'none' && adjQty > 0;
+        if (!hasMeta && !hasAdj) {
+            alert('Set at least one field to change.');
+            return;
+        }
+
+        const btn = document.getElementById('bulkSubmitBtn');
+        btn.disabled = true;
+        let done = 0, failed = 0;
+        const total = skus.length * ((hasMeta ? 1 : 0) + (hasAdj ? 1 : 0));
+
+        for (const sku of skus) {
+            if (hasMeta) {
+                try {
+                    const payload = { action: 'updateitem', sku, updatedBy: currentUser };
+                    if (category) payload.category = category;
+                    if (minQtyRaw !== '') payload.minQty = minQtyRaw;
+                    if (location) payload.location = location;
+                    if (saleRaw !== '') payload.salePrice = saleRaw;
+                    if (isManager && costRaw !== '') payload.costPrice = costRaw;
+                    const data = await apiPost(payload);
+                    if (data.success) done++; else failed++;
+                } catch (_) { failed++; }
+                btn.textContent = 'Applying? ' + (done + failed) + '/' + total;
+            }
+            if (hasAdj) {
+                try {
+                    const data = await apiPost({
+                        action: 'adjuststock', sku, type: adjType, qty: adjQty,
+                        reason: adjReason, updatedBy: currentUser
+                    });
+                    if (data.success) done++; else failed++;
+                } catch (_) { failed++; }
+                btn.textContent = 'Applying? ' + (done + failed) + '/' + total;
+            }
+        }
+
+        closeModal('bulkModal');
+        clearBulkSelection();
+        haptic('success');
+        showToast(done + ' update' + (done === 1 ? '' : 's') + ' applied' + (failed ? ', ' + failed + ' failed' : '') + '.', failed ? '' : 'ok');
+        await loadInventory();
+    }
+
+    function getFilteredItems() {
+        const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+        const cat = document.getElementById('filterCategory')?.value || '';
+        const stock = document.getElementById('filterStock')?.value || '';
+        return allItems.filter(i => {
+            const matchQ = !q || [i.name, i.sku, i.compat, i.category, i.location].some(f => (f || '').toLowerCase().includes(q));
+            const matchCat = !cat || i.category === cat;
+            const qty = parseInt(i.qty) || 0;
+            const min = parseInt(i.minQty) || 0;
+            let matchStock = true;
+            if (stock === 'low') matchStock = qty > 0 && qty <= min;
+            else if (stock === 'out') matchStock = qty <= 0;
+            else if (stock === 'ok') matchStock = qty > min;
+            return matchQ && matchCat && matchStock;
+        });
+    }
 
     function openItemModal(sku) {
         editingSku = sku;
         const item = sku ? allItems.find(i => i.sku === sku) : null;
-        document.getElementById('itemModalTitle').textContent = item ? '✏️ Edit Item' : '➕ Add Item';
+        const titleEl = document.getElementById('itemModalTitle');
+        if (titleEl) {
+            const label = item ? 'Edit Item' : 'Add Item';
+            const iconName = item ? 'edit' : 'plus';
+            titleEl.innerHTML = (typeof scIcon === 'function' ? scIcon(iconName, 18) + ' ' : '') + label;
+        }
         document.getElementById('iName').value      = item?.name       || '';
         document.getElementById('iSku').value       = item?.sku        || '';
         document.getElementById('iSku').readOnly    = !!item;
         document.getElementById('iCategory').value  = item?.category   || localStorage.getItem('sc_last_category') || 'Screens';
         document.getElementById('iQty').value       = item?.qty        ?? 0;
         document.getElementById('iMinQty').value    = item?.minQty     ?? 1;
+        const qtyField = document.getElementById('iQty');
+        const qtyHint  = qtyField.closest('.form-group')?.querySelector('.form-hint');
+        if (item) {
+            qtyField.disabled = true;
+            qtyField.style.opacity = '0.45';
+            qtyField.style.cursor = 'not-allowed';
+            if (qtyHint) qtyHint.textContent = 'Use the Adjust Stock button to change quantity on existing items.';
+        } else {
+            qtyField.disabled = false;
+            qtyField.style.opacity = '1';
+            qtyField.style.cursor = '';
+            if (qtyHint) qtyHint.textContent = 'Starting quantity for this new item (you can adjust later with ?).';
+        }
         document.getElementById('iLocation').value  = item?.location   || '';
         document.getElementById('iCost').value      = item?.costPrice  || '';
         document.getElementById('iSalePrice').value = item?.salePrice  || '';
@@ -861,7 +1146,7 @@
         document.getElementById('iCompat').value    = item?.compat     || '';
         document.getElementById('iNotes').value     = item?.notes      || '';
 
-        // Cashiers can edit everything except delete — remove field restrictions
+        // Cashiers can edit everything except delete ? remove field restrictions
         const priceFields = ['iCost', 'iSalePrice', 'iMinQty', 'iSupplier'];
         priceFields.forEach(id => {
             document.getElementById(id).readOnly  = false;
@@ -876,14 +1161,14 @@
             costField.closest('.form-group').style.display = isManager ? '' : 'none';
         }
 
-        // Show cashier warning if editing (no longer applicable — only managers edit)
+        // Show cashier warning if editing (no longer applicable ? only managers edit)
         let warn = document.getElementById('cashierEditWarn');
         if (warn) warn.style.display = 'none';
 
         document.getElementById('itemSubmitBtn').disabled    = false;
         document.getElementById('itemSubmitBtn').textContent = item ? 'Save Changes' : 'Save Item';
         openModal('itemModal');
-        setTimeout(() => document.getElementById('iName').focus(), 300);
+        setTimeout(() => (item ? document.getElementById('iName') : qtyField).focus(), 300);
     }
 
     async function submitItem() {
@@ -895,7 +1180,7 @@
             return;
         }
         const btn = document.getElementById('itemSubmitBtn');
-        btn.disabled = true; btn.textContent = 'Saving…';
+        btn.disabled = true; btn.textContent = 'Saving?';
         
         const payload = {
             action:    editingSku ? 'updateitem' : 'createitem',
@@ -941,7 +1226,7 @@
             if (data.success) {
                 // Backend confirmed - remember last used category
                 localStorage.setItem('sc_last_category', payload.category || 'Screens');
-                sendNotification('received', '📦 Inventory Updated', `${name} has been ${editingSku ? 'updated' : 'added'}.`);
+                sendNotification('received', 'Inventory Updated', `${name} has been ${editingSku ? 'updated' : 'added'}.`);
                 await loadInventory(); // Sync with backend
             } else {
                 // REVERT: Backend failed
@@ -952,7 +1237,7 @@
                 }
                 renderInventory();
                 renderStats();
-                alert('❌ ' + (data.error || 'Could not save.'));
+                alert(data.error || 'Could not save.');
                 btn.disabled = false;
                 btn.textContent = editingSku ? 'Save Changes' : 'Save Item';
             }
@@ -971,7 +1256,7 @@
         }
     }
 
-    // ── Stock Adjustment Modal ────────────────────────────────────────────────
+    // -- Stock Adjustment Modal ------------------------------------------------
     let adjSelectedSku = null;
 
     function openAdjustModal(sku) {
@@ -987,7 +1272,7 @@
         const selDiv = document.getElementById('adjSelectedItem');
         if (sku) {
             const item = allItems.find(i => i.sku === sku);
-            selDiv.textContent = item ? `${item.name} (${item.sku}) — ${item.qty} in stock` : sku;
+            selDiv.textContent = item ? `${item.name} (${item.sku}) ? ${item.qty} in stock` : sku;
             selDiv.style.display = 'block';
             document.getElementById('adjSearch').value = item?.name || sku;
         } else {
@@ -1009,7 +1294,7 @@
         list.innerHTML = matches.map(i => `
             <div onclick="selectAdjItem('${escH(i.sku)}')" style="padding:9px 12px;cursor:pointer;border-radius:8px;font-size:0.85rem;border:1px solid var(--glass-border);margin-bottom:4px;background:var(--glass);transition:background 0.15s;"
                 onmouseover="this.style.background='rgba(37,99,235,0.08)'" onmouseout="this.style.background='var(--glass)'">
-                <strong>${escH(i.name)}</strong> <span style="color:var(--text-dim);font-size:0.75rem;">${escH(i.sku)} · ${i.qty} in stock</span>
+                <strong>${escH(i.name)}</strong> <span style="color:var(--text-dim);font-size:0.75rem;">${escH(i.sku)} ? ${i.qty} in stock</span>
             </div>`).join('');
     }
 
@@ -1019,7 +1304,7 @@
         document.getElementById('adjSearch').value = item?.name || sku;
         document.getElementById('adjItemList').style.display = 'none';
         const selDiv = document.getElementById('adjSelectedItem');
-        selDiv.textContent = `${item?.name} (${sku}) — ${item?.qty} in stock`;
+        selDiv.textContent = `${item?.name} (${sku}) ? ${item?.qty} in stock`;
         selDiv.style.display = 'block';
         document.getElementById('adjQty').focus();
     }
@@ -1032,7 +1317,7 @@
         const reason = document.getElementById('adjReason').value.trim();
         const jobId  = document.getElementById('adjJobId').value.trim();
         const btn    = document.getElementById('adjSubmitBtn');
-        btn.disabled = true; btn.textContent = 'Applying…';
+        btn.disabled = true; btn.textContent = 'Applying?';
         
         // OPTIMISTIC UPDATE: Store original state and update UI immediately
         const item = allItems.find(i => i.sku === adjSelectedSku);
@@ -1069,7 +1354,7 @@
                 }
                 renderInventory();
                 renderStats();
-                alert('❌ ' + (data.error || 'Could not adjust.'));
+                alert(data.error || 'Could not adjust.');
                 btn.disabled = false;
                 btn.textContent = 'Apply';
             }
@@ -1086,7 +1371,7 @@
         }
     }
 
-    // ── View Modal ────────────────────────────────────────────────────────────
+    // -- View Modal ------------------------------------------------------------
     function openViewModal(sku) {
         const i = allItems.find(x => x.sku === sku);
         if (!i) return;
@@ -1095,20 +1380,20 @@
         const min  = parseInt(i.minQty) || 0;
         const cost = parseFloat(i.costPrice) || 0;
         const sale = parseFloat(i.salePrice) || 0;
-        const margin = cost > 0 ? (((sale - cost) / cost) * 100).toFixed(1) : '—';
-        const statusLabel = qty <= 0 ? '🔴 Out of Stock' : qty <= min ? '🟡 Low Stock' : '🟢 In Stock';
+        const margin = cost > 0 ? (((sale - cost) / cost) * 100).toFixed(1) : '?';
+        const statusLabel = qty <= 0 ? 'Out of Stock' : qty <= min ? 'Low Stock' : 'In Stock';
 
         document.getElementById('viewBody').innerHTML = `
             <div class="view-grid">
-                <div class="view-field full"><div class="view-label">Item</div><div class="view-value" style="font-size:1.05rem;">${escH(i.name || '—')}</div></div>
+                <div class="view-field full"><div class="view-label">Item</div><div class="view-value" style="font-size:1.05rem;">${escH(i.name || '?')}</div></div>
                 <div class="view-field"><div class="view-label">SKU</div><div class="view-value" style="font-family:monospace;">${escH(i.sku)}</div></div>
-                <div class="view-field"><div class="view-label">Category</div><div class="view-value">${escH(i.category || '—')}</div></div>
+                <div class="view-field"><div class="view-label">Category</div><div class="view-value">${escH(i.category || '?')}</div></div>
                 <div class="view-field"><div class="view-label">Stock</div><div class="view-value">${qty} units &nbsp;${statusLabel}</div></div>
                 <div class="view-field"><div class="view-label">Min Qty</div><div class="view-value">${min}</div></div>
                 ${isManager ? `<div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>` : ''}
                 <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} ${isManager ? `<span style="font-size:0.75rem;color:var(--text-dim);">(${margin}% margin)</span>` : ''}</div></div>
-                <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '—')}</div></div>
-                <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '—')}</div></div>
+                <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '?')}</div></div>
+                <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '?')}</div></div>
                 ${i.notes ? `<div class="view-field full"><div class="view-label">Notes</div><div class="view-value">${escH(i.notes)}</div></div>` : ''}
             </div>`;
 
@@ -1119,14 +1404,18 @@
         else {
             mList.innerHTML = moves.map(m => {
                 const isIn  = m.type === 'add' || m.type === 'set';
-                const icon  = m.type === 'add' ? '📥' : m.type === 'set' ? '📋' : '📤';
+                const icon  = m.type === 'add'
+                    ? (typeof scIcon === 'function' ? scIcon('download', 14) : '+')
+                    : m.type === 'set'
+                        ? (typeof scIcon === 'function' ? scIcon('clipboard', 14) : '=')
+                        : (typeof scIcon === 'function' ? scIcon('upload', 14) : '-');
                 const qSign = m.type === 'remove' ? '-' : '+';
-                const ts    = m.timestamp ? new Date(m.timestamp).toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+                const ts    = m.timestamp ? new Date(m.timestamp).toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '?';
                 return `<div class="movement-item">
                     <div class="movement-icon">${icon}</div>
                     <div class="movement-body">
                         <div class="movement-desc">${escH(m.reason || m.type)}</div>
-                        <div class="movement-meta">${ts} · ${escH(m.updatedBy || '—')}${m.jobId ? ' · Job #' + escH(m.jobId) : ''}</div>
+                        <div class="movement-meta">${ts} ? ${escH(m.updatedBy || '?')}${m.jobId ? ' ? Job #' + escH(m.jobId) : ''}</div>
                     </div>
                     <div class="movement-qty ${isIn ? 'in' : 'out'}">${qSign}${m.qty}</div>
                 </div>`;
@@ -1139,13 +1428,13 @@
     function openEditFromView()    { closeModal('viewModal'); setTimeout(() => openItemModal(activeViewSku), 200); }
     function openAdjustFromView()  { closeModal('viewModal'); setTimeout(() => openAdjustModal(activeViewSku), 200); }
 
-    // ── Delete ────────────────────────────────────────────────────────────────
+    // -- Delete ----------------------------------------------------------------
     function openDeleteModal(sku) {
         if (!isManager && !window.canDelete) return;
         const i = allItems.find(x => x.sku === sku);
         if (!i) return;
         pendingDeleteSku = sku;
-        document.getElementById('deleteInfo').innerHTML = `<strong>${escH(i.name)}</strong><br><span style="color:var(--text-dim);">SKU: ${escH(i.sku)} · ${i.qty} units in stock</span>`;
+        document.getElementById('deleteInfo').innerHTML = `<strong>${escH(i.name)}</strong><br><span style="color:var(--text-dim);">SKU: ${escH(i.sku)} ? ${i.qty} units in stock</span>`;
         document.getElementById('deleteConfirmBtn').disabled    = false;
         document.getElementById('deleteConfirmBtn').textContent = 'Delete Item';
         openModal('deleteModal');
@@ -1154,7 +1443,7 @@
     async function confirmDelete() {
         if (!pendingDeleteSku || (!isManager && !window.canDelete)) return;
         const btn = document.getElementById('deleteConfirmBtn');
-        btn.disabled = true; btn.textContent = 'Deleting…';
+        btn.disabled = true; btn.textContent = 'Deleting?';
         
         // OPTIMISTIC UPDATE: Store original state and remove from UI immediately
         const originalItems = [...allItems];
@@ -1181,7 +1470,7 @@
                 allItems = originalItems;
                 renderInventory();
                 renderStats();
-                alert('❌ ' + (data.error || 'Could not delete.'));
+                alert(data.error || 'Could not delete.');
                 btn.disabled = false;
                 btn.textContent = 'Delete Item';
             }
@@ -1196,7 +1485,7 @@
         }
     }
 
-    // ── Barcode Scanner (USB keyboard wedge) ──────────────────────────────────
+    // -- Barcode Scanner (USB keyboard wedge) ----------------------------------
     function initBarcodeScanner() {
         let buffer = '';
         let timer  = null;
@@ -1252,10 +1541,10 @@
     function focusScanToField(fieldId) {
         scanTargetField = fieldId;
         const el = document.getElementById(fieldId);
-        if (el) { el.focus(); el.placeholder = '⌖ Scan now…'; setTimeout(() => { el.placeholder = el.id === 'iSku' ? 'e.g. SCR-IP14P-BLK' : 'Search name or scan SKU…'; }, 5000); }
+        if (el) { el.focus(); el.placeholder = 'Scan now?'; setTimeout(() => { el.placeholder = el.id === 'iSku' ? 'e.g. SCR-IP14P-BLK' : 'Search name or scan SKU'; }, 5000); }
     }
 
-    // ── Camera Scanner ────────────────────────────────────────────────────────
+    // -- Camera Scanner --------------------------------------------------------
     async function openCameraScanner(targetField) {
         if (!('BarcodeDetector' in window)) {
             alert('Camera barcode scanning is not supported on this browser. Use your USB scanner instead.');
@@ -1294,7 +1583,7 @@
         if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
     }
 
-    // ── Modal helpers ─────────────────────────────────────────────────────────
+    // -- Modal helpers ---------------------------------------------------------
     function openModal(id)  { document.getElementById(id).classList.add('open'); }
     function closeModal(id) { document.getElementById(id).classList.remove('open'); }
     function handleOverlay(e, id) { if (e.target === document.getElementById(id)) closeModal(id); }
@@ -1319,10 +1608,10 @@
     }
 
     document.addEventListener('keydown', e => {
-        if (e.key === 'Escape') ['itemModal','adjustModal','viewModal','deleteModal'].forEach(closeModal);
+        if (e.key === 'Escape') ['itemModal','adjustModal','viewModal','deleteModal','bulkModal'].forEach(closeModal);
     });
 
-    // ── CSV Import ────────────────────────────────────────────────────────────
+    // -- CSV Import ------------------------------------------------------------
     let _csvRows = [];
     let _csvHeaders = [];
 
@@ -1385,7 +1674,7 @@
             return '<div>'
                 + '<label style="display:block;font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:5px;">' + f.label + (f.key === 'sku' || f.key === 'name' ? ' *' : '') + '</label>'
                 + '<select id="map_' + f.key + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;outline:none;">'
-                + '<option value="">— Skip —</option>' + opts
+                + '<option value="">? Skip ?</option>' + opts
                 + '</select></div>';
         }).join('');
     }
@@ -1424,7 +1713,7 @@
             + '<br><span style="font-size:0.75rem;color:var(--text-dim);">Existing items with the same SKU will be updated. New SKUs will be created.</span>';
 
         const tableHTML = '<table style="width:100%;border-collapse:collapse;">'
-            + '<tr style="background:rgba(37,99,235,0.06);">'
+            + '<tr style="background:rgba(var(--primary-rgb), 0.06);">'
             + '<th style="padding:7px 10px;text-align:left;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--primary);">SKU</th>'
             + '<th style="padding:7px 10px;text-align:left;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--primary);">Name</th>'
             + '<th style="padding:7px 10px;text-align:right;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--primary);">Qty</th>'
@@ -1450,7 +1739,7 @@
         const items = window._csvParsed || [];
         if (!items.length) return;
         const btn = document.getElementById('csvConfirmBtn');
-        btn.disabled = true; btn.textContent = 'Importing…';
+        btn.disabled = true; btn.textContent = 'Importing?';
         let success = 0, failed = 0;
         // Import sequentially to avoid GAS lock contention
         for (const item of items) {
@@ -1470,7 +1759,7 @@
                 const data = await apiPost(params);
                 if (data.success) success++; else failed++;
             } catch (_) { failed++; }
-            btn.textContent = 'Importing… ' + (success + failed) + '/' + items.length;
+            btn.textContent = 'Importing? ' + (success + failed) + '/' + items.length;
         }
         closeCSVModal();
         haptic('success');

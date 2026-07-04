@@ -123,12 +123,12 @@
             background: rgba(255, 255, 255, 0.05);
         }
         .tab-panel { display: none; }
-        .tab-panel.active { display: block; }
+        .tab-panel.active { display: block; animation: fadeInUp 0.25s ease both; }
 
         /* -- Summary Cards ------------------------------- */
         .summary-row {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
             margin-bottom: 16px;
         }
@@ -266,15 +266,15 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 14px 18px;
+            padding: 16px 18px;
             border-bottom: 1px solid var(--glass-border);
-            transition: background 0.15s;
+            transition: background 0.15s ease;
         }
         .list-item:last-child  { border-bottom: none; }
         .list-item:hover       { background: rgba(255, 255, 255, 0.03); }
         .list-item-icon        { font-size: 1.2rem; flex-shrink: 0; }
         .list-item-body        { flex: 1; min-width: 0; }
-        .list-item-title       { font-size: 0.88rem; font-weight: 700; color: var(--text-main); }
+        .list-item-title       { font-size: 0.88rem; font-weight: 700; color: var(--text-main); line-height: 1.35; }
         .list-item-meta        { font-size: 0.72rem; color: var(--text-dim); margin-top: 2px; }
         .list-item-right       { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
         .list-item-amount      { font-size: 0.95rem; font-weight: 800; }
@@ -319,6 +319,12 @@
         .empty-state { padding: 40px 24px; text-align: center; color: var(--text-dim); }
         .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 10px; }
         .empty-state p { font-size: 0.88rem; }
+        .partial-sale-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 0; border-bottom: 1px solid var(--glass-border);
+        }
+        .partial-sale-row:last-child { border-bottom: none; }
+        .partial-sale-row:hover { background: rgba(var(--primary-rgb, 37, 99, 235), 0.04); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 8px; }
 
         /* -- Modals -------------------------------------- */
         .modal-overlay {
@@ -733,14 +739,14 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
-            <h1>&#x1F4B0; Sales</h1>
+            <h1 data-icon="dollar">Sales</h1>
             <p id="shiftLabel">Loading shift info&hellip;</p>
         </div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <button class="btn-secondary btn-open-drawer" onclick="kickDrawer()" title="Open cash drawer (F9)">
-                &#x1F4B5; Open Drawer
+            <button class="btn-secondary btn-open-drawer" onclick="kickDrawer()" title="Open cash drawer (F9)" data-icon="drawer">
+                Open Drawer
             </button>
-            <a href="current-jobs.html" class="btn-secondary">&#x1F527; Current Jobs</a>
+            <a href="current-jobs.html" class="btn-secondary" data-icon="wrench">Current Jobs</a>
         </div>
     </div>
 
@@ -755,48 +761,53 @@
 
     <!-- Tabs — desktop pill bar, mobile dropdown -->
     <div class="tabs" id="tabBar">
-        <button class="tab-btn active" onclick="switchTab('sales')">&#x1F6D2; Sales</button>
-        <button class="tab-btn" onclick="switchTab('payouts')">&#x1F4B8; Payouts</button>
-        <button class="tab-btn" onclick="switchTab('bills')">&#x1F4CB; Bills</button>
-        <button class="tab-btn" onclick="switchTab('eod')">&#x1F4CA; End of Day</button>
+        <button class="tab-btn active" onclick="switchTab('sales')" data-icon="cart">Sales</button>
+        <button class="tab-btn" onclick="switchTab('payouts')" data-icon="payout">Payouts</button>
+        <button class="tab-btn" onclick="switchTab('bills')" data-icon="clipboard">Bills</button>
+        <button class="tab-btn" onclick="switchTab('eod')" data-icon="chart">End of Day</button>
     </div>
     <select id="tabSelect" onchange="switchTab(this.value)" class="tab-select-mobile">
-        <option value="sales">&#x1F6D2; Sales</option>
-        <option value="payouts">&#x1F4B8; Payouts</option>
-        <option value="bills">&#x1F4CB; Bills</option>
-        <option value="eod">&#x1F4CA; End of Day</option>
+        <option value="sales">Sales</option>
+        <option value="payouts">Payouts</option>
+        <option value="bills">Bills</option>
+        <option value="eod">End of Day</option>
     </select>
 
     <!-- -- TAB: SALES ---------------------------------------------------- -->
     <div class="tab-panel active" id="tab-sales">
         <div class="summary-row">
             <div class="sum-card green" id="grossSalesCard">
-                <div class="sum-label">Gross Sales</div>
+                <div class="sum-label">Collected Today</div>
                 <div class="sum-value" id="sumGross">BZ$0.00</div>
+            </div>
+            <div class="sum-card yellow" style="cursor:pointer;" onclick="openSalesPartialSales()" title="View partial sales with balance due">
+                <div class="sum-label">Balance Due</div>
+                <div class="sum-value" id="sumOutstanding">BZ$0.00</div>
             </div>
             <div class="sum-card">
                 <div class="sum-label">Transactions</div>
                 <div class="sum-value" id="sumCount">0</div>
             </div>
-            <div class="sum-card yellow">
-                <div class="sum-label">Partial</div>
+            <div class="sum-card">
+                <div class="sum-label">Partial Sales</div>
                 <div class="sum-value" id="sumPartial">0</div>
             </div>
-            <div class="sum-card">
+            <div class="sum-card" style="opacity:0.85;">
                 <div class="sum-label">Reversed</div>
                 <div class="sum-value" id="sumReversed">0</div>
             </div>
         </div>
         <div class="action-bar">
             <button class="btn-primary" onclick="openSaleModal()">+ New Sale</button>
-            <button class="btn-secondary" onclick="openJobPickupModal()">&#x1F4E6; Job Pickup</button>
-            <button class="btn-secondary" onclick="printSalesReport()">&#x1F5A8;&#xFE0F; Print Report</button>
+            <button class="btn-secondary" onclick="openJobPickupModal()" data-icon="job">Job Pickup</button>
+            <button class="btn-secondary" onclick="openSalesPartialSales()" data-icon="bolt">Partial Owed</button>
+            <button class="btn-secondary" onclick="printSalesReport()" data-icon="print">Print Report</button>
             <input type="date" id="salesDateFilter" style="padding:10px 13px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;outline:none;cursor:pointer;margin-left:auto;" onchange="onSalesDateChange()">
         </div>
-        <input type="text" id="salesSearch" placeholder="&#x1F50D; Search by item, amount, cashier..." oninput="onSalesSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="salesSearch" placeholder="Search by item, amount, cashier..." oninput="onSalesSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="salesList">
             <div class="empty-state">
-                <div class="empty-icon">&#x1F6D2;</div>
+                <div class="empty-icon" data-icon="cart"></div>
                 <p>No sales yet today.</p>
             </div>
         </div>
@@ -817,11 +828,11 @@
         </div>
         <div class="action-bar">
             <button class="btn-primary" onclick="openPayoutModal()">+ Log Payout</button>
-            <button class="btn-secondary" onclick="printPayoutsReport()">&#x1F5A8;&#xFE0F; Print Report</button>
+            <button class="btn-secondary" onclick="printPayoutsReport()" data-icon="print">Print Report</button>
         </div>
         <div class="list-card" id="payoutsList">
             <div class="empty-state">
-                <div class="empty-icon">&#x1F4B8;</div>
+                <div class="empty-icon" data-icon="payout"></div>
                 <p>No payouts logged today.</p>
             </div>
         </div>
@@ -841,13 +852,13 @@
         </div>
         <div class="action-bar">
             <button class="btn-primary" onclick="openBillModal()">+ New Bill</button>
-            <button class="btn-secondary" onclick="printBillsReport()">&#x1F5A8;&#xFE0F; Print Report</button>
-            <button class="btn-secondary" id="showSettledBtn" onclick="toggleShowSettled()" style="margin-left:auto;">&#x1F4CB; Show Settled</button>
+            <button class="btn-secondary" onclick="printBillsReport()" data-icon="print">Print Report</button>
+            <button class="btn-secondary" id="showSettledBtn" onclick="toggleShowSettled()" style="margin-left:auto;" data-icon="clipboard">Show Settled</button>
         </div>
-        <input type="text" id="billsSearch" placeholder="&#x1F50D; Search by name or item..." oninput="onBillsSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="billsSearch" placeholder="Search by name or item..." oninput="onBillsSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="billsList">
             <div class="empty-state">
-                <div class="empty-icon">&#x1F4CB;</div>
+                <div class="empty-icon" data-icon="clipboard"></div>
                 <p>No active bills.</p>
             </div>
         </div>
@@ -856,23 +867,26 @@
     <!-- -- TAB: END OF DAY ---------------------------------------------- -->
     <div class="tab-panel" id="tab-eod">
         <div class="eod-section">
-            <h3>&#x1F4CA; Shift Summary</h3>
-            <div style="font-size:0.82rem;font-weight:700;color:var(--text-dim);margin-bottom:14px;" id="eodShiftLabel">&#x23F3; Detecting shift&hellip;</div>
-            <div class="eod-row"><span class="lbl">Gross Sales</span><span class="val" id="eodGross">BZ$0.00</span></div>
-            <div class="eod-row"><span class="lbl">&#x1F4B5; Cash Sales</span><span class="val" id="eodCash" style="color:var(--success);">BZ$0.00</span></div>
-            <div class="eod-row"><span class="lbl">&#x1F4B3; Card Sales</span><span class="val" id="eodCard" style="color:var(--primary);">BZ$0.00</span></div>
+            <h3 data-icon="chart">Shift Summary</h3>
+            <div style="font-size:0.82rem;font-weight:700;color:var(--text-dim);margin-bottom:14px;" id="eodShiftLabel" data-icon="clock">Detecting shift&hellip;</div>
+            <div class="eod-row"><span class="lbl">Collected Today</span><span class="val" id="eodGross">BZ$0.00</span></div>
+            <div class="eod-row"><span class="lbl">Cash in Drawer</span><span class="val" id="eodCash" style="color:var(--success);">BZ$0.00</span></div>
+            <div class="eod-row"><span class="lbl">Card Sales (not in drawer)</span><span class="val" id="eodCard" style="color:var(--primary);">BZ$0.00</span></div>
+            <div class="eod-row"><span class="lbl">GST on Cash Sales</span><span class="val" id="eodGSTCash">BZ$0.00</span></div>
+            <div class="eod-row"><span class="lbl">GST on Card Sales</span><span class="val" id="eodGSTCard">BZ$0.00</span></div>
+            <div class="eod-row"><span class="lbl">Total GST Collected</span><span class="val" id="eodGST">BZ$0.00</span></div>
             <div class="eod-row"><span class="lbl">Total Payouts</span><span class="val" id="eodPayouts">BZ$0.00</span></div>
-            <div class="eod-row total"><span class="lbl">Cash Expected in Drawer</span><span class="val" id="eodNet">BZ$0.00</span></div>
+            <div class="eod-row total"><span class="lbl">Today&apos;s cash sales (excl. card)</span><span class="val" id="eodNet">BZ$0.00</span></div>
         </div>
         <div class="eod-section">
-            <h3>&#x1F3E6; Drawer Count</h3>
+            <h3 data-icon="bank">Drawer Count</h3>
             <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:14px;" id="eodDrawerHint">Count all cash in the drawer and enter the total below.</p>
             
             <!-- Last Shift's Float (Morning Shift Only) -->
             <div id="lastFloatSection" style="display:none;margin-bottom:14px;padding:10px 14px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:10px;">
-                <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">💰 Starting Float (from previous shift)</div>
+                <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">Starting Float (from previous shift)</div>
                 <div style="font-size:1.1rem;font-weight:800;color:var(--primary);" id="lastShiftFloat">BZ$0.00</div>
-                <div style="font-size:0.7rem;color:var(--text-dim);margin-top:4px;">Verify this matches what you found in the drawer when you started.</div>
+                <div style="font-size:0.7rem;color:var(--text-dim);margin-top:4px;" class="float-section-sub">Verify this matches what you found in the drawer when you started.</div>
             </div>
             
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
@@ -895,14 +909,14 @@
             <div class="variance-display" id="varianceDisplay" style="display:none;"></div>
         </div>
         <div class="action-bar" style="justify-content:flex-end;">
-            <button class="btn-secondary" onclick="printEOD()">&#x1F5A8;&#xFE0F; Print Report</button>
-            <button class="btn-primary" id="submitEODBtn" onclick="submitEOD()">&#x2713; Submit End of Day</button>
+            <button class="btn-secondary" onclick="printEOD()" data-icon="print">Print Report</button>
+            <button class="btn-primary" id="submitEODBtn" onclick="submitEOD()" data-icon="check">Submit End of Day</button>
         </div>
         <div class="list-card" style="margin-top:16px;">
             <div style="padding:14px 18px;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);border-bottom:1px solid var(--glass-border);">Recent Closes</div>
             <div id="eodHistory">
                 <div class="empty-state">
-                    <div class="empty-icon">&#x1F4CA;</div>
+                    <div class="empty-icon" data-icon="chart"></div>
                     <p>No recent closes found.</p>
                 </div>
             </div>
@@ -915,7 +929,7 @@
             <div class="sync-dot loading" id="syncDot"></div>
             <span id="syncText">Connecting&hellip;</span>
         </div>
-        <button onclick="loadAll()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">&#x21BB; Refresh</button>
+        <button onclick="loadAll()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);" data-icon="refresh">Refresh</button>
     </div>
 
 </main>
@@ -924,8 +938,8 @@
 <div class="modal-overlay" id="saleModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x1F6D2; New Sale</h2>
-            <button class="modal-close" onclick="closeModal('saleModal')">&#x2715;</button>
+            <h2 data-icon="cart">New Sale</h2>
+            <button class="modal-close" onclick="closeModal('saleModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group" style="position:relative;">
             <label>Scan or Search Item</label>
@@ -955,15 +969,15 @@
             <div class="pay-pills">
                 <div class="pay-pill cash">
                     <input type="radio" name="saleMethod" id="pm-cash" value="cash" checked onchange="togglePartialField()">
-                    <label for="pm-cash">&#x1F4B5; Cash</label>
+                    <label for="pm-cash" data-icon="cash">Cash</label>
                 </div>
                 <div class="pay-pill card">
                     <input type="radio" name="saleMethod" id="pm-card" value="card" onchange="togglePartialField()">
-                    <label for="pm-card">&#x1F4B3; Card</label>
+                    <label for="pm-card" data-icon="card">Card</label>
                 </div>
                 <div class="pay-pill partial">
                     <input type="radio" name="saleMethod" id="pm-partial" value="partial" onchange="togglePartialField()">
-                    <label for="pm-partial">&#x26A1; Partial</label>
+                    <label for="pm-partial" data-icon="bolt">Partial</label>
                 </div>
             </div>
         </div>
@@ -979,6 +993,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('saleModal')">Cancel</button>
+            <button class="btn-secondary" onclick="createBillFromSale()" data-icon="clipboard">Create Bill</button>
             <button class="btn-primary" id="saleSubmitBtn" onclick="submitSale()">Complete Sale</button>
         </div>
     </div>
@@ -988,8 +1003,8 @@
 <div class="modal-overlay" id="jobPickupModal" onclick="handleOverlay(event,'jobPickupModal')">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x1F4E6; Job Pickup Payment</h2>
-            <button class="modal-close" onclick="closeModal('jobPickupModal')">&#x2715;</button>
+            <h2 data-icon="job">Job Pickup Payment</h2>
+            <button class="modal-close" onclick="closeModal('jobPickupModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
             <label>Search Job by ID or Customer Name</label>
@@ -1011,15 +1026,15 @@
                 <div class="pay-pills">
                     <div class="pay-pill cash">
                         <input type="radio" name="jobMethod" id="jpm-cash" value="cash" checked onchange="toggleJobPaymentFields()">
-                        <label for="jpm-cash">&#x1F4B5; Cash</label>
+                        <label for="jpm-cash" data-icon="cash">Cash</label>
                     </div>
                     <div class="pay-pill card">
                         <input type="radio" name="jobMethod" id="jpm-card" value="card" onchange="toggleJobPaymentFields()">
-                        <label for="jpm-card">&#x1F4B3; Card</label>
+                        <label for="jpm-card" data-icon="card">Card</label>
                     </div>
                     <div class="pay-pill partial">
                         <input type="radio" name="jobMethod" id="jpm-partial" value="partial" onchange="toggleJobPaymentFields()">
-                        <label for="jpm-partial">&#x26A1; Partial</label>
+                        <label for="jpm-partial" data-icon="bolt">Partial</label>
                     </div>
                 </div>
             </div>
@@ -1036,7 +1051,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('jobPickupModal')">Cancel</button>
-            <button class="btn-primary" id="jobPickupBtn" onclick="submitJobPickup()" style="display:none;">&#x2713; Collect Payment</button>
+            <button class="btn-primary" id="jobPickupBtn" onclick="submitJobPickup()" style="display:none;" data-icon="check">Collect Payment</button>
         </div>
     </div>
 </div>
@@ -1045,8 +1060,8 @@
 <div class="modal-overlay" id="payoutModal" onclick="handleOverlay(event,'payoutModal')">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x1F4B8; Log Payout</h2>
-            <button class="modal-close" onclick="closeModal('payoutModal')">&#x2715;</button>
+            <h2 data-icon="payout">Log Payout</h2>
+            <button class="modal-close" onclick="closeModal('payoutModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -1073,12 +1088,15 @@
 <div class="modal-overlay" id="billModal" onclick="handleOverlay(event,'billModal')">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x1F4CB; New Bill / Tab</h2>
-            <button class="modal-close" onclick="closeModal('billModal')">&#x2715;</button>
+            <h2 data-icon="clipboard">New Bill / Tab</h2>
+            <button class="modal-close" onclick="closeModal('billModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
             <label>Person Name *</label>
             <input type="text" id="billPerson" placeholder="e.g. Kareem, Bat, walk-in customer...">
+            <div class="form-hint" style="margin-top:6px;">
+                <strong>Enter</strong> = Add top match  •  <strong>Shift+Enter</strong> = Add as custom item
+            </div>
         </div>
         <div class="form-group">
             <label>Items</label>
@@ -1106,8 +1124,8 @@
 <div class="modal-overlay" id="settleBillModal" onclick="handleOverlay(event,'settleBillModal')">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x2705; Settle Bill</h2>
-            <button class="modal-close" onclick="closeModal('settleBillModal')">&#x2715;</button>
+            <h2 data-icon="success">Settle Bill</h2>
+            <button class="modal-close" onclick="closeModal('settleBillModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div id="settleBillInfo" style="padding:12px 14px;background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.15);border-radius:10px;font-size:0.85rem;margin-bottom:16px;"></div>
         <div class="form-group">
@@ -1119,11 +1137,11 @@
             <div class="pay-pills">
                 <div class="pay-pill cash">
                     <input type="radio" name="settleMethod" id="sm-cash" value="cash" checked>
-                    <label for="sm-cash">&#x1F4B5; Cash</label>
+                    <label for="sm-cash" data-icon="cash">Cash</label>
                 </div>
                 <div class="pay-pill card">
                     <input type="radio" name="settleMethod" id="sm-card" value="card">
-                    <label for="sm-card">&#x1F4B3; Card</label>
+                    <label for="sm-card" data-icon="card">Card</label>
                 </div>
             </div>
         </div>
@@ -1139,12 +1157,15 @@
 <div class="modal-overlay" id="editBillModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x270F;&#xFE0F; Edit Bill</h2>
-            <button class="modal-close" onclick="closeModal('editBillModal')">&#x2715;</button>
+            <h2 data-icon="edit">Edit Bill</h2>
+            <button class="modal-close" onclick="closeModal('editBillModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
             <label>Person Name *</label>
             <input type="text" id="editBillPerson" placeholder="e.g. Kareem, Bat...">
+            <div class="form-hint" style="margin-top:6px;">
+                <strong>Enter</strong> = Add top match  •  <strong>Shift+Enter</strong> = Add as custom item
+            </div>
         </div>
         <div class="form-group">
             <label>Items</label>
@@ -1172,12 +1193,12 @@
 <div class="modal-overlay" id="reverseSaleModal" onclick="handleOverlay(event,'reverseSaleModal')">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x21A9;&#xFE0F; Reverse Sale</h2>
-            <button class="modal-close" onclick="closeModal('reverseSaleModal')">&#x2715;</button>
+            <h2 data-icon="revert">Reverse Sale</h2>
+            <button class="modal-close" onclick="closeModal('reverseSaleModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div id="reverseSaleInfo" style="padding:12px 14px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;font-size:0.85rem;margin-bottom:16px;"></div>
         <div style="padding:12px 14px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;font-size:0.82rem;margin-bottom:16px;color:#d97706;font-weight:700;">
-            ⚠️ <strong>Warning:</strong> This action cannot be undone. The sale will be marked as reversed and inventory will be restored.
+            <strong>Warning:</strong> This action cannot be undone. The sale will be marked as reversed and inventory will be restored.
         </div>
         <div class="form-group">
             <label>Reason for Reversal *</label>
@@ -1192,7 +1213,7 @@
         </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('reverseSaleModal')">Cancel</button>
-            <button class="btn-primary" id="reverseSubmitBtn" onclick="submitReverse()" style="background:var(--danger);" disabled>&#x21A9;&#xFE0F; Confirm Reversal</button>
+            <button class="btn-primary" id="reverseSubmitBtn" onclick="submitReverse()" style="background:var(--danger);" disabled data-icon="revert">Confirm Reversal</button>
         </div>
     </div>
 </div>
@@ -1201,13 +1222,13 @@
 <div class="modal-overlay" id="viewSaleModal" onclick="handleOverlay(event,'viewSaleModal')">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x1F6D2; Sale Details</h2>
-            <button class="modal-close" onclick="closeModal('viewSaleModal')">&#x2715;</button>
+            <h2 data-icon="cart">Sale Details</h2>
+            <button class="modal-close" onclick="closeModal('viewSaleModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div id="viewSaleContent" style="font-size:0.88rem;"></div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('viewSaleModal')">Close</button>
-            <button class="btn-primary" onclick="printViewedSale()">&#x1F5A8;&#xFE0F; Print Receipt</button>
+            <button class="btn-primary" onclick="printViewedSale()" data-icon="print">Print Receipt</button>
         </div>
     </div>
 </div>
@@ -1216,8 +1237,8 @@
 <div class="modal-overlay" id="editSaleModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h2>&#x270F;&#xFE0F; Edit Sale</h2>
-            <button class="modal-close" onclick="closeModal('editSaleModal')">&#x2715;</button>
+            <h2 data-icon="edit">Edit Sale</h2>
+            <button class="modal-close" onclick="closeModal('editSaleModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
             <label>Customer / Reference</label>
@@ -1245,6 +1266,21 @@
     </div>
 </div>
 
+<!-- -- MODAL: Partial Sales ----------------------------------------------- -->
+<div class="modal-overlay" id="partialSalesModal" onclick="if(event.target===this)closePartialSalesModal()">
+    <div class="modal-card" style="max-width:520px;">
+        <div class="modal-header">
+            <h2 data-icon="bolt">Partial Sales</h2>
+            <button class="modal-close" onclick="closePartialSalesModal()" data-icon="x" aria-label="Close"></button>
+        </div>
+        <div id="partialSalesSummary" style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px;"></div>
+        <div id="partialSalesList" style="max-height:360px;overflow-y:auto;"></div>
+        <div class="modal-footer">
+            <button class="btn-secondary" onclick="closePartialSalesModal()">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- -- Footer & Utility --------------------------------------------------- -->
 <div id="footer-placeholder"></div>
 
@@ -1252,9 +1288,9 @@
 <div class="modal-overlay" id="saleConfirmModal">
     <div class="modal-card" style="max-width:360px;text-align:center;">
         <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-            <button class="modal-close" onclick="closeModal('saleConfirmModal')">✕</button>
+            <button class="modal-close" onclick="closeModal('saleConfirmModal')" data-icon="x" aria-label="Close"></button>
         </div>
-        <div style="font-size:2rem;margin-bottom:8px;">✅</div>
+        <div class="empty-icon" style="margin-bottom:8px;opacity:1;" data-icon="success" data-icon-size="40"></div>
         <div style="font-size:1rem;font-weight:800;color:var(--text-main);margin-bottom:20px;">Sale Complete</div>
         <div style="background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
             <div style="display:flex;justify-content:space-between;font-size:0.88rem;">
@@ -1271,14 +1307,16 @@
             </div>
         </div>
         <div style="display:flex;gap:10px;width:100%;">
-            <button onclick="reprintLastReceipt()" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(37,99,235,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06)';" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);">🖨️ Print Receipt</button>
+            <button onclick="reprintLastReceipt()" data-icon="print" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(37,99,235,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06)';" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);">Print Receipt</button>
             <button onclick="closeModal('saleConfirmModal')" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(37,99,235,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06)';" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);">Done</button>
         </div>
     </div>
 </div>
 <div id="toastEl" class="toast"></div>
 <div id="printArea" style="display:none;"></div>
+<script src="js/icons.js"></script>
 <script src="js/components.js"></script>
+<script src="js/partial-sales.js"></script>
 <script src="js/qz-drawer.js"></script>
 <script src="js/receipt.js"></script>
 <script src="js/sales.js"></script>

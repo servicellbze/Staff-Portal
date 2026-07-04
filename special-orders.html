@@ -798,7 +798,8 @@
     </div>
 
     <div id="footer-placeholder"></div>
-    <script src="js/components.js"></script>
+    <script src="js/icons.js"></script>
+<script src="js/components.js"></script>
 
     <script>
         // SCRIPT_URL is provided globally by js/api.js
@@ -820,7 +821,9 @@
         // ── Init ──────────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             currentUser = getLoggedInUser();
-            isManager = deriveRole(currentUser) === 'manager';
+            isManager = typeof getEffectiveRole === 'function'
+                ? getEffectiveRole(currentUser) === 'manager'
+                : deriveRole(currentUser) === 'manager';
             loadOrders();
         });
 
@@ -847,7 +850,7 @@
             const select = document.getElementById('filterUser');
             const current = select.value;
             select.innerHTML = '<option value="">All Staff</option>' +
-                users.map(u => `<option value="${u}" ${u === current ? 'selected' : ''}>${u}</option>`).join('');
+                users.map(u => `<option value="${escHtml(u)}" ${u === current ? 'selected' : ''}>${escHtml(u)}</option>`).join('');
         }
 
         // ── Render ────────────────────────────────────────────────────────────

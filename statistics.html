@@ -52,10 +52,42 @@
         .kpi-card.yellow .kpi-value{color:var(--warning);}
         .kpi-card.purple .kpi-value{color:#7c3aed;}
         .kpi-sub{font-size:0.72rem;color:var(--text-dim);margin-top:4px;}
+        .kpi-delta{font-size:0.68rem;font-weight:700;margin-top:3px;}
+        .kpi-delta.up{color:var(--success);}
+        .kpi-delta.down{color:var(--danger);}
+        .kpi-delta.neutral{color:var(--text-dim);}
+        .kpi-card.teal::before{background:#0d9488;}
+        .kpi-card.teal .kpi-value{color:#0d9488;}
+        .bar-wrap.drillable{cursor:pointer;}
+        .bar-wrap.drillable:hover .bar{opacity:1;}
+        .person-row.drill-row{cursor:pointer;border-radius:8px;margin:0 -8px;padding-left:8px;padding-right:8px;}
+        .person-row.drill-row:hover{background:rgba(var(--primary-rgb,37,99,235),0.06);}
+        .partial-sale-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--glass-border);}
+        .partial-sale-row:last-child{border-bottom:none;}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
+        .modal-overlay.open{opacity:1;pointer-events:auto;}
+        .modal-card{background:var(--glass-strong,var(--glass));border:1px solid var(--glass-border);border-radius:var(--radius-md);padding:22px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);transform:translateY(12px);transition:transform 0.2s ease;}
+        .modal-overlay.open .modal-card{transform:translateY(0);}
+        .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+        .modal-header h2{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px;}
+        .modal-close{width:28px;height:28px;border-radius:50%;border:none;background:rgba(100,116,139,0.1);color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+        .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--glass-border);}
+        .stat-btn{padding:8px 14px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.78rem;font-weight:700;cursor:pointer;}
+        .stat-btn:hover{border-color:var(--primary);color:var(--primary);}
+        .drill-sale-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--glass-border);font-size:0.82rem;}
+        .drill-sale-row:last-child{border-bottom:none;}
 
         /* ── Section Cards ── */
         .stat-section{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius-md);backdrop-filter:blur(10px);overflow:hidden;margin-bottom:16px;animation:fadeInUp 0.4s ease 0.1s both;}
-        .stat-section-head{padding:16px 20px;border-bottom:1px solid var(--glass-border);font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);}
+        .stat-section-head{display:flex;align-items:center;gap:8px;padding:16px 20px;border-bottom:1px solid var(--glass-border);font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);}
+        .stat-section-head .sc-icon{flex-shrink:0;opacity:0.9;}
+        .stat-action-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);}
+        .stat-action-btn:hover{border-color:var(--primary);color:var(--primary);}
+        .page-header h1{display:flex;align-items:center;gap:10px;}
+        .stat-badge{display:inline-flex;align-items:center;gap:4px;font-size:0.65rem;padding:2px 7px;border-radius:99px;font-weight:800;vertical-align:middle;}
+        .stat-badge-success{background:rgba(var(--success-rgb,16,185,129),0.15);color:var(--success);}
+        .stat-badge-primary{background:rgba(var(--primary-rgb,37,99,235),0.15);color:var(--primary);}
+        .person-avatar .sc-icon{color:var(--primary);}
         .stat-section-body{padding:16px 20px;}
 
         /* ── Bar Chart ── */
@@ -82,7 +114,7 @@
         /* ── Person rows (staff performance) ── */
         .person-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--glass-border);}
         .person-row:last-child{border-bottom:none;}
-        .person-avatar{width:32px;height:32px;border-radius:50%;background:rgba(37,99,235,0.1);display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0;}
+        .person-avatar{width:32px;height:32px;border-radius:50%;background:rgba(var(--primary-rgb,37,99,235),0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
         .person-name{font-size:0.85rem;font-weight:700;color:var(--text-main);}
         .person-meta{font-size:0.72rem;color:var(--text-dim);margin-top:2px;}
         .person-stats{margin-left:auto;text-align:right;}
@@ -144,12 +176,13 @@
     <!-- Page Header -->
     <div class="page-header">
         <div>
-            <h1>&#x1F4CA; Statistics</h1>
+            <h1 data-icon="chart" data-icon-size="22">Statistics</h1>
             <p>Shop performance, revenue, and staff metrics.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button onclick="exportCSV()" style="padding:10px 18px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);">&#x1F4C4; Export CSV</button>
-            <button onclick="exportPDF()" style="padding:10px 18px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;cursor:pointer;backdrop-filter:blur(10px);">&#x1F5A8;&#xFE0F; Print Report</button>
+            <button class="stat-action-btn" onclick="openStatsPartialSales()" data-icon="bolt">Partial Owed</button>
+            <button class="stat-action-btn" onclick="exportCSV()" data-icon="file">Export CSV</button>
+            <button class="stat-action-btn" onclick="exportPDF()" data-icon="print">Print Report</button>
         </div>
     </div>
 
@@ -172,21 +205,25 @@
             <div class="kpi-label">Gross Revenue</div>
             <div class="kpi-value" id="kpiRevenue"><div class="shimmer" style="width:80px;"></div></div>
             <div class="kpi-sub" id="kpiRevenueSub">&nbsp;</div>
+            <div class="kpi-delta" id="kpiRevenueDelta">&nbsp;</div>
         </div>
         <div class="kpi-card red">
             <div class="kpi-label">Total Payouts</div>
             <div class="kpi-value" id="kpiPayouts"><div class="shimmer" style="width:60px;"></div></div>
             <div class="kpi-sub" id="kpiPayoutsSub">&nbsp;</div>
+            <div class="kpi-delta" id="kpiPayoutsDelta">&nbsp;</div>
         </div>
         <div class="kpi-card">
-            <div class="kpi-label">Net</div>
+            <div class="kpi-label">Net Cash</div>
             <div class="kpi-value" id="kpiNet"><div class="shimmer" style="width:70px;"></div></div>
             <div class="kpi-sub" id="kpiNetSub">&nbsp;</div>
+            <div class="kpi-delta" id="kpiNetDelta">&nbsp;</div>
         </div>
         <div class="kpi-card">
             <div class="kpi-label">Jobs Completed</div>
             <div class="kpi-value" id="kpiJobs"><div class="shimmer" style="width:40px;"></div></div>
             <div class="kpi-sub" id="kpiJobsSub">&nbsp;</div>
+            <div class="kpi-delta" id="kpiJobsDelta">&nbsp;</div>
         </div>
         <div class="kpi-card yellow">
             <div class="kpi-label">Avg Repair Value</div>
@@ -203,11 +240,26 @@
             <div class="kpi-value" id="kpiReversals"><div class="shimmer" style="width:50px;"></div></div>
             <div class="kpi-sub" id="kpiReversalsSub">&nbsp;</div>
         </div>
+        <div class="kpi-card yellow" style="cursor:pointer;" onclick="openStatsPartialSales()" title="View partial sales">
+            <div class="kpi-label">Partial Owed</div>
+            <div class="kpi-value" id="kpiPartialOwed"><div class="shimmer" style="width:60px;"></div></div>
+            <div class="kpi-sub" id="kpiPartialSub">&nbsp;</div>
+        </div>
+        <div class="kpi-card teal">
+            <div class="kpi-label">GST Included</div>
+            <div class="kpi-value" id="kpiGST"><div class="shimmer" style="width:60px;"></div></div>
+            <div class="kpi-sub" id="kpiGSTSub">12.5% of collected</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Drawer Variance</div>
+            <div class="kpi-value" id="kpiVariance"><div class="shimmer" style="width:60px;"></div></div>
+            <div class="kpi-sub" id="kpiVarianceSub">&nbsp;</div>
+        </div>
     </div>
 
     <!-- Revenue by Day -->
     <div class="stat-section">
-        <div class="stat-section-head">&#x1F4C5; Revenue by Day</div>
+        <div class="stat-section-head" data-icon="calendar">Revenue by Day</div>
         <div class="stat-section-body">
             <div class="bar-chart" id="revenueChart">
                 <div class="empty-state" style="width:100%;">Loading&hellip;</div>
@@ -218,7 +270,7 @@
     <!-- Sales Breakdown + Job Status -->
     <div class="two-col">
         <div class="stat-section" style="margin-bottom:0;">
-            <div class="stat-section-head">&#x1F4B3; Payment Methods</div>
+            <div class="stat-section-head" data-icon="card">Payment Methods</div>
             <div class="stat-section-body" id="paymentMethods">
                 <div class="shimmer" style="margin-bottom:8px;"></div>
                 <div class="shimmer" style="margin-bottom:8px;width:70%;"></div>
@@ -226,7 +278,7 @@
             </div>
         </div>
         <div class="stat-section" style="margin-bottom:0;">
-            <div class="stat-section-head">&#x1F527; Job Status Breakdown</div>
+            <div class="stat-section-head" data-icon="wrench">Job Status Breakdown</div>
             <div class="stat-section-body" id="jobStatus">
                 <div class="shimmer" style="margin-bottom:8px;"></div>
                 <div class="shimmer" style="margin-bottom:8px;width:70%;"></div>
@@ -239,7 +291,7 @@
     <!-- Top Selling Items + Inventory Health -->
     <div class="two-col">
         <div class="stat-section" style="margin-bottom:0;">
-            <div class="stat-section-head">&#x1F525; Top Selling Items</div>
+            <div class="stat-section-head" data-icon="bolt">Top Selling Items</div>
             <div class="stat-section-body" id="topItems">
                 <div class="shimmer" style="margin-bottom:8px;"></div>
                 <div class="shimmer" style="margin-bottom:8px;width:80%;"></div>
@@ -247,7 +299,7 @@
             </div>
         </div>
         <div class="stat-section" style="margin-bottom:0;">
-            <div class="stat-section-head">&#x1F4E6; Inventory Health</div>
+            <div class="stat-section-head" data-icon="package">Inventory Health</div>
             <div class="stat-section-body" id="invHealth">
                 <div class="shimmer" style="margin-bottom:8px;"></div>
                 <div class="shimmer" style="margin-bottom:8px;width:70%;"></div>
@@ -259,7 +311,7 @@
 
     <!-- Staff Performance -->
     <div class="stat-section">
-        <div class="stat-section-head">&#x1F451; Cashier Performance</div>
+        <div class="stat-section-head" data-icon="crown">Cashier Performance</div>
         <div class="stat-section-body" id="cashierPerf">
             <div class="shimmer" style="margin-bottom:8px;"></div>
             <div class="shimmer" style="width:70%;"></div>
@@ -267,7 +319,7 @@
     </div>
 
     <div class="stat-section">
-        <div class="stat-section-head">&#x1F527; Technician Performance</div>
+        <div class="stat-section-head" data-icon="tools">Technician Performance</div>
         <div class="stat-section-body" id="techPerf">
             <div class="shimmer" style="margin-bottom:8px;"></div>
             <div class="shimmer" style="width:70%;"></div>
@@ -276,7 +328,7 @@
 
     <!-- Short Cashier History -->
     <div class="stat-section">
-        <div class="stat-section-head">&#x26A0;&#xFE0F; Short Cashier History</div>
+        <div class="stat-section-head" data-icon="warning">Short Cashier History</div>
         <div class="stat-section-body" id="shortHistory">
             <div class="shimmer" style="margin-bottom:8px;"></div>
             <div class="shimmer" style="width:60%;"></div>
@@ -285,10 +337,14 @@
 
     <!-- Customer Lookup -->
     <div class="stat-section">
-        <div class="stat-section-head">&#x1F464; Customer Lookup</div>
+        <div class="stat-section-head" data-icon="users">Customer Lookup</div>
         <div class="stat-section-body">
             <input type="text" id="customerSearch" placeholder="Search by name or phone..." oninput="searchCustomers()"
-                style="width:100%;padding:10px 14px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;margin-bottom:12px;">
+                style="width:100%;padding:10px 14px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;color:var(--text-dim);margin-bottom:12px;cursor:pointer;">
+                <input type="checkbox" id="customerPeriodToggle" onchange="searchCustomers()" style="width:16px;height:16px;cursor:pointer;">
+                <span>Limit spend to selected period</span>
+            </label>
             <div id="customerResults"></div>
         </div>
     </div>
@@ -299,12 +355,44 @@
             <div class="sync-dot loading" id="syncDot"></div>
             <span id="syncText">Loading&hellip;</span>
         </div>
-        <button onclick="loadStats()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);">&#x21BB; Refresh</button>
+        <button onclick="loadStats()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);display:inline-flex;align-items:center;gap:5px;" data-icon="refresh">Refresh</button>
     </div>
 
 </main>
 <div id="footer-placeholder"></div>
+
+<!-- Partial Sales Modal -->
+<div class="modal-overlay" id="partialSalesModal" onclick="if(event.target===this)closePartialSalesModal()">
+    <div class="modal-card" style="max-width:520px;">
+        <div class="modal-header">
+            <h2 data-icon="bolt">Partial Sales</h2>
+            <button class="modal-close" onclick="closePartialSalesModal()" data-icon="x" aria-label="Close"></button>
+        </div>
+        <div id="partialSalesSummary" style="font-size:0.82rem;color:var(--text-dim);margin-bottom:12px;"></div>
+        <div id="partialSalesList" style="max-height:360px;overflow-y:auto;"></div>
+        <div class="modal-footer">
+            <button class="stat-btn" onclick="closePartialSalesModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Drill-down Modal -->
+<div class="modal-overlay" id="statDrillModal" onclick="if(event.target===this)closeStatDrill()">
+    <div class="modal-card" style="max-width:560px;">
+        <div class="modal-header">
+            <h2 data-icon="list"><span id="statDrillTitle">Details</span></h2>
+            <button class="modal-close" onclick="closeStatDrill()" data-icon="x" aria-label="Close"></button>
+        </div>
+        <div id="statDrillBody" style="max-height:400px;overflow-y:auto;"></div>
+        <div class="modal-footer">
+            <button class="stat-btn" onclick="closeStatDrill()">Close</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/icons.js"></script>
 <script src="js/components.js"></script>
+<script src="js/partial-sales.js"></script>
 <script src="js/statistics.js"></script>
 </body>
 </html>

@@ -1311,7 +1311,8 @@
         </div>
     </div>
 
-    <script src="js/components.js"></script>
+    <script src="js/icons.js"></script>
+<script src="js/components.js"></script>
     <script src="js/qz-drawer.js"></script>
     <script src="js/receipt.js"></script>
     <script>
@@ -1516,14 +1517,18 @@
                 const params = new URLSearchParams(sheetData);
                 const result = await apiPost(params);
                 if (result && result.success === false) {
+                    if ((result.error || '').includes('already exists')) {
+                        await fetchLastId();
+                    }
                     throw new Error(result.error || 'Server rejected the job');
                 }
                 showSuccess(repairId);
-                // Upload inspection images to Drive in the background
+                // Upload inspection images in the background
                 uploadInspectionImages(repairId);
             } catch (err) {
                 console.error(err);
-                showToast('❌ Something went wrong.', 'error');
+                const msg = err.message || 'Something went wrong.';
+                showToast('❌ ' + msg, 'error');
                 btn.classList.remove('loading');
                 btn.disabled = false;
                 isSubmitting = false;
@@ -1809,20 +1814,10 @@ async function uploadInspectionImages(repairId) {
 
             const publicImageUrl = publicUrlData.publicUrl;
 
-            // 6. Insert the photo entry linked directly to your job id
-            const { error: dbError } = await supabase
-                .from('job_inspection_images')
-                .insert([
-                    { 
-                        job_id: repairId, 
-                        image_url: publicImageUrl, 
-                        stage: stageLabel,
-                        notes: `Logged on ticket creation for item index ${i+1}`
-                    }
-                ]);
-
-            if (dbError) {
-                console.warn(`[Supabase DB] Failed to link image record for index ${i}:`, dbError.message);
+            // 6. Link URL on the job row (same field current-jobs.html reads)
+            const linkResult = await apiPost({ action: 'addimage', repairId, imageUrl: publicImageUrl });
+            if (linkResult && linkResult.success === false) {
+                console.warn(`[Supabase] Failed to link image for index ${i}:`, linkResult.error);
             } else {
                 console.log(`[Supabase] Image ${i+1} (${stageLabel}) uploaded and linked successfully!`);
             }

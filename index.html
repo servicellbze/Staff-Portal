@@ -836,7 +836,7 @@
     <div id="footer-placeholder"></div>
     <div id="install-hint" class="install-hint">
         <div class="hint-content">
-            <span class="hint-icon">📲</span>
+            <span class="hint-icon" data-icon="smartphone" data-icon-size="24"></span>
             <div class="hint-text">
                 <strong>Install ServiCell Portal</strong>
                 <p id="hint-apple" style="display:none;">
@@ -852,7 +852,8 @@
         </div>
     </div>
 
-    <script src="js/components.js"></script>
+    <script src="js/icons.js"></script>
+<script src="js/components.js"></script>
     <script>
         // ── HARD PWA WALL ENFORCEMENT ──────────────────────────────────────
         (function enforcePWA() {
@@ -874,7 +875,7 @@
                 <div style="position:fixed;inset:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font-family:Inter,sans-serif;">
                     <div style="position:absolute;inset:0;background:url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');opacity:0.3;"></div>
                     <div style="position:relative;z-index:1;max-width:400px;animation:slideUp 0.6s cubic-bezier(0.175,0.885,0.32,1.275);">
-                        <div style="width:120px;height:120px;background:white;border-radius:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);font-size:60px;">📱</div>
+                        <div style="width:120px;height:120px;background:white;border-radius:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 20px 60px rgba(0,0,0,0.3);" data-icon="smartphone" data-icon-size="56"></div>
                         <h1 style="color:white;font-size:1.8rem;font-weight:800;margin-bottom:12px;letter-spacing:-0.5px;">Install Required</h1>
                         <p style="color:rgba(255,255,255,0.9);font-size:1rem;margin-bottom:32px;line-height:1.6;">ServiCell Portal must be installed on your home screen to ensure secure access and optimal performance.</p>
                         
@@ -1065,6 +1066,12 @@
             document.getElementById('statUrgent').textContent = urgent;
         }
 
+        function escH(s) {
+            const d = document.createElement('div');
+            d.textContent = String(s || '');
+            return d.innerHTML;
+        }
+
         function renderActivity(jobs) {
             const list = document.getElementById('activityList');
             if (!jobs.length) {
@@ -1077,8 +1084,8 @@
                 const si = statusIcon[cls] || statusIcon.received;
                 const label = statusLabel[cls] || cls;
                 const badgeCls = 'badge-' + cls;
-                const device = j.device || '—';
-                const name = j.customerName || 'Walk-in';
+                const device = escH(j.device || '—');
+                const name = escH(j.customerName || 'Walk-in');
 
                 return `
             <div class="activity-item status-${cls}">
@@ -1115,7 +1122,7 @@
             if (new URLSearchParams(window.location.search).get('revoked') === '1') {
                 const notice = document.createElement('div');
                 notice.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 22px;border-radius:99px;font-size:0.88rem;font-weight:700;z-index:99999;box-shadow:0 8px 24px rgba(0,0,0,0.3);';
-                notice.textContent = '🚫 Your session was ended by a manager. Please log back in.';
+                notice.textContent = 'Your session was ended by a manager. Please log back in.';
                 document.body.appendChild(notice);
                 setTimeout(() => notice.remove(), 6000);
                 history.replaceState({}, '', window.location.pathname);
@@ -1186,7 +1193,7 @@
             const lockData   = JSON.parse(localStorage.getItem(lockKey) || 'null');
             if (lockData && Date.now() < lockData.until) {
                 const mins = Math.ceil((lockData.until - Date.now()) / 60000);
-                btn.textContent = '🔒 Try again in ' + mins + ' min';
+                btn.textContent = 'Try again in ' + mins + ' min';
                 btn.disabled = true;
                 setTimeout(() => { btn.textContent = 'Sign In'; btn.disabled = false; }, 3000);
                 return;
@@ -1248,13 +1255,13 @@
                     let attempts = parseInt(localStorage.getItem(attemptsKey) || '0') + 1;
                     localStorage.setItem(attemptsKey, attempts);
                     if (data.revoked) {
-                        alert('🚫 Your account has been suspended. Please contact your manager.');
+                        alert('Your account has been suspended. Please contact your manager.');
                     } else if (attempts >= 3) {
                         localStorage.setItem(lockKey, JSON.stringify({ until: Date.now() + 20 * 60 * 1000 }));
                         localStorage.removeItem(attemptsKey);
-                        alert('🔒 Too many failed attempts. Try again in 20 minutes.');
+                        alert('Too many failed attempts. Try again in 20 minutes.');
                     } else {
-                        alert('❌ Incorrect username or password. ' + (3 - attempts) + ' attempt' + (3 - attempts === 1 ? '' : 's') + ' remaining.');
+                        alert('Incorrect username or password. ' + (3 - attempts) + ' attempt' + (3 - attempts === 1 ? '' : 's') + ' remaining.');
                     }
                     btn.textContent = "Unlock System";
                     btn.disabled = false;
@@ -1304,7 +1311,7 @@
                             newWorker.addEventListener('statechange', () => {
                                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                                     if (typeof sendNotification === 'function') {
-                                        sendNotification('update', '🚀 Update Available',
+                                        sendNotification('update', 'Update Available',
                                             'A new version of ServiCell Portal is ready. Refresh to update.');
                                     }
                                 }
