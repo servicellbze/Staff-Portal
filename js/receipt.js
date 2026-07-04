@@ -475,39 +475,24 @@ function buildPayoutsReportHTML(payouts, displayDate) {
 window.buildPayoutsReportHTML = buildPayoutsReportHTML;
 
 // ── Unified print entry point ─────────────────────────────────────────────────
-// Silent QZ Tray print on desktop; browser dialog fallback on mobile / QZ failure.
+// Browser print dialog (faithful formatting). QZ Tray is cash drawer only.
 let _printInFlight = false;
-
-function _canUseSilentPrint() {
-    return typeof printSilentHTML === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP;
-}
 
 function printHTML(htmlContent) {
     if (_printInFlight) return;
     _printInFlight = true;
+
+    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
 
     function _releasePrintLock() {
         setTimeout(function() { _printInFlight = false; }, 400);
     }
 
     function _dispatchPrint() {
-        if (_canUseSilentPrint()) {
-            printSilentHTML(htmlContent, function() {
-                console.warn('[Print] QZ silent print failed — using browser print.');
-                _windowPrint(htmlContent, _releasePrintLock);
-            }).then(function(ok) {
-                if (ok) _releasePrintLock();
-            }).catch(function() {
-                _releasePrintLock();
-            });
-            return;
-        }
         _windowPrint(htmlContent, _releasePrintLock);
     }
 
-    // Preload QR for browser fallback; QZ image path loads inside iframe
-    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
-    if (qrMatch && !_canUseSilentPrint()) {
+    if (qrMatch) {
         const qrUrl = qrMatch[0];
         const preloadImg = new Image();
         let finished = false;
