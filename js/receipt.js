@@ -4,73 +4,74 @@
 
 const RECEIPT_STYLES = `
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
-#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 12mm; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0; }
+#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 12mm; font-size: 15px; font-weight: 700; line-height: 1.4; letter-spacing: 0; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 4px; }
 .pi-shop img { max-width: 72px; margin-bottom: 2px; display: block; margin-left: auto; margin-right: auto; }
-.pi-shop h1 { font-size: 15px; font-weight: 900; letter-spacing: 0.5px; margin: 0 0 2px; }
-.pi-shop p { font-size: 10px; margin: 1px 0; letter-spacing: 0; }
+.pi-shop h1 { font-size: 19px; font-weight: 900; letter-spacing: 0.5px; margin: 0 0 2px; }
+.pi-shop p { font-size: 14px; margin: 1px 0; letter-spacing: 0; }
+.pi-shop-tagline { font-size: 9px; white-space: nowrap; letter-spacing: -0.25px; }
 .pi-rule { border: none; border-top: 2px solid #000; margin: 4px 0 3px; }
 .pi-dash { border: none; border-top: 1px solid #000; margin: 3px 0 2px; }
-.pi-title { text-align: center; font-size: 11px; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; margin: 2px 0 3px; }
-.pi-meta { font-size: 10px; line-height: 1.4; margin-bottom: 2px; }
-.pi-meta-row { font-size: 10px; margin: 2px 0 3px; padding: 3px 4px; background: transparent; border: 1px solid #000; line-height: 1.4; }
+.pi-title { text-align: center; font-size: 15px; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; margin: 2px 0 3px; }
+.pi-meta { font-size: 14px; line-height: 1.4; margin-bottom: 2px; }
+.pi-meta-row { font-size: 14px; margin: 2px 0 3px; padding: 3px 4px; background: transparent; border: 1px solid #000; line-height: 1.4; }
 .pi-meta-row strong { display: block; }
-.pi-section { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 3px 0 1px; }
+.pi-section { font-size: 13px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 3px 0 1px; }
 .pi-grid { margin-bottom: 2px; }
-.pi-field-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
-.pi-field-value { font-size: 11px; padding: 1px 0; border-bottom: 1px solid #000; min-height: 12px; margin-bottom: 2px; }
-.pi-notes { border: 1px solid #000; padding: 3px 4px; min-height: 18px; font-size: 10px; line-height: 1.4; margin: 2px 0 4px; }
-.pi-cost-table { width: 100%; border-collapse: collapse; margin: 2px 0 4px; font-size: 10px; }
-.pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; padding: 2px 0; border-bottom: 2px solid #000; }
+.pi-field-label { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0; }
+.pi-field-value { font-size: 15px; padding: 1px 0; border-bottom: 1px solid #000; min-height: 16px; margin-bottom: 2px; }
+.pi-notes { border: 1px solid #000; padding: 3px 4px; min-height: 18px; font-size: 14px; line-height: 1.4; margin: 2px 0 4px; }
+.pi-cost-table { width: 100%; border-collapse: collapse; margin: 2px 0 4px; font-size: 14px; }
+.pi-cost-table th { text-align: left; font-size: 13px; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; padding: 2px 0; border-bottom: 2px solid #000; }
 .pi-cost-table th:last-child { text-align: right; }
 .pi-cost-table td { padding: 2px 0; border-bottom: 1px solid #000; }
 .pi-cost-table td:last-child { text-align: right; }
-.pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 12px; font-weight: 900; padding-top: 3px; }
-.pi-payment-status { text-align: center; font-size: 10px; margin: 3px 0 4px; padding: 3px 4px; background: transparent; border: 1px solid #000; font-weight: 900; }
-.pi-footer { text-align: center; font-size: 9px; margin-top: 4px; border-top: 1px solid #000; padding-top: 3px; line-height: 1.4; }
+.pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 16px; font-weight: 900; padding-top: 3px; }
+.pi-payment-status { text-align: center; font-size: 14px; margin: 3px 0 4px; padding: 3px 4px; background: transparent; border: 1px solid #000; font-weight: 900; }
+.pi-footer { text-align: center; font-size: 13px; margin-top: 4px; border-top: 1px solid #000; padding-top: 3px; line-height: 1.4; }
 .pi-qr { text-align: center; margin-top: 5px; }
 .pi-qr img { max-width: 110px; margin: 0 auto 3px; display: block !important; }
-.pi-qr-text { font-size: 10px; font-weight: 900; letter-spacing: 0.3px; }
+.pi-qr-text { font-size: 14px; font-weight: 900; letter-spacing: 0.3px; }
 .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px; }
-.pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 9px; text-align: center; }
-.po-slip { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 2mm 2mm 10mm; font-size: 10px; font-weight: 700; line-height: 1.35; text-align: left; }
+.pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 13px; text-align: center; }
+.po-slip { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 2mm 2mm 10mm; font-size: 14px; font-weight: 700; line-height: 1.35; text-align: left; }
 .po-slip * { box-sizing: border-box; color: #000; font-weight: 700; }
 .po-rule-eq { display: block; width: 100%; height: 0; border: none; border-top: 2px solid #000; margin: 5px 0; }
 .po-rule-dash { display: block; width: 100%; height: 0; border: none; border-top: 1px dashed #000; margin: 5px 0; }
 .po-banner { text-align: center; margin: 3px 0; }
-.po-company { font-size: 11px; font-weight: 900; letter-spacing: 0.4px; margin: 0 0 2px; }
-.po-title { font-size: 10px; font-weight: 900; letter-spacing: 0.5px; margin: 0; }
-.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: 9px; line-height: 1.35; margin: 1px 0; font-weight: 700; }
+.po-company { font-size: 15px; font-weight: 900; letter-spacing: 0.4px; margin: 0 0 2px; }
+.po-title { font-size: 14px; font-weight: 900; letter-spacing: 0.5px; margin: 0; }
+.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: 13px; line-height: 1.35; margin: 1px 0; font-weight: 700; }
 .po-meta-row span:last-child { text-align: right; white-space: nowrap; flex-shrink: 0; }
 .po-meta-row span:first-child { min-width: 0; word-break: break-word; }
 .po-block { margin: 2px 0; }
-.po-line { font-size: 10px; font-weight: 700; line-height: 1.35; margin: 1px 0; word-break: break-word; }
+.po-line { font-size: 14px; font-weight: 700; line-height: 1.35; margin: 1px 0; word-break: break-word; }
 .po-line .po-k { font-weight: 900; }
-.po-line-label { font-size: 10px; font-weight: 900; margin: 0 0 2px; line-height: 1.35; }
-.po-line-body { font-size: 10px; font-weight: 700; line-height: 1.35; word-break: break-word; margin: 0 0 2px; }
-.po-total-line { font-size: 11px; font-weight: 700; line-height: 1.35; margin: 2px 0 0; }
+.po-line-label { font-size: 14px; font-weight: 900; margin: 0 0 2px; line-height: 1.35; }
+.po-line-body { font-size: 14px; font-weight: 700; line-height: 1.35; word-break: break-word; margin: 0 0 2px; }
+.po-total-line { font-size: 15px; font-weight: 700; line-height: 1.35; margin: 2px 0 0; }
 .po-total-line .po-k { font-weight: 900; }
-.po-words { font-size: 9px; font-weight: 700; line-height: 1.35; margin: 0 0 2px; }
-.po-foot { margin-top: 2px; font-size: 9px; font-weight: 700; text-align: center; line-height: 1.35; }
+.po-words { font-size: 13px; font-weight: 700; line-height: 1.35; margin: 0 0 2px; }
+.po-foot { margin-top: 2px; font-size: 13px; font-weight: 700; text-align: center; line-height: 1.35; }
 .po-slip#printInvoice, .po-slip#printInvoice * { font-weight: 700 !important; }
 .po-slip#printInvoice .po-company, .po-slip#printInvoice .po-title, .po-slip#printInvoice .po-line-label, .po-slip#printInvoice .po-total-line, .po-slip#printInvoice .po-k { font-weight: 900 !important; }
-.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 2mm 2mm 12mm; font-weight: 700; font-size: 10px; }
+.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 2mm 2mm 12mm; font-weight: 700; font-size: 14px; }
 .po-report * { box-sizing: border-box; color: #000; font-weight: 700; }
 .po-report-head { text-align: center; margin-bottom: 3px; }
-.po-report-company { font-size: 14px; font-weight: 900; letter-spacing: 0.4px; margin: 0 0 2px; }
-.po-report-title { font-size: 11px; font-weight: 900; margin: 0 0 2px; }
-.po-report-date { font-size: 10px; font-weight: 700; margin: 0 0 2px; }
+.po-report-company { font-size: 18px; font-weight: 900; letter-spacing: 0.4px; margin: 0 0 2px; }
+.po-report-title { font-size: 15px; font-weight: 900; margin: 0 0 2px; }
+.po-report-date { font-size: 14px; font-weight: 700; margin: 0 0 2px; }
 .po-report-rule { height: 0; border: none; border-top: 2px solid #000; margin: 5px 0; }
-.po-report-table { width: 100%; border-collapse: collapse; font-size: 10px; font-weight: 700; }
-.po-report-table th { text-align: left; font-size: 9px; font-weight: 900; padding: 2px 0; border-bottom: 2px solid #000; }
+.po-report-table { width: 100%; border-collapse: collapse; font-size: 14px; font-weight: 700; }
+.po-report-table th { text-align: left; font-size: 13px; font-weight: 900; padding: 2px 0; border-bottom: 2px solid #000; }
 .po-report-table th.col-amt { text-align: right; }
 .po-report-table td { padding: 2px 0; border-bottom: 1px solid #000; vertical-align: top; word-break: break-word; }
 .po-report-table td.col-amt { text-align: right; font-weight: 900; white-space: nowrap; }
-.po-report-table tr.total td { border-top: 3px solid #000; border-bottom: none; font-size: 12px; font-weight: 900; padding-top: 4px; }
+.po-report-table tr.total td { border-top: 3px solid #000; border-bottom: none; font-size: 16px; font-weight: 900; padding-top: 4px; }
 .po-report-table tr.total td.col-amt { text-align: right; }
 .po-report-table td.empty { text-align: center; padding: 8px 0; border-bottom: none; }
-.po-report-foot { text-align: center; font-size: 9px; font-weight: 700; margin-top: 6px; border-top: 1px dashed #000; padding-top: 4px; line-height: 1.35; }
+.po-report-foot { text-align: center; font-size: 13px; font-weight: 700; margin-top: 6px; border-top: 1px dashed #000; padding-top: 4px; line-height: 1.35; }
 `;
 
 const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">';
@@ -158,7 +159,7 @@ function buildJobReceiptHTML(j, opts) {
                 <tr class="pi-total-row"><td><strong>TOTAL</strong></td><td><strong>${total.toFixed(2)}</strong></td></tr>
             </tbody>
         </table>` :
-        `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:7px;">Final cost after diagnostic.</span></div>`;
+        `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:11px;">Final cost after diagnostic.</span></div>`;
 
     const imgSrc = opts.imgSrc || _receiptLogoSrc();
     
@@ -173,7 +174,7 @@ function buildJobReceiptHTML(j, opts) {
     <div class="pi-shop">
         <img src="${imgSrc}" alt="Servicell Belize">
         <h1>SERVICELL BELIZE</h1>
-        <p>Device Repair &amp; Services &middot; Belize City, Belize</p>
+        <p class="pi-shop-tagline">Device Repair &amp; Services &middot; Belize City, Belize</p>
         <p>Tel: +501 615-3388</p>
     </div>
     <hr class="pi-rule">
@@ -247,20 +248,20 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-#printInvoice { font-family:'Courier New',Courier,monospace; font-size:11px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 12mm; line-height:1.4; letter-spacing:0; background:white; color:#000; }
+#printInvoice { font-family:'Courier New',Courier,monospace; font-size:15px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 12mm; line-height:1.4; letter-spacing:0; background:white; color:#000; }
 #printInvoice * { box-sizing:border-box; font-weight:700; color:#000; }
-#printInvoice h2 { text-align:center; font-size:15px; font-weight:900; letter-spacing:0.5px; margin:0 0 2px; }
-#printInvoice p { text-align:center; margin:1px 0; font-size:10px; }
+#printInvoice h2 { text-align:center; font-size:19px; font-weight:900; letter-spacing:0.5px; margin:0 0 2px; }
+#printInvoice p { text-align:center; margin:1px 0; font-size:14px; }
 #printInvoice img { display:block; margin:0 auto 3px; max-width:72px; }
 #printInvoice hr { border:none; border-top:1px solid #000; margin:4px 0 3px; }
 #printInvoice hr.solid { border-top:2px solid #000; margin:4px 0 3px; }
-#printInvoice table { width:100%; border-collapse:collapse; font-size:10px; }
-#printInvoice th { border-bottom:2px solid #000; padding:3px 0; font-size:9px; text-align:left; font-weight:900; letter-spacing:0.3px; text-transform:uppercase; }
+#printInvoice table { width:100%; border-collapse:collapse; font-size:14px; }
+#printInvoice th { border-bottom:2px solid #000; padding:3px 0; font-size:13px; text-align:left; font-weight:900; letter-spacing:0.3px; text-transform:uppercase; }
 #printInvoice th:nth-child(2),#printInvoice th:nth-child(3),#printInvoice th:nth-child(4) { text-align:right; }
 #printInvoice td { padding:3px 0; border-bottom:1px solid #000; }
-#printInvoice .divider td { border-top:2px solid #000; border-bottom:none; font-size:12px; font-weight:900; padding-top:4px; }
-#printInvoice .gst-row td { border-bottom:1px solid #000; font-size:10px; }
-#printInvoice .footer { text-align:center; font-size:10px; margin-top:5px; border-top:1px solid #000; padding-top:4px; line-height:1.4; }
+#printInvoice .divider td { border-top:2px solid #000; border-bottom:none; font-size:16px; font-weight:900; padding-top:4px; }
+#printInvoice .gst-row td { border-bottom:1px solid #000; font-size:14px; }
+#printInvoice .footer { text-align:center; font-size:14px; margin-top:5px; border-top:1px solid #000; padding-top:4px; line-height:1.4; }
 </style>
 <div id="printInvoice">
 <img src="${_receiptLogoSrc()}" alt="Servicell Belize">
