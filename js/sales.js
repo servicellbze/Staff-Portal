@@ -34,20 +34,107 @@ function tryParseJSON(str, fallback) {
     try { return JSON.parse(str); } catch (_) { return fallback; }
 }
 
+/** Collected revenue for gross (partial sales count only what was paid). */
+function saleCollectedAmount(s) {
+    if (!s || s.status === 'reversed') return 0;
+    const total = parseFloat(s.total) || 0;
+    const paid  = parseFloat(s.amountPaid) || 0;
+    if (s.method === 'partial') return paid;
+    return total;
+}
+
+/** Cash that should be in the drawer from this sale (excludes card). */
+function saleDrawerCash(s) {
+    if (!s || s.status === 'reversed') return 0;
+    if (s.method === 'card') return 0;
+    const total = parseFloat(s.total) || 0;
+    const paid  = parseFloat(s.amountPaid) || 0;
+    if (s.method === 'partial') return paid;
+    return total;
+}
+
+/** Remaining balance on partial-payment sales. */
+function saleOutstanding(s) {
+    if (!s || s.status === 'reversed' || s.method !== 'partial') return 0;
+    return Math.max(0, (parseFloat(s.total) || 0) - (parseFloat(s.amountPaid) || 0));
+}
+
+function sumCollectedSales(sales) {
+    return sales.filter(s => s.status !== 'reversed').reduce((t, s) => t + saleCollectedAmount(s), 0);
+}
+
+function sumDrawerCash(sales) {
+    return sales.filter(s => s.status !== 'reversed').reduce((t, s) => t + saleDrawerCash(s), 0);
+}
+
+function sumOutstandingPartial(sales) {
+    return sales.filter(s => s.status !== 'reversed').reduce((t, s) => t + saleOutstanding(s), 0);
+}
+
+/** GST portion of tax-inclusive (12.5%) gross. */
+function gstFromInclusive(gross) {
+    return (parseFloat(gross) || 0) * 12.5 / 112.5;
+}
+
+function sumCardCollected(sales) {
+    return sales
+        .filter(s => s.status !== 'reversed' && s.method === 'card')
+        .reduce((t, s) => t + saleCollectedAmount(s), 0);
+}
+
+/** Single source of truth for shift summary / EOD print / submit. */
+function computeEODSummary(sales, payouts) {
+    const validSales   = sales.filter(s => s.status !== 'reversed');
+    const gross        = sumCollectedSales(validSales);
+    const cashSales    = sumDrawerCash(validSales);
+    const cardSales    = sumCardCollected(validSales);
+    const gstCash      = gstFromInclusive(cashSales);
+    const gstCard      = gstFromInclusive(cardSales);
+    const gstTotal     = gstCash + gstCard;
+    const payoutsTotal = (payouts || []).reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
+    const net          = cashSales - payoutsTotal;
+    return {
+        validSales, gross, cashSales, cardSales,
+        gstCash, gstCard, gstTotal,
+        preTax: gross - gstTotal,
+        payoutsTotal, net
+    };
+}
+
 // -- Shift Logic ---------------------------------------------------------------
+/** Shop hours: Mon–Fri Morning 8am–3pm, Night 3pm–8pm; Sat 8am–8pm; Sun closed. */
 function getCurrentShift() {
     const now = new Date();
     const day = now.getDay();
     const h   = now.getHours() + now.getMinutes() / 60;
-    if (day === 0) return null; // Sunday - Closed
+
+    if (day === 0) return null;
+
     if (day === 6) {
-        // Saturday - single shift 9am to 7pm
-        if (h >= 9 && h < 19) return { label: 'Saturday Shift', start: 9, end: 19 };
+        if (h >= 8 && h < 20) return { label: 'Saturday Shift', start: 8, end: 20 };
         return null;
     }
-    // Weekdays: Morning 8am-5pm, Night 5pm-8am (wraps past midnight)
-    if (h >= 8 && h < 17) return { label: 'Morning Shift', start: 8, end: 17 };
-    return { label: 'Night Shift', start: 17, end: 32 }; // Night covers 5pm-8am next day
+
+    if (h >= 8 && h < 15) return { label: 'Morning Shift', start: 8, end: 15 };
+    if (h >= 15 && h < 20) return { label: 'Night Shift', start: 15, end: 20 };
+    return null;
+}
+
+function formatShiftHours(shift) {
+    if (!shift) return '';
+    const fmt = (hour) => {
+        const h = Math.floor(hour);
+        const ap = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return h12 + ':00 ' + ap;
+    };
+    return fmt(shift.start) + ' – ' + fmt(shift.end);
+}
+
+function getShiftEndTime(now, shift) {
+    const endTime = new Date(now);
+    endTime.setHours(shift.end, 0, 0, 0);
+    return endTime;
 }
 
 function getShiftDate() {
@@ -72,25 +159,18 @@ function updateShiftBanner() {
         return;
     }
     const now      = new Date();
-    // For Night Shift, end is 8am next day (stored as 32 = 24+8)
-    const endTime  = new Date(now);
-    if (shift.end >= 24) {
-        endTime.setDate(endTime.getDate() + 1);
-        endTime.setHours(shift.end - 24, 0, 0, 0);
-    } else {
-        endTime.setHours(shift.end, 0, 0, 0);
-    }
+    const endTime  = getShiftEndTime(now, shift);
     const msLeft   = endTime - now;
     const minsLeft = Math.floor(msLeft / 60000);
     const hoursLeft = Math.floor(minsLeft / 60);
     const minsRem   = minsLeft % 60;
-    if (label) label.textContent = shift.label + ' — ' + getShiftDate();
+    if (label) label.textContent = shift.label + ' (' + formatShiftHours(shift) + ') — ' + getShiftDate();
     status.textContent = shift.label;
     if (minsLeft <= 0) {
         dot.className = 'shift-dot off'; countdown.textContent = 'Shift ended'; countdown.className = 'shift-off';
     } else if (minsLeft <= 30) {
         dot.className = 'shift-dot warn';
-        countdown.textContent = '⚠️ Shift ends in ' + minsLeft + ' minutes';
+        countdown.textContent = 'Shift ends in ' + minsLeft + ' minutes';
         countdown.className = 'shift-warn';
     } else {
         dot.className = 'shift-dot';
@@ -210,7 +290,8 @@ function toggleShowSettled() {
     _showSettled = !_showSettled;
     const btn = document.getElementById('showSettledBtn');
     if (btn) {
-        btn.innerHTML = _showSettled ? '&#x1F4CB; Hide Settled' : '&#x1F4CB; Show Settled';
+        const label = _showSettled ? 'Hide Settled' : 'Show Settled';
+        btn.innerHTML = typeof scIconLabel === 'function' ? scIconLabel('clipboard', label, 15) : label;
         btn.style.borderColor = _showSettled ? 'var(--primary)' : '';
     }
     renderBills();
@@ -224,8 +305,11 @@ function onBillsSearch()  { debounce('billsSearch',  renderBills, 50); }
 function renderSales() {
     const q      = (document.getElementById('salesSearch')?.value || '').trim().toLowerCase();
     const active = allSales.filter(s => s.status !== 'reversed');
-    const gross  = active.reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
+    const gross  = sumCollectedSales(active);
+    const owed   = sumOutstandingPartial(active);
     document.getElementById('sumGross').textContent    = bz(gross);
+    const owedEl = document.getElementById('sumOutstanding');
+    if (owedEl) owedEl.textContent = bz(owed);
     document.getElementById('sumCount').textContent    = active.length;
     document.getElementById('sumPartial').textContent  = active.filter(s => s.method === 'partial').length;
     document.getElementById('sumReversed').textContent = allSales.filter(s => s.status === 'reversed').length;
@@ -243,7 +327,8 @@ function renderSales() {
         });
     }
     if (!list.length) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F6D2;</div><p>' + (q ? 'No results for "' + escH(q) + '"' : 'No sales yet today.') + '</p></div>';
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon" data-icon="cart"></div><p>' + (q ? 'No results for "' + escH(q) + '"' : 'No sales yet today.') + '</p></div>';
+        if (typeof initDataIcons === 'function') initDataIcons(el);
         const pg = document.getElementById('salesPagination');
         if (pg) pg.style.display = 'none';
         return;
@@ -266,19 +351,21 @@ function renderSales() {
         const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
         const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
             : (s.method === 'partial' ? '<span class="badge badge-partial">Balance Due: ' + bz(Math.max(0, transactionTotal - amountTendered)) + '</span>' : '<span class="badge badge-paid">Paid</span>');
-        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">✏️</button>';
+        const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">' + (typeof scIcon === 'function' ? scIcon('edit', 15) : 'Edit') + '</button>';
         const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
-        const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">&#x1F441;&#xFE0F;</button>';
+        const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">' + (typeof scIcon === 'function' ? scIcon('eye', 15) : 'View') + '</button>';
         
-        // Build amount display: show transaction total and tendered amount
+        // Build amount display: show collected vs invoice total
         let amountLine = '<div style="text-align:right;">';
-        amountLine += '<div style="font-size:0.95rem;font-weight:800;">Total: ' + bz(transactionTotal) + '</div>';
-        
-        // Show tendered amount for all payment methods
         if (s.method === 'partial') {
-            // For partial: show what was paid (less than total)
-            amountLine += '<div style="font-size:0.72rem;color:var(--warning);font-weight:700;">Paid: ' + bz(amountTendered) + '</div>';
-        } else if (s.method === 'cash') {
+            amountLine += '<div style="font-size:0.95rem;font-weight:800;color:var(--success);">Collected: ' + bz(amountTendered) + '</div>';
+            amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:600;">Invoice: ' + bz(transactionTotal) + '</div>';
+        } else {
+            amountLine += '<div style="font-size:0.95rem;font-weight:800;">Total: ' + bz(transactionTotal) + '</div>';
+        }
+        
+        // Show tendered amount for cash/card
+        if (s.method === 'cash') {
             // For cash: always show tendered amount
             amountLine += '<div style="font-size:0.72rem;color:var(--text-dim);font-weight:700;">Tendered: ' + bz(amountTendered) + '</div>';
             if (change > 0.01) {
@@ -291,7 +378,11 @@ function renderSales() {
         amountLine += '</div>';
         
         // Icon based on payment method
-        const methodIcon = s.method === 'card' ? '💳' : s.method === 'partial' ? '⚡' : '💵';
+        const methodIcon = s.method === 'card'
+            ? (typeof scIcon === 'function' ? scIcon('card', 14) : 'Card')
+            : s.method === 'partial'
+                ? (typeof scIcon === 'function' ? scIcon('bolt', 14) : 'Partial')
+                : (typeof scIcon === 'function' ? scIcon('cash', 14) : 'Cash');
         return '<div class="list-item" style="' + (isRev ? 'opacity:0.5;' : '') + '">'
             + '<div class="list-item-icon">' + methodIcon + '</div>'
             + '<div class="list-item-body">'
@@ -316,16 +407,22 @@ function renderPayouts() {
     document.getElementById('sumPayouts').textContent     = bz(total);
     document.getElementById('sumPayoutCount').textContent = allPayouts.length;
     const el = document.getElementById('payoutsList');
-    if (!allPayouts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">💸</div><p>No payouts logged today.</p></div>'; return; }
+    if (!allPayouts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon" data-icon="payout"></div><p>No payouts logged today.</p></div>'; if (typeof initDataIcons === 'function') initDataIcons(el); return; }
     el.innerHTML = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+        const pid = escH(p.payoutId || '');
         return '<div class="list-item">'
-            + '<div class="list-item-icon">💸</div>'
+            + '<div class="list-item-icon">' + (typeof scIcon === 'function' ? scIcon('payout', 18) : '') + '</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(p.reason || 'Payout') + '</div>'
             +   '<div class="list-item-meta">' + escH(ts) + (p.loggedBy ? '  ·  ' + escH(p.loggedBy) : '') + (p.takenBy ? '  ·  Taken by: ' + escH(p.takenBy) : '') + '</div>'
             + '</div>'
-            + '<span class="list-item-amount red">-' + bz(p.amount) + '</span>'
+            + '<div class="list-item-right">'
+            +   '<span class="list-item-amount red">-' + bz(p.amount) + '</span>'
+            +   '<div class="list-item-actions">'
+            +     '<button class="item-btn" title="Print slip" onclick="printPayoutSlip(\'' + pid + '\')">' + (typeof scIcon === 'function' ? scIcon('print', 15) : 'Print') + '</button>'
+            +   '</div>'
+            + '</div>'
             + '</div>';
     }).join('');
 }
@@ -347,25 +444,27 @@ function renderBills() {
         });
     }
     if (!visible.length) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-icon">&#x1F4CB;</div><p>' + (q ? 'No results for "' + escH(q) + '"' : (_showSettled ? 'No bills found.' : 'No open bills.')) + '</p></div>';
+        el.innerHTML = '<div class="empty-state"><div class="empty-icon" data-icon="clipboard"></div><p>' + (q ? 'No results for "' + escH(q) + '"' : (_showSettled ? 'No bills found.' : 'No open bills.')) + '</p></div>';
+        if (typeof initDataIcons === 'function') initDataIcons(el);
         return;
     }
+    const billIcon = typeof scIcon === 'function' ? scIcon('clipboard', 18) : '';
     el.innerHTML = visible.map(b => {
         const balance   = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
         const isSettled = b.status === 'settled' || balance <= 0;
         const items     = tryParseJSON(b.items, []);
         const itemNames = items.map(i => i.name).filter(Boolean);
-        const desc      = itemNames.slice(0, 3).join(', ') + (itemNames.length > 3 ? ' <span style="color:var(--text-dim);font-size:0.72rem;">+' + (itemNames.length - 3) + ' more</span>' : '') || 'Bill';
+        const desc      = itemNames.slice(0, 3).map(n => escH(n)).join(', ') + (itemNames.length > 3 ? ' <span style="color:var(--text-dim);font-size:0.72rem;">+' + (itemNames.length - 3) + ' more</span>' : '') || 'Bill';
         const ts        = b.createdAt ? new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
         return '<div class="list-item" style="' + (isSettled ? 'opacity:0.55;' : '') + '">'
-            + '<div class="list-item-icon">&#x1F4CB;</div>'
+            + '<div class="list-item-icon">' + billIcon + '</div>'
             + '<div class="list-item-body">'
             +   '<div class="list-item-title">' + escH(b.personName || 'Unknown') + '</div>'
             +   '<div class="list-item-meta">' + desc + (ts ? '  ·  ' + escH(ts) : '') + '</div>'
             +   '<div style="margin-top:4px;"><span class="bill-balance ' + (isSettled ? 'settled' : '') + '">' + (isSettled ? '\u2713 Settled' : 'Owes ' + bz(balance)) + '</span></div>'
             + '</div>'
             + (!isSettled ? '<button class="btn-success-sm" onclick="openSettleBill(\'' + escH(b.billId) + '\')">Settle</button>' : '')
-            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">✏️</button>' : '')
+            + (!isSettled ? '<button class="item-btn" title="Edit" onclick="openEditBill(\'' + escH(b.billId) + '\')" style="margin-left:4px;">' + (typeof scIcon === 'function' ? scIcon('edit', 15) : 'Edit') + '</button>' : '')
             + '</div>';
     }).join('');
 }
@@ -377,8 +476,10 @@ function initEODShiftPills() {
     const labelEl = document.getElementById('eodShiftLabel');
     if (labelEl) {
         if (shift) {
-            const icon = shift.label === 'Morning Shift' ? '🌅' : shift.label === 'Saturday Shift' ? '📅' : '🌙';
-            labelEl.textContent = 'For: ' + icon + ' ' + shift.label;
+            const iconName = shift.label === 'Morning Shift' ? 'sunrise' : shift.label === 'Saturday Shift' ? 'calendar' : 'moon';
+            const iconHtml = typeof scIcon === 'function' ? scIcon(iconName, 16) + ' ' : '';
+            labelEl.innerHTML = 'For: ' + iconHtml + escH(shift.label)
+                + ' <span style="color:var(--text-dim);font-weight:600;">(' + escH(formatShiftHours(shift)) + ')</span>';
             labelEl.style.color = 'var(--primary)';
         } else {
             labelEl.textContent = 'No active shift detected';
@@ -386,8 +487,8 @@ function initEODShiftPills() {
         }
     }
     _updateFloatVisibility();
-    // Load last shift's float for morning shift
-    if (shift && shift.label === 'Morning Shift') {
+    // Load prior shift float for morning (verify) and night/saturday (variance math)
+    if (shift && (shift.label === 'Morning Shift' || _isFloatShift())) {
         _loadLastShiftFloat();
     }
 }
@@ -408,13 +509,31 @@ async function _loadLastShiftFloat() {
             if (lastFloatEl && lastFloatSection) {
                 lastFloatEl.textContent = bz(lastFloatClose.float);
                 lastFloatSection.style.display = 'block';
-                // Store it for comparison
                 window._expectedStartingFloat = lastFloatClose.float;
+                const shift = getCurrentShift();
+                const sub = lastFloatSection.querySelector('.float-section-sub');
+                if (sub) {
+                    sub.textContent = shift && _isFloatShift()
+                        ? 'This was already in the drawer at shift start. Expected drawer = starting float + today\'s cash sales.'
+                        : 'Verify this matches what you found in the drawer when you started.';
+                }
             }
         }
     } catch (e) {
         console.warn('Could not load last shift float:', e);
     }
+}
+
+function getStartingFloat() {
+    return parseFloat(window._expectedStartingFloat) || 0;
+}
+
+/** Drawer/deposit targets for close — accounts for float already in the drawer. */
+function computeEODCloseExpecteds(net, floatLeft) {
+    const startingFloat  = getStartingFloat();
+    const expectedDrawer = startingFloat + net;
+    const expectedDeposit = expectedDrawer - floatLeft;
+    return { startingFloat, expectedDrawer, expectedDeposit };
 }
 
 function getEODShiftLabel() {
@@ -440,7 +559,14 @@ function _updateFloatVisibility() {
         if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
             hint.innerHTML = '<strong>Instructions:</strong> You started with ' + bz(window._expectedStartingFloat) + ' float. Count all cash in the drawer below. The system will automatically subtract your starting float to calculate variance.';
         } else if (isFloat) {
-            hint.innerHTML = '<strong>Instructions:</strong><br>1. Count ALL cash in the drawer<br>2. Enter the float amount to leave for tomorrow<br>3. System will calculate your deposit amount (drawer - float) and compare to expected net';
+            const sf = getStartingFloat();
+            hint.innerHTML = '<strong>Instructions:</strong><br>'
+                + '1. Count <strong>all</strong> cash in the drawer (including starting float)<br>'
+                + '2. Enter the float amount to leave for tomorrow<br>'
+                + '3. Deposit = drawer total − float left<br>'
+                + (sf > 0
+                    ? '<br>Starting float: ' + bz(sf) + ' · Expected drawer: ' + bz(sf + (parseFloat((document.getElementById('eodNet')?.textContent || '').replace('BZ$', '')) || 0))
+                    : '');
         } else {
             hint.textContent = 'Count all cash in the drawer and enter the total below.';
         }
@@ -448,32 +574,20 @@ function _updateFloatVisibility() {
     calcVariance();
 }
 function updateEOD() {
-    const validSales   = allSales.filter(s => s.status !== 'reversed');
-    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const gstCollected = gross * 12.5 / 112.5;
-    const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
-    // Net drawer = cash/partial sales only (card never touches the drawer) minus payouts
-    const net          = cashSales - payoutsTotal;
-    document.getElementById('eodGross').textContent   = bz(gross);
-    document.getElementById('eodCash').textContent    = bz(cashSales);
-    document.getElementById('eodCard').textContent    = bz(cardSales);
-    document.getElementById('eodPayouts').textContent = bz(payoutsTotal);
-    document.getElementById('eodNet').textContent     = bz(net);
-    // GST line — add element if not present
-    let gstEl = document.getElementById('eodGST');
-    if (!gstEl) {
-        const netRow = document.getElementById('eodNet').closest('.eod-row');
-        if (netRow) {
-            const gstRow = document.createElement('div');
-            gstRow.className = 'eod-row';
-            gstRow.innerHTML = '<span class="lbl">GST Collected (12.5%)</span><span class="val" id="eodGST"></span>';
-            netRow.parentNode.insertBefore(gstRow, netRow);
-            gstEl = document.getElementById('eodGST');
-        }
-    }
-    if (gstEl) gstEl.textContent = bz(gstCollected);
+    const summary = computeEODSummary(allSales, allPayouts);
+    document.getElementById('eodGross').textContent   = bz(summary.gross);
+    document.getElementById('eodCash').textContent    = bz(summary.cashSales);
+    document.getElementById('eodCard').textContent    = bz(summary.cardSales);
+    document.getElementById('eodPayouts').textContent = bz(summary.payoutsTotal);
+    document.getElementById('eodNet').textContent     = bz(summary.net);
+
+    const gstCashEl = document.getElementById('eodGSTCash');
+    const gstCardEl = document.getElementById('eodGSTCard');
+    const gstEl     = document.getElementById('eodGST');
+    if (gstCashEl) gstCashEl.textContent = bz(summary.gstCash);
+    if (gstCardEl) gstCardEl.textContent = bz(summary.gstCard);
+    if (gstEl) gstEl.textContent = bz(summary.gstTotal);
+
     calcVariance();
 }
 
@@ -516,34 +630,29 @@ function calcVariance() {
             disp.style.background = 'rgba(251,191,36,0.1)';
             disp.style.color = '#f59e0b';
             disp.style.borderColor = 'rgba(251,191,36,0.3)';
-            disp.textContent = '💡 Reminder: You started with ' + bz(startingFloat) + ' float. Current drawer should include sales cash too.';
+            disp.textContent = 'Reminder: You started with ' + bz(startingFloat) + ' float. Current drawer should include sales cash too.';
             if (depositDisp) depositDisp.style.display = 'none';
             return;
         }
     }
     
-    // NIGHT/SATURDAY SHIFT LOGIC:
-    // - Drawer count is total cash
-    // - Float amount is what stays in drawer for next shift
-    // - Deposit = drawer count - float left
-    // - Expected net = cash sales - payouts
-    // - Variance = deposit - expected net
-    let depositAmount = actualCash;
-    if (_isFloatShift() && float_ > 0) {
-        depositAmount = actualCash - float_;
-    }
-    
-    // Calculate variance: deposit/sales cash vs expected net
-    const diff = depositAmount - net;
+    // NIGHT/SATURDAY + MORNING: shared close math (starting float + float left)
+    const close = computeEODVariance(drawer, float_, net, shift);
+    const depositAmount = close.depositAmount;
+    const expectedDeposit = close.expectedDeposit;
+    const diff = close.variance;
+    startingFloat = close.startingFloat;
     
     // Show deposit amount for float shifts (night/saturday)
     if (depositDisp && _isFloatShift()) {
         depositDisp.style.display = 'block';
+        const closeExpected = computeEODCloseExpecteds(net, float_);
         depositDisp.innerHTML = '<div style="padding:10px 16px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:8px;margin-bottom:10px;">'
-            + '<div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">💰 Deposit to Bank</div>'
+            + '<div style="font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:4px;">Deposit to Bank</div>'
             + '<div style="font-size:1.3rem;font-weight:800;color:var(--primary);">' + bz(depositAmount) + '</div>'
-            + '<div style="font-size:0.68rem;color:var(--text-dim);margin-top:2px;">Drawer ' + bz(drawer) + ' - Float ' + bz(float_) + '</div>'
-            + '</div>';
+            + '<div style="font-size:0.68rem;color:var(--text-dim);margin-top:2px;">Drawer ' + bz(drawer) + ' − Float ' + bz(float_)
+            + (closeExpected.startingFloat > 0 ? ' · Expected deposit ' + bz(expectedDeposit) : '')
+            + '</div></div>';
     } else if (depositDisp) {
         depositDisp.style.display = 'none';
     }
@@ -562,13 +671,13 @@ function calcVariance() {
         if (float_ > 0) disp.textContent += '  \u00b7  Float: ' + bz(float_);
     } else {
         disp.className = 'variance-display short';
-        disp.textContent = '\u26a0\ufe0f Short by ' + bz(Math.abs(diff)) + '  \u2014  Manager will be notified';
+        disp.textContent = 'Short by ' + bz(Math.abs(diff)) + '  —  Manager will be notified';
     }
 }
 
 function renderEODHistory(closes) {
     const el = document.getElementById('eodHistory');
-    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><p>No recent closes found.</p></div>'; return; }
+    if (!closes.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon" data-icon="chart"></div><p>No recent closes found.</p></div>'; if (typeof initDataIcons === 'function') initDataIcons(el); return; }
     el.innerHTML = [...closes].reverse().map(c => {
         const ts       = c.timestamp ? new Date(c.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
         const date     = c.shiftDate || c.timestamp ? new Date(c.timestamp || c.shiftDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
@@ -579,7 +688,7 @@ function renderEODHistory(closes) {
             varLabel = '\u2713 Exact';
         } else if (variance < 0) {
             varColor = 'var(--danger)';
-            varLabel = '\u26a0\ufe0f Short ' + bz(Math.abs(variance));
+            varLabel = 'Short ' + bz(Math.abs(variance));
         } else {
             // Over — managers see the amount, cashiers see a neutral placeholder
             varColor = isManager ? 'var(--success)' : 'var(--text-dim)';
@@ -596,6 +705,31 @@ function renderEODHistory(closes) {
     }).join('');
 }
 
+/** Shared close math for calcVariance, submitEOD, and printEOD. */
+function computeEODVariance(drawer, float_, net, shift) {
+    let actualCash    = drawer;
+    let startingFloat = getStartingFloat();
+
+    if (shift && shift.label === 'Morning Shift' && startingFloat) {
+        actualCash = drawer - startingFloat;
+    }
+
+    let depositAmount   = actualCash;
+    let expectedDeposit = net;
+
+    if (_isFloatShift()) {
+        const closeExpected = computeEODCloseExpecteds(net, float_);
+        expectedDeposit = closeExpected.expectedDeposit;
+        if (float_ > 0) depositAmount = actualCash - float_;
+    }
+
+    const variance = _isFloatShift()
+        ? depositAmount - expectedDeposit
+        : actualCash - net;
+
+    return { actualCash, startingFloat, depositAmount, expectedDeposit, variance };
+}
+
 async function submitEOD() {
     const net      = parseFloat((document.getElementById('eodNet').textContent || '').replace('BZ$', '')) || 0;
     const drawerVal = document.getElementById('drawerCount').value;
@@ -608,28 +742,14 @@ async function submitEOD() {
     }
     const drawer       = parseFloat(drawerVal);
     const shift        = getCurrentShift();
-    
-    // Calculate actual cash and variance properly
-    let actualCash = drawer;
-    let startingFloat = 0;
-    
-    // For morning shift: subtract starting float
-    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
-        startingFloat = window._expectedStartingFloat;
-        actualCash = drawer - startingFloat;
-    }
-    
-    // For float shifts: subtract float to get deposit amount
-    let depositAmount = actualCash;
-    if (_isFloatShift() && float_ > 0) {
-        depositAmount = actualCash - float_;
-    }
-    
-    // Variance = deposit/sales cash vs expected net
-    const variance     = depositAmount - net;
+    const close        = computeEODVariance(drawer, float_, net, shift);
+    const variance     = close.variance;
+    const depositAmount = close.depositAmount;
+    const startingFloat = close.startingFloat;
     const shiftLabel   = getEODShiftLabel();
-    const gross        = allSales.filter(s => s.status !== 'reversed').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
+    const summary      = computeEODSummary(allSales, allPayouts);
+    const gross        = summary.gross;
+    const payoutsTotal = summary.payoutsTotal;
     const btn          = document.getElementById('submitEODBtn');
     btn.disabled = true; btn.textContent = 'Submitting...';
     try {
@@ -644,7 +764,7 @@ async function submitEOD() {
         if (data.success) {
             if (typeof haptic === 'function') haptic('success');
             if (variance < -0.01 && typeof sendNotification === 'function')
-                sendNotification('manageronly', '⚠️ Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
+                sendNotification('manageronly', 'Cashier Short', currentUser + ' is short ' + bz(Math.abs(variance)) + ' on ' + getShiftDate() + '.');
             showToast('End of day submitted!', 'ok');
             btn.textContent = '\u2713 Submitted';
             document.getElementById('drawerCount').value = '';
@@ -656,9 +776,9 @@ async function submitEOD() {
             await loadAll();
         } else {
             btn.disabled = false; btn.textContent = '\u2713 Submit End of Day';
-            showToast('❌ ' + (data.error || 'Could not submit.'), 'err');
+            showToast(data.error || 'Could not submit.', 'err');
         }
-    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Submit End of Day'; showToast('❌ Connection error.', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Submit End of Day'; showToast('Connection error.', 'err'); }
 }
 
 // -- Shared single-fire print helper ------------------------------------------
@@ -686,37 +806,20 @@ function printEOD() {
     if (_isFloatShift() && !document.getElementById('floatAmount')?.value) {
         alert('Enter the float amount before printing.'); return;
     }
-    const validSales   = allSales.filter(s => s.status !== 'reversed');
-    const gross        = validSales.reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const cashSales    = validSales.filter(s => s.method === 'cash' || s.method === 'partial').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const cardSales    = validSales.filter(s => s.method === 'card').reduce((t, s) => t + (parseFloat(s.total) || 0), 0);
-    const gstCollected = gross * 12.5 / 112.5;
-    const preTax       = gross - gstCollected;
-    const payoutsTotal = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
-    // Net drawer = cash only (card never touches the drawer) minus payouts
-    const net          = cashSales - payoutsTotal;
+    const summary      = computeEODSummary(allSales, allPayouts);
+    const gross        = summary.gross;
+    const cashSales    = summary.cashSales;
+    const cardSales    = summary.cardSales;
+    const preTax       = summary.preTax;
+    const payoutsTotal = summary.payoutsTotal;
+    const net          = summary.net;
     const float_       = parseFloat(document.getElementById('floatAmount')?.value) || 0;
     const drawer       = parseFloat(drawerRaw);
     const shift        = getCurrentShift();
-    
-    // Calculate actual cash and variance properly (same as submitEOD)
-    let actualCash = drawer;
-    let startingFloat = 0;
-    
-    // For morning shift: subtract starting float
-    if (shift && shift.label === 'Morning Shift' && window._expectedStartingFloat) {
-        startingFloat = window._expectedStartingFloat;
-        actualCash = drawer - startingFloat;
-    }
-    
-    // For float shifts: subtract float to get deposit amount
-    let depositAmount = actualCash;
-    if (_isFloatShift() && float_ > 0) {
-        depositAmount = actualCash - float_;
-    }
-    
-    // Variance = deposit/sales cash vs expected net
-    const variance     = depositAmount - net;
+    const close        = computeEODVariance(drawer, float_, net, shift);
+    const variance     = close.variance;
+    const depositAmount = close.depositAmount;
+    const startingFloat = close.startingFloat;
     const shiftLabel   = getEODShiftLabel();
     const varText  = Math.abs(variance) < 0.01 ? 'Exact' : (variance > 0 ? 'OVER ' : 'SHORT ') + bz(Math.abs(variance));
     const displayDate  = _currentDateFilter || getShiftDate();
@@ -741,11 +844,13 @@ function printEOD() {
         + '<p>Cashier: ' + escH(currentUser) + '</p>'
         + '<hr>'
         + '<table>'
-        + '<tr><td>Gross Sales (incl. GST)</td><td>' + bz(gross) + '</td></tr>'
+        + '<tr><td>Collected Today (incl. GST)</td><td>' + bz(gross) + '</td></tr>'
         + '<tr><td>&nbsp;&nbsp;Cash / Partial</td><td>' + bz(cashSales) + '</td></tr>'
         + '<tr><td>&nbsp;&nbsp;Card (not in drawer)</td><td>' + bz(cardSales) + '</td></tr>'
         + '<tr><td>Sales excl. GST</td><td>' + bz(preTax) + '</td></tr>'
-        + '<tr><td>GST Collected (12.5%)</td><td>' + bz(gstCollected) + '</td></tr>'
+        + '<tr><td>GST on Cash Sales</td><td>' + bz(summary.gstCash) + '</td></tr>'
+        + '<tr><td>GST on Card Sales</td><td>' + bz(summary.gstCard) + '</td></tr>'
+        + '<tr><td>Total GST Collected</td><td>' + bz(summary.gstTotal) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
         + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
@@ -763,7 +868,7 @@ function printEOD() {
 // -- Print Sales Report --------------------------------------------------------
 function printSalesReport() {
     const validSales = allSales.filter(s => s.status !== 'reversed');
-    const gross = validSales.reduce((t, s) => t + (parseFloat(s.total) || parseFloat(s.amountPaid) || 0), 0);
+    const gross = sumCollectedSales(validSales);
     const displayDate = _currentDateFilter || getShiftDate();
     const shift = getCurrentShift();
     
@@ -825,8 +930,14 @@ function printSalesReport() {
 
 // -- Print Payouts Report ------------------------------------------------------
 function printPayoutsReport() {
-    const total = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     const displayDate = _currentDateFilter || getShiftDate();
+    if (typeof buildPayoutsReportHTML === 'function') {
+        const html = buildPayoutsReportHTML(allPayouts, displayDate);
+        if (typeof printHTML === 'function') printHTML(html);
+        else _openAndPrint(html);
+        return;
+    }
+    const total = allPayouts.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
     
     const payoutRows = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
@@ -1140,24 +1251,15 @@ function calcSaleChange() {
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
-        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
+        disp.textContent = 'Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = change < 0.01 ? '✓ Exact  —  no change' : '💵 Change: BZ$' + change.toFixed(2);
+        disp.textContent = change < 0.01 ? 'Exact — no change' : 'Change: BZ$' + change.toFixed(2);
     }
 }
 
 async function submitSale() {
-    const rows = document.querySelectorAll('#saleLineItems .line-item-row');
-    const items = [];
-    rows.forEach(r => {
-        const i = r.querySelectorAll('input');
-        const name = i[0].value.trim();
-        const qty  = parseFloat(i[1].value) || 1;
-        const price = parseFloat(i[2].value) || 0;
-        const sku  = r.dataset.sku || '';
-        if (name) items.push({ name, qty, price, total: qty * price, sku });
-    });
+    const items = collectSaleLineItems();
     if (!items.length) { alert('Add at least one item.'); return; }
     const total      = items.reduce((t, i) => t + i.total, 0);
     const method     = document.querySelector('input[name="saleMethod"]:checked').value;
@@ -1200,14 +1302,73 @@ async function submitSale() {
             // Store last receipt data for reprinting
             window._lastReceipt = { items, total, amountPaid, method, saleId: data.saleId, customer: '' };
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast('❌ ' + (data.error || 'Could not save.'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast('❌ Connection error.', 'err'); }
+        } else { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast(data.error || 'Could not save.', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast('Connection error.', 'err'); }
+}
+
+function collectSaleLineItems() {
+    const items = [];
+    document.querySelectorAll('#saleLineItems .line-item-row').forEach(r => {
+        const i = r.querySelectorAll('input');
+        const name = i[0].value.trim();
+        const qty = parseFloat(i[1].value) || 1;
+        const price = parseFloat(i[2].value) || 0;
+        const sku = r.dataset.sku || '';
+        if (name) items.push({ name, qty, price, total: qty * price, sku });
+    });
+    return items;
+}
+
+async function createBillFromSale() {
+    const items = collectSaleLineItems();
+    if (!items.length) { showToast('Add at least one item first.', 'err'); return; }
+    const person = prompt('Customer / person name for this bill:');
+    if (!person || !person.trim()) return;
+    const total = items.reduce((t, i) => t + i.total, 0);
+    try {
+        const data = await apiPost({
+            action: 'createbill',
+            personName: person.trim(),
+            items: JSON.stringify(items),
+            totalOwed: total,
+            cashier: currentUser,
+            shiftDate: getShiftDate()
+        });
+        if (data.success) {
+            if (typeof haptic === 'function') haptic('success');
+            showToast('Bill opened for ' + person.trim(), 'ok');
+            document.getElementById('saleLineItems').innerHTML = '';
+            updateSaleTotal();
+            closeModal('saleModal');
+            await loadAll();
+            switchTab('bills');
+        } else {
+            showToast(data.error || 'Could not create bill.', 'err');
+        }
+    } catch (e) {
+        showToast('Connection error.', 'err');
+    }
+}
+
+function openSalesPartialSales() {
+    const date = _currentDateFilter || getShiftDate();
+    openPartialSalesModal(allSales, {
+        from: date,
+        to: date,
+        onRowClick: 'openPartialSalesRow',
+        emptyText: 'No partial sales with balance due for this date.'
+    });
+}
+
+function openPartialSalesRow(saleId) {
+    closePartialSalesModal();
+    openViewSale(saleId);
 }
 
 // -- Reprint Last Receipt -----------------------------------------------------
 function reprintLastReceipt() {
     if (!window._lastReceipt) {
-        showToast('❌ No receipt to reprint', 'err');
+        showToast('No receipt to reprint', 'err');
         return;
     }
     
@@ -1216,7 +1377,7 @@ function reprintLastReceipt() {
         
         // Check if required functions exist
         if (typeof buildSaleReceiptHTML !== 'function' || typeof printHTML !== 'function') {
-            showToast('❌ Print functions not loaded', 'err');
+            showToast('Print functions not loaded', 'err');
             console.error('Receipt functions not found');
             return;
         }
@@ -1227,11 +1388,11 @@ function reprintLastReceipt() {
         const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, currentUser);
         printHTML(html);
         
-        showToast('🖨️ Printing receipt...', 'ok');
+        showToast('Printing receipt...', 'ok');
         if (typeof haptic === 'function') haptic('light');
     } catch (error) {
         console.error('Reprint error:', error);
-        showToast('❌ Failed to print receipt', 'err');
+        showToast('Failed to print receipt', 'err');
     }
 }
 
@@ -1338,10 +1499,10 @@ function calcJobChange() {
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
-        disp.textContent = '⚠️ Short by BZ$' + Math.abs(change).toFixed(2);
+        disp.textContent = 'Short by BZ$' + Math.abs(change).toFixed(2);
     } else {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = change < 0.01 ? '✓ Exact  —  no change' : '💵 Change: BZ$' + change.toFixed(2);
+        disp.textContent = change < 0.01 ? 'Exact — no change' : 'Change: BZ$' + change.toFixed(2);
     }
 }
 
@@ -1359,7 +1520,7 @@ function calcJobBalance() {
     disp.style.display = 'block';
     if (balance <= 0.01) {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
-        disp.textContent = '✓ Fully paid  —  device can be released';
+        disp.textContent = 'Fully paid — device can be released';
     } else {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.2);';
         disp.textContent = 'Partial  —  ' + bz(balance) + ' remaining. Device stays until fully paid.';
@@ -1402,7 +1563,7 @@ async function submitJobPickup() {
             if (balance <= 0.01) {
                 updateParams.status = 'resolved';
             } else {
-                showToast('⚠️ Partial payment — device stays until fully paid.', '');
+                showToast('Partial payment — device stays until fully paid.', '');
             }
             await apiPost(updateParams);
             closeModal('jobPickupModal');
@@ -1433,8 +1594,8 @@ async function submitJobPickup() {
             );
             
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast('❌ Connection error.', 'err'); }
+        } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast(data.error || 'Error', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast('Connection error.', 'err'); }
 }
 
 // -- Payout --------------------------------------------------------------------
@@ -1467,11 +1628,14 @@ async function submitPayout() {
             closeModal('payoutModal');
             if (typeof haptic === 'function') haptic('success');
             if (typeof sendNotification === 'function')
-                sendNotification('manageronly', '💸 Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
+                sendNotification('manageronly', 'Payout Logged', currentUser + ' logged a ' + bz(amount) + ' payout: ' + reason);
             showToast('Payout logged!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Log Payout'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Log Payout'; showToast('❌ Connection error.', 'err'); }
+            if (data.payoutId && typeof printPayoutSlip === 'function' && confirm('Print payout slip now?')) {
+                printPayoutSlip(data.payoutId);
+            }
+        } else { btn.disabled = false; btn.textContent = 'Log Payout'; showToast(data.error || 'Error', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Log Payout'; showToast('Connection error.', 'err'); }
 }
 
 // -- Bills ---------------------------------------------------------------------
@@ -1493,29 +1657,25 @@ function addBillLine(name, qty, price, sku) {
     row.innerHTML =
         '<div style="position:relative;flex:1;">'
         + '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" autocomplete="off"'
-        + ' oninput="billLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
+        + ' oninput="billLineAutocomplete(this,\'' + dropId + '\')" onkeydown="billLineItemKey(event,this,\'' + dropId + '\')"'
+        + ' onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
         + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
         + '</div>'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateBillTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateBillTotal()">'
-        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">✕</button>';
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateBillTotal()">' + (typeof scIcon === 'function' ? scIcon('x', 14) : '×') + '</button>';
     document.getElementById('billLineItems').appendChild(row);
 }
 
-// Autocomplete for bill line items (same as sales)
-function billLineAutocomplete(el, dropId) {
-    const q = el.value.toLowerCase().trim();
-    const drop = document.getElementById(dropId);
-    if (!q || q.length < 2) { drop.style.display = 'none'; return; }
-    const matches = (window._inventoryCache || []).filter(i =>
-        (i.name || '').toLowerCase().includes(q) || (i.sku || '').toLowerCase().includes(q)
-    ).slice(0, 8);
-    if (!matches.length) { drop.style.display = 'none'; return; }
-    drop.style.display = 'block';
-    drop.innerHTML = matches.map(i => {
+function _billLineHintFooter(q) {
+    return '<div style="padding:8px 14px;font-size:0.72rem;color:var(--text-dim);background:rgba(var(--primary-rgb),0.04);border-top:1px solid var(--glass-border);text-align:center;"><strong>Enter</strong> = Add top match  •  <strong>Shift+Enter</strong> = Add "' + escH(q) + '" as custom</div>';
+}
+
+function _billLineMatchHtml(matches, selectFn) {
+    return matches.map(i => {
         const stock = parseInt(i.qty) || 0;
         const stockColor = stock <= 0 ? 'var(--danger)' : stock <= (parseInt(i.minQty) || 0) ? 'var(--warning)' : 'var(--success)';
-        return '<div onclick="selectBillItem(this,\'' + escH(i.sku) + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--glass-border);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(37,99,235,0.08)\'" onmouseout="this.style.background=\'transparent\'">'
+        return '<div onclick="' + selectFn + '(this,\'' + escH(i.sku) + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--glass-border);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(var(--primary-rgb),0.08)\'" onmouseout="this.style.background=\'transparent\'">'
             + '<div style="font-weight:700;font-size:0.85rem;">' + escH(i.name) + '</div>'
             + '<div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;">'
             + escH(i.sku) + ' · BZ$' + (parseFloat(i.salePrice) || 0).toFixed(2)
@@ -1524,18 +1684,77 @@ function billLineAutocomplete(el, dropId) {
     }).join('');
 }
 
-function selectBillItem(el, sku) {
-    const item = (window._inventoryCache || []).find(i => String(i.sku) === String(sku));
-    if (!item) return;
-    const row = el.closest('.line-item-row').parentElement.parentElement;
-    if (!row) return;
-    row.dataset.sku = sku;
+function _billInventoryMatches(q) {
+    const qLower = q.toLowerCase();
+    return (window._inventoryCache || []).filter(i =>
+        (i.name || '').toLowerCase().includes(qLower) || String(i.sku || '').toLowerCase().includes(qLower)
+    ).slice(0, 8);
+}
+
+function _applyBillItemToRow(row, item) {
+    if (!row || !item) return;
+    row.dataset.sku = item.sku || '';
     const inputs = row.querySelectorAll('input');
     inputs[0].value = item.name || '';
     inputs[2].value = parseFloat(item.salePrice) || 0;
-    updateBillTotal();
-    const drop = el.parentElement;
+    if (row.closest('#editBillLineItems')) updateEditBillTotal();
+    else updateBillTotal();
+    const drop = row.querySelector('[id^="bill-ac-"], [id^="edit-bill-ac-"]');
     if (drop) drop.style.display = 'none';
+    if (inputs[1]) inputs[1].focus();
+}
+
+function billLineItemKey(e, el, dropId) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const q = (el.value || '').trim();
+    if (!q) return;
+    const row = el.closest('.line-item-row');
+    const drop = document.getElementById(dropId);
+
+    if (e.shiftKey) {
+        if (row) row.dataset.sku = '';
+        if (drop) drop.style.display = 'none';
+        row?.querySelectorAll('input')[1]?.focus();
+        return;
+    }
+
+    const inv = window._inventoryCache || [];
+    const qLower = q.toLowerCase();
+    const exact = inv.find(i => String(i.sku).toLowerCase() === qLower || (i.name || '').toLowerCase() === qLower);
+    if (exact) { _applyBillItemToRow(row, exact); return; }
+
+    const partial = inv.find(i =>
+        (i.name || '').toLowerCase().includes(qLower) || String(i.sku || '').toLowerCase().includes(qLower)
+    );
+    if (partial) { _applyBillItemToRow(row, partial); return; }
+
+    if (row) row.dataset.sku = '';
+    if (drop) drop.style.display = 'none';
+    row?.querySelectorAll('input')[1]?.focus();
+}
+
+// Autocomplete for bill line items (same as sales)
+function billLineAutocomplete(el, dropId) {
+    const q = (el.value || '').trim();
+    const drop = document.getElementById(dropId);
+    if (!q) { drop.style.display = 'none'; return; }
+    const matches = _billInventoryMatches(q);
+    drop.style.display = 'block';
+    if (!matches.length) {
+        drop.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match — press <strong>Enter</strong> to add as custom item</div>'
+            + _billLineHintFooter(q);
+        return;
+    }
+    drop.innerHTML = _billLineMatchHtml(matches, 'selectBillItem') + _billLineHintFooter(q);
+}
+
+function selectBillItem(el, sku) {
+    const item = (window._inventoryCache || []).find(i => String(i.sku) === String(sku));
+    if (!item) return;
+    const row = el.closest('.line-item-row');
+    if (!row) return;
+    _applyBillItemToRow(row, item);
 }
 
 function updateBillTotal() {
@@ -1573,8 +1792,8 @@ async function submitBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill opened!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Open Bill'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; showToast('❌ Connection error.', 'err'); }
+        } else { btn.disabled = false; btn.textContent = 'Open Bill'; showToast(data.error || 'Error', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Open Bill'; showToast('Connection error.', 'err'); }
 }
 
 // -- Edit Bill -----------------------------------------------------------------
@@ -1605,7 +1824,8 @@ function addEditBillLine(name, qty, price, sku) {
     row.innerHTML =
         '<div style="position:relative;flex:1;">'
         + '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" autocomplete="off"'
-        + ' oninput="editBillLineAutocomplete(this,\'' + dropId + '\')" onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
+        + ' oninput="editBillLineAutocomplete(this,\'' + dropId + '\')" onkeydown="billLineItemKey(event,this,\'' + dropId + '\')"'
+        + ' onblur="setTimeout(()=>{const d=document.getElementById(\'' + dropId + '\');if(d)d.style.display=\'none\';},250)">'
         + '<div id="' + dropId + '" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:500;background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:10px;box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;"></div>'
         + '</div>'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditBillTotal()">'
@@ -1616,38 +1836,25 @@ function addEditBillLine(name, qty, price, sku) {
 
 // Autocomplete for edit bill line items (same as new bill)
 function editBillLineAutocomplete(el, dropId) {
-    const q = el.value.toLowerCase().trim();
+    const q = (el.value || '').trim();
     const drop = document.getElementById(dropId);
-    if (!q || q.length < 2) { drop.style.display = 'none'; return; }
-    const matches = (window._inventoryCache || []).filter(i =>
-        (i.name || '').toLowerCase().includes(q) || (i.sku || '').toLowerCase().includes(q)
-    ).slice(0, 8);
-    if (!matches.length) { drop.style.display = 'none'; return; }
+    if (!q) { drop.style.display = 'none'; return; }
+    const matches = _billInventoryMatches(q);
     drop.style.display = 'block';
-    drop.innerHTML = matches.map(i => {
-        const stock = parseInt(i.qty) || 0;
-        const stockColor = stock <= 0 ? 'var(--danger)' : stock <= (parseInt(i.minQty) || 0) ? 'var(--warning)' : 'var(--success)';
-        return '<div onclick="selectEditBillItem(this,\'' + escH(i.sku) + '\')" style="padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--glass-border);transition:background 0.15s;" onmouseover="this.style.background=\'rgba(37,99,235,0.08)\'" onmouseout="this.style.background=\'transparent\'">'
-            + '<div style="font-weight:700;font-size:0.85rem;">' + escH(i.name) + '</div>'
-            + '<div style="font-size:0.72rem;color:var(--text-dim);margin-top:2px;">'
-            + escH(i.sku) + ' · BZ$' + (parseFloat(i.salePrice) || 0).toFixed(2)
-            + ' · <span style="color:' + stockColor + ';font-weight:700;">' + stock + ' in stock</span>'
-            + '</div></div>';
-    }).join('');
+    if (!matches.length) {
+        drop.innerHTML = '<div style="padding:10px 14px;font-size:0.8rem;color:var(--text-dim);">No match — press <strong>Enter</strong> to add as custom item</div>'
+            + _billLineHintFooter(q);
+        return;
+    }
+    drop.innerHTML = _billLineMatchHtml(matches, 'selectEditBillItem') + _billLineHintFooter(q);
 }
 
 function selectEditBillItem(el, sku) {
     const item = (window._inventoryCache || []).find(i => String(i.sku) === String(sku));
     if (!item) return;
-    const row = el.closest('.line-item-row').parentElement.parentElement;
+    const row = el.closest('.line-item-row');
     if (!row) return;
-    row.dataset.sku = sku;
-    const inputs = row.querySelectorAll('input');
-    inputs[0].value = item.name || '';
-    inputs[2].value = parseFloat(item.salePrice) || 0;
-    updateEditBillTotal();
-    const drop = el.parentElement;
-    if (drop) drop.style.display = 'none';
+    _applyBillItemToRow(row, item);
 }
 
 function updateEditBillTotal() {
@@ -1687,8 +1894,8 @@ async function submitEditBill() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ Connection error.', 'err'); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; showToast(data.error || 'Error', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('Connection error.', 'err'); }
 }
 
 // -- Settle Bill ---------------------------------------------------------------
@@ -1734,7 +1941,10 @@ async function submitSettle() {
     const btn = document.getElementById('settleSubmitBtn');
     btn.disabled = true; btn.textContent = 'Settling...';
     try {
-        const params = new URLSearchParams({ action: 'settlebill', billId: settlingBillId, amount, payMethod: method, cashier: currentUser });
+        const params = new URLSearchParams({
+            action: 'settlebill', billId: settlingBillId, amount, payMethod: method,
+            cashier: currentUser, shiftDate: getShiftDate()
+        });
         const data = await apiPost(params);
         if (data.success) {
             // Deduct inventory for items with SKUs when bill is fully settled
@@ -1768,8 +1978,8 @@ async function submitSettle() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Bill settled!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Settle'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; showToast('❌ Connection error.', 'err'); }
+        } else { btn.disabled = false; btn.textContent = 'Settle'; showToast(data.error || 'Error', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Settle'; showToast('Connection error.', 'err'); }
 }
 
 // -- View Sale -----------------------------------------------------------------
@@ -1827,7 +2037,8 @@ function openViewSale(saleId) {
         + (s.method === 'card' ? '<div class="receipt-total-row"><span style="color:var(--text-dim);">Charged</span><span>' + bz(amountTendered) + '</span></div>' : '')
         + (s.method === 'partial' ? '<div class="receipt-total-row"><span style="color:var(--warning);">Paid</span><span style="color:var(--warning);">' + bz(amountTendered) + '</span></div>' : '')
         + (change > 0.01 ? '<div class="receipt-total-row"><span style="color:var(--success);">Change Given</span><span style="color:var(--success);font-weight:800;">' + bz(change) + '</span></div>' : '')
-        + '<div class="receipt-total-row main"><span>Net Sale</span><span>' + bz(transactionTotal) + '</span></div>'
+        + '<div class="receipt-total-row main"><span>Collected</span><span>' + bz(saleCollectedAmount(s)) + '</span></div>'
+        + (s.method === 'partial' ? '<div class="receipt-total-row"><span style="color:var(--warning);">Still Owed</span><span style="color:var(--warning);">' + bz(saleOutstanding(s)) + '</span></div>' : '')
         + '</div>';
     openModal('viewSaleModal');
 }
@@ -1872,7 +2083,7 @@ function addEditSaleLine(name, qty, price) {
         '<input class="line-input" type="text" placeholder="Item name or description..." value="' + escH(name) + '" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Qty" value="' + qty + '" min="1" style="text-align:center;" oninput="updateEditSaleTotal()">'
         + '<input class="line-input" type="number" placeholder="Price" value="' + escH(price) + '" min="0" step="0.01" style="text-align:right;" oninput="updateEditSaleTotal()">'
-        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">✕</button>';
+        + '<button class="line-remove" onclick="this.closest(\'.line-item-row\').remove();updateEditSaleTotal()">' + (typeof scIcon === 'function' ? scIcon('x', 14) : '×') + '</button>';
     document.getElementById('editSaleLineItems').appendChild(row);
 }
 
@@ -1910,8 +2121,8 @@ async function submitEditSale() {
             if (typeof haptic === 'function') haptic('success');
             showToast('Sale updated!', 'ok');
             await loadAll();
-        } else { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ ' + (data.error || 'Error'), 'err'); }
-    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('❌ Connection error.', 'err'); }
+        } else { btn.disabled = false; btn.textContent = 'Save Changes'; showToast(data.error || 'Error', 'err'); }
+    } catch (e) { btn.disabled = false; btn.textContent = 'Save Changes'; showToast('Connection error.', 'err'); }
 }
 
 // -- Reverse Sale --------------------------------------------------------------
@@ -1932,7 +2143,11 @@ function reverseSale(saleId) {
     document.getElementById('reverseReason').value = '';
     document.getElementById('reverseConfirmCheck').checked = false;
     document.getElementById('reverseSubmitBtn').disabled = true;
-    document.getElementById('reverseSubmitBtn').textContent = '↩️ Confirm Reversal';
+    const revBtn = document.getElementById('reverseSubmitBtn');
+    if (revBtn) {
+        revBtn.textContent = 'Confirm Reversal';
+        if (typeof initDataIcons === 'function') initDataIcons(revBtn.parentElement || document);
+    }
     openModal('reverseSaleModal');
     setTimeout(() => document.getElementById('reverseReason').focus(), 300);
 }
@@ -1973,12 +2188,14 @@ async function submitReverse() {
             showToast('Sale reversed.', '');
             await loadAll();
         } else {
-            btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
-            showToast('❌ ' + (data.error || 'Could not reverse.'), 'err');
+            btn.disabled = false; btn.textContent = 'Confirm Reversal';
+            if (typeof initDataIcons === 'function') initDataIcons(btn);
+            showToast(data.error || 'Could not reverse.', 'err');
         }
     } catch (e) {
-        btn.disabled = false; btn.textContent = '↩️ Confirm Reversal';
-        showToast('❌ Connection error.', 'err');
+        btn.disabled = false; btn.textContent = 'Confirm Reversal';
+        if (typeof initDataIcons === 'function') initDataIcons(btn);
+        showToast('Connection error.', 'err');
     }
 }
 
@@ -1988,6 +2205,16 @@ async function deductInventory(sku, qty, saleId) {
         const params = new URLSearchParams({ action: 'adjuststock', sku, qty, type: 'remove', reason: 'Sale #' + saleId, saleId });
         await apiPostAsync(params);
     } catch (e) { console.warn('Inventory deduct failed:', e); }
+}
+
+// -- Payout slip printing -------------------------------------------------------
+function printPayoutSlip(payoutId) {
+    const p = allPayouts.find(x => String(x.payoutId) === String(payoutId));
+    if (!p) { showToast('Payout not found', 'err'); return; }
+    if (typeof buildPayoutSlipHTML !== 'function') { showToast('Print module not loaded', 'err'); return; }
+    const html = buildPayoutSlipHTML(p, currentUser);
+    if (typeof printHTML === 'function') printHTML(html);
+    else _openAndPrint(html);
 }
 
 // -- Receipt Printing ----------------------------------------------------------
@@ -2034,7 +2261,9 @@ function showToast(msg, type) {
 // -- Init ----------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
     currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Cashier';
-    isManager   = currentUser.toLowerCase().startsWith('manager');
+    isManager   = typeof getEffectiveRole === 'function'
+        ? getEffectiveRole(currentUser) === 'manager'
+        : currentUser.toLowerCase().startsWith('manager');
     
     // Apply manager class to body for CSS-based role visibility
     if (isManager) {
@@ -2058,6 +2287,7 @@ document.addEventListener('DOMContentLoaded', function () {
     updateShiftBanner();
     setInterval(updateShiftBanner, 60000);
     initEODShiftPills();
+    if (typeof initDataIcons === 'function') initDataIcons();
 });
 
 window.addEventListener('sc-back-online', function () { loadAll(); });

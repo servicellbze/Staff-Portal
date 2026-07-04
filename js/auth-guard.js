@@ -27,6 +27,12 @@
         return 'technician';
     }
 
+    function getEffectiveRole() {
+        const stored = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
+        if (['manager', 'cashier', 'technician'].includes(stored)) return stored;
+        return deriveRole(getUser());
+    }
+
     const page = window.location.pathname.split('/').pop() || 'index.html';
 
     // Not logged in → back to login
@@ -37,7 +43,7 @@
 
     // Role-restricted page → check access
     if (PAGE_ACCESS[page]) {
-        const role = deriveRole(getUser());
+        const role = getEffectiveRole();
         if (!PAGE_ACCESS[page].includes(role)) {
             window.location.replace('index.html');
             throw new Error(`Auth guard: role "${role}" cannot access ${page}`);

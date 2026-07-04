@@ -3,7 +3,7 @@
 // Requires: js/qz-drawer.js loaded before this file
 
 const RECEIPT_STYLES = `
-@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice { background: white !important; color: #000 !important; } img { display: block !important; } }
+@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
 #printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 5px; }
@@ -34,9 +34,49 @@ const RECEIPT_STYLES = `
 .pi-qr-text { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; }
 .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; text-align: center; }
+.po-slip { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-size: 10px; font-weight: 400; line-height: 1.45; text-align: left; }
+.po-slip * { box-sizing: border-box; color: #000; }
+.po-rule-eq { display: block; width: 100%; height: 0; border: none; border-top: 2px solid #000; margin: 7px 0; }
+.po-rule-dash { display: block; width: 100%; height: 0; border: none; border-top: 1px dashed #000; margin: 7px 0; }
+.po-banner { text-align: center; margin: 5px 0; }
+.po-company { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; margin: 0 0 3px; }
+.po-title { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; margin: 0; }
+.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 9px; line-height: 1.55; margin: 1px 0; font-weight: 400; }
+.po-meta-row span:last-child { text-align: right; white-space: nowrap; flex-shrink: 0; }
+.po-meta-row span:first-child { min-width: 0; word-break: break-word; }
+.po-block { margin: 2px 0; }
+.po-line { font-size: 10px; font-weight: 400; line-height: 1.55; margin: 2px 0; word-break: break-word; }
+.po-line .po-k { font-weight: 700; }
+.po-line-label { font-size: 10px; font-weight: 700; margin: 0 0 2px; line-height: 1.55; }
+.po-line-body { font-size: 10px; font-weight: 400; line-height: 1.45; word-break: break-word; margin: 0 0 2px; }
+.po-total-line { font-size: 10px; font-weight: 400; line-height: 1.55; margin: 2px 0 0; }
+.po-total-line .po-k { font-weight: 700; }
+.po-words { font-size: 10px; font-weight: 400; line-height: 1.45; margin: 0 0 2px; }
+.po-foot { margin-top: 2px; font-size: 9px; font-weight: 400; text-align: center; line-height: 1.5; }
+.po-slip#printInvoice, .po-slip#printInvoice * { font-weight: 400; }
+.po-slip#printInvoice .po-k, .po-slip#printInvoice .po-line-label, .po-slip#printInvoice .po-company, .po-slip#printInvoice .po-title { font-weight: 700; }
+.po-report { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-weight: 400; }
+.po-report * { box-sizing: border-box; color: #000; }
+.po-report-head { text-align: center; margin-bottom: 4px; }
+.po-report-company { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; margin: 0 0 2px; }
+.po-report-title { font-size: 10px; font-weight: 700; margin: 0 0 2px; }
+.po-report-date { font-size: 10px; font-weight: 400; margin: 0 0 2px; }
+.po-report-rule { height: 0; border: none; border-top: 2px solid #000; margin: 6px 0; }
+.po-report-table { width: 100%; border-collapse: collapse; font-size: 9px; font-weight: 400; }
+.po-report-table th { text-align: left; font-size: 8px; font-weight: 700; padding: 3px 0; border-bottom: 2px solid #000; }
+.po-report-table th.col-amt { text-align: right; }
+.po-report-table td { padding: 3px 0; border-bottom: 1px solid #000; vertical-align: top; word-break: break-word; }
+.po-report-table td.col-amt { text-align: right; font-weight: 700; white-space: nowrap; }
+.po-report-table tr.total td { border-top: 3px solid #000; border-bottom: none; font-size: 11px; font-weight: 700; padding-top: 5px; }
+.po-report-table tr.total td.col-amt { text-align: right; }
+.po-report-table td.empty { text-align: center; padding: 10px 0; border-bottom: none; }
+.po-report-foot { text-align: center; font-size: 8px; font-weight: 400; margin-top: 8px; border-top: 1px dashed #000; padding-top: 5px; line-height: 1.4; }
+.po-report#printInvoice, .po-report#printInvoice * { font-weight: 400; }
+.po-report#printInvoice .po-report-company, .po-report#printInvoice .po-report-title, .po-report#printInvoice th, .po-report#printInvoice tr.total td, .po-report#printInvoice td.col-amt { font-weight: 700; }
 `;
 
-const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&display=swap">';
+const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">';
+const PO_FONT_LINK = RECEIPT_FONT_LINK;
 const QR_LIBRARY = '<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>';
 
 function _esc(str) {
@@ -215,6 +255,193 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
 </table>
 <div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>`;
 }
+
+// ── Payout slip & report (sales.js) ───────────────────────────────────────────
+function _intToWords(n) {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+        'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    n = Math.floor(Math.abs(n));
+    if (n === 0) return 'Zero';
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+    if (n < 1000) {
+        return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + _intToWords(n % 100) : '');
+    }
+    if (n < 1000000) {
+        return _intToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + _intToWords(n % 1000) : '');
+    }
+    return _intToWords(Math.floor(n / 1000000)) + ' Million' + (n % 1000000 ? ' ' + _intToWords(n % 1000000) : '');
+}
+
+function amountToWordsLine(amount) {
+    const n = Math.round((parseFloat(amount) || 0) * 100) / 100;
+    const dollars = Math.floor(n);
+    const cents = Math.round((n - dollars) * 100);
+    const dollarPart = _intToWords(dollars) + (dollars === 1 ? ' Dollar' : ' Dollars');
+    if (cents > 0) {
+        return dollarPart + ' and ' + _intToWords(cents) + (cents === 1 ? ' Cent' : ' Cents');
+    }
+    return dollarPart + ' only';
+}
+
+function amountToWords(amount) {
+    return amountToWordsLine(amount);
+}
+
+function formatPayoutSlipDate(ts) {
+    const d = ts ? new Date(ts) : new Date();
+    if (isNaN(d.getTime())) return '— / — / —';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return dd + ' / ' + mm + ' / ' + yyyy;
+}
+
+function formatPayoutSlipDateShort(ts) {
+    const d = ts ? new Date(ts) : new Date();
+    if (isNaN(d.getTime())) return '—/—/—';
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return dd + '/' + mm + '/' + yyyy;
+}
+
+function formatPayoutSlipTime(ts) {
+    const d = ts ? new Date(ts) : new Date();
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+const STAFF_DISPLAY_NAMES = {
+    cashier_chee:     'Ericson',
+    cashier_coleman:  'Kiana',
+    manager_chee:     'Eric',
+    technician_bailey:'Kareem',
+    technician_bat:   'Bat'
+};
+
+function resolveStaffDisplayName(username) {
+    if (!username) return '—';
+    const key = String(username).trim();
+    const lower = key.toLowerCase();
+    try {
+        const sessionUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+        const sessionName = localStorage.getItem('scDisplayName') || sessionStorage.getItem('scDisplayName') || '';
+        if (sessionName && sessionUser.toLowerCase() === lower) return sessionName;
+    } catch (_) {}
+    if (STAFF_DISPLAY_NAMES[lower]) return STAFF_DISPLAY_NAMES[lower];
+    return key.replace(/_/g, ' ');
+}
+window.resolveStaffDisplayName = resolveStaffDisplayName;
+
+function buildPayoutSlipHTML(p, loggedByUser) {
+    const amount     = parseFloat(p.amount) || 0;
+    const slipNo     = p.payoutId || '—';
+    const dateLong   = formatPayoutSlipDate(p.timestamp);
+    const dateShort  = formatPayoutSlipDateShort(p.timestamp);
+    const timeStr    = formatPayoutSlipTime(p.timestamp);
+    const author     = p.loggedBy || loggedByUser || '';
+    const issuedBy   = resolveStaffDisplayName(author);
+    const receivedBy = p.takenBy || '—';
+    const reasonRaw  = (p.reason || '').trim();
+    const reason     = reasonRaw || '---';
+    const shift      = p.shift || '—';
+    const words      = amountToWordsLine(amount);
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8">${PO_FONT_LINK}<style>${RECEIPT_STYLES}</style></head><body>
+<div class="po-slip" id="printInvoice">
+    <div class="po-rule-eq" aria-hidden="true"></div>
+    <div class="po-banner">
+        <div class="po-company">SERVICELL BELIZE</div>
+        <div class="po-title">PAYOUT SLIP</div>
+    </div>
+    <div class="po-rule-eq" aria-hidden="true"></div>
+
+    <div class="po-meta-row"><span>Slip No: #${_esc(slipNo)}</span><span>Date: ${dateShort}</span></div>
+    <div class="po-meta-row"><span>Shift: ${_esc(shift)}</span><span>Time: ${timeStr}</span></div>
+
+    <div class="po-rule-dash" aria-hidden="true"></div>
+
+    <div class="po-block">
+        <div class="po-line"><span class="po-k">ISSUED BY:</span> ${_esc(issuedBy)}</div>
+        <div class="po-line"><span class="po-k">RECEIVED BY:</span> ${_esc(receivedBy)}</div>
+    </div>
+
+    <div class="po-rule-dash" aria-hidden="true"></div>
+
+    <div class="po-block">
+        <div class="po-line-label">PURPOSE / REASON:</div>
+        <div class="po-line-body">${_esc(reason)}</div>
+    </div>
+
+    <div class="po-rule-dash" aria-hidden="true"></div>
+
+    <div class="po-block">
+        <div class="po-total-line"><span class="po-k">TOTAL PAID:</span> BZ$${amount.toFixed(2)}</div>
+        <div class="po-words">(${_esc(words)})</div>
+    </div>
+
+    <div class="po-rule-dash" aria-hidden="true"></div>
+
+    <div class="po-foot">Authorized on ${dateLong}</div>
+</div></body></html>`;
+}
+
+function buildPayoutsReportHTML(payouts, displayDate) {
+    const list  = [...(payouts || [])].reverse();
+    const total = list.reduce((t, p) => t + (parseFloat(p.amount) || 0), 0);
+    const dateLabel = displayDate || formatPayoutSlipDateShort(Date.now()).replace(/\//g, '-');
+
+    function bzAmt(n) {
+        return 'BZ$' + (parseFloat(n) || 0).toFixed(2);
+    }
+
+    const rows = list.length
+        ? list.map(p => {
+            const reason  = ((p.reason || '').trim() || '---').substring(0, 30);
+            const takenBy = (p.takenBy || '').trim();
+            const time    = p.timestamp
+                ? new Date(p.timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+                : '';
+            return '<tr>'
+                + '<td>' + _esc(time) + '</td>'
+                + '<td>' + _esc(reason) + '</td>'
+                + '<td>' + _esc(takenBy) + '</td>'
+                + '<td class="col-amt">' + bzAmt(p.amount) + '</td>'
+                + '</tr>';
+        }).join('')
+        : '<tr><td colspan="4" class="empty">No payouts</td></tr>';
+
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8">${PO_FONT_LINK}<title>Payouts Report</title><style>${RECEIPT_STYLES}</style></head><body>
+<div class="po-report" id="printInvoice">
+    <div class="po-report-head">
+        <div class="po-report-company">SERVICELL BELIZE</div>
+        <div class="po-report-title">Payouts Report</div>
+        <div class="po-report-date">${_esc(dateLabel)}</div>
+    </div>
+    <div class="po-report-rule" aria-hidden="true"></div>
+    <table class="po-report-table">
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Reason</th>
+                <th>Taken By</th>
+                <th class="col-amt">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows}
+            <tr class="total">
+                <td colspan="3">Total Payouts</td>
+                <td class="col-amt">${bzAmt(total)}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="po-report-foot">Printed ${_esc(new Date().toLocaleString())}</div>
+</div></body></html>`;
+}
+window.buildPayoutsReportHTML = buildPayoutsReportHTML;
 
 // ── Unified print entry point ─────────────────────────────────────────────────
 // Tries QZ Tray first, falls back to window.print()

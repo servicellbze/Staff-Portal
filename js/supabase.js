@@ -94,6 +94,45 @@ const Auth = {
 
 // ── JOBS ──────────────────────────────────────────────────────────────────────
 const Jobs = {
+  _normalizeImageUrl(item) {
+    const trimmed = String(item).trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('http')) return trimmed;
+    return `${SUPABASE_URL}/storage/v1/object/public/repair-photos/${encodeURIComponent(trimmed)}`;
+  },
+
+  _parseInspectionImages(raw) {
+    if (!raw) return [];
+    return String(raw).split(',').map(s => Jobs._normalizeImageUrl(s)).filter(Boolean);
+  },
+
+  /** Merge job_inspection_images rows (legacy new-job uploads) into job objects */
+  async _mergeInspectionImages(jobs) {
+    if (!jobs.length) return jobs;
+    try {
+      const imgRows = await sbGet('job_inspection_images', 'select=job_id,image_url');
+      const byJob = {};
+      for (const row of imgRows) {
+        const url = Jobs._normalizeImageUrl(row.image_url);
+        if (!url) continue;
+        if (!byJob[row.job_id]) byJob[row.job_id] = [];
+        if (!byJob[row.job_id].includes(url)) byJob[row.job_id].push(url);
+      }
+      for (const job of jobs) {
+        const extra = byJob[job.id] || [];
+        if (!extra.length) continue;
+        const merged = [...job.inspectionImages];
+        for (const url of extra) {
+          if (!merged.includes(url)) merged.push(url);
+        }
+        job.inspectionImages = merged;
+      }
+    } catch (e) {
+      console.warn('[Jobs] Could not merge job_inspection_images:', e.message);
+    }
+    return jobs;
+  },
+
   _map(j) {
     return {
       id:                  j.id,
@@ -113,7 +152,7 @@ const Jobs = {
       technician:          j.technician,
       estimatedCompletion: j.estimated_completion,
       inspection:          j.inspection,
-      inspectionImages:    j.inspection_images ? String(j.inspection_images).split(',').map(s => s.trim()).filter(Boolean) : [],
+      inspectionImages:    Jobs._parseInspectionImages(j.inspection_images),
       claimedBy:           j.claimed_by,
       claimedAt:           j.claimed_at,
       calledStatus:        j.called_status,
@@ -126,12 +165,16 @@ const Jobs = {
 
   async list() {
     const rows = await sbGet('jobs', 'archived=eq.false&order=id.desc');
-    return { jobs: rows.map(Jobs._map) };
+    const jobs = rows.map(Jobs._map);
+    await Jobs._mergeInspectionImages(jobs);
+    return { jobs };
   },
 
   async listArchived() {
     const rows = await sbGet('jobs', 'archived=eq.true&order=id.desc');
-    return { jobs: rows.map(j => ({ ...Jobs._map(j), archived: true })) };
+    const jobs = rows.map(j => ({ ...Jobs._map(j), archived: true }));
+    await Jobs._mergeInspectionImages(jobs);
+    return { jobs };
   },
 
   async lastId() {
@@ -140,22 +183,46 @@ const Jobs = {
   },
 
   async create(data) {
-    const id = data.repairId || data.id;
-    await sbPost('jobs', {
-      id,
-      customer_name:    data.customerName,
-      device:           data.device,
-      status:           data.status || 'received',
-      customer_phone:   data.customerPhone || '',
-      notes:            data.notes || '',
-      issue:            data.issue || '',
-      job_type:         data.jobType || '',
-      priority:         data.priority || 'low',
-      technician:       data.technician || data.username || 'Unknown',
-      estimated_completion: data.estimatedCompletion || null,
-      inspection:       data.inspection || 'No damage noted'
-    }, 'return=minimal');
-    await Customers.save(data.customerName, data.customerPhone);
+    const id = Number(data.repairId || data.id);
+    if (!id || Number.isNaN(id)) {
+      return { success: false, error: 'Valid job ID is required' };
+    }
+
+    const existing = await sbGet('jobs', `id=eq.${id}&select=id&limit=1`);
+    if (existing.length) {
+      return { success: false, error: `Job #${id} already exists — refresh the page for the next available ID` };
+    }
+
+    const dateReceived = data.dateReceived || new Date().toLocaleDateString('en-US', {
+      month: 'numeric', day: 'numeric', year: 'numeric'
+    });
+
+    try {
+      await sbPost('jobs', {
+        id,
+        customer_name:        data.customerName,
+        device:               data.device,
+        status:               data.status || 'received',
+        customer_phone:       data.customerPhone || '',
+        notes:                data.notes || '',
+        issue:                data.issue || '',
+        job_type:             data.jobType || '',
+        priority:             data.priority || 'low',
+        technician:           data.technician || data.username || 'Unknown',
+        estimated_completion: data.estimatedCompletion || null,
+        inspection:           data.inspection || 'No damage noted',
+        date_received:        dateReceived,
+        payment:              data.payment || 'unpaid'
+      }, 'return=minimal');
+    } catch (err) {
+      const msg = err.message || 'Could not create job';
+      if (/duplicate|23505|already exists/i.test(msg)) {
+        return { success: false, error: `Job #${id} already exists — refresh the page for the next available ID` };
+      }
+      return { success: false, error: msg.replace(/^Supabase \d+: /, '') };
+    }
+
+    await Customers.save(data.customerName, data.customerPhone).catch(e => console.warn('[Customers]', e));
     Notifications.push('received', '📦 New Job Received',
       `Job #${id} — ${data.device} for ${data.customerName}`).catch(e => console.warn('[Notify]', e));
     return { success: true };
@@ -479,7 +546,8 @@ const Sales = {
     let query = 'order=timestamp.desc';
     if (data.date)              query += `&shift_date=eq.${data.date}`;
     else if (data.from && data.to) query += `&shift_date=gte.${data.from}&shift_date=lte.${data.to}`;
-    query += '&status=neq.reversed';
+    const includeReversed = data.includeReversed === '1' || data.includeReversed === true || data.includeReversed === 'true';
+    if (!includeReversed) query += '&status=neq.reversed';
     const rows = await sbGet('sales', query);
     return { sales: rows.map(s => ({
       saleId:     s.sale_id,
@@ -526,7 +594,10 @@ const Sales = {
         }).catch(e => console.warn(`Inventory deduct error for ${item.sku}:`, e));
       }
     }
-    await Audit.log('SALE_CREATE', `${data.cashier} | ${saleId} | BZ$${Number(data.total).toFixed(2)}`);
+    const collected = (data.method === 'partial')
+      ? Number(data.amountPaid) || 0
+      : Number(data.total) || 0;
+    await Audit.log('SALE_CREATE', `${data.cashier} | ${saleId} | BZ$${collected.toFixed(2)} collected`);
     return { success: true, saleId };
   },
 
@@ -612,6 +683,8 @@ const Bills = {
       person_name: data.personName,
       items:       JSON.parse(data.items),
       total_owed:  Number(data.totalOwed) || 0,
+      total_paid:  0,
+      status:      'open',
       cashier:     data.cashier || 'Unknown'
     }, 'return=minimal');
     return { success: true, billId };
@@ -622,8 +695,10 @@ const Bills = {
     const rows = await sbGet('bills', `bill_id=eq.${encodeURIComponent(data.billId)}&select=*`);
     if (!rows.length) return { success: false, error: 'Bill not found' };
     const bill    = rows[0];
-    const newPaid = bill.total_paid + Number(data.amount);
-    const settled = newPaid >= bill.total_owed - 0.01;
+    const prevPaid = Number(bill.total_paid) || 0;
+    const newPaid = prevPaid + Number(data.amount);
+    const owed = Number(bill.total_owed) || 0;
+    const settled = newPaid >= owed - 0.01;
     await sbPatch('bills', `bill_id=eq.${encodeURIComponent(data.billId)}`, {
       total_paid: newPaid,
       status:     settled ? 'settled' : 'open'
@@ -635,17 +710,33 @@ const Bills = {
       total:      Number(data.amount),
       method:     data.payMethod || 'cash',
       amountPaid: Number(data.amount),
-      shiftDate:  data.shiftDate || ''
+      shiftDate:  data.shiftDate || bill.shift_date || null,
+      shift:      data.shift || ''
     });
+    if (saleResult && saleResult.success === false) {
+      await sbPatch('bills', `bill_id=eq.${encodeURIComponent(data.billId)}`, {
+        total_paid: prevPaid,
+        status:     prevPaid >= owed - 0.01 ? 'settled' : 'open'
+      });
+      return saleResult;
+    }
     return { success: true, fullySettled: settled, saleId: saleResult.saleId };
   },
 
   async update(data) {
     if (!data.billId) return { success: false, error: 'BillID required' };
+    const rows = await sbGet('bills', `bill_id=eq.${encodeURIComponent(data.billId)}&select=total_paid,total_owed`);
     const patch = {};
     if (data.personName !== undefined) patch.person_name = data.personName;
     if (data.items      !== undefined) patch.items       = JSON.parse(data.items);
-    if (data.totalOwed  !== undefined) patch.total_owed  = Number(data.totalOwed);
+    if (data.totalOwed  !== undefined) {
+      patch.total_owed = Number(data.totalOwed);
+      if (rows.length) {
+        const paid = Number(rows[0].total_paid) || 0;
+        if (paid >= patch.total_owed - 0.01) patch.status = 'settled';
+        else patch.status = 'open';
+      }
+    }
     await sbPatch('bills', `bill_id=eq.${encodeURIComponent(data.billId)}`, patch);
     return { success: true };
   }
@@ -814,6 +905,7 @@ const Audit = {
 // ── MAIN ROUTER (drop-in replacement for the GAS action router) ───────────────
 // This matches the exact same action names your frontend already uses.
 async function handleAction(action, id, data) {
+  try {
   switch (action) {
     case 'login':          return Auth.login(data.username, data.password);
     case 'changepassword': return Auth.changePassword(data.username, data.currentPassword || data.currentpassword, data.newPassword || data.newpassword);
@@ -876,6 +968,10 @@ async function handleAction(action, id, data) {
     case 'subscribe':      return PushWorker.subscribe(data);
     case 'unsubscribe':    return PushWorker.unsubscribe(data.endpoint);
 
-    default: return { error: `Unknown action: ${action}` };
+    default: return { success: false, error: `Unknown action: ${action}` };
+  }
+  } catch (err) {
+    console.error(`[API] ${action} failed:`, err.message);
+    return { success: false, error: err.message || 'Request failed' };
   }
 }

@@ -17,25 +17,39 @@ function deriveRole(username) {
     return 'technician';
 }
 
+/** Prefer server role from login; fall back to username prefix */
+function getEffectiveRole(username) {
+    const u = username || getLoggedInUser();
+    const stored = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
+    if (['manager', 'cashier', 'technician'].includes(stored)) return stored;
+    return deriveRole(u);
+}
+
+function escH(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+}
+
 
 // ── Nav link definitions ──────────────────────────────────────────────────────
 const NAV_LINKS = [
-    { label: 'Dashboard',      icon: '🏠', href: 'index.html',          roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Current Jobs',   icon: '🔧', href: 'current-jobs.html',   roles: ['technician', 'cashier', 'manager'] },
-    { label: 'New Job',        icon: '➕', href: 'new-job.html',         roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Special Orders', icon: '🛒', href: 'special-orders.html', roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Inventory',      icon: '📦', href: 'inventory.html',       roles: ['technician', 'cashier', 'manager'] },
-    { label: 'Sales',          icon: '💰', href: 'sales.html',          roles: ['cashier', 'manager'] },
-    { label: 'Statistics',     icon: '📊', href: 'statistics.html',       roles: ['manager'] },
-    { label: 'Settings',       icon: '⚙️', href: 'settings.html',        roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Dashboard',      icon: 'home',     href: 'index.html',          roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Current Jobs',   icon: 'wrench',   href: 'current-jobs.html',   roles: ['technician', 'cashier', 'manager'] },
+    { label: 'New Job',        icon: 'plus',     href: 'new-job.html',         roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Special Orders', icon: 'cart',     href: 'special-orders.html', roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Inventory',      icon: 'package',  href: 'inventory.html',       roles: ['technician', 'cashier', 'manager'] },
+    { label: 'Sales',          icon: 'dollar',   href: 'sales.html',          roles: ['cashier', 'manager'] },
+    { label: 'Statistics',     icon: 'chart',    href: 'statistics.html',       roles: ['manager'] },
+    { label: 'Settings',       icon: 'settings', href: 'settings.html',        roles: ['technician', 'cashier', 'manager'] },
 ];
 
 // ── Auth helpers (global) ─────────────────────────────────────────────────────
 function logOut() {
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('scUser');
-    sessionStorage.removeItem('isLoggedIn');
-    sessionStorage.removeItem('scUser');
+    ['isLoggedIn', 'scUser', 'scRole', 'scDisplayName'].forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+    });
     window.location.href = 'index.html';
 }
 
@@ -109,7 +123,7 @@ const ComponentLoader = {
         if (!placeholder) return;
 
         const username = getLoggedInUser();
-        const role = deriveRole(username);
+        const role = getEffectiveRole(username);
         const current = window.location.pathname.split('/').pop() || 'index.html';
         const visible = NAV_LINKS.filter(l => l.roles.includes(role));
 
@@ -118,32 +132,25 @@ const ComponentLoader = {
             return `<a href="${l.href}" class="nav-btn ${active}">${l.label}</a>`;
         }).join('');
 
-        // Add this role icon map near the top with your other constants
-        const ROLE_ICONS = {
-            manager: '👑',
-            cashier: '💵',
-            technician: '🔧'
-        };
+        const ROLE_ICONS = { manager: 'crown', cashier: 'cash', technician: 'wrench' };
+        const roleIconName = ROLE_ICONS[role] || 'wrench';
+        const roleIconSvg = typeof scIcon === 'function' ? scIcon(roleIconName, 16) : '';
 
-        // Then in your loadNav() function, get the icon:
-        const roleIcon = ROLE_ICONS[role] || '🔧';
-
-        // Updated accountHTML with icons:
         const accountHTML = username ? `
   <div class="nav-account" id="navAccount">
     <button class="account-chip" onclick="toggleAccountMenu(event)" aria-label="Account menu">
-      <span class="account-avatar" title="${role}">${roleIcon}</span>
+      <span class="account-avatar" title="${role}">${roleIconSvg}</span>
       <span class="account-name">${username}</span>
-      <span class="account-caret">▾</span>
+      <span class="account-caret">${typeof scIcon === 'function' ? scIcon('chevronDown', 10) : ''}</span>
     </button>
     <div class="account-dropdown" id="accountDropdown">
       <div class="dropdown-header">
         <span class="dropdown-username">${username}</span>
-        <span class="dropdown-role-badge">${roleIcon} ${role}</span>
+        <span class="dropdown-role-badge">${roleIconSvg} ${role}</span>
       </div>
       <div class="dropdown-divider"></div>
-      <a href="settings.html" class="dropdown-item">⚙️ Settings</a>
-      <button class="dropdown-item danger" onclick="logOut()">🚪 Log out</button>
+      <a href="settings.html" class="dropdown-item">${typeof scIcon === 'function' ? scIcon('settings', 15) : ''} Settings</a>
+      <button class="dropdown-item danger" onclick="logOut()">${typeof scIcon === 'function' ? scIcon('logout', 15) : ''} Log out</button>
     </div>
   </div>` : '';
 
@@ -181,7 +188,7 @@ const ComponentLoader = {
               ${visible.map(l => {
             const active = current === l.href ? 'active' : '';
             return `<a href="${l.href}" class="nav-btn mobile-nav-btn ${active}">
-                <span class="mobile-nav-icon">${l.icon}</span>
+                <span class="mobile-nav-icon">${typeof scIcon === 'function' ? scIcon(l.icon, 22) : ''}</span>
                 <span class="mobile-nav-label">${l.label}</span>
               </a>`;
         }).join('')}
@@ -189,17 +196,18 @@ const ComponentLoader = {
             ${username ? `
             <div class="mobile-menu-footer">
               <div class="mobile-user-info">
-                <div class="mobile-avatar">${roleIcon}</div>
+                <div class="mobile-avatar">${roleIconSvg}</div>
                 <div class="mobile-user-text">
                   <span class="mobile-username">${username}</span>
                   <span class="mobile-role-badge">${role}</span>
                 </div>
               </div>
-              <button class="mobile-logout" onclick="logOut()">🚪 Log out</button>
+              <button class="mobile-logout" onclick="logOut()">${typeof scIcon === 'function' ? scIcon('logout', 15) : ''} Log out</button>
             </div>` : ''}
           </div>`;
 
         this.attachNavListeners();
+        if (typeof initDataIcons === 'function') initDataIcons(placeholder);
     },
 
     async loadFooter() {
@@ -293,6 +301,14 @@ if (document.readyState === 'loading') {
     ComponentLoader.init();
 }
 
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof initDataIcons === 'function') initDataIcons();
+    });
+} else if (typeof initDataIcons === 'function') {
+    initDataIcons();
+}
+
 window.ComponentLoader = ComponentLoader;
 
 // ── Notification panel helpers ────────────────────────────────────────────────
@@ -318,7 +334,7 @@ function renderNotifPanel() {
     const notifs = InAppNotif.get();
     if (!notifs.length) {
         list.innerHTML = `<div class="notif-empty">
-            <span style="font-size:1.8rem;">🔔</span>
+            ${typeof scIcon === 'function' ? scIcon('bell', 32) : ''}
             <p>No notifications yet</p>
         </div>`;
         return;
@@ -327,11 +343,11 @@ function renderNotifPanel() {
         <div class="notif-item ${n.read ? '' : 'unread'}">
             <div class="notif-icon">${InAppNotif.typeIcon(n.type)}</div>
             <div class="notif-content">
-                <div class="notif-title">${n.title}</div>
-                <div class="notif-body">${n.body}</div>
+                <div class="notif-title">${escH(n.title)}</div>
+                <div class="notif-body">${escH(n.body)}</div>
                 <div class="notif-time">${InAppNotif.timeAgo(n.time)}</div>
             </div>
-            <button class="notif-dismiss" onclick="InAppNotif.dismiss(${idx});renderNotifPanel();" title="Dismiss">✕</button>
+            <button class="notif-dismiss" onclick="InAppNotif.dismiss(${idx});renderNotifPanel();" title="Dismiss">${typeof scIcon === 'function' ? scIcon('x', 14) : '×'}</button>
         </div>`).join('');
 }
 window.toggleNotifPanel = toggleNotifPanel;
@@ -513,16 +529,17 @@ const InAppNotif = {
 
     typeIcon(type) {
         const icons = {
-            received:     '📦',
-            ready:        '✅',
-            abandoned:    '⚠️',
-            specialorder: '🛒',
-            update:       '🚀',
-            jobstatus:    '🔧',
-            manageronly:  '🔒',
-            general:      '🔔'
+            received:     'package',
+            ready:        'success',
+            abandoned:    'warning',
+            specialorder: 'cart',
+            update:       'rocket',
+            jobstatus:    'wrench',
+            manageronly:  'lock',
+            general:      'bell'
         };
-        return icons[type] || '🔔';
+        const name = icons[type] || 'bell';
+        return typeof scIcon === 'function' ? scIcon(name, 18) : '';
     },
 
     dismiss(idx) {
@@ -545,7 +562,7 @@ window.InAppNotif = InAppNotif;
         if (document.getElementById('sc-offline-banner')) return;
         const b = document.createElement('div');
         b.id = 'sc-offline-banner';
-        b.innerHTML = '📡 You\'re offline — showing cached data. Changes will not save.';
+        b.innerHTML = (typeof scIcon === 'function' ? scIcon('offline', 14) + ' ' : '') + 'You\'re offline — showing cached data. Changes will not save.';
         b.style.cssText = [
             'position:fixed', 'top:0', 'left:0', 'right:0', 'z-index:99999',
             'background:#b45309', 'color:#fff', 'text-align:center',
