@@ -4,75 +4,73 @@
 
 const RECEIPT_STYLES = `
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
-#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
+#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 12px; font-weight: 700; line-height: 1.55; letter-spacing: 0; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
-.pi-shop { text-align: center; margin-bottom: 5px; }
-.pi-shop img { max-width: 70px; margin-bottom: 3px; display: block; margin-left: auto; margin-right: auto; }
-.pi-shop h1 { font-size: 14px; font-weight: 900; letter-spacing: 1px; margin: 0 0 2px; }
-.pi-shop p { font-size: 9px; margin: 1px 0; letter-spacing: 0; }
-.pi-rule { border: none; border-top: 2px solid #000; margin: 5px 0 4px; }
-.pi-dash { border: none; border-top: 1px solid #000; margin: 4px 0 3px; }
-.pi-title { text-align: center; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 3px 0 4px; }
-.pi-meta { font-size: 9px; line-height: 1.6; margin-bottom: 3px; }
-.pi-meta-row { font-size: 9px; margin: 3px 0 4px; padding: 3px 5px; background: transparent; border: 1px solid #000; line-height: 1.6; }
+.pi-shop { text-align: center; margin-bottom: 6px; }
+.pi-shop img { max-width: 85px; margin-bottom: 4px; display: block; margin-left: auto; margin-right: auto; }
+.pi-shop h1 { font-size: 17px; font-weight: 900; letter-spacing: 1px; margin: 0 0 3px; }
+.pi-shop p { font-size: 11px; margin: 2px 0; letter-spacing: 0; }
+.pi-rule { border: none; border-top: 2px solid #000; margin: 6px 0 5px; }
+.pi-dash { border: none; border-top: 1px solid #000; margin: 5px 0 4px; }
+.pi-title { text-align: center; font-size: 12px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; margin: 4px 0 5px; }
+.pi-meta { font-size: 11px; line-height: 1.55; margin-bottom: 4px; }
+.pi-meta-row { font-size: 11px; margin: 4px 0 5px; padding: 4px 6px; background: transparent; border: 1px solid #000; line-height: 1.55; }
 .pi-meta-row strong { display: block; }
-.pi-section { font-size: 8px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 2px; }
-.pi-grid { margin-bottom: 3px; }
-.pi-field-label { font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2px; }
-.pi-field-value { font-size: 10px; padding: 1px 0; border-bottom: 1px solid #000; min-height: 14px; margin-bottom: 3px; }
-.pi-notes { border: 1px solid #000; padding: 3px 4px; min-height: 28px; font-size: 9px; line-height: 1.5; margin: 2px 0 5px; }
-.pi-cost-table { width: 100%; border-collapse: collapse; margin: 3px 0 5px; font-size: 9px; }
-.pi-cost-table th { text-align: left; font-size: 8px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 0; border-bottom: 2px solid #000; }
+.pi-section { font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 5px 0 3px; }
+.pi-grid { margin-bottom: 4px; }
+.pi-field-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2px; }
+.pi-field-value { font-size: 12px; padding: 2px 0; border-bottom: 1px solid #000; min-height: 16px; margin-bottom: 4px; }
+.pi-notes { border: 1px solid #000; padding: 4px 5px; min-height: 32px; font-size: 11px; line-height: 1.5; margin: 3px 0 6px; }
+.pi-cost-table { width: 100%; border-collapse: collapse; margin: 4px 0 6px; font-size: 11px; }
+.pi-cost-table th { text-align: left; font-size: 10px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; padding: 3px 0; border-bottom: 2px solid #000; }
 .pi-cost-table th:last-child { text-align: right; }
-.pi-cost-table td { padding: 3px 0; border-bottom: 1px solid #000; }
+.pi-cost-table td { padding: 4px 0; border-bottom: 1px solid #000; }
 .pi-cost-table td:last-child { text-align: right; }
-.pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 11px; font-weight: 900; padding-top: 4px; }
-.pi-payment-status { text-align: center; font-size: 9px; margin: 4px 0 5px; padding: 3px 5px; background: transparent; border: 1px solid #000; font-weight: 900; }
-.pi-footer { text-align: center; font-size: 9px; margin-top: 6px; border-top: 1px solid #000; padding-top: 4px; line-height: 1.6; }
-.pi-qr { text-align: center; margin-top: 8px; }
-.pi-qr img { max-width: 120px; margin: 0 auto 4px; display: block !important; }
-.pi-qr-text { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; }
-.pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-.pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; text-align: center; }
-.po-slip { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-size: 10px; font-weight: 400; line-height: 1.45; text-align: left; }
-.po-slip * { box-sizing: border-box; color: #000; }
-.po-rule-eq { display: block; width: 100%; height: 0; border: none; border-top: 2px solid #000; margin: 7px 0; }
-.po-rule-dash { display: block; width: 100%; height: 0; border: none; border-top: 1px dashed #000; margin: 7px 0; }
-.po-banner { text-align: center; margin: 5px 0; }
-.po-company { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; margin: 0 0 3px; }
-.po-title { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; margin: 0; }
-.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 9px; line-height: 1.55; margin: 1px 0; font-weight: 400; }
+.pi-cost-table .pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-size: 13px; font-weight: 900; padding-top: 5px; }
+.pi-payment-status { text-align: center; font-size: 11px; margin: 5px 0 6px; padding: 4px 6px; background: transparent; border: 1px solid #000; font-weight: 900; }
+.pi-footer { text-align: center; font-size: 11px; margin-top: 7px; border-top: 1px solid #000; padding-top: 5px; line-height: 1.55; }
+.pi-qr { text-align: center; margin-top: 10px; }
+.pi-qr img { max-width: 145px; margin: 0 auto 5px; display: block !important; }
+.pi-qr-text { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; }
+.pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.pi-sig { border-top: 1px solid #000; padding-top: 3px; font-size: 10px; text-align: center; }
+.po-slip { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-size: 12px; font-weight: 700; line-height: 1.5; text-align: left; }
+.po-slip * { box-sizing: border-box; color: #000; font-weight: 700; }
+.po-rule-eq { display: block; width: 100%; height: 0; border: none; border-top: 2px solid #000; margin: 8px 0; }
+.po-rule-dash { display: block; width: 100%; height: 0; border: none; border-top: 1px dashed #000; margin: 8px 0; }
+.po-banner { text-align: center; margin: 6px 0; }
+.po-company { font-size: 13px; font-weight: 900; letter-spacing: 0.6px; margin: 0 0 4px; }
+.po-title { font-size: 12px; font-weight: 900; letter-spacing: 0.8px; margin: 0; }
+.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 11px; line-height: 1.55; margin: 2px 0; font-weight: 700; }
 .po-meta-row span:last-child { text-align: right; white-space: nowrap; flex-shrink: 0; }
 .po-meta-row span:first-child { min-width: 0; word-break: break-word; }
-.po-block { margin: 2px 0; }
-.po-line { font-size: 10px; font-weight: 400; line-height: 1.55; margin: 2px 0; word-break: break-word; }
-.po-line .po-k { font-weight: 700; }
-.po-line-label { font-size: 10px; font-weight: 700; margin: 0 0 2px; line-height: 1.55; }
-.po-line-body { font-size: 10px; font-weight: 400; line-height: 1.45; word-break: break-word; margin: 0 0 2px; }
-.po-total-line { font-size: 10px; font-weight: 400; line-height: 1.55; margin: 2px 0 0; }
-.po-total-line .po-k { font-weight: 700; }
-.po-words { font-size: 10px; font-weight: 400; line-height: 1.45; margin: 0 0 2px; }
-.po-foot { margin-top: 2px; font-size: 9px; font-weight: 400; text-align: center; line-height: 1.5; }
-.po-slip#printInvoice, .po-slip#printInvoice * { font-weight: 400; }
-.po-slip#printInvoice .po-k, .po-slip#printInvoice .po-line-label, .po-slip#printInvoice .po-company, .po-slip#printInvoice .po-title { font-weight: 700; }
-.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-weight: 400; }
-.po-report * { box-sizing: border-box; color: #000; }
-.po-report-head { text-align: center; margin-bottom: 4px; }
-.po-report-company { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; margin: 0 0 2px; }
-.po-report-title { font-size: 10px; font-weight: 700; margin: 0 0 2px; }
-.po-report-date { font-size: 10px; font-weight: 400; margin: 0 0 2px; }
-.po-report-rule { height: 0; border: none; border-top: 2px solid #000; margin: 6px 0; }
-.po-report-table { width: 100%; border-collapse: collapse; font-size: 9px; font-weight: 400; }
-.po-report-table th { text-align: left; font-size: 8px; font-weight: 700; padding: 3px 0; border-bottom: 2px solid #000; }
+.po-block { margin: 3px 0; }
+.po-line { font-size: 12px; font-weight: 700; line-height: 1.55; margin: 3px 0; word-break: break-word; }
+.po-line .po-k { font-weight: 900; }
+.po-line-label { font-size: 12px; font-weight: 900; margin: 0 0 3px; line-height: 1.55; }
+.po-line-body { font-size: 12px; font-weight: 700; line-height: 1.5; word-break: break-word; margin: 0 0 3px; }
+.po-total-line { font-size: 13px; font-weight: 700; line-height: 1.55; margin: 3px 0 0; }
+.po-total-line .po-k { font-weight: 900; }
+.po-words { font-size: 12px; font-weight: 700; line-height: 1.5; margin: 0 0 3px; }
+.po-foot { margin-top: 3px; font-size: 11px; font-weight: 700; text-align: center; line-height: 1.5; }
+.po-slip#printInvoice, .po-slip#printInvoice * { font-weight: 700 !important; }
+.po-slip#printInvoice .po-company, .po-slip#printInvoice .po-title, .po-slip#printInvoice .po-line-label, .po-slip#printInvoice .po-total-line, .po-slip#printInvoice .po-k { font-weight: 900 !important; }
+.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-weight: 700; font-size: 11px; }
+.po-report * { box-sizing: border-box; color: #000; font-weight: 700; }
+.po-report-head { text-align: center; margin-bottom: 5px; }
+.po-report-company { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; margin: 0 0 3px; }
+.po-report-title { font-size: 12px; font-weight: 900; margin: 0 0 3px; }
+.po-report-date { font-size: 12px; font-weight: 700; margin: 0 0 3px; }
+.po-report-rule { height: 0; border: none; border-top: 2px solid #000; margin: 7px 0; }
+.po-report-table { width: 100%; border-collapse: collapse; font-size: 11px; font-weight: 700; }
+.po-report-table th { text-align: left; font-size: 10px; font-weight: 900; padding: 4px 0; border-bottom: 2px solid #000; }
 .po-report-table th.col-amt { text-align: right; }
-.po-report-table td { padding: 3px 0; border-bottom: 1px solid #000; vertical-align: top; word-break: break-word; }
-.po-report-table td.col-amt { text-align: right; font-weight: 700; white-space: nowrap; }
-.po-report-table tr.total td { border-top: 3px solid #000; border-bottom: none; font-size: 11px; font-weight: 700; padding-top: 5px; }
+.po-report-table td { padding: 4px 0; border-bottom: 1px solid #000; vertical-align: top; word-break: break-word; }
+.po-report-table td.col-amt { text-align: right; font-weight: 900; white-space: nowrap; }
+.po-report-table tr.total td { border-top: 3px solid #000; border-bottom: none; font-size: 13px; font-weight: 900; padding-top: 6px; }
 .po-report-table tr.total td.col-amt { text-align: right; }
-.po-report-table td.empty { text-align: center; padding: 10px 0; border-bottom: none; }
-.po-report-foot { text-align: center; font-size: 8px; font-weight: 400; margin-top: 8px; border-top: 1px dashed #000; padding-top: 5px; line-height: 1.4; }
-.po-report#printInvoice, .po-report#printInvoice * { font-weight: 400; }
-.po-report#printInvoice .po-report-company, .po-report#printInvoice .po-report-title, .po-report#printInvoice th, .po-report#printInvoice tr.total td, .po-report#printInvoice td.col-amt { font-weight: 700; }
+.po-report-table td.empty { text-align: center; padding: 12px 0; border-bottom: none; }
+.po-report-foot { text-align: center; font-size: 10px; font-weight: 700; margin-top: 10px; border-top: 1px dashed #000; padding-top: 6px; line-height: 1.45; }
 `;
 
 const RECEIPT_FONT_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">';
@@ -249,20 +247,20 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-#printInvoice { font-family:'Courier New',Courier,monospace; font-size:10px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 40mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
+#printInvoice { font-family:'Courier New',Courier,monospace; font-size:12px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 40mm; line-height:1.55; letter-spacing:0; background:white; color:#000; }
 #printInvoice * { box-sizing:border-box; font-weight:700; color:#000; }
-#printInvoice h2 { text-align:center; font-size:14px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
-#printInvoice p { text-align:center; margin:1px 0; font-size:9px; }
-#printInvoice img { display:block; margin:0 auto 3px; max-width:70px; }
-#printInvoice hr { border:none; border-top:1px solid #000; margin:4px 0 3px; }
-#printInvoice hr.solid { border-top:2px solid #000; margin:5px 0 4px; }
-#printInvoice table { width:100%; border-collapse:collapse; font-size:9px; }
-#printInvoice th { border-bottom:2px solid #000; padding:3px 0; font-size:8px; text-align:left; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; }
+#printInvoice h2 { text-align:center; font-size:17px; font-weight:900; letter-spacing:1px; margin:0 0 3px; }
+#printInvoice p { text-align:center; margin:2px 0; font-size:11px; }
+#printInvoice img { display:block; margin:0 auto 4px; max-width:85px; }
+#printInvoice hr { border:none; border-top:1px solid #000; margin:5px 0 4px; }
+#printInvoice hr.solid { border-top:2px solid #000; margin:6px 0 5px; }
+#printInvoice table { width:100%; border-collapse:collapse; font-size:11px; }
+#printInvoice th { border-bottom:2px solid #000; padding:4px 0; font-size:10px; text-align:left; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; }
 #printInvoice th:nth-child(2),#printInvoice th:nth-child(3),#printInvoice th:nth-child(4) { text-align:right; }
-#printInvoice td { padding:3px 0; border-bottom:1px solid #000; }
-#printInvoice .divider td { border-top:2px solid #000; border-bottom:none; font-size:11px; font-weight:900; padding-top:4px; }
-#printInvoice .gst-row td { border-bottom:1px solid #000; font-size:9px; }
-#printInvoice .footer { text-align:center; font-size:9px; margin-top:6px; border-top:1px solid #000; padding-top:4px; line-height:1.6; }
+#printInvoice td { padding:4px 0; border-bottom:1px solid #000; }
+#printInvoice .divider td { border-top:2px solid #000; border-bottom:none; font-size:13px; font-weight:900; padding-top:5px; }
+#printInvoice .gst-row td { border-bottom:1px solid #000; font-size:11px; }
+#printInvoice .footer { text-align:center; font-size:11px; margin-top:7px; border-top:1px solid #000; padding-top:5px; line-height:1.55; }
 </style>
 <div id="printInvoice">
 <img src="${_receiptLogoSrc()}" alt="Servicell Belize">
@@ -597,7 +595,7 @@ function _windowPrint(htmlContent, onDone) {
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
 const A4_STYLES = `
 @media print { @page { size: A4; margin: 15mm 20mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; } body { background: white !important; } img { display: block !important; } }
-body { font-family: 'Courier New', Courier, monospace; font-size: 11px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
+body { font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
 * { box-sizing: border-box; }
 .pi-shop { text-align: center; margin-bottom: 12px; }
 .pi-shop img { max-width: 80px; display: block; margin: 0 auto 6px; }
