@@ -42,7 +42,7 @@ const RECEIPT_STYLES = `
 .po-banner { text-align: center; margin: 3px 0; }
 .po-company { font-size: 12px; font-weight: 900; letter-spacing: 0.4px; margin: 0 0 2px; }
 .po-title { font-size: 11px; font-weight: 900; letter-spacing: 0.5px; margin: 0; }
-.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: 10px; line-height: 1.35; margin: 1px 0; font-weight: 700; }
+.po-meta-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 10px; line-height: 1.5; letter-spacing: 0.2px; margin: 2px 0; font-weight: 700; }
 .po-meta-row span:last-child { text-align: right; white-space: nowrap; flex-shrink: 0; }
 .po-meta-row span:first-child { min-width: 0; word-break: break-word; }
 .po-block { margin: 2px 0; }
@@ -56,18 +56,19 @@ const RECEIPT_STYLES = `
 .po-foot { margin-top: 2px; font-size: 10px; font-weight: 700; text-align: center; line-height: 1.35; }
 .po-slip#printInvoice, .po-slip#printInvoice * { font-weight: 700 !important; }
 .po-slip#printInvoice .po-company, .po-slip#printInvoice .po-title, .po-slip#printInvoice .po-line-label, .po-slip#printInvoice .po-total-line, .po-slip#printInvoice .po-k { font-weight: 900 !important; }
-.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 2mm 2mm 12mm; font-weight: 700; font-size: 11px; }
+.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 2mm 2mm 12mm; font-weight: 700; font-size: 11px; line-height: 1.5; letter-spacing: 0.2px; }
 .po-report * { box-sizing: border-box; color: #000; font-weight: 700; }
 .po-report-head { text-align: center; margin-bottom: 3px; }
 .po-report-company { font-size: 15px; font-weight: 900; letter-spacing: 0.4px; margin: 0 0 2px; }
 .po-report-title { font-size: 12px; font-weight: 900; margin: 0 0 2px; }
 .po-report-date { font-size: 11px; font-weight: 700; margin: 0 0 2px; }
 .po-report-rule { height: 0; border: none; border-top: 2px solid #000; margin: 5px 0; }
-.po-report-table { width: 100%; border-collapse: collapse; font-size: 11px; font-weight: 700; }
-.po-report-table th { text-align: left; font-size: 10px; font-weight: 900; padding: 2px 0; border-bottom: 2px solid #000; }
+.po-report-table { width: 100%; border-collapse: collapse; font-size: 11px; font-weight: 700; line-height: 1.5; letter-spacing: 0.2px; }
+.po-report-table th { text-align: left; font-size: 10px; font-weight: 900; padding: 3px 2px; border-bottom: 2px solid #000; }
 .po-report-table th.col-amt { text-align: right; }
-.po-report-table td { padding: 2px 0; border-bottom: 1px solid #000; vertical-align: top; word-break: break-word; }
-.po-report-table td.col-amt { text-align: right; font-weight: 900; white-space: nowrap; }
+.po-report-table td { padding: 3px 2px; border-bottom: 1px solid #000; vertical-align: top; word-break: break-word; }
+.po-report-table td + td { padding-left: 4px; }
+.po-report-table td.col-amt { text-align: right; font-weight: 900; white-space: nowrap; padding-left: 6px; }
 .po-report-table tr.total td { border-top: 3px solid #000; border-bottom: none; font-size: 13px; font-weight: 900; padding-top: 4px; }
 .po-report-table tr.total td.col-amt { text-align: right; }
 .po-report-table td.empty { text-align: center; padding: 8px 0; border-bottom: none; }

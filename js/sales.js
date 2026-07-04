@@ -840,9 +840,11 @@ function printEOD() {
         + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
         + 'hr.dash{border-top:1px dashed #000;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
-        + 'td{padding:3px 0;border-bottom:1px solid #000;}'
-        + 'td:last-child{text-align:right;font-weight:900;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'th,td{padding:4px 3px;vertical-align:top;}'
+        + 'td{border-bottom:1px solid #000;}'
+        + 'td:first-child{padding-right:6px;}'
+        + 'td:last-child{text-align:right;font-weight:900;padding-left:6px;white-space:nowrap;}'
         + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
         + '.variance td{font-size:11pt;font-weight:900;}'
         + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
@@ -860,7 +862,7 @@ function printEOD() {
         + '<tr><td>GST on Card Sales</td><td>' + bz(summary.gstCard) + '</td></tr>'
         + '<tr><td>Total GST Collected</td><td>' + bz(summary.gstTotal) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
-        + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;">-' + bz(p.amount) + '</td></tr>').join('') : '')
+        + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;padding:4px 3px;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;padding:4px 3px;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
         + '<tr><td>Actual Drawer Total</td><td>' + bz(drawer) + '</td></tr>'
         + (startingFloat > 0 ? '<tr><td>&nbsp;&nbsp;Less: Starting Float</td><td>-' + bz(startingFloat) + '</td></tr>' : '')
@@ -890,15 +892,15 @@ function printSalesReport() {
             const itemName = escH((item.name || 'Item').substring(0, 24));
             const qty = item.qty || 1;
             const total = parseFloat(item.total) || (parseFloat(item.price) || 0) * qty;
-            return '<tr><td style="font-size:9pt;">' + itemName + '</td>'
-                + '<td style="text-align:center;font-size:9pt;">' + qty + '</td>'
-                + '<td style="text-align:right;font-size:9pt;">' + bz(total) + '</td></tr>';
+            return '<tr><td style="font-size:9pt;padding:4px 3px;">' + itemName + '</td>'
+                + '<td style="text-align:center;font-size:9pt;padding:4px 3px;">' + qty + '</td>'
+                + '<td style="text-align:right;font-size:9pt;padding:4px 3px;">' + bz(total) + '</td></tr>';
         }).join('');
         
         // Header row for this sale
-        const headerRow = '<tr style="background:#f0f0f0;"><td colspan="3" style="font-size:9pt;padding:2px 0;border-top:1px solid #000;">'
-            + escH(ts) + ' [' + method + '] ' + escH(s.cashier || 'Staff')
-            + (s.jobId && String(s.jobId).trim() ? ' - Job #' + escH(s.jobId) : '')
+        const headerRow = '<tr style="background:#f0f0f0;"><td colspan="3" style="font-size:9pt;padding:4px 3px;border-top:1px solid #000;line-height:1.5;letter-spacing:0.2px;">'
+            + escH(ts) + ' &middot; [' + method + '] &middot; ' + escH(s.cashier || 'Staff')
+            + (s.jobId && String(s.jobId).trim() ? ' &middot; Job #' + escH(s.jobId) : '')
             + '</td></tr>';
         
         return headerRow + itemRows;
@@ -912,9 +914,13 @@ function printSalesReport() {
         + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
         + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
-        + 'td{padding:2px 0;border-bottom:1px dotted #ccc;}'
-        + 'td:last-child{text-align:right;font-weight:900;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'th,td{padding:4px 3px;vertical-align:top;}'
+        + 'td{border-bottom:1px dotted #ccc;}'
+        + 'td:first-child,th:first-child{padding-right:4px;}'
+        + 'td:last-child,th:last-child{text-align:right;font-weight:900;padding-left:4px;}'
+        + 'th{text-align:left;font-weight:900;border-bottom:2px solid #000;}'
+        + 'th:nth-child(2){text-align:center;}'
         + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
         + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
@@ -924,9 +930,9 @@ function printSalesReport() {
         + (shift ? '<p style="font-size:9pt;">' + shift.label + '</p>' : '')
         + '<hr>'
         + '<table>'
-        + '<tr><th style="text-align:left;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Item</th>'
-        + '<th style="text-align:center;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Qty</th>'
-        + '<th style="text-align:right;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Total</th></tr>'
+        + '<tr><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Item</th>'
+        + '<th style="text-align:center;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Qty</th>'
+        + '<th style="text-align:right;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Total</th></tr>'
         + salesRows
         + '<tr class="total"><td colspan="2"><strong>Total Sales</strong></td><td><strong>' + bz(gross) + '</strong></td></tr>'
         + '<tr><td colspan="2">Transactions</td><td>' + validSales.length + '</td></tr>'
@@ -949,7 +955,7 @@ function printPayoutsReport() {
     
     const payoutRows = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        return '<tr><td style="font-size:9pt;">' + escH(ts) + '</td><td style="font-size:9pt;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;">' + escH(p.takenBy || ' · ') + '</td><td style="text-align:right;font-size:9pt;">' + bz(p.amount) + '</td></tr>';
+        return '<tr><td style="font-size:9pt;padding:4px 3px;">' + escH(ts) + '</td><td style="font-size:9pt;padding:4px 3px;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;padding:4px 3px;">' + escH(p.takenBy || '—') + '</td><td style="text-align:right;font-size:9pt;padding:4px 3px;">' + bz(p.amount) + '</td></tr>';
     }).join('');
     
     const html = '<!DOCTYPE html><html><head><title>Payouts Report</title>'
@@ -960,9 +966,11 @@ function printPayoutsReport() {
         + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
         + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
-        + 'td{padding:3px 0;border-bottom:1px solid #000;}'
-        + 'td:last-child{text-align:right;font-weight:900;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'th,td{padding:4px 3px;vertical-align:top;}'
+        + 'td{border-bottom:1px solid #000;}'
+        + 'td:first-child{padding-right:6px;}'
+        + 'td:last-child{text-align:right;font-weight:900;padding-left:6px;white-space:nowrap;}'
         + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
         + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
@@ -971,7 +979,7 @@ function printPayoutsReport() {
         + '<p>' + displayDate + '</p>'
         + '<hr>'
         + '<table>'
-        + '<tr><th style="text-align:left;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Time</th><th style="text-align:left;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Reason</th><th style="text-align:left;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Taken By</th><th style="text-align:right;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Amount</th></tr>'
+        + '<tr><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Time</th><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Reason</th><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Taken By</th><th style="text-align:right;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Amount</th></tr>'
         + (payoutRows || '<tr><td colspan="4" style="text-align:center;font-size:9pt;padding:8px 0;">No payouts</td></tr>')
         + '<tr class="total"><td colspan="3"><strong>Total Payouts</strong></td><td><strong>' + bz(total) + '</strong></td></tr>'
         + '</table>'
@@ -989,7 +997,7 @@ function printBillsReport() {
         const balance = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
         const items = tryParseJSON(b.items, []);
         const itemNames = items.map(i => i.name).join(', ');
-        return '<tr><td style="font-size:9pt;">' + escH(b.personName || 'Unknown') + '</td><td style="font-size:9pt;">' + escH(itemNames.substring(0, 25)) + (itemNames.length > 25 ? '...' : '') + '</td><td style="text-align:right;font-size:9pt;">' + bz(balance) + '</td></tr>';
+        return '<tr><td style="font-size:9pt;padding:4px 3px;">' + escH(b.personName || 'Unknown') + '</td><td style="font-size:9pt;padding:4px 3px;">' + escH(itemNames.substring(0, 25)) + (itemNames.length > 25 ? '...' : '') + '</td><td style="text-align:right;font-size:9pt;padding:4px 3px;">' + bz(balance) + '</td></tr>';
     }).join('');
     
     const html = '<!DOCTYPE html><html><head><title>Bills Report</title>'
@@ -1000,9 +1008,11 @@ function printBillsReport() {
         + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
         + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;}'
-        + 'td{padding:3px 0;border-bottom:1px solid #000;}'
-        + 'td:last-child{text-align:right;font-weight:900;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'th,td{padding:4px 3px;vertical-align:top;}'
+        + 'td{border-bottom:1px solid #000;}'
+        + 'td:first-child{padding-right:6px;}'
+        + 'td:last-child{text-align:right;font-weight:900;padding-left:6px;white-space:nowrap;}'
         + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
         + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
@@ -1011,7 +1021,7 @@ function printBillsReport() {
         + '<p>' + new Date().toLocaleDateString() + '</p>'
         + '<hr>'
         + '<table>'
-        + '<tr><th style="text-align:left;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Person</th><th style="text-align:left;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Items</th><th style="text-align:right;font-size:9pt;padding:2px 0;border-bottom:2px solid #000;">Balance</th></tr>'
+        + '<tr><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Person</th><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Items</th><th style="text-align:right;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Balance</th></tr>'
         + (billRows || '<tr><td colspan="3" style="text-align:center;font-size:9pt;padding:8px 0;">No open bills</td></tr>')
         + '<tr class="total"><td colspan="2"><strong>Total Outstanding</strong></td><td><strong>' + bz(totalOwed) + '</strong></td></tr>'
         + '<tr><td colspan="2">Open Bills</td><td>' + open.length + '</td></tr>'
