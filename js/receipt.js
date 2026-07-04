@@ -445,109 +445,111 @@ window.buildPayoutsReportHTML = buildPayoutsReportHTML;
 
 // ── Unified print entry point ─────────────────────────────────────────────────
 // Tries QZ Tray first, falls back to window.print()
-function printHTML(htmlContent) {
-    // Extract QR code URL from HTML to preload it
-    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
-    
-    if (qrMatch) {
-        // Preload QR code image before printing
-        const qrUrl = qrMatch[0];
-        const preloadImg = new Image();
-        
-        preloadImg.onload = function() {
-            // QR code loaded, now print
-            if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
-                printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
-            } else {
-                _windowPrint(htmlContent);
-            }
-        };
-        
-        preloadImg.onerror = function() {
-            // QR code failed to load, print anyway
-            console.warn('QR code failed to preload, printing anyway');
-            if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
-                printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
-            } else {
-                _windowPrint(htmlContent);
-            }
-        };
-        
-        preloadImg.src = qrUrl;
-        
-        // Fallback timeout
-        setTimeout(function() {
-            if (!preloadImg.complete) {
-                console.warn('QR code preload timeout, printing anyway');
-                if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
-                    printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
-                } else {
-                    _windowPrint(htmlContent);
-                }
-            }
-        }, 3000);
-    } else {
-        // No QR code found, print normally
-        if (typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP) {
-            printReceiptQZ(htmlContent, () => _windowPrint(htmlContent));
-        } else {
-            _windowPrint(htmlContent);
-        }
-    }
+let _printInFlight = false;
+
+function _canUseQZPrint() {
+    return typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP;
 }
 
-function _windowPrint(htmlContent) {
+function printHTML(htmlContent) {
+    if (_printInFlight) return;
+    _printInFlight = true;
+
+    const useQZ = _canUseQZPrint();
+    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
+
+    function _releasePrintLock() {
+        setTimeout(function() { _printInFlight = false; }, 400);
+    }
+
+    function _dispatchPrint() {
+        if (useQZ) {
+            printReceiptQZ(htmlContent, function() {
+                _windowPrint(htmlContent, _releasePrintLock);
+            }).then(function(ok) {
+                if (ok) _releasePrintLock();
+            }).catch(function() {
+                _releasePrintLock();
+            });
+            return;
+        }
+        _windowPrint(htmlContent, _releasePrintLock);
+    }
+
+    // QZ renders remote images itself — skip slow QR preload on the fast path
+    if (qrMatch && !useQZ) {
+        const qrUrl = qrMatch[0];
+        const preloadImg = new Image();
+        let finished = false;
+
+        function _finishPreload() {
+            if (finished) return;
+            finished = true;
+            _dispatchPrint();
+        }
+
+        preloadImg.onload = _finishPreload;
+        preloadImg.onerror = function() {
+            console.warn('QR code failed to preload, printing anyway');
+            _finishPreload();
+        };
+        preloadImg.src = qrUrl;
+        setTimeout(_finishPreload, 800);
+        return;
+    }
+
+    _dispatchPrint();
+}
+
+function _windowPrint(htmlContent, onDone) {
     const w = window.open('', '_blank', 'width=400,height=600,alwaysRaised=yes');
-    if (!w) return;
+    if (!w) {
+        if (typeof onDone === 'function') onDone();
+        return;
+    }
     w.document.write(htmlContent);
     w.document.close();
-    
-    // Wait for all images to load before printing
+
     let _printed = false;
     function _doPrint() {
         if (_printed) return;
         _printed = true;
         w.focus();
         w.print();
-        setTimeout(() => { try { w.close(); } catch(_) {} }, 1500);
+        setTimeout(function() {
+            try { w.close(); } catch(_) {}
+            if (typeof onDone === 'function') onDone();
+        }, 600);
     }
-    
-    // Wait for window to load first, then check images
+
     w.addEventListener('load', function() {
         const images = w.document.getElementsByTagName('img');
-        
+
         if (images.length === 0) {
-            // No images, print immediately
-            setTimeout(_doPrint, 300);
+            _doPrint();
             return;
         }
-        
+
         let loadedCount = 0;
         const totalImages = images.length;
         let allLoaded = true;
-        
-        // Check if any images are still loading
+
         for (let i = 0; i < images.length; i++) {
             if (!images[i].complete || images[i].naturalWidth === 0) {
                 allLoaded = false;
             }
         }
-        
+
         if (allLoaded) {
-            // All images already loaded
-            setTimeout(_doPrint, 500);
+            _doPrint();
             return;
         }
-        
-        // Wait for images to load
+
         function checkAllLoaded() {
             loadedCount++;
-            if (loadedCount >= totalImages) {
-                // All images loaded, wait a bit more then print
-                setTimeout(_doPrint, 500);
-            }
+            if (loadedCount >= totalImages) _doPrint();
         }
-        
+
         for (let i = 0; i < images.length; i++) {
             if (images[i].complete && images[i].naturalWidth > 0) {
                 checkAllLoaded();
@@ -556,9 +558,8 @@ function _windowPrint(htmlContent) {
                 images[i].addEventListener('error', checkAllLoaded);
             }
         }
-        
-        // Fallback timeout in case something goes wrong (5 seconds)
-        setTimeout(_doPrint, 5000);
+
+        setTimeout(_doPrint, 2000);
     });
 }
 

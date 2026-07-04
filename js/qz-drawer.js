@@ -72,6 +72,8 @@ D9UT1IG38WeOrzS3KzCaVrJGDD/twPaMpxPCvK9wNw==
 
 let _qzReady = false;
 let _qzConnecting = false;
+let _qzWaiters = [];
+let _qzPrintQueue = Promise.resolve();
 
 function _loadQZScript(cb) {
     if (window.qz) { cb(); return; }
@@ -89,14 +91,29 @@ function _loadQZScript(cb) {
     document.head.appendChild(rsa);
 }
 
+function _resolveQZWaiters(err) {
+    const waiters = _qzWaiters;
+    _qzWaiters = [];
+    waiters.forEach(function(w) { err ? w.reject(err) : w.resolve(); });
+}
+
 function _connectQZ() {
     return new Promise(function(resolve, reject) {
         if (_qzReady) { resolve(); return; }
-        if (_qzConnecting) { reject('connecting'); return; }
+        if (_qzConnecting) {
+            _qzWaiters.push({ resolve: resolve, reject: reject });
+            return;
+        }
         _qzConnecting = true;
 
         _loadQZScript(function() {
-            if (!window.qz) { _qzConnecting = false; reject('no-lib'); return; }
+            if (!window.qz) {
+                _qzConnecting = false;
+                const err = new Error('no-lib');
+                reject(err);
+                _resolveQZWaiters(err);
+                return;
+            }
 
             qz.security.setCertificatePromise(function(resolve) {
                 resolve(QZ_CERTIFICATE);
@@ -117,20 +134,92 @@ function _connectQZ() {
             });
 
             qz.websocket.connect({ retries: 2, delay: 1 })
-                .then(function() { _qzReady = true; _qzConnecting = false; resolve(); })
-                .catch(function(e) { _qzConnecting = false; reject(e); });
+                .then(function() {
+                    _qzReady = true;
+                    _qzConnecting = false;
+                    resolve();
+                    _resolveQZWaiters();
+                })
+                .catch(function(e) {
+                    _qzConnecting = false;
+                    reject(e);
+                    _resolveQZWaiters(e);
+                });
         });
     });
+}
+
+function _qzPrinterConfig() {
+    return qz.configs.create(QZ_PRINTER_NAME, {
+        scaleContent: true,
+        margins: { top: 0, right: 0, bottom: 0, left: 0 }
+    });
+}
+
+function _qzPrint(config, data) {
+    const job = _qzPrintQueue.then(function() { return qz.print(config, data); });
+    _qzPrintQueue = job.catch(function() {});
+    return job;
+}
+
+function _prepareHtmlForQZ(html) {
+    const base = new URL('.', window.location.href).href;
+    let out = html;
+    if (!/<html[\s>]/i.test(out)) {
+        out = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>' + out + '</body></html>';
+    }
+    out = out.replace(/src="(?!https?:|data:)([^"]+)"/g, function(_, path) {
+        return 'src="' + new URL(path, base).href + '"';
+    });
+    out = out.replace(/href="(?!https?:|data:)([^"]+)"/g, function(_, path) {
+        return 'href="' + new URL(path, base).href + '"';
+    });
+    return out;
+}
+
+// Direct thermal print via QZ Tray — bypasses browser print dialog
+async function printReceiptQZ(htmlContent, fallback) {
+    if (!IS_DESKTOP) {
+        if (typeof fallback === 'function') fallback();
+        return false;
+    }
+    try {
+        await _connectQZ();
+        const config = _qzPrinterConfig();
+        const data = [{
+            type: 'pixel',
+            format: 'html',
+            flavor: 'plain',
+            data: _prepareHtmlForQZ(htmlContent)
+        }];
+        await _qzPrint(config, data);
+        console.log('[QZ] Receipt printed.');
+        return true;
+    } catch (e) {
+        console.warn('[QZ] Print failed, falling back:', e);
+        if (typeof fallback === 'function') fallback();
+        return false;
+    }
 }
 
 async function kickDrawer() {
     if (!IS_DESKTOP) return; // silently ignore on mobile/tablet
     try {
         await _connectQZ();
-        const config = qz.configs.create(QZ_PRINTER_NAME);
-        await qz.print(config, [{ type: 'raw', format: 'plain', data: DRAWER_KICK_BYTES }]);
+        const config = _qzPrinterConfig();
+        await _qzPrint(config, [{ type: 'raw', format: 'plain', data: DRAWER_KICK_BYTES }]);
         console.log('[QZ] Drawer kicked.');
     } catch (e) {
         console.warn('[QZ] Drawer kick failed:', e);
+    }
+}
+
+// Pre-warm QZ connection on desktop so first receipt prints immediately
+if (IS_DESKTOP) {
+    const _warmQZ = function() { _connectQZ().catch(function() {}); };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _warmQZ);
+    } else {
+        _warmQZ();
     }
 }
