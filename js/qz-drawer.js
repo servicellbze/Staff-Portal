@@ -157,7 +157,7 @@ function _qzThermalConfig() {
         units: 'mm',
         size: { width: 72, height: null },
         margins: { top: 0, right: 0, bottom: 0, left: 0 },
-        scaleContent: false
+        scaleContent: true
     });
 }
 
@@ -167,8 +167,44 @@ function _qzPrint(config, data) {
     return job;
 }
 
-// ── Silent thermal printing (ESC/POS raw + rendered image) ─────────────────────
-const THERMAL_RENDER_WIDTH = 576; // 72mm @ 203dpi
+// ── Silent thermal printing (HTML → faithful image → QZ) ──────────────────────
+// Capture at CSS pixel density (96dpi) so layout matches browser print, then
+// scale up for crisp thermal output.
+const CAPTURE_DPI = 96;
+const CAPTURE_SCALE = 2;
+
+function _mmToPx(mm) {
+    return Math.round(mm * CAPTURE_DPI / 25.4);
+}
+
+function _captureWidthPx(html) {
+    if (_isA4Html(html)) return 680;
+    if (/width:\s*72mm/i.test(html)) return _mmToPx(72);
+    return _mmToPx(68);
+}
+
+function _prepareHtmlForSilentPrint(html) {
+    let out = _absolutizeHtmlUrls(html);
+    out = out.replace(/<link[^>]*fonts\.googleapis\.com[^>]*>/gi, '');
+    out = out.replace(/font-family:\s*'IBM Plex Mono'[^;]*/gi, "font-family:'Courier New',Courier,monospace");
+    if (!/<html[\s>]/i.test(out)) {
+        out = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>' + out + '</body></html>';
+    }
+    const captureWidth = _captureWidthPx(out);
+    const captureCss = '<style id="qz-capture-base">'
+        + 'html,body{margin:0!important;padding:0!important;background:#fff!important;color:#000!important;'
+        + 'width:' + captureWidth + 'px!important;max-width:' + captureWidth + 'px!important;'
+        + '-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}'
+        + '#printInvoice,.po-slip,.po-report,.a4-invoice{width:' + captureWidth + 'px!important;max-width:' + captureWidth + 'px!important;margin:0!important;}'
+        + 'img{display:block!important;max-width:100%!important;}'
+        + '*{color:#000!important;}</style>';
+    if (/<head[^>]*>/i.test(out)) {
+        out = out.replace(/<head([^>]*)>/i, '<head$1>' + captureCss);
+    } else {
+        out = out.replace(/<html([^>]*)>/i, '<html$1><head><meta charset="utf-8">' + captureCss + '</head>');
+    }
+    return { html: out, width: captureWidth };
+}
 
 function _loadScriptOnce(src, globalName) {
     if (globalName && window[globalName]) return Promise.resolve(window[globalName]);
@@ -188,12 +224,6 @@ function _loadScriptOnce(src, globalName) {
     });
 }
 
-function _wrapHtmlDocument(html) {
-    if (/<html[\s>]/i.test(html)) return html;
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#fff;">'
-        + html + '</body></html>';
-}
-
 function _absolutizeHtmlUrls(html) {
     const base = new URL('.', window.location.href).href;
     return html
@@ -208,10 +238,6 @@ function _absolutizeHtmlUrls(html) {
 function _isA4Html(html) {
     return /@page\s*\{[^}]*size:\s*A4/i.test(html)
         || /max-width:\s*680px/i.test(html) && /pi-qr-a4/i.test(html);
-}
-
-function _thermalRenderWidth(html) {
-    return _isA4Html(html) ? 680 : THERMAL_RENDER_WIDTH;
 }
 
 function _waitForImagesIn(root, maxMs) {
@@ -232,38 +258,43 @@ async function _htmlToPngBase64(html) {
         'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
         'html2canvas'
     );
-    const renderWidth = _thermalRenderWidth(html);
-    const fullHtml = _absolutizeHtmlUrls(_wrapHtmlDocument(html));
+    const prepared = _prepareHtmlForSilentPrint(html);
+    const captureWidth = prepared.width;
 
     const frame = document.createElement('iframe');
     frame.setAttribute('aria-hidden', 'true');
-    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + renderWidth + 'px;height:1px;border:0;';
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + captureWidth + 'px;height:800px;border:0;';
     document.body.appendChild(frame);
 
     try {
         const doc = frame.contentDocument || frame.contentWindow.document;
         doc.open();
-        doc.write(fullHtml);
+        doc.write(prepared.html);
         doc.close();
 
         await new Promise(function(resolve) {
             if (doc.readyState === 'complete') resolve();
             else frame.addEventListener('load', resolve, { once: true });
-            setTimeout(resolve, 1200);
+            setTimeout(resolve, 1500);
         });
 
-        await _waitForImagesIn(doc.body, 2500);
-        await new Promise(function(r) { setTimeout(r, 80); });
+        await _waitForImagesIn(doc.body, 3000);
+        await new Promise(function(r) { setTimeout(r, 150); });
 
         const target = doc.getElementById('printInvoice') || doc.body;
+        const captureHeight = Math.max(target.scrollHeight, target.offsetHeight) + 20;
+
         const canvas = await html2canvas(target, {
             backgroundColor: '#ffffff',
-            scale: 1,
-            width: renderWidth,
-            windowWidth: renderWidth,
+            scale: CAPTURE_SCALE,
+            width: captureWidth,
+            height: captureHeight,
+            windowWidth: captureWidth,
+            windowHeight: captureHeight,
             useCORS: true,
             allowTaint: true,
-            logging: false
+            logging: false,
+            imageTimeout: 3000
         });
 
         return canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
@@ -272,15 +303,11 @@ async function _htmlToPngBase64(html) {
     }
 }
 
-async function _printRawEscpos(data) {
+async function _printImageBase64(base64, html) {
     await _connectQZ();
-    const config = _qzPrinterConfig();
-    await _qzPrint(config, [{ type: 'raw', format: 'plain', data: data }]);
-}
-
-async function _printImageBase64(base64) {
-    await _connectQZ();
-    const config = _qzThermalConfig();
+    const config = _isA4Html(html)
+        ? qz.configs.create(QZ_PRINTER_NAME, { units: 'mm', size: { width: 210, height: 297 }, margins: 0 })
+        : _qzThermalConfig();
     await _qzPrint(config, [{
         type: 'pixel',
         format: 'image',
@@ -289,22 +316,15 @@ async function _printImageBase64(base64) {
     }]);
 }
 
-// opts.escpos — optional pre-built ESC/POS bytes (fast path for sale receipts)
-async function printSilentHTML(htmlContent, fallback, opts) {
-    opts = opts || {};
+async function printSilentHTML(htmlContent, fallback) {
     if (!IS_DESKTOP) {
         if (typeof fallback === 'function') fallback();
         return false;
     }
     try {
-        if (opts.escpos) {
-            await _printRawEscpos(opts.escpos);
-            console.log('[QZ] Silent ESC/POS print sent.');
-            return true;
-        }
         const base64 = await _htmlToPngBase64(htmlContent);
-        await _printImageBase64(base64);
-        console.log('[QZ] Silent image print sent.');
+        await _printImageBase64(base64, htmlContent);
+        console.log('[QZ] Silent print sent.');
         return true;
     } catch (e) {
         console.warn('[QZ] Silent print failed:', e);

@@ -4,7 +4,7 @@
 
 const RECEIPT_STYLES = `
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
-#printInvoice { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
+#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 40mm; font-size: 10px; font-weight: 700; line-height: 1.6; letter-spacing: -0.1px; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 5px; }
 .pi-shop img { max-width: 70px; margin-bottom: 3px; display: block; margin-left: auto; margin-right: auto; }
@@ -34,7 +34,7 @@ const RECEIPT_STYLES = `
 .pi-qr-text { font-size: 9px; font-weight: 900; letter-spacing: 0.5px; }
 .pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .pi-sig { border-top: 1px solid #000; padding-top: 2px; font-size: 8px; text-align: center; }
-.po-slip { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-size: 10px; font-weight: 400; line-height: 1.45; text-align: left; }
+.po-slip { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-size: 10px; font-weight: 400; line-height: 1.45; text-align: left; }
 .po-slip * { box-sizing: border-box; color: #000; }
 .po-rule-eq { display: block; width: 100%; height: 0; border: none; border-top: 2px solid #000; margin: 7px 0; }
 .po-rule-dash { display: block; width: 100%; height: 0; border: none; border-top: 1px dashed #000; margin: 7px 0; }
@@ -55,7 +55,7 @@ const RECEIPT_STYLES = `
 .po-foot { margin-top: 2px; font-size: 9px; font-weight: 400; text-align: center; line-height: 1.5; }
 .po-slip#printInvoice, .po-slip#printInvoice * { font-weight: 400; }
 .po-slip#printInvoice .po-k, .po-slip#printInvoice .po-line-label, .po-slip#printInvoice .po-company, .po-slip#printInvoice .po-title { font-weight: 700; }
-.po-report { font-family: 'IBM Plex Mono','Courier New',monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-weight: 400; }
+.po-report { font-family: 'Courier New', Courier, monospace; color: #000; background: #fff; width: 68mm; margin: 0 auto; padding: 3mm 2mm 40mm; font-weight: 400; }
 .po-report * { box-sizing: border-box; color: #000; }
 .po-report-head { text-align: center; margin-bottom: 4px; }
 .po-report-company { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; margin: 0 0 2px; }
@@ -170,7 +170,7 @@ function buildJobReceiptHTML(j, opts) {
     // Use quickchart.io - a free, reliable QR code API
     const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(trackerUrl)}&size=150`;
 
-    return `<style>${RECEIPT_STYLES}</style>${RECEIPT_FONT_LINK}
+    return `<style>${RECEIPT_STYLES}</style>
 <div id="printInvoice">
     <div class="pi-shop">
         <img src="${imgSrc}" alt="Servicell Belize">
@@ -249,21 +249,22 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-body { font-family:'IBM Plex Mono','Courier New',monospace; font-size:10px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 40mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
-* { box-sizing:border-box; font-weight:700; color:#000; }
-h2 { text-align:center; font-size:14px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
-p { text-align:center; margin:1px 0; font-size:9px; }
-img { display:block; margin:0 auto 3px; max-width:70px; }
-hr { border:none; border-top:1px solid #000; margin:4px 0 3px; }
-hr.solid { border-top:2px solid #000; margin:5px 0 4px; }
-table { width:100%; border-collapse:collapse; font-size:9px; }
-th { border-bottom:2px solid #000; padding:3px 0; font-size:8px; text-align:left; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; }
-th:nth-child(2),th:nth-child(3),th:nth-child(4) { text-align:right; }
-td { padding:3px 0; border-bottom:1px solid #000; }
-.divider td { border-top:2px solid #000; border-bottom:none; font-size:11px; font-weight:900; padding-top:4px; }
-.gst-row td { border-bottom:1px solid #000; font-size:9px; }
-.footer { text-align:center; font-size:9px; margin-top:6px; border-top:1px solid #000; padding-top:4px; line-height:1.6; }
-</style>${RECEIPT_FONT_LINK}
+#printInvoice { font-family:'Courier New',Courier,monospace; font-size:10px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 40mm; line-height:1.6; letter-spacing:-0.1px; background:white; color:#000; }
+#printInvoice * { box-sizing:border-box; font-weight:700; color:#000; }
+#printInvoice h2 { text-align:center; font-size:14px; font-weight:900; letter-spacing:1px; margin:0 0 2px; }
+#printInvoice p { text-align:center; margin:1px 0; font-size:9px; }
+#printInvoice img { display:block; margin:0 auto 3px; max-width:70px; }
+#printInvoice hr { border:none; border-top:1px solid #000; margin:4px 0 3px; }
+#printInvoice hr.solid { border-top:2px solid #000; margin:5px 0 4px; }
+#printInvoice table { width:100%; border-collapse:collapse; font-size:9px; }
+#printInvoice th { border-bottom:2px solid #000; padding:3px 0; font-size:8px; text-align:left; font-weight:900; letter-spacing:0.5px; text-transform:uppercase; }
+#printInvoice th:nth-child(2),#printInvoice th:nth-child(3),#printInvoice th:nth-child(4) { text-align:right; }
+#printInvoice td { padding:3px 0; border-bottom:1px solid #000; }
+#printInvoice .divider td { border-top:2px solid #000; border-bottom:none; font-size:11px; font-weight:900; padding-top:4px; }
+#printInvoice .gst-row td { border-bottom:1px solid #000; font-size:9px; }
+#printInvoice .footer { text-align:center; font-size:9px; margin-top:6px; border-top:1px solid #000; padding-top:4px; line-height:1.6; }
+</style>
+<div id="printInvoice">
 <img src="${_receiptLogoSrc()}" alt="Servicell Belize">
 <h2>SERVICELL BELIZE</h2>
 <p>#7 Douglas Jones, Belize City</p>
@@ -282,106 +283,9 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
     <tr><td colspan="3">Paid (${_esc(displayMethod)})</td><td style="text-align:right">${bz(amountPaid)}</td></tr>
     ${change > 0 ? `<tr><td colspan="3">Change</td><td style="text-align:right">${bz(change)}</td></tr>` : ''}
 </table>
-<div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>`;
+<div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>
+</div>`;
 }
-
-function buildSaleReceiptESCPOS(items, total, amountPaid, method, saleId, customer, cashier) {
-    const ESC = '\x1B';
-    const GS = '\x1D';
-    const WIDTH = 42;
-    const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
-    const gst = total * 12.5 / 112.5;
-    const preTax = total - gst;
-
-    const nameMap = {
-        'Cashier_Chee': 'Ericson',
-        'Cashier_Coleman': 'Kiana',
-        'Technician_Bailey': 'Kareem',
-        'Technician_Bat': 'Bat',
-        'Manager_Chee': 'Eric'
-    };
-    const friendlyName = cashier
-        ? (nameMap[cashier] || cashier.replace(/^(Cashier_|Manager_|Technician_)/i, ''))
-        : 'Staff';
-    const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
-
-    function bz(n) { return 'BZ$' + parseFloat(n || 0).toFixed(2); }
-    function line(ch) { return String(ch || '-').repeat(WIDTH) + '\n'; }
-    function center(text) {
-        const t = String(text || '').trim();
-        if (t.length >= WIDTH) return t.slice(0, WIDTH) + '\n';
-        const pad = Math.floor((WIDTH - t.length) / 2);
-        return ' '.repeat(Math.max(0, pad)) + t + '\n';
-    }
-    function row(left, right) {
-        const l = String(left || '');
-        const r = String(right || '');
-        const space = Math.max(1, WIDTH - l.length - r.length);
-        if (l.length + r.length >= WIDTH) {
-            return (l.slice(0, WIDTH - r.length - 1) + ' ' + r).slice(0, WIDTH) + '\n';
-        }
-        return l + ' '.repeat(space) + r + '\n';
-    }
-    function wrap(text) {
-        const words = String(text || '').split(/\s+/);
-        let current = '';
-        const out = [];
-        words.forEach(function(word) {
-            const next = current ? current + ' ' + word : word;
-            if (next.length > WIDTH) {
-                if (current) out.push(current);
-                current = word.length > WIDTH ? word.slice(0, WIDTH) : word;
-            } else {
-                current = next;
-            }
-        });
-        if (current) out.push(current);
-        return out.map(function(l) { return l + '\n'; }).join('');
-    }
-
-    let out = '';
-    out += ESC + '@';
-    out += ESC + 'a' + '\x01';
-    out += ESC + 'E' + '\x01';
-    out += center('SERVICELL BELIZE');
-    out += ESC + 'E' + '\x00';
-    out += center('#7 Douglas Jones, Belize City');
-    out += center('Tel: +501 615-3388');
-    out += '\n';
-    out += ESC + 'a' + '\x00';
-    out += wrap(new Date().toLocaleString());
-    out += wrap('Served by: ' + friendlyName);
-    if (customer) out += wrap('Customer: ' + customer);
-    out += wrap('Receipt #' + (saleId || ''));
-    out += line('=');
-    out += row('Item', 'Total');
-    out += line('-');
-
-    (items || []).forEach(function(item) {
-        const name = String(item.name || 'Item');
-        const qty = item.qty || 1;
-        const itemTotal = bz(item.total != null ? item.total : (parseFloat(item.price) || 0) * qty);
-        out += wrap(name + ' x' + qty);
-        out += row('', itemTotal);
-    });
-
-    out += line('=');
-    out += row('Subtotal (excl. GST)', bz(preTax));
-    out += row('GST (12.5%)', bz(gst));
-    out += ESC + 'E' + '\x01';
-    out += row('TOTAL', bz(total));
-    out += ESC + 'E' + '\x00';
-    out += row('Paid (' + displayMethod + ')', bz(amountPaid));
-    if (change > 0) out += row('Change', bz(change));
-    out += '\n';
-    out += ESC + 'a' + '\x01';
-    out += wrap('Thank you for choosing Servicell Belize!');
-    out += wrap('Prices include GST.');
-    out += '\n\n\n';
-    out += GS + 'V' + '\x41' + '\x03';
-    return out;
-}
-window.buildSaleReceiptESCPOS = buildSaleReceiptESCPOS;
 
 // ── Payout slip & report (sales.js) ───────────────────────────────────────────
 function _intToWords(n) {
@@ -476,7 +380,7 @@ function buildPayoutSlipHTML(p, loggedByUser) {
     const shift      = p.shift || '—';
     const words      = amountToWordsLine(amount);
 
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8">${PO_FONT_LINK}<style>${RECEIPT_STYLES}</style></head><body>
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${RECEIPT_STYLES}</style></head><body>
 <div class="po-slip" id="printInvoice">
     <div class="po-rule-eq" aria-hidden="true"></div>
     <div class="po-banner">
@@ -540,7 +444,7 @@ function buildPayoutsReportHTML(payouts, displayDate) {
         }).join('')
         : '<tr><td colspan="4" class="empty">No payouts</td></tr>';
 
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8">${PO_FONT_LINK}<title>Payouts Report</title><style>${RECEIPT_STYLES}</style></head><body>
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Payouts Report</title><style>${RECEIPT_STYLES}</style></head><body>
 <div class="po-report" id="printInvoice">
     <div class="po-report-head">
         <div class="po-report-company">SERVICELL BELIZE</div>
@@ -578,10 +482,9 @@ function _canUseSilentPrint() {
     return typeof printSilentHTML === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP;
 }
 
-function printHTML(htmlContent, opts) {
+function printHTML(htmlContent) {
     if (_printInFlight) return;
     _printInFlight = true;
-    opts = opts || {};
 
     function _releasePrintLock() {
         setTimeout(function() { _printInFlight = false; }, 400);
@@ -592,7 +495,7 @@ function printHTML(htmlContent, opts) {
             printSilentHTML(htmlContent, function() {
                 console.warn('[Print] QZ silent print failed — using browser print.');
                 _windowPrint(htmlContent, _releasePrintLock);
-            }, opts).then(function(ok) {
+            }).then(function(ok) {
                 if (ok) _releasePrintLock();
             }).catch(function() {
                 _releasePrintLock();
@@ -709,7 +612,7 @@ function _windowPrint(htmlContent, onDone) {
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
 const A4_STYLES = `
 @media print { @page { size: A4; margin: 15mm 20mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; } body { background: white !important; } img { display: block !important; } }
-body { font-family: 'IBM Plex Mono', 'Courier New', monospace; font-size: 11px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
+body { font-family: 'Courier New', Courier, monospace; font-size: 11px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
 * { box-sizing: border-box; }
 .pi-shop { text-align: center; margin-bottom: 12px; }
 .pi-shop img { max-width: 80px; display: block; margin: 0 auto 6px; }
@@ -801,8 +704,8 @@ function buildJobA4HTML(j, opts) {
     // Use quickchart.io - a free, reliable QR code API
     const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(trackerUrl)}&size=200`;
 
-    return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap">
-<style>${A4_STYLES}</style>
+    return `<style>${A4_STYLES}</style>
+<div id="printInvoice" class="a4-invoice">
 <div class="pi-shop">
     <img src="${imgSrc}" alt="Servicell Belize">
     <h1>SERVICELL BELIZE</h1>
@@ -851,5 +754,6 @@ ${costTableHTML}
     <div class="pi-qr-a4-title">SCAN TO TRACK YOUR REPAIR</div>
     <div class="pi-qr-a4-url">Visit: servicellbze.github.io/ServiCell/tracker.html</div>
 </div>
-<div class="pi-footer">Thank you for choosing Servicell Belize!<br>Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>We are not responsible for data loss. Please back up your device.</div>`;
+<div class="pi-footer">Thank you for choosing Servicell Belize!<br>Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>We are not responsible for data loss. Please back up your device.</div>
+</div>`;
 }

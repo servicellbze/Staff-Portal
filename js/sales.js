@@ -804,12 +804,7 @@ function _openAndPrint(html) {
 }
 
 function _printSaleReceipt(items, total, amountPaid, method, saleId, customer, cashier) {
-    const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier);
-    const opts = {};
-    if (typeof buildSaleReceiptESCPOS === 'function') {
-        opts.escpos = buildSaleReceiptESCPOS(items, total, amountPaid, method, saleId, customer, cashier);
-    }
-    printHTML(html, opts);
+    printHTML(buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier));
 }
 
 function printEOD() {
