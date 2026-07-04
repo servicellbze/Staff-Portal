@@ -473,18 +473,13 @@ function buildPayoutsReportHTML(payouts, displayDate) {
 window.buildPayoutsReportHTML = buildPayoutsReportHTML;
 
 // ── Unified print entry point ─────────────────────────────────────────────────
-// Tries QZ Tray first, falls back to window.print()
+// Prints via browser (thermal driver). QZ Tray is used for cash drawer only.
 let _printInFlight = false;
-
-function _canUseQZPrint() {
-    return typeof printReceiptQZ === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP;
-}
 
 function printHTML(htmlContent) {
     if (_printInFlight) return;
     _printInFlight = true;
 
-    const useQZ = _canUseQZPrint();
     const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
 
     function _releasePrintLock() {
@@ -492,22 +487,10 @@ function printHTML(htmlContent) {
     }
 
     function _dispatchPrint() {
-        if (useQZ) {
-            printReceiptQZ(htmlContent, function() {
-                console.warn('[Print] QZ Tray unavailable — using browser print (slower). Ensure QZ Tray is running.');
-                _windowPrint(htmlContent, _releasePrintLock);
-            }).then(function(ok) {
-                if (ok) _releasePrintLock();
-            }).catch(function() {
-                _releasePrintLock();
-            });
-            return;
-        }
         _windowPrint(htmlContent, _releasePrintLock);
     }
 
-    // QZ renders remote images itself — skip slow QR preload on the fast path
-    if (qrMatch && !useQZ) {
+    if (qrMatch) {
         const qrUrl = qrMatch[0];
         const preloadImg = new Image();
         let finished = false;
@@ -577,15 +560,12 @@ function _windowPrint(htmlContent, onDone) {
         if (typeof onDone === 'function') onDone();
         return;
     }
-    w.document.write(htmlContent);
-    w.document.close();
 
     let printed = false;
     function triggerPrint() {
         if (printed) return;
         printed = true;
         w.focus();
-        // Defer w.print() so load/timer handlers return immediately (avoids Chrome violation warnings)
         setTimeout(function() {
             w.print();
             setTimeout(function() {
@@ -595,9 +575,21 @@ function _windowPrint(htmlContent, onDone) {
         }, 0);
     }
 
-    w.addEventListener('load', function() {
-        _waitForPrintImages(w.document, 400).then(triggerPrint);
-    });
+    function startPrint() {
+        _waitForPrintImages(w.document, 600).then(triggerPrint);
+    }
+
+    w.document.open();
+    w.document.write(htmlContent);
+    w.document.close();
+
+    // document.write can finish before the load listener is attached
+    if (w.document.readyState === 'complete') {
+        startPrint();
+    } else {
+        w.addEventListener('load', startPrint, { once: true });
+    }
+    setTimeout(startPrint, 800);
 }
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
