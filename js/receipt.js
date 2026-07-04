@@ -344,6 +344,16 @@ function formatPayoutSlipTime(ts) {
     return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
+function formatPayoutSlipNo(payoutId) {
+    if (!payoutId) return '—';
+    const s = String(payoutId).trim();
+    const m = s.match(/^P-(\d+)$/i);
+    if (m) return 'P-' + m[1].slice(-6);
+    const digits = s.replace(/\D/g, '');
+    if (digits.length > 6) return 'P-' + digits.slice(-6);
+    return s;
+}
+
 const STAFF_DISPLAY_NAMES = {
     cashier_chee:     'Ericson',
     cashier_coleman:  'Kiana',
@@ -368,7 +378,7 @@ window.resolveStaffDisplayName = resolveStaffDisplayName;
 
 function buildPayoutSlipHTML(p, loggedByUser) {
     const amount     = parseFloat(p.amount) || 0;
-    const slipNo     = p.payoutId || '—';
+    const slipNo     = formatPayoutSlipNo(p.payoutId);
     const dateLong   = formatPayoutSlipDate(p.timestamp);
     const dateShort  = formatPayoutSlipDateShort(p.timestamp);
     const timeStr    = formatPayoutSlipTime(p.timestamp);

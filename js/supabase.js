@@ -640,7 +640,7 @@ const Payouts = {
 
   async create(data) {
     if (!data.amount || !data.reason) return { success: false, error: 'Amount and reason required' };
-    const payoutId = `P-${Date.now()}`;
+    const payoutId = `P-${String(Date.now()).slice(-6)}`;
     await sbPost('payouts', {
       payout_id:  payoutId,
       shift_date: data.shiftDate || null,
