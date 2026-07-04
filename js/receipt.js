@@ -285,6 +285,104 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
 <div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>`;
 }
 
+function buildSaleReceiptESCPOS(items, total, amountPaid, method, saleId, customer, cashier) {
+    const ESC = '\x1B';
+    const GS = '\x1D';
+    const WIDTH = 42;
+    const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
+    const gst = total * 12.5 / 112.5;
+    const preTax = total - gst;
+
+    const nameMap = {
+        'Cashier_Chee': 'Ericson',
+        'Cashier_Coleman': 'Kiana',
+        'Technician_Bailey': 'Kareem',
+        'Technician_Bat': 'Bat',
+        'Manager_Chee': 'Eric'
+    };
+    const friendlyName = cashier
+        ? (nameMap[cashier] || cashier.replace(/^(Cashier_|Manager_|Technician_)/i, ''))
+        : 'Staff';
+    const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
+
+    function bz(n) { return 'BZ$' + parseFloat(n || 0).toFixed(2); }
+    function line(ch) { return String(ch || '-').repeat(WIDTH) + '\n'; }
+    function center(text) {
+        const t = String(text || '').trim();
+        if (t.length >= WIDTH) return t.slice(0, WIDTH) + '\n';
+        const pad = Math.floor((WIDTH - t.length) / 2);
+        return ' '.repeat(Math.max(0, pad)) + t + '\n';
+    }
+    function row(left, right) {
+        const l = String(left || '');
+        const r = String(right || '');
+        const space = Math.max(1, WIDTH - l.length - r.length);
+        if (l.length + r.length >= WIDTH) {
+            return (l.slice(0, WIDTH - r.length - 1) + ' ' + r).slice(0, WIDTH) + '\n';
+        }
+        return l + ' '.repeat(space) + r + '\n';
+    }
+    function wrap(text) {
+        const words = String(text || '').split(/\s+/);
+        let current = '';
+        const out = [];
+        words.forEach(function(word) {
+            const next = current ? current + ' ' + word : word;
+            if (next.length > WIDTH) {
+                if (current) out.push(current);
+                current = word.length > WIDTH ? word.slice(0, WIDTH) : word;
+            } else {
+                current = next;
+            }
+        });
+        if (current) out.push(current);
+        return out.map(function(l) { return l + '\n'; }).join('');
+    }
+
+    let out = '';
+    out += ESC + '@';
+    out += ESC + 'a' + '\x01';
+    out += ESC + 'E' + '\x01';
+    out += center('SERVICELL BELIZE');
+    out += ESC + 'E' + '\x00';
+    out += center('#7 Douglas Jones, Belize City');
+    out += center('Tel: +501 615-3388');
+    out += '\n';
+    out += ESC + 'a' + '\x00';
+    out += wrap(new Date().toLocaleString());
+    out += wrap('Served by: ' + friendlyName);
+    if (customer) out += wrap('Customer: ' + customer);
+    out += wrap('Receipt #' + (saleId || ''));
+    out += line('=');
+    out += row('Item', 'Total');
+    out += line('-');
+
+    (items || []).forEach(function(item) {
+        const name = String(item.name || 'Item');
+        const qty = item.qty || 1;
+        const itemTotal = bz(item.total != null ? item.total : (parseFloat(item.price) || 0) * qty);
+        out += wrap(name + ' x' + qty);
+        out += row('', itemTotal);
+    });
+
+    out += line('=');
+    out += row('Subtotal (excl. GST)', bz(preTax));
+    out += row('GST (12.5%)', bz(gst));
+    out += ESC + 'E' + '\x01';
+    out += row('TOTAL', bz(total));
+    out += ESC + 'E' + '\x00';
+    out += row('Paid (' + displayMethod + ')', bz(amountPaid));
+    if (change > 0) out += row('Change', bz(change));
+    out += '\n';
+    out += ESC + 'a' + '\x01';
+    out += wrap('Thank you for choosing Servicell Belize!');
+    out += wrap('Prices include GST.');
+    out += '\n\n\n';
+    out += GS + 'V' + '\x41' + '\x03';
+    return out;
+}
+window.buildSaleReceiptESCPOS = buildSaleReceiptESCPOS;
+
 // ── Payout slip & report (sales.js) ───────────────────────────────────────────
 function _intToWords(n) {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -473,24 +571,40 @@ function buildPayoutsReportHTML(payouts, displayDate) {
 window.buildPayoutsReportHTML = buildPayoutsReportHTML;
 
 // ── Unified print entry point ─────────────────────────────────────────────────
-// Prints via browser (thermal driver). QZ Tray is used for cash drawer only.
+// Silent QZ Tray print on desktop; browser dialog fallback on mobile / QZ failure.
 let _printInFlight = false;
 
-function printHTML(htmlContent) {
+function _canUseSilentPrint() {
+    return typeof printSilentHTML === 'function' && typeof IS_DESKTOP !== 'undefined' && IS_DESKTOP;
+}
+
+function printHTML(htmlContent, opts) {
     if (_printInFlight) return;
     _printInFlight = true;
-
-    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
+    opts = opts || {};
 
     function _releasePrintLock() {
         setTimeout(function() { _printInFlight = false; }, 400);
     }
 
     function _dispatchPrint() {
+        if (_canUseSilentPrint()) {
+            printSilentHTML(htmlContent, function() {
+                console.warn('[Print] QZ silent print failed — using browser print.');
+                _windowPrint(htmlContent, _releasePrintLock);
+            }, opts).then(function(ok) {
+                if (ok) _releasePrintLock();
+            }).catch(function() {
+                _releasePrintLock();
+            });
+            return;
+        }
         _windowPrint(htmlContent, _releasePrintLock);
     }
 
-    if (qrMatch) {
+    // Preload QR for browser fallback; QZ image path loads inside iframe
+    const qrMatch = htmlContent.match(/https:\/\/quickchart\.io\/qr[^"'\s]+/);
+    if (qrMatch && !_canUseSilentPrint()) {
         const qrUrl = qrMatch[0];
         const preloadImg = new Image();
         let finished = false;

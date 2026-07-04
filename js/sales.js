@@ -783,6 +783,10 @@ async function submitEOD() {
 
 // -- Shared single-fire print helper ------------------------------------------
 function _openAndPrint(html) {
+    if (typeof printHTML === 'function') {
+        printHTML(html);
+        return;
+    }
     const w = window.open('', '_blank', 'width=400,height=600,alwaysRaised=yes');
     if (!w) return;
     w.document.write(html);
@@ -797,6 +801,15 @@ function _openAndPrint(html) {
     }
     w.onload = _doPrint;
     setTimeout(_doPrint, 300);
+}
+
+function _printSaleReceipt(items, total, amountPaid, method, saleId, customer, cashier) {
+    const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier);
+    const opts = {};
+    if (typeof buildSaleReceiptESCPOS === 'function') {
+        opts.escpos = buildSaleReceiptESCPOS(items, total, amountPaid, method, saleId, customer, cashier);
+    }
+    printHTML(html, opts);
 }
 
 function printEOD() {
@@ -1381,12 +1394,10 @@ function reprintLastReceipt() {
             console.error('Receipt functions not found');
             return;
         }
-        
-        // Bypass auto-print check and print directly
+
         if (typeof kickDrawer === 'function') kickDrawer();
-        
-        const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, currentUser);
-        printHTML(html);
+
+        _printSaleReceipt(items, total, amountPaid, method, saleId, customer, currentUser);
         
         showToast('Printing receipt...', 'ok');
         if (typeof haptic === 'function') haptic('light');
@@ -2048,7 +2059,7 @@ function printViewedSale() {
     const s     = _viewedSale;
     const items = tryParseJSON(s.items, []);
     kickDrawer();
-    const html  = buildSaleReceiptHTML(
+    _printSaleReceipt(
         items,
         parseFloat(s.total) || 0,
         parseFloat(s.amountPaid) || 0,
@@ -2057,7 +2068,6 @@ function printViewedSale() {
         s.customer || '',
         s.cashier || ''
     );
-    printHTML(html);
 }
 
 // -- Edit Sale -----------------------------------------------------------------
@@ -2221,8 +2231,7 @@ function printPayoutSlip(payoutId) {
 function printReceipt(items, total, amountPaid, method, saleId, customer) {
     if (localStorage.getItem('scAutoPrintReceipt') !== '1') return;
     kickDrawer();
-    const html = buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, currentUser);
-    printHTML(html);
+    _printSaleReceipt(items, total, amountPaid, method, saleId, customer, currentUser);
 }
 
 // -- Modal Helpers -------------------------------------------------------------

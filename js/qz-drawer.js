@@ -152,10 +152,165 @@ function _qzPrinterConfig() {
     return qz.configs.create(QZ_PRINTER_NAME);
 }
 
+function _qzThermalConfig() {
+    return qz.configs.create(QZ_PRINTER_NAME, {
+        units: 'mm',
+        size: { width: 72, height: null },
+        margins: { top: 0, right: 0, bottom: 0, left: 0 },
+        scaleContent: false
+    });
+}
+
 function _qzPrint(config, data) {
     const job = _qzPrintQueue.then(function() { return qz.print(config, data); });
     _qzPrintQueue = job.catch(function() {});
     return job;
+}
+
+// ── Silent thermal printing (ESC/POS raw + rendered image) ─────────────────────
+const THERMAL_RENDER_WIDTH = 576; // 72mm @ 203dpi
+
+function _loadScriptOnce(src, globalName) {
+    if (globalName && window[globalName]) return Promise.resolve(window[globalName]);
+    return new Promise(function(resolve, reject) {
+        const existing = document.querySelector('script[data-qz-src="' + src + '"]');
+        if (existing) {
+            existing.addEventListener('load', function() { resolve(window[globalName]); });
+            existing.addEventListener('error', reject);
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.dataset.qzSrc = src;
+        s.onload = function() { resolve(globalName ? window[globalName] : undefined); };
+        s.onerror = function() { reject(new Error('Failed to load ' + src)); };
+        document.head.appendChild(s);
+    });
+}
+
+function _wrapHtmlDocument(html) {
+    if (/<html[\s>]/i.test(html)) return html;
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;background:#fff;">'
+        + html + '</body></html>';
+}
+
+function _absolutizeHtmlUrls(html) {
+    const base = new URL('.', window.location.href).href;
+    return html
+        .replace(/src="(?!https?:|data:)([^"]+)"/g, function(_, path) {
+            return 'src="' + new URL(path, base).href + '"';
+        })
+        .replace(/href="(?!https?:|data:)([^"]+)"/g, function(_, path) {
+            return 'href="' + new URL(path, base).href + '"';
+        });
+}
+
+function _isA4Html(html) {
+    return /@page\s*\{[^}]*size:\s*A4/i.test(html)
+        || /max-width:\s*680px/i.test(html) && /pi-qr-a4/i.test(html);
+}
+
+function _thermalRenderWidth(html) {
+    return _isA4Html(html) ? 680 : THERMAL_RENDER_WIDTH;
+}
+
+function _waitForImagesIn(root, maxMs) {
+    const images = Array.from(root.querySelectorAll('img'));
+    if (!images.length) return Promise.resolve();
+    return Promise.all(images.map(function(img) {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise(function(resolve) {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+            setTimeout(resolve, maxMs);
+        });
+    }));
+}
+
+async function _htmlToPngBase64(html) {
+    const html2canvas = await _loadScriptOnce(
+        'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+        'html2canvas'
+    );
+    const renderWidth = _thermalRenderWidth(html);
+    const fullHtml = _absolutizeHtmlUrls(_wrapHtmlDocument(html));
+
+    const frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + renderWidth + 'px;height:1px;border:0;';
+    document.body.appendChild(frame);
+
+    try {
+        const doc = frame.contentDocument || frame.contentWindow.document;
+        doc.open();
+        doc.write(fullHtml);
+        doc.close();
+
+        await new Promise(function(resolve) {
+            if (doc.readyState === 'complete') resolve();
+            else frame.addEventListener('load', resolve, { once: true });
+            setTimeout(resolve, 1200);
+        });
+
+        await _waitForImagesIn(doc.body, 2500);
+        await new Promise(function(r) { setTimeout(r, 80); });
+
+        const target = doc.getElementById('printInvoice') || doc.body;
+        const canvas = await html2canvas(target, {
+            backgroundColor: '#ffffff',
+            scale: 1,
+            width: renderWidth,
+            windowWidth: renderWidth,
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+        });
+
+        return canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
+    } finally {
+        document.body.removeChild(frame);
+    }
+}
+
+async function _printRawEscpos(data) {
+    await _connectQZ();
+    const config = _qzPrinterConfig();
+    await _qzPrint(config, [{ type: 'raw', format: 'plain', data: data }]);
+}
+
+async function _printImageBase64(base64) {
+    await _connectQZ();
+    const config = _qzThermalConfig();
+    await _qzPrint(config, [{
+        type: 'pixel',
+        format: 'image',
+        flavor: 'base64',
+        data: base64
+    }]);
+}
+
+// opts.escpos — optional pre-built ESC/POS bytes (fast path for sale receipts)
+async function printSilentHTML(htmlContent, fallback, opts) {
+    opts = opts || {};
+    if (!IS_DESKTOP) {
+        if (typeof fallback === 'function') fallback();
+        return false;
+    }
+    try {
+        if (opts.escpos) {
+            await _printRawEscpos(opts.escpos);
+            console.log('[QZ] Silent ESC/POS print sent.');
+            return true;
+        }
+        const base64 = await _htmlToPngBase64(htmlContent);
+        await _printImageBase64(base64);
+        console.log('[QZ] Silent image print sent.');
+        return true;
+    } catch (e) {
+        console.warn('[QZ] Silent print failed:', e);
+        if (typeof fallback === 'function') fallback();
+        return false;
+    }
 }
 
 async function kickDrawer() {
