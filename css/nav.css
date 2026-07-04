@@ -322,8 +322,48 @@ nav.scrolled {
 .mobile-nav-btn::before { display: none !important; }
 
 .mobile-nav-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
+}
+
+.mobile-nav-icon .sc-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Shared SVG icon helpers (js/icons.js) */
+.sc-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
+.sc-icon-label,
+[data-icon]:not(.empty-icon):not(.state-icon):not(.delete-icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.empty-icon .sc-icon,
+.state-icon .sc-icon,
+.delete-icon .sc-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  opacity: 0.45;
+}
+
+.account-avatar .sc-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.dropdown-role-badge .sc-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -0.2em;
 }
 
 .mobile-nav-label {
