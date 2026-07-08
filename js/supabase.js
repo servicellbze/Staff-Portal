@@ -546,6 +546,8 @@ const Sales = {
     let query = 'order=timestamp.desc';
     if (data.date)              query += `&shift_date=eq.${data.date}`;
     else if (data.from && data.to) query += `&shift_date=gte.${data.from}&shift_date=lte.${data.to}`;
+    // Look up every sale tied to one job (across all dates) — used to derive a job's balance
+    if (data.jobId)             query += `&job_id=eq.${encodeURIComponent(data.jobId)}`;
     const includeReversed = data.includeReversed === '1' || data.includeReversed === true || data.includeReversed === 'true';
     if (!includeReversed) query += '&status=neq.reversed';
     const rows = await sbGet('sales', query);

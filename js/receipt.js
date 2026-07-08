@@ -3,8 +3,8 @@
 // Requires: js/qz-drawer.js loaded before this file
 
 const RECEIPT_STYLES = `
-@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
-#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 12mm; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0; }
+@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; -webkit-font-smoothing: none !important; -moz-osx-font-smoothing: unset !important; text-rendering: geometricPrecision !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
+#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 12mm; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0; -webkit-font-smoothing: none; text-rendering: geometricPrecision; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 4px; }
 .pi-shop img { max-width: 72px; margin-bottom: 2px; display: block; margin-left: auto; margin-right: auto; }
@@ -248,8 +248,8 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
     ).join('');
 
     return `<style>
-@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; } body { background:white!important; } }
-#printInvoice { font-family:'Courier New',Courier,monospace; font-size:12px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 12mm; line-height:1.4; letter-spacing:0; background:white; color:#000; }
+@media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; -webkit-font-smoothing:none!important; text-rendering:geometricPrecision!important; } body { background:white!important; } }
+#printInvoice { font-family:'Courier New',Courier,monospace; font-size:12px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 12mm; line-height:1.4; letter-spacing:0; background:white; color:#000; -webkit-font-smoothing:none; text-rendering:geometricPrecision; }
 #printInvoice * { box-sizing:border-box; font-weight:700; color:#000; }
 #printInvoice h2 { text-align:center; font-size:16px; font-weight:900; letter-spacing:0.5px; margin:0 0 2px; }
 #printInvoice p { text-align:center; margin:1px 0; font-size:11px; }

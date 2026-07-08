@@ -15,6 +15,11 @@ let allJobs        = [];
 let editingSaleId  = null;
 let settlingBillId = null;
 let selectedJobId  = null;
+// Job pickup: the invoice value, what has already been collected, and what is still owed.
+// Balance is DERIVED from prior sales linked to the job — never by editing invoice line items.
+let selectedJobInvoiceTotal = 0;
+let selectedJobPaidToDate   = 0;
+let selectedJobBalanceDue    = 0;
 
 // -- Utilities -----------------------------------------------------------------
 function bz(n) { return 'BZ$' + (parseFloat(n) || 0).toFixed(2); }
@@ -834,20 +839,20 @@ function printEOD() {
     const html = '<!DOCTYPE html><html><head><title>EOD Report</title>'
         + '<style>'
         + '@page{size:72mm auto;margin:0;}'
-        + '*{box-sizing:border-box;}'
-        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
-        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
-        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + '*{box-sizing:border-box;-webkit-font-smoothing:none;text-rendering:geometricPrecision;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11px;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:15px;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10px;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
         + 'hr.dash{border-top:1px dashed #000;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10px;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
         + 'th,td{padding:4px 3px;vertical-align:top;}'
         + 'td{border-bottom:1px solid #000;}'
         + 'td:first-child{padding-right:6px;}'
         + 'td:last-child{text-align:right;font-weight:900;padding-left:6px;white-space:nowrap;}'
-        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
-        + '.variance td{font-size:11pt;font-weight:900;}'
-        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:13px;font-weight:900;padding-top:4px;}'
+        + '.variance td{font-size:11px;font-weight:900;}'
+        + '.footer{text-align:center;font-size:9px;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
         + '<h2>SERVICELL BELIZE</h2>'
         + '<p>' + escH(shiftLabel) + ' &mdash; ' + displayDate + '</p>'
@@ -862,7 +867,7 @@ function printEOD() {
         + '<tr><td>GST on Card Sales</td><td>' + bz(summary.gstCard) + '</td></tr>'
         + '<tr><td>Total GST Collected</td><td>' + bz(summary.gstTotal) + '</td></tr>'
         + '<tr><td>Total Payouts</td><td>' + bz(payoutsTotal) + '</td></tr>'
-        + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9pt;padding:4px 3px;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9pt;padding:4px 3px;">-' + bz(p.amount) + '</td></tr>').join('') : '')
+        + (allPayouts.length ? allPayouts.map(p => '<tr><td style="font-size:9px;padding:4px 3px;">&nbsp;&nbsp;' + escH(p.reason || 'Payout') + (p.takenBy ? ' (' + escH(p.takenBy) + ')' : '') + '</td><td style="font-size:9px;padding:4px 3px;">-' + bz(p.amount) + '</td></tr>').join('') : '')
         + '<tr class="total"><td><strong>Cash Expected in Drawer</strong></td><td><strong>' + bz(net) + '</strong></td></tr>'
         + '<tr><td>Actual Drawer Total</td><td>' + bz(drawer) + '</td></tr>'
         + (startingFloat > 0 ? '<tr><td>&nbsp;&nbsp;Less: Starting Float</td><td>-' + bz(startingFloat) + '</td></tr>' : '')
@@ -892,13 +897,13 @@ function printSalesReport() {
             const itemName = escH((item.name || 'Item').substring(0, 24));
             const qty = item.qty || 1;
             const total = parseFloat(item.total) || (parseFloat(item.price) || 0) * qty;
-            return '<tr><td style="font-size:9pt;padding:4px 3px;">' + itemName + '</td>'
-                + '<td style="text-align:center;font-size:9pt;padding:4px 3px;">' + qty + '</td>'
-                + '<td style="text-align:right;font-size:9pt;padding:4px 3px;">' + bz(total) + '</td></tr>';
+            return '<tr><td style="font-size:9px;padding:4px 3px;">' + itemName + '</td>'
+                + '<td style="text-align:center;font-size:9px;padding:4px 3px;">' + qty + '</td>'
+                + '<td style="text-align:right;font-size:9px;padding:4px 3px;">' + bz(total) + '</td></tr>';
         }).join('');
         
         // Header row for this sale
-        const headerRow = '<tr style="background:#f0f0f0;"><td colspan="3" style="font-size:9pt;padding:4px 3px;border-top:1px solid #000;line-height:1.5;letter-spacing:0.2px;">'
+        const headerRow = '<tr style="background:#f0f0f0;"><td colspan="3" style="font-size:9px;padding:4px 3px;border-top:1px solid #000;line-height:1.5;letter-spacing:0.2px;">'
             + escH(ts) + ' &middot; [' + method + '] &middot; ' + escH(s.cashier || 'Staff')
             + (s.jobId && String(s.jobId).trim() ? ' &middot; Job #' + escH(s.jobId) : '')
             + '</td></tr>';
@@ -909,30 +914,30 @@ function printSalesReport() {
     const html = '<!DOCTYPE html><html><head><title>Sales Report</title>'
         + '<style>'
         + '@page{size:72mm auto;margin:0;}'
-        + '*{box-sizing:border-box;}'
-        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
-        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
-        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + '*{box-sizing:border-box;-webkit-font-smoothing:none;text-rendering:geometricPrecision;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11px;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:15px;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10px;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10px;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
         + 'th,td{padding:4px 3px;vertical-align:top;}'
         + 'td{border-bottom:1px dotted #ccc;}'
         + 'td:first-child,th:first-child{padding-right:4px;}'
         + 'td:last-child,th:last-child{text-align:right;font-weight:900;padding-left:4px;}'
         + 'th{text-align:left;font-weight:900;border-bottom:2px solid #000;}'
         + 'th:nth-child(2){text-align:center;}'
-        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
-        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:13px;font-weight:900;padding-top:4px;}'
+        + '.footer{text-align:center;font-size:9px;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
         + '<h2>SERVICELL BELIZE</h2>'
         + '<p>Sales Report</p>'
         + '<p>' + displayDate + '</p>'
-        + (shift ? '<p style="font-size:9pt;">' + shift.label + '</p>' : '')
+        + (shift ? '<p style="font-size:9px;">' + shift.label + '</p>' : '')
         + '<hr>'
         + '<table>'
-        + '<tr><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Item</th>'
-        + '<th style="text-align:center;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Qty</th>'
-        + '<th style="text-align:right;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Total</th></tr>'
+        + '<tr><th style="text-align:left;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Item</th>'
+        + '<th style="text-align:center;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Qty</th>'
+        + '<th style="text-align:right;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Total</th></tr>'
         + salesRows
         + '<tr class="total"><td colspan="2"><strong>Total Sales</strong></td><td><strong>' + bz(gross) + '</strong></td></tr>'
         + '<tr><td colspan="2">Transactions</td><td>' + validSales.length + '</td></tr>'
@@ -955,32 +960,32 @@ function printPayoutsReport() {
     
     const payoutRows = [...allPayouts].reverse().map(p => {
         const ts = p.timestamp ? new Date(p.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-        return '<tr><td style="font-size:9pt;padding:4px 3px;">' + escH(ts) + '</td><td style="font-size:9pt;padding:4px 3px;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9pt;padding:4px 3px;">' + escH(p.takenBy || '—') + '</td><td style="text-align:right;font-size:9pt;padding:4px 3px;">' + bz(p.amount) + '</td></tr>';
+        return '<tr><td style="font-size:9px;padding:4px 3px;">' + escH(ts) + '</td><td style="font-size:9px;padding:4px 3px;">' + escH((p.reason || 'Payout').substring(0, 30)) + '</td><td style="font-size:9px;padding:4px 3px;">' + escH(p.takenBy || '—') + '</td><td style="text-align:right;font-size:9px;padding:4px 3px;">' + bz(p.amount) + '</td></tr>';
     }).join('');
     
     const html = '<!DOCTYPE html><html><head><title>Payouts Report</title>'
         + '<style>'
         + '@page{size:72mm auto;margin:0;}'
-        + '*{box-sizing:border-box;}'
-        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
-        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
-        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + '*{box-sizing:border-box;-webkit-font-smoothing:none;text-rendering:geometricPrecision;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11px;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:15px;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10px;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10px;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
         + 'th,td{padding:4px 3px;vertical-align:top;}'
         + 'td{border-bottom:1px solid #000;}'
         + 'td:first-child{padding-right:6px;}'
         + 'td:last-child{text-align:right;font-weight:900;padding-left:6px;white-space:nowrap;}'
-        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
-        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:13px;font-weight:900;padding-top:4px;}'
+        + '.footer{text-align:center;font-size:9px;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
         + '<h2>SERVICELL BELIZE</h2>'
         + '<p>Payouts Report</p>'
         + '<p>' + displayDate + '</p>'
         + '<hr>'
         + '<table>'
-        + '<tr><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Time</th><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Reason</th><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Taken By</th><th style="text-align:right;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Amount</th></tr>'
-        + (payoutRows || '<tr><td colspan="4" style="text-align:center;font-size:9pt;padding:8px 0;">No payouts</td></tr>')
+        + '<tr><th style="text-align:left;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Time</th><th style="text-align:left;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Reason</th><th style="text-align:left;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Taken By</th><th style="text-align:right;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Amount</th></tr>'
+        + (payoutRows || '<tr><td colspan="4" style="text-align:center;font-size:9px;padding:8px 0;">No payouts</td></tr>')
         + '<tr class="total"><td colspan="3"><strong>Total Payouts</strong></td><td><strong>' + bz(total) + '</strong></td></tr>'
         + '</table>'
         + '<div class="footer">Printed ' + new Date().toLocaleString() + '</div>'
@@ -997,32 +1002,32 @@ function printBillsReport() {
         const balance = Math.max(0, (parseFloat(b.totalOwed) || 0) - (parseFloat(b.totalPaid) || 0));
         const items = tryParseJSON(b.items, []);
         const itemNames = items.map(i => i.name).join(', ');
-        return '<tr><td style="font-size:9pt;padding:4px 3px;">' + escH(b.personName || 'Unknown') + '</td><td style="font-size:9pt;padding:4px 3px;">' + escH(itemNames.substring(0, 25)) + (itemNames.length > 25 ? '...' : '') + '</td><td style="text-align:right;font-size:9pt;padding:4px 3px;">' + bz(balance) + '</td></tr>';
+        return '<tr><td style="font-size:9px;padding:4px 3px;">' + escH(b.personName || 'Unknown') + '</td><td style="font-size:9px;padding:4px 3px;">' + escH(itemNames.substring(0, 25)) + (itemNames.length > 25 ? '...' : '') + '</td><td style="text-align:right;font-size:9px;padding:4px 3px;">' + bz(balance) + '</td></tr>';
     }).join('');
     
     const html = '<!DOCTYPE html><html><head><title>Bills Report</title>'
         + '<style>'
         + '@page{size:72mm auto;margin:0;}'
-        + '*{box-sizing:border-box;}'
-        + 'body{font-family:"Courier New",Courier,monospace;font-size:11pt;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
-        + 'h2{text-align:center;font-size:13pt;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
-        + 'p{text-align:center;margin:0 0 1mm;font-size:10pt;font-weight:bold;}'
+        + '*{box-sizing:border-box;-webkit-font-smoothing:none;text-rendering:geometricPrecision;}'
+        + 'body{font-family:"Courier New",Courier,monospace;font-size:11px;font-weight:bold;width:72mm;margin:0 auto;padding:3mm 3mm 15mm 3mm;color:#000;background:#fff;}'
+        + 'h2{text-align:center;font-size:15px;font-weight:900;margin:0 0 2mm;letter-spacing:1px;}'
+        + 'p{text-align:center;margin:0 0 1mm;font-size:10px;font-weight:bold;}'
         + 'hr{border:none;border-top:2px solid #000;margin:2mm 0;}'
-        + 'table{width:100%;border-collapse:collapse;font-size:10pt;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:10px;font-weight:bold;line-height:1.5;letter-spacing:0.2px;}'
         + 'th,td{padding:4px 3px;vertical-align:top;}'
         + 'td{border-bottom:1px solid #000;}'
         + 'td:first-child{padding-right:6px;}'
         + 'td:last-child{text-align:right;font-weight:900;padding-left:6px;white-space:nowrap;}'
-        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:12pt;font-weight:900;padding-top:4px;}'
-        + '.footer{text-align:center;font-size:9pt;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
+        + '.total td{border-top:3px solid #000;border-bottom:none;font-size:13px;font-weight:900;padding-top:4px;}'
+        + '.footer{text-align:center;font-size:9px;font-weight:bold;margin-top:3mm;border-top:1px dashed #000;padding-top:2mm;}'
         + '</style></head><body>'
         + '<h2>SERVICELL BELIZE</h2>'
         + '<p>Open Bills Report</p>'
         + '<p>' + new Date().toLocaleDateString() + '</p>'
         + '<hr>'
         + '<table>'
-        + '<tr><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Person</th><th style="text-align:left;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Items</th><th style="text-align:right;font-size:9pt;padding:4px 3px;border-bottom:2px solid #000;">Balance</th></tr>'
-        + (billRows || '<tr><td colspan="3" style="text-align:center;font-size:9pt;padding:8px 0;">No open bills</td></tr>')
+        + '<tr><th style="text-align:left;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Person</th><th style="text-align:left;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Items</th><th style="text-align:right;font-size:9px;padding:4px 3px;border-bottom:2px solid #000;">Balance</th></tr>'
+        + (billRows || '<tr><td colspan="3" style="text-align:center;font-size:9px;padding:8px 0;">No open bills</td></tr>')
         + '<tr class="total"><td colspan="2"><strong>Total Outstanding</strong></td><td><strong>' + bz(totalOwed) + '</strong></td></tr>'
         + '<tr><td colspan="2">Open Bills</td><td>' + open.length + '</td></tr>'
         + '</table>'
@@ -1421,6 +1426,8 @@ function openJobPickupModal() {
     document.getElementById('jobPickupBtn').style.display = 'none';
     document.getElementById('jobInvoiceItems').innerHTML = '';
     document.getElementById('jobTotalDisplay').textContent = 'BZ$0.00';
+    const paidInfoReset = document.getElementById('jobPaidInfo');
+    if (paidInfoReset) paidInfoReset.innerHTML = '';
     document.getElementById('jobCashTendered').value = '';
     document.getElementById('jpm-cash').checked = true;
     document.getElementById('jobCashTenderedGroup').style.display = 'block';
@@ -1428,6 +1435,9 @@ function openJobPickupModal() {
     document.getElementById('jobChangeDisplay').style.display = 'none';
     document.getElementById('jobBalanceDisplay').style.display = 'none';
     selectedJobId = null;
+    selectedJobInvoiceTotal = 0;
+    selectedJobPaidToDate = 0;
+    selectedJobBalanceDue = 0;
     openModal('jobPickupModal');
     ensureJobsLoaded();
     setTimeout(() => document.getElementById('jobSearch').focus(), 300);
@@ -1473,18 +1483,75 @@ function selectJob(id) {
     }
     
     const total = invoiceItems.reduce((t, i) => t + (parseFloat(i.price) || 0), 0);
+    selectedJobInvoiceTotal = total;
     document.getElementById('jobTotalDisplay').textContent = bz(total);
-    
-    // Set cash tendered to total by default
+
+    // Until prior payments load, assume nothing has been paid yet.
+    selectedJobPaidToDate = 0;
+    selectedJobBalanceDue = total;
+    const paidInfoEl = document.getElementById('jobPaidInfo');
+    if (paidInfoEl) paidInfoEl.innerHTML = '';
+
+    // Default cash tendered to the full total for now (refined once history loads)
     document.getElementById('jobCashTendered').value = total > 0 ? total.toFixed(2) : '';
     document.getElementById('jpm-cash').checked = true;
     document.getElementById('jobCashTenderedGroup').style.display = 'block';
     document.getElementById('jobPartialGroup').style.display = 'none';
-    
+    document.getElementById('jobBalanceDisplay').style.display = 'none';
+
     document.getElementById('jobPaymentSection').style.display = 'block';
     document.getElementById('jobPickupBtn').style.display = 'inline-flex';
-    
+
     calcJobChange();
+
+    // Pull this job's payment history and show the true balance due.
+    loadJobBalance(id, total);
+}
+
+/** Sum everything already collected on a job (across all past sales, non-reversed). */
+async function fetchJobPaidToDate(jobId) {
+    try {
+        const res = await apiGet({ action: 'listsales', jobId: jobId });
+        const sales = (res && res.sales) || [];
+        return sales.reduce((t, s) => t + saleCollectedAmount(s), 0);
+    } catch (_) {
+        return 0;
+    }
+}
+
+/** Load prior payments for a job → show "already paid" + "balance due" and default the amount owed. */
+async function loadJobBalance(jobId, invoiceTotal) {
+    const paid = await fetchJobPaidToDate(jobId);
+    // Ignore if the cashier has moved on to a different job in the meantime.
+    if (String(selectedJobId) !== String(jobId)) return;
+
+    selectedJobPaidToDate = paid;
+    const balance = Math.max(0, invoiceTotal - paid);
+    selectedJobBalanceDue = balance;
+
+    const info = document.getElementById('jobPaidInfo');
+    if (info) {
+        info.innerHTML = (paid > 0.009)
+            ? '<div class="line-total-row" style="opacity:0.85;"><span>Already paid</span><span>' + bz(paid) + '</span></div>'
+              + '<div class="line-total-row" style="color:var(--warning);font-weight:800;"><span>Balance due</span><span>' + bz(balance) + '</span></div>'
+            : '';
+    }
+
+    // Re-default the amount being collected to the outstanding balance.
+    const method = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
+    if (method === 'cash') {
+        document.getElementById('jobCashTendered').value = balance > 0 ? balance.toFixed(2) : '';
+        calcJobChange();
+    } else if (method === 'partial') {
+        calcJobBalance();
+    }
+
+    // Nothing left to collect.
+    if (paid > 0.009 && balance <= 0.01) {
+        const disp = document.getElementById('jobBalanceDisplay');
+        disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
+        disp.textContent = 'Already fully paid — nothing due.';
+    }
 }
 
 function toggleJobPaymentFields() {
@@ -1493,9 +1560,9 @@ function toggleJobPaymentFields() {
     document.getElementById('jobPartialGroup').style.display = method === 'partial' ? 'block' : 'none';
     
     if (method === 'cash') {
-        const total = parseFloat(document.getElementById('jobTotalDisplay').textContent.replace('BZ$', '')) || 0;
+        const due = selectedJobBalanceDue || 0;
         const field = document.getElementById('jobCashTendered');
-        if (!field.value) field.value = total > 0 ? total.toFixed(2) : '';
+        field.value = due > 0 ? due.toFixed(2) : '';
         calcJobChange();
     } else if (method === 'partial') {
         calcJobBalance();
@@ -1506,12 +1573,12 @@ function toggleJobPaymentFields() {
 }
 
 function calcJobChange() {
-    const total = parseFloat(document.getElementById('jobTotalDisplay').textContent.replace('BZ$', '')) || 0;
+    const due = selectedJobBalanceDue || 0;
     const tendered = parseFloat(document.getElementById('jobCashTendered').value) || 0;
     const disp = document.getElementById('jobChangeDisplay');
     if (!disp) return;
-    if (!tendered || total <= 0) { disp.style.display = 'none'; return; }
-    const change = tendered - total;
+    if (!tendered || due <= 0) { disp.style.display = 'none'; return; }
+    const change = tendered - due;
     disp.style.display = 'block';
     if (change < 0) {
         disp.style.cssText = 'display:block;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.2);';
@@ -1527,12 +1594,12 @@ function toggleJobPartial() {
 }
 
 function calcJobBalance() {
-    const total = parseFloat(document.getElementById('jobTotalDisplay').textContent.replace('BZ$', '')) || 0;
+    const due = selectedJobBalanceDue || 0;
     const method = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
-    const paid = method === 'partial' ? (parseFloat(document.getElementById('jobPartialAmount').value) || 0) : total;
-    const balance = total - paid;
+    const paid = method === 'partial' ? (parseFloat(document.getElementById('jobPartialAmount').value) || 0) : due;
+    const balance = due - paid;
     const disp = document.getElementById('jobBalanceDisplay');
-    if (total <= 0) { disp.style.display = 'none'; return; }
+    if (due <= 0) { disp.style.display = 'none'; return; }
     disp.style.display = 'block';
     if (balance <= 0.01) {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
@@ -1547,36 +1614,61 @@ async function submitJobPickup() {
     if (!selectedJobId) return;
     const j = allJobs.find(x => String(x.id) === String(selectedJobId));
     const invoiceItems = tryParseJSON(j.invoiceItems, []);
-    const total = invoiceItems.reduce((t, i) => t + (parseFloat(i.price) || 0), 0);
+    const invoiceTotal = invoiceItems.reduce((t, i) => t + (parseFloat(i.price) || 0), 0);
     const method = (document.querySelector('input[name="jobMethod"]:checked') || {}).value || 'cash';
-    
-    let amountPaid = total;
-    if (method === 'partial') {
-        amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
-    } else if (method === 'cash') {
-        // For cash: amountPaid is the tendered amount (what customer gave)
-        amountPaid = parseFloat(document.getElementById('jobCashTendered').value) || total;
-    } else {
-        // For card: amountPaid equals total
-        amountPaid = total;
-    }
-    
-    const balance = total - amountPaid;
-    if (method === 'partial' && balance > 0.01)
-        if (!confirm('Customer still owes ' + bz(balance) + '. Device will NOT be released. Continue?')) return;
+
     const btn = document.getElementById('jobPickupBtn');
     btn.disabled = true; btn.textContent = 'Processing...';
+
+    // Re-check what has already been collected so we never charge more than the balance.
+    const paidToDate = await fetchJobPaidToDate(selectedJobId);
+    const due = Math.max(0, invoiceTotal - paidToDate);   // amount owed at the start of this transaction
+    if (due <= 0.01) {
+        btn.disabled = false; btn.textContent = '\u2713 Collect Payment';
+        showToast('This job is already fully paid.', '');
+        return;
+    }
+
+    let amountPaid;      // value stored on the sale record
+    let collectedNow;    // revenue actually collected in this transaction
+    if (method === 'partial') {
+        amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
+        collectedNow = amountPaid;
+    } else if (method === 'cash') {
+        // For cash: amountPaid is the tendered amount (what customer gave); collected = the balance
+        amountPaid = parseFloat(document.getElementById('jobCashTendered').value) || due;
+        collectedNow = due;
+    } else {
+        // Card settles the full balance
+        amountPaid = due;
+        collectedNow = due;
+    }
+
+    const remainingAfter = Math.max(0, invoiceTotal - paidToDate - collectedNow);
+    if (method === 'partial' && remainingAfter > 0.01)
+        if (!confirm('Customer still owes ' + bz(remainingAfter) + '. Device will NOT be released. Continue?')) {
+            btn.disabled = false; btn.textContent = '\u2713 Collect Payment';
+            return;
+        }
+
+    // Describe the line so a follow-up payment reads as a balance, not a fresh full charge.
+    const deviceLabel = j ? (j.device || 'Repair') : 'Repair';
+    const saleLabel = paidToDate > 0.009
+        ? 'Job #' + selectedJobId + '  ·  Balance — ' + deviceLabel
+        : 'Job #' + selectedJobId + '  ·  ' + deviceLabel;
+
     try {
         const data = await apiPost({
             action: 'createsale', customer: j ? (j.customerName || '') : '',
-            items: JSON.stringify([{ name: 'Job #' + selectedJobId + '  ·  ' + (j ? (j.device || 'Repair') : 'Repair'), qty: 1, price: total, total }]),
-            total, method, amountPaid, jobId: selectedJobId,
+            items: JSON.stringify([{ name: saleLabel, qty: 1, price: due, total: due }]),
+            total: due, method, amountPaid, jobId: selectedJobId,
             shiftDate: getShiftDate(), shift: getCurrentShift() ? getCurrentShift().label : 'Unknown', cashier: currentUser
         });
         if (data.success) {
-            const payStatus = balance <= 0.01 ? 'paid' : 'partial';
+            const fullyPaid = remainingAfter <= 0.01;
+            const payStatus = fullyPaid ? 'paid' : 'partial';
             const updateParams = { action: 'update', id: selectedJobId, payStatus, username: currentUser };
-            if (balance <= 0.01) {
+            if (fullyPaid) {
                 updateParams.status = 'resolved';
             } else {
                 showToast('Partial payment — device stays until fully paid.', '');
@@ -1584,12 +1676,12 @@ async function submitJobPickup() {
             await apiPost(updateParams);
             closeModal('jobPickupModal');
             if (typeof haptic === 'function') haptic('success');
-            
+
             // Show confirmation modal with change if cash
-            if (method === 'cash' && balance <= 0.01) {
-                const jobTendered = parseFloat(document.getElementById('jobCashTendered').value) || total;
-                const change = Math.max(0, jobTendered - total);
-                document.getElementById('scTotal').textContent = bz(total);
+            if (method === 'cash' && fullyPaid) {
+                const jobTendered = parseFloat(document.getElementById('jobCashTendered').value) || due;
+                const change = Math.max(0, jobTendered - due);
+                document.getElementById('scTotal').textContent = bz(due);
                 document.getElementById('scPaid').textContent = bz(jobTendered);
                 const changeRow = document.getElementById('scChangeRow');
                 if (change > 0.01) {
@@ -1599,16 +1691,16 @@ async function submitJobPickup() {
                     changeRow.style.display = 'none';
                 }
                 openModal('saleConfirmModal');
-            } else if (balance <= 0.01) {
+            } else if (fullyPaid) {
                 showToast('Payment collected!', 'ok');
             }
-            
-            // Print receipt
-            printReceipt(
-                invoiceItems.map(i => ({ name: i.desc, qty: 1, price: i.price, total: i.price })),
-                total, amountPaid, method, data.saleId, j.customerName || ''
-            );
-            
+
+            // Print receipt for the amount collected now (itemized on first payment, single balance line after)
+            const receiptItems = paidToDate > 0.009
+                ? [{ name: saleLabel, qty: 1, price: due, total: due }]
+                : invoiceItems.map(i => ({ name: i.desc, qty: 1, price: i.price, total: i.price }));
+            printReceipt(receiptItems, due, amountPaid, method, data.saleId, j.customerName || '');
+
             await loadAll();
         } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast(data.error || 'Error', 'err'); }
     } catch (e) { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast('Connection error.', 'err'); }

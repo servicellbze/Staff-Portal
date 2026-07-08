@@ -60,6 +60,45 @@ function jobInDateRange(j, from, to) {
     return d >= from && d <= to;
 }
 
+/**
+ * Who should be credited for a job's revenue.
+ * Prefer the person who claimed (did) the job; fall back to the assigned technician.
+ * Returns null when there is no real person to credit (so that revenue stays unattributed
+ * rather than being dumped on a placeholder like "Unknown" or "Unassigned").
+ */
+function techCreditFor(job) {
+    if (!job) return null;
+    const claimer = String(job.claimedBy || '').trim();
+    if (claimer) return claimer;
+    const tech = String(job.technician || '').trim();
+    if (tech && !['unknown', 'unassigned'].includes(tech.toLowerCase())) return tech;
+    return null;
+}
+
+/**
+ * Attribute each in-period sale's collected revenue to the technician of its job.
+ * The job→tech map is built from ALL jobs (window._allJobs), not just jobs received in the
+ * period, so a payment collected now still credits the tech even if the job came in earlier.
+ * This keeps technician revenue reconciled with the shop's collected (job-linked) revenue.
+ */
+function buildTechRevenue(salesInRange) {
+    const allJobs = window._allJobs || [];
+    const creditByJob = {};
+    allJobs.forEach(j => {
+        const credit = techCreditFor(j);
+        if (credit && j.id != null) creditByJob[String(j.id)] = credit;
+    });
+    const rev = {};
+    (salesInRange || []).forEach(s => {
+        if (!s || s.status === 'reversed') return;
+        if (!s.jobId || String(s.jobId).trim() === '') return;
+        const credit = creditByJob[String(s.jobId)];
+        if (!credit) return;
+        rev[credit] = (rev[credit] || 0) + saleCollectedAmount(s);
+    });
+    return rev;
+}
+
 function formatPeriodLabel(from, to) {
     const fmt = (d) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     return from === to ? fmt(from) : fmt(from) + ' – ' + fmt(to);
@@ -84,6 +123,47 @@ function saleOutstanding(s) {
 
 function sumPartialOutstandingStats(sales) {
     return sales.filter(s => s.status !== 'reversed' && s.method === 'partial').reduce((t, s) => t + saleOutstanding(s), 0);
+}
+
+/**
+ * True money still owed by customers, as of now.
+ *
+ * Job repairs are measured PER JOB (invoice total vs. everything ever collected on that job),
+ * so a repair settled across several visits — or a job whose payment status is already "paid" —
+ * no longer shows a phantom balance. Summing each partial sale on its own would double-count a
+ * job paid over multiple visits and never clear a job that was later paid in full.
+ * Retail partial sales (no job attached) are still measured per sale.
+ *
+ * Returns { owed, count }.
+ */
+function computePartialOutstanding(allSales) {
+    const jobById = {};
+    (window._allJobs || []).forEach(j => { if (j.id != null) jobById[String(j.id)] = j; });
+
+    const collectedByJob = {};
+    let retailOwed = 0, retailCount = 0;
+    (allSales || []).filter(s => s && s.status !== 'reversed').forEach(s => {
+        const jid = s.jobId != null ? String(s.jobId).trim() : '';
+        if (jid && jobById[jid]) {
+            collectedByJob[jid] = (collectedByJob[jid] || 0) + saleCollectedAmount(s);
+        } else if (s.method === 'partial') {
+            const out = saleOutstanding(s);
+            if (out > 0.009) { retailOwed += out; retailCount++; }
+        }
+    });
+
+    let jobOwed = 0, jobCount = 0;
+    Object.keys(collectedByJob).forEach(jid => {
+        const j = jobById[jid];
+        const invoiceTotal = (tryParseJSON(j.invoiceItems, []) || []).reduce((t, i) => t + (parseFloat(i.price) || 0), 0);
+        const collected = collectedByJob[jid];
+        const fullyPaid = String(j.payStatus || j.payment || '').toLowerCase() === 'paid';
+        const remaining = invoiceTotal - collected;
+        // Only a genuine partial: some money in, not fully paid, still something left.
+        if (!fullyPaid && collected > 0.009 && remaining > 0.009) { jobOwed += remaining; jobCount++; }
+    });
+
+    return { owed: jobOwed + retailOwed, count: jobCount + retailCount };
 }
 
 function gstFromInclusive(gross) {
@@ -236,15 +316,19 @@ function renderKPIs(sales, reversed, payouts, jobs, bills, closes, prevSales) {
     const netCash   = cashColl - pTotal;
     const completed = jobs.filter(j => ['resolved','ready'].includes((j.status||'').toLowerCase()));
     const jobSales  = sales.filter(s => s.jobId && String(s.jobId).trim() !== '');
-    const avgRepair = jobSales.length
-        ? jobSales.reduce((t, s) => t + saleCollectedAmount(s), 0) / jobSales.length
+    // Average per repair, not per transaction — a job paid over several visits is still one repair.
+    const uniqueJobIds = new Set(jobSales.map(s => String(s.jobId).trim()));
+    const avgRepair = uniqueJobIds.size
+        ? jobSales.reduce((t, s) => t + saleCollectedAmount(s), 0) / uniqueJobIds.size
         : 0;
     const openBills = bills.filter(b => b.status === 'open');
     const billsOwed = openBills.reduce((t, b) => t + Math.max(0, (parseFloat(b.totalOwed)||0) - (parseFloat(b.totalPaid)||0)), 0);
     const totalTx   = sales.length + reversed.length;
     const revRate   = totalTx > 0 ? Math.round((reversed.length / totalTx) * 100) : 0;
-    const partialOwed = sumPartialOutstandingStats(sales);
-    const partialCount = sales.filter(s => s.method === 'partial' && saleOutstanding(s) > 0.009).length;
+    // Outstanding balances are an as-of-now figure (all time), measured per job — see computePartialOutstanding.
+    const partialBal   = computePartialOutstanding(window._allSales || sales);
+    const partialOwed  = partialBal.owed;
+    const partialCount = partialBal.count;
     const gstTotal = gstFromInclusive(gross);
     const variance = computeDrawerVariance(closes);
 
@@ -272,7 +356,7 @@ function renderKPIs(sales, reversed, payouts, jobs, bills, closes, prevSales) {
     document.getElementById('kpiReversals').textContent  = revRate + '%';
     document.getElementById('kpiReversalsSub').textContent = reversed.length + ' of ' + totalTx + ' reversed';
     document.getElementById('kpiPartialOwed').textContent = bz(partialOwed);
-    document.getElementById('kpiPartialSub').textContent = partialCount + ' open partial sale' + (partialCount === 1 ? '' : 's');
+    document.getElementById('kpiPartialSub').textContent = partialCount + ' open balance' + (partialCount === 1 ? '' : 's') + ' (all time)';
     document.getElementById('kpiGST').textContent = bz(gstTotal);
     document.getElementById('kpiGSTSub').textContent = 'Pre-tax approx. ' + bz(gross - gstTotal);
     const varEl = document.getElementById('kpiVariance');
@@ -454,19 +538,9 @@ function renderTechPerf(jobs, from, to) {
     const el = document.getElementById('techPerf');
     const techs = {};
 
-    // Build a jobId → claimedBy map for revenue attribution
-    const jobClaimMap = {};
-    jobs.forEach(j => { if (j.claimedBy && j.id) jobClaimMap[String(j.id)] = j.claimedBy; });
-
-    // Pull sales from cache and attribute revenue to the technician who claimed the job
-    const allSales = (window._allSales || []).filter(s => s.status !== 'reversed' && saleInDateRange(s, from, to));
-    const techRevenue = {};
-    allSales.forEach(s => {
-        if (!s.jobId || String(s.jobId).trim() === '') return;
-        const claimer = jobClaimMap[String(s.jobId)];
-        if (!claimer) return;
-        techRevenue[claimer] = (techRevenue[claimer] || 0) + saleCollectedAmount(s);
-    });
+    // Attribute revenue from ALL sales in the period to each job's technician (claimed → assigned).
+    const salesInRange = (window._allSales || []).filter(s => s.status !== 'reversed' && saleInDateRange(s, from, to));
+    const techRevenue = buildTechRevenue(salesInRange);
 
     jobs.forEach(j => {
         const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
@@ -492,6 +566,12 @@ function renderTechPerf(jobs, from, to) {
                 if (!j.claimedBy && status === 'received') techs[t].unclaimed++;
             }
         }
+    });
+
+    // A tech may have earned revenue this period from a job received earlier (so it isn't in
+    // the job-count loop above). Make sure they still appear and can win "Top Revenue".
+    Object.keys(techRevenue).forEach(name => {
+        if (!techs[name]) techs[name] = { assigned: 0, completed: 0, stale: 0, unclaimed: 0, totalMs: 0, countMs: 0 };
     });
 
     const sorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
@@ -716,7 +796,7 @@ function exportPDF() {
     const netCash   = cashColl - pTotal;
     const totalTx   = sales.length + reversed.length;
     const revRate   = totalTx > 0 ? Math.round((reversed.length / totalTx) * 100) : 0;
-    const partialOwed = sumPartialOutstandingStats(sales);
+    const partialOwed = computePartialOutstanding(window._allSales || sales).owed;
     const gstTotal = gstFromInclusive(gross);
     const variance = computeDrawerVariance(window._allCloses || []);
 
@@ -727,15 +807,7 @@ function exportPDF() {
     sales.forEach(s => { tryParseJSON(s.items, []).forEach(i => { if (i.name) itemCounts[i.name] = (itemCounts[i.name]||0) + (i.qty||1); }); });
     const topItems = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
 
-    const jobClaimMap = {};
-    jobs.forEach(j => { if (j.claimedBy && j.id) jobClaimMap[String(j.id)] = j.claimedBy; });
-    const techRevenue = {};
-    sales.filter(s => saleInDateRange(s, from, to)).forEach(s => {
-        if (!s.jobId || String(s.jobId).trim() === '') return;
-        const claimer = jobClaimMap[String(s.jobId)];
-        if (!claimer) return;
-        techRevenue[claimer] = (techRevenue[claimer] || 0) + saleCollectedAmount(s);
-    });
+    const techRevenue = buildTechRevenue(sales.filter(s => saleInDateRange(s, from, to)));
     const techs = {};
     jobs.forEach(j => {
         const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
@@ -743,6 +815,8 @@ function exportPDF() {
         techs[t].assigned++;
         if (['resolved','ready'].includes((j.status||'').toLowerCase())) techs[t].completed++;
     });
+    // Include techs who earned revenue from earlier jobs so they still show / can win Top Revenue.
+    Object.keys(techRevenue).forEach(name => { if (!techs[name]) techs[name] = { completed: 0, assigned: 0 }; });
     const techSorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
     const maxCompleted = Math.max(...techSorted.map(([,d]) => d.completed), 0);
     const maxRevenue   = Math.max(...techSorted.map(([n]) => techRevenue[n]||0), 0);
