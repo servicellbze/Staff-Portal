@@ -850,51 +850,65 @@ function closeReceiptPreview() {
     _receiptPreviewState = null;
 }
 
-function openReceiptPreview(html, plainText, opts) {
-    showReceiptPreview(html, plainText, opts);
-}
-
 window.buildSaleReceiptText = buildSaleReceiptText;
 window.buildJobReceiptText = buildJobReceiptText;
 window.shareReceiptText = shareReceiptText;
 window.showReceiptPreview = showReceiptPreview;
-window.openReceiptPreview = openReceiptPreview;
 window.closeReceiptPreview = closeReceiptPreview;
 window.isMobileReceipt = isMobileReceipt;
+window.openReceiptPreview = showReceiptPreview;
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
 const A4_STYLES = `
-@media print { @page { size: A4; margin: 15mm 20mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; } body { background: white !important; } img { display: block !important; } }
-body { font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #000; background: white; max-width: 680px; margin: 0 auto; padding: 20px; }
+@media print {
+    @page { size: A4; margin: 14mm 16mm; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color: #000 !important; background: transparent !important; }
+    html, body { background: white !important; }
+    img { display: block !important; max-width: 100%; }
+    .a4-invoice { box-shadow: none !important; }
+}
+html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+body { font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.45; }
 * { box-sizing: border-box; }
-.pi-shop { text-align: center; margin-bottom: 12px; }
-.pi-shop img { max-width: 80px; display: block; margin: 0 auto 6px; }
-.pi-shop h1 { font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 0 0 3px; }
-.pi-shop p { font-size: 11px; margin: 2px 0; }
-.pi-rule { border: none; border-top: 2px solid #000; margin: 10px 0 8px; }
-.pi-dash { border: none; border-top: 1px dashed #000; margin: 8px 0 6px; }
-.pi-title { text-align: center; font-size: 13px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin: 8px 0 12px; }
-.pi-meta { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; line-height: 1.8; }
-.pi-meta-row { display: flex; justify-content: space-between; font-size: 11px; margin: 6px 0 10px; padding: 8px 12px; background: transparent; border: 1px solid #000; gap: 16px; }
-.pi-section { font-size: 9px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; margin-top: 4px; }
-.pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; margin-bottom: 10px; }
-.pi-field-label { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
-.pi-field-value { font-size: 13px; font-weight: 700; padding: 3px 0; border-bottom: 1px solid #000; min-height: 24px; }
-.pi-notes { border: 1px solid #000; padding: 10px; min-height: 70px; font-size: 12px; line-height: 1.5; margin-top: 4px; margin-bottom: 12px; }
-.pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 12px; }
-.pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 4px 0; border-bottom: 2px solid #000; }
-.pi-cost-table th:last-child, .pi-cost-table td:last-child { text-align: right; }
-.pi-cost-table td { padding: 5px 0; border-bottom: 1px dashed #000; font-size: 12px; }
-.pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 13px; padding-top: 8px; }
-.pi-payment-status { text-align: center; font-size: 11px; font-weight: 900; margin: 10px 0 12px; padding: 8px 12px; background: transparent; border: 1px solid #000; }
-.pi-inspection { border: 1px solid #000; padding: 8px 12px; margin: 4px 0 12px; font-size: 11px; line-height: 1.7; }
-.pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
-.pi-sig { border-top: 1px solid #000; padding-top: 4px; font-size: 9px; text-align: center; }
-.pi-qr-a4 { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px dashed #000; }
-.pi-qr-a4 img { max-width: 160px; margin: 0 auto 8px; display: block !important; }
+.a4-invoice { max-width: 720px; margin: 0 auto; padding: 24px 28px 32px; background: #fff; color: #000; }
+.pi-shop { text-align: center; margin-bottom: 14px; }
+.pi-shop img { max-width: 72px; height: auto; display: block; margin: 0 auto 8px; }
+.pi-shop h1 { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin: 0 0 4px; }
+.pi-shop p { font-size: 11px; margin: 2px 0; line-height: 1.5; }
+.pi-rule { border: none; border-top: 2px solid #000; margin: 12px 0 10px; }
+.pi-dash { border: none; border-top: 1px dashed #000; margin: 10px 0 8px; }
+.pi-title { text-align: center; font-size: 14px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; margin: 4px 0 14px; }
+.pi-meta-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font-size: 12px; margin-bottom: 10px; line-height: 1.6; }
+.pi-meta-bar strong { font-weight: 900; }
+.pi-meta-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 16px; font-size: 11px; margin: 0 0 12px; padding: 10px 14px; border: 1px solid #000; line-height: 1.5; }
+.pi-meta-row span { display: block; }
+.pi-meta-row .pi-k { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; }
+.pi-meta-row .pi-v { font-size: 12px; font-weight: 700; }
+.pi-section { font-size: 9px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; margin: 12px 0 8px; }
+.pi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px; margin-bottom: 4px; }
+.pi-field { min-width: 0; }
+.pi-field-label { font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+.pi-field-value { font-size: 13px; font-weight: 700; padding: 4px 0 6px; border-bottom: 1px solid #000; min-height: 28px; word-break: break-word; }
+.pi-notes { border: 1px solid #000; padding: 10px 12px; min-height: 64px; font-size: 12px; line-height: 1.55; margin: 4px 0 12px; white-space: pre-wrap; word-break: break-word; }
+.pi-cost-table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 12px; }
+.pi-cost-table th { text-align: left; font-size: 9px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 6px 0; border-bottom: 2px solid #000; }
+.pi-cost-table th.col-amt { text-align: right; width: 120px; }
+.pi-cost-table td { padding: 7px 0; border-bottom: 1px dashed #ccc; vertical-align: top; word-break: break-word; }
+.pi-cost-table td.col-amt { text-align: right; font-weight: 700; white-space: nowrap; padding-left: 12px; }
+.pi-cost-table tr.pi-subtotal td { border-bottom: 1px solid #000; font-size: 11px; padding-top: 10px; }
+.pi-cost-table tr.pi-gst td { border-bottom: 1px solid #000; font-size: 11px; }
+.pi-cost-table tr.pi-total-row td { border-top: 2px solid #000; border-bottom: none; font-weight: 900; font-size: 14px; padding-top: 10px; }
+.pi-cost-table tr.pi-total-row td.col-amt { text-align: right; }
+.pi-payment-status { text-align: center; font-size: 12px; font-weight: 900; margin: 14px 0 16px; padding: 10px 14px; border: 2px solid #000; }
+.pi-inspection { border: 1px solid #000; padding: 10px 12px; margin: 4px 0 12px; font-size: 11px; line-height: 1.65; }
+.pi-sigs { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 28px; page-break-inside: avoid; }
+.pi-sig { border-top: 1px solid #000; padding-top: 6px; font-size: 10px; text-align: center; min-height: 48px; }
+.pi-qr-a4 { text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed #000; page-break-inside: avoid; }
+.pi-qr-a4 img { max-width: 140px; height: auto; margin: 0 auto 10px; }
 .pi-qr-a4-title { font-size: 11px; font-weight: 900; letter-spacing: 1px; }
-.pi-qr-a4-url { font-size: 9px; margin-top: 4px; color: #666; }
-.pi-footer { text-align: center; font-size: 11px; font-weight: 700; margin-top: 20px; border-top: 1px dashed #000; padding-top: 8px; line-height: 1.6; }
+.pi-qr-a4-url { font-size: 10px; margin-top: 4px; color: #333; }
+.pi-footer { text-align: center; font-size: 10px; font-weight: 700; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px; line-height: 1.65; page-break-inside: avoid; }
+.pi-pending { border: 1px solid #000; padding: 16px; text-align: center; font-size: 12px; line-height: 1.5; margin: 4px 0 8px; }
 `;
 
 function buildJobA4HTML(j, opts) {
@@ -934,15 +948,22 @@ function buildJobA4HTML(j, opts) {
         paymentStatus = p.startsWith('paid') ? 'Paid via ' + (p.includes('card') ? 'Card' : 'Cash') : 'UNPAID';
     }
 
-    const costTableHTML = items.length ? `
+    const costTableHTML = items.length ? (() => {
+        const gst = total * 12.5 / 112.5;
+        const preTax = total - gst;
+        function bz(n) { return 'BZ$' + (parseFloat(n) || 0).toFixed(2); }
+        return `
         <table class="pi-cost-table">
-            <thead><tr><th>Service / Item</th><th>BZD</th></tr></thead>
+            <thead><tr><th>Service / Item</th><th class="col-amt">Amount</th></tr></thead>
             <tbody>
-                ${items.map(i => `<tr><td>${_esc(i.desc||'')}</td><td>${(parseFloat(i.price||0)||0).toFixed(2)}</td></tr>`).join('')}
-                <tr class="pi-total-row"><td><strong>TOTAL</strong></td><td><strong>${total.toFixed(2)}</strong></td></tr>
+                ${items.map(i => `<tr><td>${_esc(i.desc || '')}</td><td class="col-amt">${bz(i.price || 0)}</td></tr>`).join('')}
+                <tr class="pi-subtotal"><td>Subtotal (excl. GST)</td><td class="col-amt">${bz(preTax)}</td></tr>
+                <tr class="pi-gst"><td>GST (12.5%)</td><td class="col-amt">${bz(gst)}</td></tr>
+                <tr class="pi-total-row"><td><strong>TOTAL</strong></td><td class="col-amt"><strong>${bz(total)}</strong></td></tr>
             </tbody>
-        </table>` :
-        `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:10px;">Final cost will be provided after diagnostic assessment.</span></div>`;
+        </table>`;
+    })() :
+        `<div class="pi-pending"><strong>Price To Be Determined</strong><br><span style="font-size:10px;">Final cost will be provided after diagnostic assessment.</span></div>`;
 
     const inspectionHTML = (j.inspection && j.inspection !== 'No damage noted')
         ? `<div class="pi-section">Device Inspection</div>
@@ -957,44 +978,40 @@ function buildJobA4HTML(j, opts) {
     // Use quickchart.io - a free, reliable QR code API
     const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(trackerUrl)}&size=200`;
 
-    return `<style>${A4_STYLES}</style>
+    return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Job Invoice #${_esc(j.id)}</title><style>${A4_STYLES}</style></head><body>
 <div id="printInvoice" class="a4-invoice">
 <div class="pi-shop">
     <img src="${imgSrc}" alt="Servicell Belize">
     <h1>SERVICELL BELIZE</h1>
-    <p>Device Repair &amp; Services &middot; #7 Douglas Jones, Belize City</p>
-    <p>Tel: +501 615-3388</p>
+    <p>Device Repair &amp; Services</p>
+    <p>#7 Douglas Jones, Belize City &middot; Tel: +501 615-3388</p>
 </div>
 <hr class="pi-rule">
 <div class="pi-title">Job Invoice &amp; Intake Form</div>
-<div class="pi-meta">
+<div class="pi-meta-bar">
     <div><strong>JOB #:</strong> ${_esc(j.id)}</div>
-    <div><strong>DATE:</strong> ${_esc(receivedDate)}</div>
+    <div><strong>DATE RECEIVED:</strong> ${_esc(receivedDate)}</div>
 </div>
 <div class="pi-meta-row">
-    <div><strong>Type:</strong> ${_esc(j.jobType||'Repair')}</div>
-    <div><strong>Priority:</strong> ${_esc(priorityLabel)}</div>
-    <div><strong>Technician:</strong> ${_esc(j.technician||'—')}</div>
+    <span><span class="pi-k">Job Type</span><span class="pi-v">${_esc(j.jobType || 'Repair')}</span></span>
+    <span><span class="pi-k">Priority</span><span class="pi-v">${_esc(priorityLabel)}</span></span>
+    <span><span class="pi-k">Technician</span><span class="pi-v">${_esc(j.technician || '—')}</span></span>
 </div>
-<hr class="pi-dash">
 <div class="pi-section">Customer Information</div>
 <div class="pi-grid">
-    <div><div class="pi-field-label">Name</div><div class="pi-field-value">${_esc(j.customerName||'Walk-in')}</div></div>
-    <div><div class="pi-field-label">Phone</div><div class="pi-field-value">${_esc(fmtPhone(j.customerPhone))}</div></div>
+    <div class="pi-field"><div class="pi-field-label">Name</div><div class="pi-field-value">${_esc(j.customerName || 'Walk-in')}</div></div>
+    <div class="pi-field"><div class="pi-field-label">Phone</div><div class="pi-field-value">${_esc(fmtPhone(j.customerPhone))}</div></div>
 </div>
-<hr class="pi-dash">
 <div class="pi-section">Device Information</div>
 <div class="pi-grid">
-    <div><div class="pi-field-label">Device</div><div class="pi-field-value">${_esc(j.device||'—')}</div></div>
-    <div><div class="pi-field-label">Issue Reported</div><div class="pi-field-value">${_esc(j.issue||'—')}</div></div>
-    <div><div class="pi-field-label">Status</div><div class="pi-field-value">${_esc(fmtStatus(j.status))}</div></div>
-    <div><div class="pi-field-label">${j.dateCompleted ? 'Completed On' : 'Est. Completion'}</div><div class="pi-field-value">${_esc(j.dateCompleted ? bzDate(j.dateCompleted) : estimatedDate)}</div></div>
+    <div class="pi-field"><div class="pi-field-label">Device</div><div class="pi-field-value">${_esc(j.device || '—')}</div></div>
+    <div class="pi-field"><div class="pi-field-label">Issue Reported</div><div class="pi-field-value">${_esc(j.issue || '—')}</div></div>
+    <div class="pi-field"><div class="pi-field-label">Status</div><div class="pi-field-value">${_esc(fmtStatus(j.status))}</div></div>
+    <div class="pi-field"><div class="pi-field-label">${j.dateCompleted ? 'Completed On' : 'Est. Completion'}</div><div class="pi-field-value">${_esc(j.dateCompleted ? bzDate(j.dateCompleted) : estimatedDate)}</div></div>
 </div>
-<hr class="pi-dash">
 <div class="pi-section">Work Notes</div>
-<div class="pi-notes">${_esc(j.notes||'No additional notes.')}</div>
+<div class="pi-notes">${_esc(j.notes || 'No additional notes.')}</div>
 ${inspectionHTML}
-<hr class="pi-dash">
 <div class="pi-section">Cost Breakdown</div>
 ${costTableHTML}
 <div class="pi-payment-status"><strong>Payment Status:</strong> ${_esc(paymentStatus)}</div>
@@ -1005,8 +1022,8 @@ ${costTableHTML}
 <div class="pi-qr-a4">
     <img src="${qrCodeUrl}" alt="Track Your Repair">
     <div class="pi-qr-a4-title">SCAN TO TRACK YOUR REPAIR</div>
-    <div class="pi-qr-a4-url">Visit: servicellbze.github.io/ServiCell/tracker.html</div>
+    <div class="pi-qr-a4-url">servicellbze.github.io/ServiCell/tracker.html?job=${_esc(j.id)}</div>
 </div>
-<div class="pi-footer">Thank you for choosing Servicell Belize!<br>Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>We are not responsible for data loss. Please back up your device.</div>
-</div>`;
+<div class="pi-footer">Thank you for choosing Servicell Belize!<br>Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>We are not responsible for data loss. Please back up your device.<br>Prices include GST where applicable.</div>
+</div></body></html>`;
 }
