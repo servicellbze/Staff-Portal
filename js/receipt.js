@@ -904,6 +904,49 @@ function getJobGreetingOptions() {
     ];
 }
 
+function getJobMessageTypeOptions() {
+    return [
+        { id: 'intake', label: 'Check-in confirmed' },
+        { id: 'progress', label: 'Repair update' },
+        { id: 'ready', label: 'Ready for pickup' }
+    ];
+}
+
+function getJobProgressOptions() {
+    return [
+        { id: 'received', label: 'Received & assessing' },
+        { id: 'inqueue', label: 'In queue' },
+        { id: 'ordered', label: 'Waiting on parts' },
+        { id: 'fixing', label: 'Being repaired' },
+        { id: 'testing', label: 'Testing' },
+        { id: 'completed', label: 'Repair completed' }
+    ];
+}
+
+function _jobDefaultMessageType(j, opts) {
+    opts = opts || {};
+    if (opts.context === 'intake') return 'intake';
+    if (String(j.status || '').toLowerCase() === 'ready') return 'ready';
+    return 'progress';
+}
+
+function _jobDefaultProgressStatus(j) {
+    const s = String(j.status || 'received').toLowerCase();
+    const valid = getJobProgressOptions().some(function(o) { return o.id === s; });
+    return valid ? s : 'received';
+}
+
+function _jobProgressPhrase(status) {
+    return ({
+        ordered: 'we are waiting on parts for your repair',
+        received: 'your device has been received and is being assessed',
+        inqueue: 'your device is in our queue awaiting service',
+        fixing: 'your repair is currently in progress',
+        testing: 'your device is being tested following repair',
+        completed: 'your repair has been completed'
+    })[status] || ('your repair is currently ' + _jobFmtStatus(status).toLowerCase());
+}
+
 function _jobBz(n) {
     return 'BZ$' + (parseFloat(n) || 0).toFixed(2);
 }
@@ -929,19 +972,19 @@ function _jobWarmSignOff(variant) {
 function buildJobCustomerMessage(j, opts) {
     opts = opts || {};
     j = j || {};
-    const context = opts.context || 'update';
     const firstName = _jobFirstName(j.customerName);
     const greetingPhrase = opts.greeting != null ? String(opts.greeting).trim() : _jobTimeGreeting();
     const greeting = _jobGreetingLine(greetingPhrase, firstName);
+    const messageType = opts.messageType || _jobDefaultMessageType(j, opts);
+    const progressStatus = String(opts.progressStatus || _jobDefaultProgressStatus(j)).toLowerCase();
     const items = _jobParseInvoiceItems(j);
     const total = items.reduce(function(s, i) { return s + (parseFloat(i.price || 0) || 0); }, 0);
     const hasTotal = items.length > 0 && total > 0;
     const device = j.device || 'device';
     const jobRef = j.id ? ('Job #' + j.id) : 'your repair';
     const issueText = j.issue ? String(j.issue).trim() : '';
-    const status = String(j.status || '').toLowerCase();
-    const isReady = status === 'ready';
-    const isIntake = context === 'intake';
+    const isReady = messageType === 'ready';
+    const isIntake = messageType === 'intake';
     const estDate = j.estimatedCompletion || 'to be confirmed';
     const payment = String(j.payment || 'unpaid').toLowerCase();
     const isPaid = payment.startsWith('paid');
@@ -984,14 +1027,7 @@ function buildJobCustomerMessage(j, opts) {
                 + ' ' + trackerLine;
         }
     } else {
-        const statusPhrase = ({
-            ordered: 'we are waiting on parts for your repair',
-            received: 'your device has been received and is being assessed',
-            inqueue: 'your device is in our queue awaiting service',
-            fixing: 'your repair is currently in progress',
-            testing: 'your device is being tested following repair',
-            completed: 'your repair has been completed'
-        })[status] || ('your repair is currently ' + _jobFmtStatus(j.status).toLowerCase());
+        const statusPhrase = _jobProgressPhrase(progressStatus);
 
         let totalClause = '';
         if (hasTotal) {
@@ -1077,10 +1113,16 @@ async function _dispatchJobCustomerMessage(j, opts) {
 let _customerSmsState = null;
 
 function _ensureCustomerSmsModal() {
-    if (document.getElementById('customerSmsModal')) return;
+    const existing = document.getElementById('customerSmsModal');
+    if (existing) {
+        if (document.getElementById('customerSmsMessageTypes')) return;
+        existing.remove();
+    }
 
     const style = document.createElement('style');
-    style.textContent = `
+    style.id = 'customerSmsModalStyles';
+    if (!document.getElementById('customerSmsModalStyles')) {
+        style.textContent = `
 .customer-sms-overlay { display:none; position:fixed; inset:0; z-index:10060; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; padding:0; }
 .customer-sms-overlay.open { display:flex; }
 .customer-sms-sheet { width:100%; max-width:520px; max-height:92vh; background:var(--glass-strong,#fff); border-radius:28px 28px 0 0; box-shadow:0 -8px 40px rgba(0,0,0,0.25); display:flex; flex-direction:column; animation:receiptSlideUp 0.3s ease both; }
@@ -1090,12 +1132,14 @@ function _ensureCustomerSmsModal() {
 .customer-sms-close { width:36px; height:36px; border-radius:50%; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:transparent; cursor:pointer; font-size:1.1rem; flex-shrink:0; }
 .customer-sms-body { overflow:auto; padding:16px 20px; flex:1; -webkit-overflow-scrolling:touch; }
 .customer-sms-label { display:block; font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-dim,#64748b); margin-bottom:8px; }
-.customer-sms-greetings { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
-.customer-sms-greeting-btn { padding:9px 14px; border-radius:999px; border:1px solid var(--glass-border,rgba(0,0,0,0.12)); background:var(--glass,rgba(0,0,0,0.04)); color:var(--text-main,#111); font-family:inherit; font-size:0.82rem; font-weight:700; cursor:pointer; }
-.customer-sms-greeting-btn.active { background:var(--primary,#2563eb); border-color:var(--primary,#2563eb); color:#fff; }
+.customer-sms-pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.customer-sms-pill-btn { padding:9px 14px; border-radius:999px; border:1px solid var(--glass-border,rgba(0,0,0,0.12)); background:var(--glass,rgba(0,0,0,0.04)); color:var(--text-main,#111); font-family:inherit; font-size:0.82rem; font-weight:700; cursor:pointer; }
+.customer-sms-pill-btn.active { background:var(--primary,#2563eb); border-color:var(--primary,#2563eb); color:#fff; }
+.customer-sms-progress-wrap { display:none; margin-bottom:14px; }
+.customer-sms-progress-wrap.is-visible { display:block; }
 .customer-sms-custom { display:none; width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--glass-border,rgba(0,0,0,0.12)); font-family:inherit; font-size:0.9rem; margin-bottom:14px; box-sizing:border-box; }
 .customer-sms-custom.is-visible { display:block; }
-.customer-sms-preview { width:100%; min-height:180px; max-height:280px; padding:14px; border-radius:12px; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:#f8fafc; color:var(--text-main,#111); font-family:inherit; font-size:0.84rem; line-height:1.55; resize:vertical; box-sizing:border-box; white-space:pre-wrap; }
+.customer-sms-preview { width:100%; min-height:160px; max-height:240px; padding:14px; border-radius:12px; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:#f8fafc; color:var(--text-main,#111); font-family:inherit; font-size:0.84rem; line-height:1.55; resize:vertical; box-sizing:border-box; white-space:pre-wrap; }
 .customer-sms-actions { display:flex; gap:10px; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
 .customer-sms-actions button { flex:1; padding:14px; border-radius:12px; border:none; font-family:inherit; font-size:0.9rem; font-weight:700; cursor:pointer; }
 .customer-sms-cancel { background:var(--glass,rgba(0,0,0,0.06)); color:var(--text-main,#111); border:1px solid var(--glass-border,rgba(0,0,0,0.1)) !important; }
@@ -1105,7 +1149,8 @@ function _ensureCustomerSmsModal() {
     .customer-sms-overlay { align-items:center; padding:24px; }
     .customer-sms-sheet { border-radius:20px; max-height:88vh; }
 }`;
-    document.head.appendChild(style);
+        document.head.appendChild(style);
+    }
 
     const modal = document.createElement('div');
     modal.id = 'customerSmsModal';
@@ -1117,8 +1162,14 @@ function _ensureCustomerSmsModal() {
         + '<button type="button" class="customer-sms-close" aria-label="Close">&times;</button>'
         + '</div>'
         + '<div class="customer-sms-body">'
+        + '<span class="customer-sms-label">Message type</span>'
+        + '<div class="customer-sms-pills" id="customerSmsMessageTypes"></div>'
+        + '<div class="customer-sms-progress-wrap" id="customerSmsProgressWrap">'
+        + '<span class="customer-sms-label">Repair progress</span>'
+        + '<div class="customer-sms-pills" id="customerSmsProgress"></div>'
+        + '</div>'
         + '<span class="customer-sms-label">Greeting</span>'
-        + '<div class="customer-sms-greetings" id="customerSmsGreetings"></div>'
+        + '<div class="customer-sms-pills" id="customerSmsGreetings"></div>'
         + '<input type="text" class="customer-sms-custom" id="customerSmsCustom" placeholder="Type a custom greeting, e.g. Hey" maxlength="40">'
         + '<span class="customer-sms-label" style="margin-top:4px;">Message preview</span>'
         + '<textarea class="customer-sms-preview" id="customerSmsPreview" readonly></textarea>'
@@ -1138,27 +1189,58 @@ function _ensureCustomerSmsModal() {
     document.getElementById('customerSmsSendBtn').addEventListener('click', _submitCustomerSmsModal);
 }
 
+function _customerSmsBuildSendOpts() {
+    const phrase = _jobGreetingPhraseFromId(_customerSmsState.greetingId, _customerSmsState.customGreeting);
+    return Object.assign({}, _customerSmsState.opts, {
+        greeting: phrase,
+        messageType: _customerSmsState.messageType,
+        progressStatus: _customerSmsState.progressStatus
+    });
+}
+
 function _refreshCustomerSmsPreview() {
     if (!_customerSmsState) return;
     const customEl = document.getElementById('customerSmsCustom');
     const previewEl = document.getElementById('customerSmsPreview');
+    const progressWrap = document.getElementById('customerSmsProgressWrap');
     if (!_customerSmsState.greetingId) _customerSmsState.greetingId = _jobDefaultGreetingId();
+    if (!_customerSmsState.messageType) _customerSmsState.messageType = _jobDefaultMessageType(_customerSmsState.j, _customerSmsState.opts);
+    if (!_customerSmsState.progressStatus) _customerSmsState.progressStatus = _jobDefaultProgressStatus(_customerSmsState.j);
 
     if (_customerSmsState.greetingId === 'custom' && customEl) {
         _customerSmsState.customGreeting = customEl.value;
-        if (customEl.parentElement) customEl.classList.add('is-visible');
+        customEl.classList.add('is-visible');
     } else if (customEl) {
         customEl.classList.remove('is-visible');
     }
 
-    const phrase = _jobGreetingPhraseFromId(_customerSmsState.greetingId, _customerSmsState.customGreeting);
-    const sendOpts = Object.assign({}, _customerSmsState.opts, { greeting: phrase });
-    if (previewEl) {
-        previewEl.value = buildJobCustomerMessage(_customerSmsState.j, sendOpts);
+    if (progressWrap) {
+        progressWrap.classList.toggle('is-visible', _customerSmsState.messageType === 'progress');
     }
 
-    document.querySelectorAll('#customerSmsGreetings .customer-sms-greeting-btn').forEach(function(btn) {
+    if (previewEl) {
+        previewEl.value = buildJobCustomerMessage(_customerSmsState.j, _customerSmsBuildSendOpts());
+    }
+
+    document.querySelectorAll('#customerSmsMessageTypes .customer-sms-pill-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-message-type') === _customerSmsState.messageType);
+    });
+    document.querySelectorAll('#customerSmsProgress .customer-sms-pill-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-progress-status') === _customerSmsState.progressStatus);
+    });
+    document.querySelectorAll('#customerSmsGreetings .customer-sms-pill-btn').forEach(function(btn) {
         btn.classList.toggle('active', btn.getAttribute('data-greeting-id') === _customerSmsState.greetingId);
+    });
+}
+
+function _bindCustomerSmsPills(container, attrName, stateKey, onSelect) {
+    if (!container) return;
+    container.querySelectorAll('.customer-sms-pill-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            _customerSmsState[stateKey] = btn.getAttribute(attrName);
+            if (typeof onSelect === 'function') onSelect();
+            _refreshCustomerSmsPreview();
+        });
     });
 }
 
@@ -1169,32 +1251,47 @@ function openCustomerSmsModal(j, opts) {
         j: j,
         opts: Object.assign({}, opts),
         greetingId: _jobDefaultGreetingId(),
-        customGreeting: ''
+        customGreeting: '',
+        messageType: _jobDefaultMessageType(j, opts),
+        progressStatus: _jobDefaultProgressStatus(j)
     };
 
     const sub = document.getElementById('customerSmsSub');
+    const messageTypesEl = document.getElementById('customerSmsMessageTypes');
+    const progressEl = document.getElementById('customerSmsProgress');
     const greetingsEl = document.getElementById('customerSmsGreetings');
     const customEl = document.getElementById('customerSmsCustom');
 
     if (sub) {
         const name = j.customerName || 'Customer';
         const device = j.device ? (' · ' + j.device) : '';
-        sub.textContent = name + device + ' · Job #' + j.id;
+        const actualStatus = _jobFmtStatus(j.status);
+        sub.textContent = name + device + ' · Job #' + j.id + ' · Current: ' + actualStatus;
+    }
+
+    if (messageTypesEl) {
+        messageTypesEl.innerHTML = getJobMessageTypeOptions().map(function(opt) {
+            return '<button type="button" class="customer-sms-pill-btn" data-message-type="' + opt.id + '">' + opt.label + '</button>';
+        }).join('');
+        _bindCustomerSmsPills(messageTypesEl, 'data-message-type', 'messageType');
+    }
+
+    if (progressEl) {
+        progressEl.innerHTML = getJobProgressOptions().map(function(opt) {
+            return '<button type="button" class="customer-sms-pill-btn" data-progress-status="' + opt.id + '">' + opt.label + '</button>';
+        }).join('');
+        _bindCustomerSmsPills(progressEl, 'data-progress-status', 'progressStatus');
     }
 
     if (greetingsEl) {
         greetingsEl.innerHTML = getJobGreetingOptions().map(function(opt) {
-            return '<button type="button" class="customer-sms-greeting-btn" data-greeting-id="' + opt.id + '">' + opt.label + '</button>';
+            return '<button type="button" class="customer-sms-pill-btn" data-greeting-id="' + opt.id + '">' + opt.label + '</button>';
         }).join('');
-        greetingsEl.querySelectorAll('.customer-sms-greeting-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                _customerSmsState.greetingId = btn.getAttribute('data-greeting-id');
-                _refreshCustomerSmsPreview();
-                if (_customerSmsState.greetingId === 'custom') {
-                    const customEl = document.getElementById('customerSmsCustom');
-                    if (customEl) customEl.focus();
-                }
-            });
+        _bindCustomerSmsPills(greetingsEl, 'data-greeting-id', 'greetingId', function() {
+            if (_customerSmsState.greetingId === 'custom') {
+                const customInput = document.getElementById('customerSmsCustom');
+                if (customInput) customInput.focus();
+            }
         });
     }
 
@@ -1213,7 +1310,7 @@ function openCustomerSmsModal(j, opts) {
 function closeCustomerSmsModal() {
     const modal = document.getElementById('customerSmsModal');
     if (modal) modal.classList.remove('open');
-    if (!document.querySelector('.modal-overlay.open, .paper-modal-overlay.open, .mark-called-modal.open, .receipt-preview-overlay.open')) {
+    if (!document.querySelector('.modal-overlay.open, .paper-modal-overlay.open, .mark-called-modal.open, .receipt-preview-overlay.open, .customer-sms-overlay.open')) {
         document.body.classList.remove('modal-open');
     }
     _customerSmsState = null;
@@ -1227,8 +1324,7 @@ async function _submitCustomerSmsModal() {
         sendBtn.textContent = 'Sending…';
     }
 
-    const phrase = _jobGreetingPhraseFromId(_customerSmsState.greetingId, _customerSmsState.customGreeting);
-    const sendOpts = Object.assign({}, _customerSmsState.opts, { greeting: phrase });
+    const sendOpts = _customerSmsBuildSendOpts();
     const j = _customerSmsState.j;
 
     try {
@@ -1554,7 +1650,7 @@ function showReceiptPreview(html, plainText, opts) {
 function closeReceiptPreview() {
     const modal = document.getElementById('receiptPreviewModal');
     if (modal) modal.classList.remove('open');
-    if (!document.querySelector('.modal-overlay.open, .paper-modal-overlay.open, .mark-called-modal.open')) {
+    if (!document.querySelector('.modal-overlay.open, .paper-modal-overlay.open, .mark-called-modal.open, .receipt-preview-overlay.open, .customer-sms-overlay.open')) {
         document.body.classList.remove('modal-open');
     }
     _receiptPreviewState = null;
@@ -1566,6 +1662,8 @@ window.buildJobCustomerMessagePayload = buildJobCustomerMessagePayload;
 window.buildJobDocumentHTML = buildJobDocumentHTML;
 window.shareJobCustomerMessage = shareJobCustomerMessage;
 window.openCustomerSmsModal = openCustomerSmsModal;
+window.getJobMessageTypeOptions = getJobMessageTypeOptions;
+window.getJobProgressOptions = getJobProgressOptions;
 window.closeCustomerSmsModal = closeCustomerSmsModal;
 window.openJobReceiptPreview = openJobReceiptPreview;
 window.buildSaleReceiptText = buildSaleReceiptText;
