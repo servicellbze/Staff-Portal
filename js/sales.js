@@ -60,7 +60,7 @@ function saleDrawerCash(s) {
 
 /** Remaining balance on partial-payment sales. */
 function saleOutstanding(s) {
-    if (!s || s.status === 'reversed' || s.method !== 'partial') return 0;
+    if (!s || s.status === 'reversed' || s.status === 'settled' || s.method !== 'partial') return 0;
     return Math.max(0, (parseFloat(s.total) || 0) - (parseFloat(s.amountPaid) || 0));
 }
 
@@ -355,7 +355,8 @@ function renderSales() {
         const methodDisplay = (s.method || 'cash').charAt(0).toUpperCase() + (s.method || 'cash').slice(1);
         const mBadge  = '<span class="badge badge-' + escH(s.method || 'cash') + '">' + escH(methodDisplay) + '</span>';
         const sBadge  = isRev ? '<span class="badge badge-reversed">Reversed</span>'
-            : (s.method === 'partial' ? '<span class="badge badge-partial">Balance Due: ' + bz(Math.max(0, transactionTotal - amountTendered)) + '</span>' : '<span class="badge badge-paid">Paid</span>');
+            : (s.status === 'settled' ? '<span class="badge badge-paid">Paid</span>'
+            : (s.method === 'partial' ? '<span class="badge badge-partial">Balance Due: ' + bz(Math.max(0, transactionTotal - amountTendered)) + '</span>' : '<span class="badge badge-paid">Paid</span>'));
         const editBtn    = '<button class="item-btn" title="Edit" onclick="openEditSale(\'' + escH(s.saleId) + '\')">' + (typeof scIcon === 'function' ? scIcon('edit', 15) : 'Edit') + '</button>';
         const reverseBtn = '<button class="item-btn red" title="Reverse" onclick="reverseSale(\'' + escH(s.saleId) + '\')">&#x21A9;&#xFE0F;</button>';
         const viewBtn    = '<button class="item-btn" title="View" onclick="openViewSale(\'' + escH(s.saleId) + '\')">' + (typeof scIcon === 'function' ? scIcon('eye', 15) : 'View') + '</button>';
@@ -1373,19 +1374,63 @@ async function createBillFromSale() {
     }
 }
 
-function openSalesPartialSales() {
-    const date = _currentDateFilter || getShiftDate();
-    openPartialSalesModal(allSales, {
-        from: date,
-        to: date,
-        onRowClick: 'openPartialSalesRow',
-        emptyText: 'No partial sales with balance due for this date.'
-    });
+// Holds an all-dates snapshot of sales so the partial-sales toggle (Today /
+// This Week / All Time) isn't limited to the single day loaded into allSales.
+let _partialSalesCache = [];
+
+const _partialModalOpts = {
+    onRowClick: 'openPartialSalesRow',
+    onSettle: 'settlePartialSale',
+    emptyText: 'No partial sales with balance due in this view.'
+};
+
+async function openSalesPartialSales() {
+    // Open immediately with what we have, then upgrade to the full all-dates set.
+    _partialSalesCache = allSales;
+    openPartialSalesModal(allSales, _partialModalOpts);
+    try {
+        const data = await apiGet({ action: 'listsales' }); // no date → every sale, all dates
+        if (data && Array.isArray(data.sales)) {
+            _partialSalesCache = data.sales;
+            // Re-render the (already open) modal with the complete dataset.
+            openPartialSalesModal(data.sales, _partialModalOpts);
+        }
+    } catch (e) {
+        console.warn('[partial-sales] all-time fetch failed, showing loaded day only', e);
+    }
 }
 
 function openPartialSalesRow(saleId) {
     closePartialSalesModal();
     openViewSale(saleId);
+}
+
+// Mark an individual partial sale's balance as fulfilled so it drops off the
+// outstanding list. Non-destructive — the sale stays in the books.
+async function settlePartialSale(saleId) {
+    const s = _partialSalesCache.find(x => String(x.saleId) === String(saleId))
+        || allSales.find(x => String(x.saleId) === String(saleId));
+    const label = s ? (s.customer ? s.customer + "'s " : '') + 'balance' : 'this balance';
+    if (!confirm('Mark ' + label + ' as fully paid? It will be removed from the outstanding list (the sale record is kept).')) return;
+    try {
+        const res = await apiPost({ action: 'settlesale', saleId: saleId, cashier: currentUser });
+        if (res && res.success) {
+            if (typeof haptic === 'function') haptic('success');
+            showToast('Balance marked as paid.', 'ok');
+            // Reflect the change locally so the list updates instantly.
+            [_partialSalesCache, allSales].forEach(arr => {
+                const hit = (arr || []).find(x => String(x.saleId) === String(saleId));
+                if (hit) hit.status = 'settled';
+            });
+            openPartialSalesModal(_partialSalesCache, _partialModalOpts);
+            if (typeof renderSales === 'function') renderSales();
+            if (typeof loadAll === 'function') loadAll();
+        } else {
+            showToast((res && res.error) || 'Could not update.', 'err');
+        }
+    } catch (e) {
+        showToast('Connection error.', 'err');
+    }
 }
 
 // -- Reprint Last Receipt -----------------------------------------------------
@@ -2094,7 +2139,8 @@ async function submitSettle() {
 let _viewedSale = null;
 
 function openViewSale(saleId) {
-    const s = allSales.find(x => String(x.saleId) === String(saleId));
+    const s = allSales.find(x => String(x.saleId) === String(saleId))
+        || _partialSalesCache.find(x => String(x.saleId) === String(saleId));
     if (!s) return;
     _viewedSale = s;
     const items  = tryParseJSON(s.items, []);

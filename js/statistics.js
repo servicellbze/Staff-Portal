@@ -117,7 +117,7 @@ const METHOD_LABELS = { cash: 'Cash', card: 'Card', partial: 'Partial' };
 const STATUS_LABELS = { resolved: 'Resolved', ready: 'Ready', fixing: 'Fixing', testing: 'Testing', received: 'Received', abandoned: 'Abandoned', unsuccessful: 'Unsuccessful' };
 
 function saleOutstanding(s) {
-    if (!s || s.status === 'reversed' || s.method !== 'partial') return 0;
+    if (!s || s.status === 'reversed' || s.status === 'settled' || s.method !== 'partial') return 0;
     return Math.max(0, (parseFloat(s.total) || 0) - (parseFloat(s.amountPaid) || 0));
 }
 
@@ -646,10 +646,8 @@ window.addEventListener('sc-back-online', loadStats);
 
 // ── Partial Sales Modal (Statistics) ───────────────────────────────────────────
 function openStatsPartialSales() {
-    const { from, to } = window._statRange || getDateRange();
     openPartialSalesModal(window._allSales || [], {
-        from, to,
-        emptyText: 'No partial sales with balance due in this period.'
+        emptyText: 'No partial sales with balance due in this view.'
     });
 }
 

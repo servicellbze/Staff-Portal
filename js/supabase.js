@@ -610,6 +610,16 @@ const Sales = {
     return { success: true };
   },
 
+  // Mark a partial sale's outstanding balance as fulfilled/collected.
+  // Non-destructive: the sale stays in the books at its original amounts, it
+  // just no longer counts as an outstanding partial balance.
+  async settle(data) {
+    if (!data.saleId) return { success: false, error: 'SaleID required' };
+    await sbPatch('sales', `sale_id=eq.${encodeURIComponent(data.saleId)}`, { status: 'settled' });
+    await Audit.log('SALE_SETTLE', `${data.cashier || 'Unknown'} | ${data.saleId} | balance marked fulfilled`);
+    return { success: true };
+  },
+
   async update(data) {
     if (!data.saleId) return { success: false, error: 'SaleID required' };
     const patch = {};
@@ -946,6 +956,7 @@ async function handleAction(action, id, data) {
     case 'listsales':      return Sales.list(data);
     case 'createsale':     return Sales.create(data);
     case 'reversesale':    return Sales.reverse(data);
+    case 'settlesale':     return Sales.settle(data);
     case 'updatesale':     return Sales.update(data);
 
     case 'listpayouts':    return Payouts.list(data);
