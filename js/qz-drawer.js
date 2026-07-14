@@ -345,6 +345,20 @@ async function kickDrawer() {
     }
 }
 
+function _base64ToPngBlob(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new Blob([bytes], { type: 'image/png' });
+}
+
+async function receiptHtmlToPngBlob(htmlContent) {
+    const base64 = await _htmlToPngBase64(htmlContent);
+    return _base64ToPngBlob(base64);
+}
+
+window.receiptHtmlToPngBlob = receiptHtmlToPngBlob;
+
 // Pre-warm QZ connection on desktop so first receipt prints immediately
 if (IS_DESKTOP) {
     const _warmQZ = function() { _connectQZ().catch(function() {}); };

@@ -744,6 +744,85 @@ function buildJobReceiptText(j) {
     return lines.join('\n');
 }
 
+function _receiptShareFilename(title) {
+    const slug = String(title || 'receipt')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 40);
+    return (slug || 'servicell-receipt') + '.png';
+}
+
+function _downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+}
+
+function _loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    return new Promise(function(resolve, reject) {
+        const src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        const existing = document.querySelector('script[data-receipt-src="' + src + '"]');
+        if (existing) {
+            existing.addEventListener('load', function() { resolve(window.html2canvas); });
+            existing.addEventListener('error', reject);
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = src;
+        s.dataset.receiptSrc = src;
+        s.onload = function() { resolve(window.html2canvas); };
+        s.onerror = function() { reject(new Error('Could not load image library')); };
+        document.head.appendChild(s);
+    });
+}
+
+async function _capturePreviewPaperToBlob() {
+    const paper = document.getElementById('receiptPreviewPaper');
+    if (!paper) throw new Error('Receipt preview not ready');
+    const html2canvas = await _loadHtml2Canvas();
+    const images = Array.from(paper.querySelectorAll('img'));
+    await Promise.all(images.map(function(img) {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise(function(resolve) {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+            setTimeout(resolve, 2500);
+        });
+    }));
+    const canvas = await html2canvas(paper, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        imageTimeout: 3000
+    });
+    return new Promise(function(resolve, reject) {
+        canvas.toBlob(function(blob) {
+            if (blob) resolve(blob);
+            else reject(new Error('Could not create image'));
+        }, 'image/png');
+    });
+}
+
+async function _receiptHtmlToPngBlob(html) {
+    if (typeof receiptHtmlToPngBlob === 'function') {
+        return receiptHtmlToPngBlob(html);
+    }
+    const paper = document.getElementById('receiptPreviewPaper');
+    if (paper && paper.innerHTML) {
+        return _capturePreviewPaperToBlob();
+    }
+    throw new Error('Image capture unavailable');
+}
+
 async function shareReceiptText(text, title) {
     if (!text) {
         _receiptNotify('Nothing to share', 'err');
@@ -771,6 +850,59 @@ async function shareReceiptText(text, title) {
     return false;
 }
 
+async function shareReceiptImage(html, opts) {
+    opts = opts || {};
+    if (!html) {
+        _receiptNotify('Nothing to share', 'err');
+        return false;
+    }
+
+    const filename = opts.filename || _receiptShareFilename(opts.title);
+    const shareBtn = document.getElementById('receiptPreviewShareBtn');
+    const prevLabel = shareBtn ? shareBtn.textContent : '';
+    if (shareBtn) {
+        shareBtn.disabled = true;
+        shareBtn.textContent = 'Preparing…';
+    }
+
+    try {
+        const blob = await _receiptHtmlToPngBlob(html);
+        const file = new File([blob], filename, { type: 'image/png' });
+
+        if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: opts.title || 'ServiCell Receipt'
+                });
+                _receiptNotify('Receipt image shared!', 'ok');
+                if (typeof haptic === 'function') haptic('success');
+                return true;
+            } catch (e) {
+                if (e && e.name === 'AbortError') return false;
+            }
+        }
+
+        _downloadBlob(blob, filename);
+        _receiptNotify('Receipt saved — attach the image in your message app', 'ok');
+        if (typeof haptic === 'function') haptic('light');
+        return true;
+    } catch (e) {
+        console.warn('Receipt image share failed:', e);
+        if (opts.text) {
+            _receiptNotify('Image failed — sharing as text instead', 'ok');
+            return shareReceiptText(opts.text, opts.title);
+        }
+        _receiptNotify('Could not create receipt image', 'err');
+        return false;
+    } finally {
+        if (shareBtn) {
+            shareBtn.disabled = false;
+            shareBtn.textContent = prevLabel || 'Share Image';
+        }
+    }
+}
+
 function _ensureReceiptPreviewModal() {
     if (document.getElementById('receiptPreviewModal')) return;
 
@@ -788,6 +920,7 @@ function _ensureReceiptPreviewModal() {
 .receipt-preview-actions { display:flex; gap:10px; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
 .receipt-preview-actions button { flex:1; padding:14px; border-radius:12px; border:none; font-family:inherit; font-size:0.9rem; font-weight:700; cursor:pointer; }
 .receipt-preview-share { background:var(--primary,#2563eb); color:#fff; }
+.receipt-preview-share:disabled { opacity:0.65; cursor:wait; }
 .receipt-preview-print { background:var(--glass,rgba(0,0,0,0.06)); color:var(--text-main,#111); border:1px solid var(--glass-border,rgba(0,0,0,0.1)) !important; }
 @media (min-width:769px) {
     .receipt-preview-overlay { align-items:center; padding:24px; }
@@ -806,7 +939,7 @@ function _ensureReceiptPreviewModal() {
         + '</div>'
         + '<div class="receipt-preview-body"><div class="receipt-preview-paper" id="receiptPreviewPaper"></div></div>'
         + '<div class="receipt-preview-actions">'
-        + '<button type="button" class="receipt-preview-share" id="receiptPreviewShareBtn">Share / Copy</button>'
+        + '<button type="button" class="receipt-preview-share" id="receiptPreviewShareBtn">Share Image</button>'
         + '<button type="button" class="receipt-preview-print" id="receiptPreviewPrintBtn">Print</button>'
         + '</div></div>';
     document.body.appendChild(modal);
@@ -822,7 +955,7 @@ let _receiptPreviewState = null;
 function showReceiptPreview(html, plainText, opts) {
     opts = opts || {};
     _ensureReceiptPreviewModal();
-    _receiptPreviewState = { html: html, text: plainText || '' };
+    _receiptPreviewState = { html: html, text: plainText || '', opts: opts };
 
     const modal = document.getElementById('receiptPreviewModal');
     const titleEl = document.getElementById('receiptPreviewTitle');
@@ -831,7 +964,12 @@ function showReceiptPreview(html, plainText, opts) {
     if (paper) paper.innerHTML = html;
 
     document.getElementById('receiptPreviewShareBtn').onclick = function() {
-        shareReceiptText(_receiptPreviewState.text, opts.title || 'ServiCell Receipt');
+        const state = _receiptPreviewState || {};
+        shareReceiptImage(state.html, {
+            title: (state.opts && state.opts.title) || 'ServiCell Receipt',
+            text: state.text,
+            filename: _receiptShareFilename((state.opts && state.opts.title) || 'receipt')
+        });
     };
     document.getElementById('receiptPreviewPrintBtn').onclick = function() {
         if (_receiptPreviewState && _receiptPreviewState.html) printHTML(_receiptPreviewState.html);
@@ -853,6 +991,7 @@ function closeReceiptPreview() {
 window.buildSaleReceiptText = buildSaleReceiptText;
 window.buildJobReceiptText = buildJobReceiptText;
 window.shareReceiptText = shareReceiptText;
+window.shareReceiptImage = shareReceiptImage;
 window.showReceiptPreview = showReceiptPreview;
 window.closeReceiptPreview = closeReceiptPreview;
 window.isMobileReceipt = isMobileReceipt;
