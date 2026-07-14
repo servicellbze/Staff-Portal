@@ -3274,6 +3274,11 @@
             <h3>Choose Paper Size</h3>
             <p>Select the paper size for your printer</p>
             <div class="paper-choices">
+                <button class="paper-choice-btn" onclick="shareJobReceipt()">
+                    <span class="choice-icon">📱</span>
+                    <span class="choice-label">View &amp; Share</span>
+                    <span class="choice-sub">Mobile · Text / SMS</span>
+                </button>
                 <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
                     <span class="choice-icon">🧾</span>
                     <span class="choice-label">Receipt Paper</span>
@@ -4913,12 +4918,25 @@
             if (!j) { showToast('⚠️ No job data available to print', 'err'); return; }
             document.getElementById('paperModal').classList.remove('open');
             const isReceipt = paperSize === 'receipt';
-            if (isReceipt) {
-                kickDrawer();
-                printHTML(buildJobReceiptHTML(j, { imgSrc: 'img/logo.png' }));
-            } else {
-                printHTML(buildJobA4HTML(j, { imgSrc: 'img/logo.png' }));
+            const html = isReceipt
+                ? buildJobReceiptHTML(j, { imgSrc: 'img/logo.png' })
+                : buildJobA4HTML(j, { imgSrc: 'img/logo.png' });
+            if (isReceipt && typeof isMobileReceipt === 'function' && isMobileReceipt()) {
+                const text = buildJobReceiptText(j);
+                openReceiptPreview(html, text, { title: 'Job #' + j.id + ' Receipt' });
+                return;
             }
+            if (isReceipt) kickDrawer();
+            printHTML(html);
+        }
+
+        function shareJobReceipt() {
+            const j = currentJobData;
+            if (!j) { showToast('⚠️ No job data available', 'err'); return; }
+            document.getElementById('paperModal').classList.remove('open');
+            const html = buildJobReceiptHTML(j, { imgSrc: 'img/logo.png' });
+            const text = buildJobReceiptText(j);
+            openReceiptPreview(html, text, { title: 'Job #' + j.id + ' Receipt' });
         }
         function showToast(msg, type = '') {
             const t = document.getElementById('toast');

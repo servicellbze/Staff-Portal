@@ -1229,6 +1229,7 @@
         <div id="viewSaleContent" style="font-size:0.88rem;"></div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeModal('viewSaleModal')">Close</button>
+            <button class="btn-secondary" onclick="shareViewedSale()">Share</button>
             <button class="btn-primary" onclick="printViewedSale()" data-icon="print">Print Receipt</button>
         </div>
     </div>
@@ -1308,6 +1309,7 @@
             </div>
         </div>
         <div style="display:flex;gap:10px;width:100%;">
+            <button onclick="shareLastReceipt()" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;">Share Receipt</button>
             <button onclick="reprintLastReceipt()" data-icon="print" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(37,99,235,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06)';" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);">Print Receipt</button>
             <button onclick="closeModal('saleConfirmModal')" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(37,99,235,0.4)';" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06)';" style="flex:1;padding:13px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);">Done</button>
         </div>

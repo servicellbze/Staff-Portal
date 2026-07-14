@@ -970,6 +970,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     Print Receipt
                 </button>
+                <button class="btn-new" onclick="shareNewJobReceipt()" style="background:var(--glass);color:var(--text-main);border:1px solid var(--glass-border);">Share Receipt</button>
                 <button class="btn-new" onclick="resetForm()">+ New Job</button>
                 <a href="index.html" class="btn-dash">← Dashboard</a>
             </div>
@@ -1310,6 +1311,11 @@
             <h3>Choose Paper Size</h3>
             <p>Select the paper size for your printer</p>
             <div class="paper-choices">
+                <button class="paper-choice-btn" onclick="shareJobReceipt()">
+                    <span class="choice-icon">📱</span>
+                    <span class="choice-label">View &amp; Share</span>
+                    <span class="choice-sub">Mobile · Text / SMS</span>
+                </button>
                 <button class="paper-choice-btn" onclick="printJobInvoice('receipt')">
                     <span class="choice-icon">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -1909,12 +1915,29 @@ async function uploadInspectionImages(repairId) {
             }
             document.getElementById('paperModal').classList.remove('open');
             const isReceipt = paperSize === 'receipt';
-            if (isReceipt) {
-                kickDrawer();
-                printHTML(buildJobReceiptHTML(currentJobData, { imgSrc: 'img/logo.png' }));
-            } else {
-                printHTML(buildJobA4HTML(currentJobData, { imgSrc: 'img/logo.png' }));
+            const html = isReceipt
+                ? buildJobReceiptHTML(currentJobData, { imgSrc: 'img/logo.png' })
+                : buildJobA4HTML(currentJobData, { imgSrc: 'img/logo.png' });
+            if (isReceipt && typeof isMobileReceipt === 'function' && isMobileReceipt()) {
+                openReceiptPreview(html, buildJobReceiptText(currentJobData), { title: 'Job #' + currentJobData.id + ' Receipt' });
+                return;
             }
+            if (isReceipt) kickDrawer();
+            printHTML(html);
+        }
+
+        function shareJobReceipt() {
+            if (!currentJobData || !currentJobData.id) {
+                showToast('⚠️ No job data available', 'error');
+                return;
+            }
+            document.getElementById('paperModal').classList.remove('open');
+            const html = buildJobReceiptHTML(currentJobData, { imgSrc: 'img/logo.png' });
+            openReceiptPreview(html, buildJobReceiptText(currentJobData), { title: 'Job #' + currentJobData.id + ' Receipt' });
+        }
+
+        function shareNewJobReceipt() {
+            shareJobReceipt();
         }
 
         function showToast(msg, type = '') {
