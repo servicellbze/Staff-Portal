@@ -853,72 +853,176 @@ function buildJobA4Text(j) {
     return lines.join('\n');
 }
 
+const JOB_TRACKER_PAGE = 'https://servicellbze.github.io/ServiCell/tracker.html';
+const JOB_TRACKER_LABEL = 'servicellbze.github.io/ServiCell';
+
+function _jobTrackerUrl(j) {
+    return j && j.id ? JOB_TRACKER_PAGE + '?job=' + encodeURIComponent(j.id) : '';
+}
+
+function _jobTimeGreeting() {
+    const belizeHour = (new Date().getUTCHours() - 6 + 24) % 24;
+    if (belizeHour >= 5 && belizeHour < 12) return 'Good morning';
+    if (belizeHour >= 12 && belizeHour < 17) return 'Good afternoon';
+    return 'Good evening';
+}
+
+function _jobDefaultGreetingId() {
+    const g = _jobTimeGreeting();
+    if (g === 'Good morning') return 'morning';
+    if (g === 'Good afternoon') return 'afternoon';
+    return 'evening';
+}
+
+function _jobGreetingPhraseFromId(greetingId, customText) {
+    const map = {
+        morning: 'Good morning',
+        afternoon: 'Good afternoon',
+        evening: 'Good evening',
+        hi: 'Hi',
+        hello: 'Hello'
+    };
+    if (greetingId === 'custom') {
+        const t = String(customText || '').trim();
+        return t || _jobTimeGreeting();
+    }
+    return map[greetingId] || _jobTimeGreeting();
+}
+
+function _jobGreetingLine(greetingPhrase, firstName) {
+    return String(greetingPhrase || _jobTimeGreeting()).trim() + ', ' + firstName + ',';
+}
+
+function getJobGreetingOptions() {
+    return [
+        { id: 'morning', label: 'Good morning' },
+        { id: 'afternoon', label: 'Good afternoon' },
+        { id: 'evening', label: 'Good evening' },
+        { id: 'hi', label: 'Hi' },
+        { id: 'hello', label: 'Hello' },
+        { id: 'custom', label: 'Custom' }
+    ];
+}
+
+function _jobBz(n) {
+    return 'BZ$' + (parseFloat(n) || 0).toFixed(2);
+}
+
+function _jobTrackerLine(j, forSms) {
+    const jobRef = 'Job #' + j.id;
+    if (forSms) {
+        return 'You can follow your repair anytime on our tracker at ' + JOB_TRACKER_LABEL + ' (' + jobRef + ').';
+    }
+    return 'You can follow your repair anytime on our online tracker using ' + jobRef + '.';
+}
+
+function _jobWarmSignOff(variant) {
+    if (variant === 'ready') {
+        return 'We\'d love to see you when it suits you — feel free to reply here or call us at +501 615-3388 if you\'d like to arrange pickup or have any questions.\n\nWarm regards,\nServiCell Belize';
+    }
+    if (variant === 'intake') {
+        return 'We\'re here if anything comes up — reply to this message or call us at +501 615-3388 anytime.\n\nThank you for choosing ServiCell,\nServiCell Belize';
+    }
+    return 'If you have any questions, just reply here or call us at +501 615-3388 — we\'re happy to help.\n\nWarm regards,\nServiCell Belize';
+}
+
 function buildJobCustomerMessage(j, opts) {
     opts = opts || {};
     j = j || {};
     const context = opts.context || 'update';
     const firstName = _jobFirstName(j.customerName);
+    const greetingPhrase = opts.greeting != null ? String(opts.greeting).trim() : _jobTimeGreeting();
+    const greeting = _jobGreetingLine(greetingPhrase, firstName);
     const items = _jobParseInvoiceItems(j);
     const total = items.reduce(function(s, i) { return s + (parseFloat(i.price || 0) || 0); }, 0);
-    const trackerUrl = j.id ? 'https://servicellbze.github.io/ServiCell/tracker.html?job=' + j.id : '';
-    const statusLabel = _jobFmtStatus(j.status);
-    const estOrDone = j.dateCompleted
-        ? ('Completed: ' + _jobFmtDate(j.dateCompleted))
-        : ('Est. completion: ' + (j.estimatedCompletion || 'To be confirmed'));
+    const hasTotal = items.length > 0 && total > 0;
+    const device = j.device || 'device';
+    const jobRef = j.id ? ('Job #' + j.id) : 'your repair';
+    const issueText = j.issue ? String(j.issue).trim() : '';
+    const status = String(j.status || '').toLowerCase();
+    const isReady = status === 'ready';
+    const isIntake = context === 'intake';
+    const estDate = j.estimatedCompletion || 'to be confirmed';
+    const payment = String(j.payment || 'unpaid').toLowerCase();
+    const isPaid = payment.startsWith('paid');
+    const paidSoFar = opts.amountPaid != null ? parseFloat(opts.amountPaid) : null;
+    const hasPartial = paidSoFar != null && hasTotal && paidSoFar > 0.01 && (total - paidSoFar) > 0.01;
+    const trackerLine = _jobTrackerLine(j, !!opts.forSms);
 
-    const lines = ['Hi ' + firstName + ',', ''];
+    let body = '';
 
-    if (context === 'intake') {
-        lines.push(
-            'Your device has been checked in at ServiCell Belize.',
-            '',
-            'Job #: ' + (j.id || '—'),
-            'Device: ' + (j.device || '—'),
-            'Issue: ' + (j.issue || '—'),
-            estOrDone
-        );
-    } else if (j.status === 'ready') {
-        lines.push(
-            'Good news — your device is ready for pickup at ServiCell Belize!',
-            '',
-            'Job #: ' + (j.id || '—'),
-            'Device: ' + (j.device || '—'),
-            'Issue: ' + (j.issue || '—'),
-            'Status: ' + statusLabel
-        );
+    if (isIntake) {
+        const issueClause = issueText
+            ? (' We have noted the reported issue: ' + issueText + '.')
+            : '';
+        body = greeting + '\n\n'
+            + 'Thank you for bringing your ' + device + ' to ServiCell Belize. This message confirms we have received your device and logged your repair (' + jobRef + ') in our system.'
+            + issueClause
+            + ' We expect to have an update for you by ' + estDate + ', and we will reach out when your device is ready or if we need anything further from you.'
+            + ' ' + trackerLine;
+    } else if (isReady) {
+        if (hasPartial) {
+            const balance = total - paidSoFar;
+            body = greeting + '\n\n'
+                + 'This is ServiCell Belize reaching out regarding your ' + device + ' repair (' + jobRef + '). Good news — your device is ready for pickup at our shop on Douglas Jones Street.'
+                + ' Your invoice total is ' + _jobBz(total) + ', which includes GST. You have paid ' + _jobBz(paidSoFar) + ' so far, with a balance of ' + _jobBz(balance) + ' due when you collect. Payment can be made by cash or card at pickup.'
+                + ' ' + trackerLine;
+        } else if (isPaid && hasTotal) {
+            body = greeting + '\n\n'
+                + 'This is ServiCell Belize reaching out regarding your ' + device + ' repair (' + jobRef + '). Good news — your device is ready for pickup at our shop on Douglas Jones Street.'
+                + ' Your final total is ' + _jobBz(total) + ', which includes GST, and we have recorded your payment — you are all set for collection.'
+                + ' ' + trackerLine;
+        } else if (hasTotal) {
+            body = greeting + '\n\n'
+                + 'This is ServiCell Belize reaching out regarding your ' + device + ' repair (' + jobRef + '). Good news — your device is ready for pickup at our shop on Douglas Jones Street.'
+                + ' Your final total is ' + _jobBz(total) + ', which includes GST. Payment can be made by cash or card when you collect.'
+                + ' ' + trackerLine;
+        } else {
+            body = greeting + '\n\n'
+                + 'This is ServiCell Belize reaching out regarding your ' + device + ' repair (' + jobRef + '). Good news — your device is ready for pickup at our shop on Douglas Jones Street.'
+                + ' We will confirm your final total with you at collection.'
+                + ' ' + trackerLine;
+        }
     } else {
-        lines.push(
-            'Here is an update from ServiCell Belize on your repair:',
-            '',
-            'Job #: ' + (j.id || '—'),
-            'Device: ' + (j.device || '—'),
-            'Issue: ' + (j.issue || '—'),
-            'Status: ' + statusLabel,
-            estOrDone
-        );
+        const statusPhrase = ({
+            ordered: 'we are waiting on parts for your repair',
+            received: 'your device has been received and is being assessed',
+            inqueue: 'your device is in our queue awaiting service',
+            fixing: 'your repair is currently in progress',
+            testing: 'your device is being tested following repair',
+            completed: 'your repair has been completed'
+        })[status] || ('your repair is currently ' + _jobFmtStatus(j.status).toLowerCase());
+
+        let totalClause = '';
+        if (hasTotal) {
+            totalClause = ' Your repair total is ' + _jobBz(total) + ' (GST included); we will confirm the final amount with you if anything changes after diagnostic.';
+            if (isPaid) {
+                totalClause = ' Your repair total is ' + _jobBz(total) + ' (GST included), and we have your payment on file.';
+            } else if (hasPartial) {
+                totalClause = ' Your repair total is ' + _jobBz(total) + ' (GST included). You have paid ' + _jobBz(paidSoFar) + ' so far, with ' + _jobBz(total - paidSoFar) + ' still outstanding.';
+            }
+        } else {
+            totalClause = ' We will confirm your final total once the diagnostic and repair are complete.';
+        }
+
+        body = greeting + '\n\n'
+            + 'This is ServiCell Belize following up on your ' + device + ' (' + jobRef + '). ' + statusPhrase.charAt(0).toUpperCase() + statusPhrase.slice(1)
+            + ', and we will notify you as soon as it is ready for pickup.'
+            + ' We expect to have an update for you by ' + estDate + '.'
+            + totalClause
+            + ' ' + trackerLine;
     }
 
-    if (items.length && total > 0) {
-        lines.push('Total: BZ$' + total.toFixed(2));
-        const p = String(j.payment || 'unpaid').toLowerCase();
-        lines.push('Payment: ' + (p.startsWith('paid') ? ('Paid (' + (p.includes('card') ? 'Card' : 'Cash') + ')') : 'Balance due'));
-    } else if (context !== 'intake') {
-        lines.push('Repair cost: To be confirmed after diagnostic');
-    }
+    const signVariant = isIntake ? 'intake' : (isReady ? 'ready' : 'update');
+    return body + '\n\n' + _jobWarmSignOff(signVariant);
+}
 
-    if (trackerUrl) {
-        lines.push('', 'Track your repair anytime:', trackerUrl);
-    }
-
-    lines.push(
-        '',
-        'Questions? Call us at +501 615-3388.',
-        '',
-        'Thank you!',
-        'ServiCell Belize'
-    );
-
-    return lines.join('\n');
+function buildJobCustomerMessagePayload(j, opts) {
+    opts = opts || {};
+    return {
+        text: buildJobCustomerMessage(j, opts),
+        url: _jobTrackerUrl(j)
+    };
 }
 
 function buildJobDocumentHTML(j, format, opts) {
@@ -932,15 +1036,27 @@ async function shareJobCustomerMessage(j, opts) {
         _receiptNotify('No job data available', 'err');
         return false;
     }
-    const text = buildJobCustomerMessage(j, opts);
+    openCustomerSmsModal(j, opts || {});
+    return true;
+}
+
+async function _dispatchJobCustomerMessage(j, opts) {
+    const payload = buildJobCustomerMessagePayload(j, opts);
     const smsPhone = _jobPhoneForSms(j.customerPhone);
+    const smsText = buildJobCustomerMessage(j, Object.assign({}, opts, { forSms: true }));
 
     if (navigator.share) {
         try {
-            await navigator.share({
-                title: 'ServiCell Job #' + j.id,
-                text: text
-            });
+            const shareData = {
+                title: 'ServiCell Belize — Job #' + j.id,
+                text: payload.text
+            };
+            if (payload.url) shareData.url = payload.url;
+            if (!navigator.canShare || navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.share({ title: shareData.title, text: payload.text });
+            }
             _receiptNotify('Message shared!', 'ok');
             if (typeof haptic === 'function') haptic('success');
             return true;
@@ -950,12 +1066,180 @@ async function shareJobCustomerMessage(j, opts) {
     }
 
     if (smsPhone && /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)) {
-        window.location.href = 'sms:' + smsPhone + '?&body=' + encodeURIComponent(text);
+        window.location.href = 'sms:' + smsPhone + '?&body=' + encodeURIComponent(smsText);
         _receiptNotify('Opening Messages…', 'ok');
         return true;
     }
 
-    return shareReceiptText(text, 'ServiCell Job #' + j.id);
+    return shareReceiptText(smsText, 'ServiCell Job #' + j.id);
+}
+
+let _customerSmsState = null;
+
+function _ensureCustomerSmsModal() {
+    if (document.getElementById('customerSmsModal')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+.customer-sms-overlay { display:none; position:fixed; inset:0; z-index:10060; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; padding:0; }
+.customer-sms-overlay.open { display:flex; }
+.customer-sms-sheet { width:100%; max-width:520px; max-height:92vh; background:var(--glass-strong,#fff); border-radius:28px 28px 0 0; box-shadow:0 -8px 40px rgba(0,0,0,0.25); display:flex; flex-direction:column; animation:receiptSlideUp 0.3s ease both; }
+.customer-sms-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:18px 20px 12px; border-bottom:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
+.customer-sms-head h3 { margin:0 0 4px; font-size:1rem; font-weight:800; }
+.customer-sms-sub { margin:0; font-size:0.78rem; color:var(--text-dim,#64748b); line-height:1.4; }
+.customer-sms-close { width:36px; height:36px; border-radius:50%; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:transparent; cursor:pointer; font-size:1.1rem; flex-shrink:0; }
+.customer-sms-body { overflow:auto; padding:16px 20px; flex:1; -webkit-overflow-scrolling:touch; }
+.customer-sms-label { display:block; font-size:0.68rem; font-weight:800; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-dim,#64748b); margin-bottom:8px; }
+.customer-sms-greetings { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.customer-sms-greeting-btn { padding:9px 14px; border-radius:999px; border:1px solid var(--glass-border,rgba(0,0,0,0.12)); background:var(--glass,rgba(0,0,0,0.04)); color:var(--text-main,#111); font-family:inherit; font-size:0.82rem; font-weight:700; cursor:pointer; }
+.customer-sms-greeting-btn.active { background:var(--primary,#2563eb); border-color:var(--primary,#2563eb); color:#fff; }
+.customer-sms-custom { display:none; width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--glass-border,rgba(0,0,0,0.12)); font-family:inherit; font-size:0.9rem; margin-bottom:14px; box-sizing:border-box; }
+.customer-sms-custom.is-visible { display:block; }
+.customer-sms-preview { width:100%; min-height:180px; max-height:280px; padding:14px; border-radius:12px; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:#f8fafc; color:var(--text-main,#111); font-family:inherit; font-size:0.84rem; line-height:1.55; resize:vertical; box-sizing:border-box; white-space:pre-wrap; }
+.customer-sms-actions { display:flex; gap:10px; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
+.customer-sms-actions button { flex:1; padding:14px; border-radius:12px; border:none; font-family:inherit; font-size:0.9rem; font-weight:700; cursor:pointer; }
+.customer-sms-cancel { background:var(--glass,rgba(0,0,0,0.06)); color:var(--text-main,#111); border:1px solid var(--glass-border,rgba(0,0,0,0.1)) !important; }
+.customer-sms-send { background:var(--primary,#2563eb); color:#fff; }
+.customer-sms-send:disabled { opacity:0.65; cursor:wait; }
+@media (min-width:769px) {
+    .customer-sms-overlay { align-items:center; padding:24px; }
+    .customer-sms-sheet { border-radius:20px; max-height:88vh; }
+}`;
+    document.head.appendChild(style);
+
+    const modal = document.createElement('div');
+    modal.id = 'customerSmsModal';
+    modal.className = 'customer-sms-overlay';
+    modal.innerHTML =
+        '<div class="customer-sms-sheet" role="dialog" aria-labelledby="customerSmsTitle">'
+        + '<div class="customer-sms-head">'
+        + '<div><h3 id="customerSmsTitle">Text Customer</h3><p class="customer-sms-sub" id="customerSmsSub"></p></div>'
+        + '<button type="button" class="customer-sms-close" aria-label="Close">&times;</button>'
+        + '</div>'
+        + '<div class="customer-sms-body">'
+        + '<span class="customer-sms-label">Greeting</span>'
+        + '<div class="customer-sms-greetings" id="customerSmsGreetings"></div>'
+        + '<input type="text" class="customer-sms-custom" id="customerSmsCustom" placeholder="Type a custom greeting, e.g. Hey" maxlength="40">'
+        + '<span class="customer-sms-label" style="margin-top:4px;">Message preview</span>'
+        + '<textarea class="customer-sms-preview" id="customerSmsPreview" readonly></textarea>'
+        + '</div>'
+        + '<div class="customer-sms-actions">'
+        + '<button type="button" class="customer-sms-cancel" id="customerSmsCancelBtn">Cancel</button>'
+        + '<button type="button" class="customer-sms-send" id="customerSmsSendBtn">Send Message</button>'
+        + '</div></div>';
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeCustomerSmsModal();
+    });
+    modal.querySelector('.customer-sms-close').addEventListener('click', closeCustomerSmsModal);
+    document.getElementById('customerSmsCancelBtn').addEventListener('click', closeCustomerSmsModal);
+    document.getElementById('customerSmsCustom').addEventListener('input', _refreshCustomerSmsPreview);
+    document.getElementById('customerSmsSendBtn').addEventListener('click', _submitCustomerSmsModal);
+}
+
+function _refreshCustomerSmsPreview() {
+    if (!_customerSmsState) return;
+    const customEl = document.getElementById('customerSmsCustom');
+    const previewEl = document.getElementById('customerSmsPreview');
+    if (!_customerSmsState.greetingId) _customerSmsState.greetingId = _jobDefaultGreetingId();
+
+    if (_customerSmsState.greetingId === 'custom' && customEl) {
+        _customerSmsState.customGreeting = customEl.value;
+        if (customEl.parentElement) customEl.classList.add('is-visible');
+    } else if (customEl) {
+        customEl.classList.remove('is-visible');
+    }
+
+    const phrase = _jobGreetingPhraseFromId(_customerSmsState.greetingId, _customerSmsState.customGreeting);
+    const sendOpts = Object.assign({}, _customerSmsState.opts, { greeting: phrase });
+    if (previewEl) {
+        previewEl.value = buildJobCustomerMessage(_customerSmsState.j, sendOpts);
+    }
+
+    document.querySelectorAll('#customerSmsGreetings .customer-sms-greeting-btn').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-greeting-id') === _customerSmsState.greetingId);
+    });
+}
+
+function openCustomerSmsModal(j, opts) {
+    opts = opts || {};
+    _ensureCustomerSmsModal();
+    _customerSmsState = {
+        j: j,
+        opts: Object.assign({}, opts),
+        greetingId: _jobDefaultGreetingId(),
+        customGreeting: ''
+    };
+
+    const sub = document.getElementById('customerSmsSub');
+    const greetingsEl = document.getElementById('customerSmsGreetings');
+    const customEl = document.getElementById('customerSmsCustom');
+
+    if (sub) {
+        const name = j.customerName || 'Customer';
+        const device = j.device ? (' · ' + j.device) : '';
+        sub.textContent = name + device + ' · Job #' + j.id;
+    }
+
+    if (greetingsEl) {
+        greetingsEl.innerHTML = getJobGreetingOptions().map(function(opt) {
+            return '<button type="button" class="customer-sms-greeting-btn" data-greeting-id="' + opt.id + '">' + opt.label + '</button>';
+        }).join('');
+        greetingsEl.querySelectorAll('.customer-sms-greeting-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                _customerSmsState.greetingId = btn.getAttribute('data-greeting-id');
+                _refreshCustomerSmsPreview();
+                if (_customerSmsState.greetingId === 'custom') {
+                    const customEl = document.getElementById('customerSmsCustom');
+                    if (customEl) customEl.focus();
+                }
+            });
+        });
+    }
+
+    if (customEl) {
+        customEl.value = '';
+        customEl.classList.remove('is-visible');
+    }
+
+    _refreshCustomerSmsPreview();
+
+    const modal = document.getElementById('customerSmsModal');
+    modal.classList.add('open');
+    document.body.classList.add('modal-open');
+}
+
+function closeCustomerSmsModal() {
+    const modal = document.getElementById('customerSmsModal');
+    if (modal) modal.classList.remove('open');
+    if (!document.querySelector('.modal-overlay.open, .paper-modal-overlay.open, .mark-called-modal.open, .receipt-preview-overlay.open')) {
+        document.body.classList.remove('modal-open');
+    }
+    _customerSmsState = null;
+}
+
+async function _submitCustomerSmsModal() {
+    if (!_customerSmsState || !_customerSmsState.j) return;
+    const sendBtn = document.getElementById('customerSmsSendBtn');
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Sending…';
+    }
+
+    const phrase = _jobGreetingPhraseFromId(_customerSmsState.greetingId, _customerSmsState.customGreeting);
+    const sendOpts = Object.assign({}, _customerSmsState.opts, { greeting: phrase });
+    const j = _customerSmsState.j;
+
+    try {
+        await _dispatchJobCustomerMessage(j, sendOpts);
+        closeCustomerSmsModal();
+    } finally {
+        if (sendBtn) {
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'Send Message';
+        }
+    }
 }
 
 function openJobReceiptPreview(j, format, opts) {
@@ -1278,8 +1562,11 @@ function closeReceiptPreview() {
 
 window.buildJobA4Text = buildJobA4Text;
 window.buildJobCustomerMessage = buildJobCustomerMessage;
+window.buildJobCustomerMessagePayload = buildJobCustomerMessagePayload;
 window.buildJobDocumentHTML = buildJobDocumentHTML;
 window.shareJobCustomerMessage = shareJobCustomerMessage;
+window.openCustomerSmsModal = openCustomerSmsModal;
+window.closeCustomerSmsModal = closeCustomerSmsModal;
 window.openJobReceiptPreview = openJobReceiptPreview;
 window.buildSaleReceiptText = buildSaleReceiptText;
 window.buildJobReceiptText = buildJobReceiptText;
