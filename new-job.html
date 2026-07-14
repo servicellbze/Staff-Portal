@@ -613,37 +613,6 @@
             box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
         }
 
-        /* ── Print Invoice ── */
-        @media print {
-            html, body {
-                background: white !important;
-                background-image: none !important;
-                background-color: white !important;
-                color: black !important;
-            }
-
-            body * {
-                visibility: hidden !important;
-            }
-
-            #printInvoice,
-            #printInvoice * {
-                visibility: visible !important;
-            }
-
-            #printInvoice {
-                position: fixed !important;
-                inset: 0 !important;
-                display: block !important;
-                background: white !important;
-                color: black !important;
-                padding: 30px 40px !important;
-            }
-        }
-
-        #printInvoice {
-            display: none;
-        }
 
         .btn-print {
             display: inline-flex;
@@ -970,7 +939,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     Print Receipt
                 </button>
-                <button class="btn-new" onclick="shareNewJobReceipt()" style="background:var(--glass);color:var(--text-main);border:1px solid var(--glass-border);">Share Receipt</button>
+                <button class="btn-new" onclick="shareJobReceipt()" style="background:var(--glass);color:var(--text-main);border:1px solid var(--glass-border);">Share Receipt</button>
                 <button class="btn-new" onclick="resetForm()">+ New Job</button>
                 <a href="index.html" class="btn-dash">← Dashboard</a>
             </div>
@@ -1061,7 +1030,7 @@
                     <label>Job Type</label>
                     <div class="job-type-pills">
                         <div class="job-type-pill">
-                            <input type="radio" name="jobType" id="jt-backglass" value="Back-Glass Repair" checked>
+                            <input type="radio" name="jobType" id="jt-backglass" value="Back-Glass Repair">
                             <label for="jt-backglass">Back-Glass Repair</label>
                         </div>
                         <div class="job-type-pill">
@@ -1084,7 +1053,7 @@
                     <label>Priority</label>
                     <div class="job-type-pills">
                         <div class="job-type-pill">
-                            <input type="radio" name="priority" id="pr-low" value="low" checked>
+                            <input type="radio" name="priority" id="pr-low" value="low">
                             <label for="pr-low" style="border-color:rgba(var(--primary-rgb),0.2);">Low — Normal</label>
                         </div>
                         <div class="job-type-pill">
@@ -1097,7 +1066,7 @@
                     <label>Initial Status</label>
                     <div class="status-pills">
                         <div class="status-pill received">
-                            <input type="radio" name="status" id="s-received" value="received" checked>
+                            <input type="radio" name="status" id="s-received" value="received">
                             <label for="s-received">Received</label>
                         </div>
                         <div class="status-pill fixing">
@@ -1118,7 +1087,7 @@
                         <div class="completion-picker">
                             <div class="completion-mode-pills">
                                 <div class="completion-mode-pill">
-                                    <input type="radio" name="completionMode" id="cm-day" value="day" checked>
+                                    <input type="radio" name="completionMode" id="cm-day" value="day">
                                     <label for="cm-day">Day</label>
                                 </div>
                                 <div class="completion-mode-pill">
@@ -1127,9 +1096,9 @@
                                 </div>
                             </div>
                             <input type="date" id="estimatedCompletion" class="form-input completion-input"
-                                placeholder="Leave Blank if Unknown">
+                                placeholder="Leave Blank if Unknown" disabled>
                             <div class="completion-hint" id="completionHint">
-                                Shows date only on invoice
+                                Select Day or Hour above, then pick a date
                             </div>
                         </div>
                     </div>
@@ -1208,7 +1177,6 @@
 
     <div id="footer-placeholder"></div>
     <div class="toast" id="toast"></div>
-    <div id="printInvoice"></div>
 
     <!-- ── Photo Inspection Modal ── -->
     <div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:20px;">
@@ -1366,8 +1334,17 @@
             radio.addEventListener('change', () => {
                 const input = document.getElementById('estimatedCompletion');
                 const hint = document.getElementById('completionHint');
+                const mode = document.querySelector('input[name="completionMode"]:checked')?.value;
 
-                if (document.getElementById('cm-day').checked) {
+                if (!mode) {
+                    input.disabled = true;
+                    input.value = '';
+                    hint.textContent = 'Select Day or Hour above, then pick a date';
+                    return;
+                }
+
+                input.disabled = false;
+                if (mode === 'day') {
                     input.type = 'date';
                     hint.textContent = 'Shows date only on invoice';
                 } else {
@@ -1415,16 +1392,12 @@
             const repairId = repairIdInput.value;
             const device = deviceInput.value.trim();
             const issue = document.getElementById('issue').value.trim();
-            const status = document.querySelector('input[name="status"]:checked')?.value || 'received';
             const customerPhone = document.getElementById('customerPhone').value.trim();
             const notes = document.getElementById('notes').value.trim();
 
-            const selectedJobType = document.querySelector('input[name="jobType"]:checked')?.value || 'Back-Glass Repair';
-            const jobType = selectedJobType === 'other'
-                ? (document.getElementById('jobTypeOther').value.trim() || 'Other')
-                : selectedJobType;
-
-            const priority = document.querySelector('input[name="priority"]:checked')?.value || 'low';
+            const statusEl = document.querySelector('input[name="status"]:checked');
+            const jobTypeEl = document.querySelector('input[name="jobType"]:checked');
+            const priorityEl = document.querySelector('input[name="priority"]:checked');
 
             if (!customerName || !repairId || !device) {
                 showToast('⚠️ Name, ID, and Device are required.', 'error');
@@ -1434,11 +1407,48 @@
                 return;
             }
 
+            if (!jobTypeEl) {
+                showToast('⚠️ Please select a job type.', 'error');
+                haptic('error');
+                return;
+            }
+            const selectedJobType = jobTypeEl.value;
+            const jobType = selectedJobType === 'other'
+                ? document.getElementById('jobTypeOther').value.trim()
+                : selectedJobType;
+            if (selectedJobType === 'other' && !jobType) {
+                showToast('⚠️ Please describe the job type.', 'error');
+                haptic('error');
+                document.getElementById('jobTypeOther').focus();
+                return;
+            }
+
+            if (!priorityEl) {
+                showToast('⚠️ Please select a priority.', 'error');
+                haptic('error');
+                return;
+            }
+            const priority = priorityEl.value;
+
+            if (!statusEl) {
+                showToast('⚠️ Please select an initial status.', 'error');
+                haptic('error');
+                return;
+            }
+            const status = statusEl.value;
+
             // Mandate front and back photos
             if (!_slots.front || !_slots.back) {
                 showToast('📷 Front and back photos are required before submitting.', 'error');
                 haptic('error');
                 openPhotoModal();
+                return;
+            }
+
+            const completionInputVal = document.getElementById('estimatedCompletion').value;
+            if (completionInputVal && !document.querySelector('input[name="completionMode"]:checked')) {
+                showToast('⚠️ Select Day or Hour for the estimated completion.', 'error');
+                haptic('error');
                 return;
             }
 
@@ -1453,9 +1463,9 @@
 
             // Get estimated completion date
             let estimatedCompletion = '';
-            const completionInput = document.getElementById('estimatedCompletion').value;
+            const completionInput = completionInputVal;
             if (completionInput) {
-                const completionMode = document.querySelector('input[name="completionMode"]:checked')?.value || 'day';
+                const completionMode = document.querySelector('input[name="completionMode"]:checked').value;
 
                 if (completionMode === 'hour') {
                     // datetime-local format is "YYYY-MM-DDTHH:MM" — parse correctly
@@ -1567,21 +1577,37 @@
             haptic('success');
         }
 
+        function resetPhotoSlots() {
+            _slots.front = null;
+            _slots.back = null;
+            _slots.accessories = null;
+            _extraPhotos = [];
+            ['front', 'back', 'accessories'].forEach(function(name) {
+                const slot = document.getElementById('slot-' + name);
+                if (!slot) return;
+                slot.innerHTML = '<span style="font-size:0.82rem;color:var(--text-dim);">Tap to add</span>';
+                slot.style.border = '2px dashed var(--glass-border)';
+                slot.style.borderColor = 'var(--glass-border)';
+                const input = document.getElementById('input-' + name);
+                if (input) input.value = '';
+            });
+            const summary = document.getElementById('photoModalSummary');
+            if (summary) { summary.style.display = 'none'; summary.textContent = ''; }
+        }
+
         function resetForm() {
             ['customerName', 'customerPhone', 'notes', 'device', 'issue'].forEach(id => {
                 const el = document.getElementById(id);
                 el.value = '';
                 el.style.borderColor = '';
             });
-            document.getElementById('s-received').checked = true;
-            document.getElementById('jt-backglass').checked = true;
-            document.getElementById('pr-low').checked = true;
+            document.querySelectorAll('input[name="jobType"], input[name="priority"], input[name="status"], input[name="completionMode"]').forEach(r => { r.checked = false; });
             document.getElementById('jobTypeOther').classList.remove('visible');
             document.getElementById('jobTypeOther').value = '';
             document.getElementById('estimatedCompletion').value = '';
-            document.getElementById('cm-day').checked = true;
-            document.getElementById('estimatedCompletion').type = 'datetime-local';
-            document.getElementById('completionHint').textContent = 'Shows date and time on invoice';
+            document.getElementById('estimatedCompletion').disabled = true;
+            document.getElementById('estimatedCompletion').type = 'date';
+            document.getElementById('completionHint').textContent = 'Select Day or Hour above, then pick a date';
             // Reset inspection checklist
             document.querySelectorAll('input[name="inspection"]').forEach(c => c.checked = false);
             document.getElementById('chk-other').checked = false;
@@ -1589,6 +1615,7 @@
             document.getElementById('chk-other-text').disabled = true;
             document.getElementById('imgPreviewGrid').innerHTML = '';
             _inspectionImages = [];
+            resetPhotoSlots();
             const btn = document.getElementById('submitBtn');
             btn.classList.remove('loading');
             btn.disabled = false;
@@ -1843,8 +1870,6 @@ async function uploadInspectionImages(repairId) {
             const linkResult = await apiPost({ action: 'addimage', repairId, imageUrl: publicImageUrl });
             if (linkResult && linkResult.success === false) {
                 console.warn(`[Supabase] Failed to link image for index ${i}:`, linkResult.error);
-            } else {
-                console.log(`[Supabase] Image ${i+1} (${stageLabel}) uploaded and linked successfully!`);
             }
 
         } catch (e) {
@@ -1934,10 +1959,6 @@ async function uploadInspectionImages(repairId) {
             document.getElementById('paperModal').classList.remove('open');
             const html = buildJobReceiptHTML(currentJobData, { imgSrc: 'img/logo.png' });
             openReceiptPreview(html, buildJobReceiptText(currentJobData), { title: 'Job #' + currentJobData.id + ' Receipt' });
-        }
-
-        function shareNewJobReceipt() {
-            shareJobReceipt();
         }
 
         function showToast(msg, type = '') {
