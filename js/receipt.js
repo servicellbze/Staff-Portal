@@ -4,7 +4,7 @@
 
 const RECEIPT_STYLES = `
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; color: #000 !important; background: transparent !important; -webkit-font-smoothing: none !important; -moz-osx-font-smoothing: unset !important; text-rendering: geometricPrecision !important; } body, #printInvoice, .po-slip, .po-report { background: white !important; color: #000 !important; } body:has(.po-slip) { text-align: left; } img { display: block !important; } }
-#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 68mm; margin: 0 auto; padding: 0 0 12mm; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0; -webkit-font-smoothing: none; text-rendering: geometricPrecision; }
+#printInvoice { font-family: 'Courier New', Courier, monospace; color: #000; background: white; width: 100%; max-width: 100%; margin: 0 auto; padding: 3mm 3mm 12mm 3mm; font-size: 11px; font-weight: 700; line-height: 1.4; letter-spacing: 0; box-sizing: border-box; -webkit-font-smoothing: none; text-rendering: geometricPrecision; }
 #printInvoice * { font-weight: 700; box-sizing: border-box; color: #000; }
 .pi-shop { text-align: center; margin-bottom: 4px; }
 .pi-shop img { max-width: 72px; margin-bottom: 2px; display: block; margin-left: auto; margin-right: auto; }
@@ -162,6 +162,10 @@ function buildJobReceiptHTML(j, opts) {
         </table>` :
         `<div class="pi-notes" style="text-align:center;"><strong>Price To Be Determined</strong><br><span style="font-size:7px;">Final cost after diagnostic.</span></div>`;
 
+    const inspectionHTML = (j.inspection && j.inspection !== 'No damage noted')
+        ? `<div class="pi-section">Inspection</div><div class="pi-notes">${_esc(j.inspection).replace(/;/g, '<br>')}</div>`
+        : '';
+
     const imgSrc = opts.imgSrc || _receiptLogoSrc();
     
     // Generate QR code URL for job tracking
@@ -187,6 +191,7 @@ function buildJobReceiptHTML(j, opts) {
     <div class="pi-meta-row">
         <strong>Type: ${_esc(j.jobType||'Repair')}</strong>
         <strong>Priority: ${_esc(priorityLabel)}</strong>
+        <strong>Technician: ${_esc(j.technician||'—')}</strong>
     </div>
     <hr class="pi-dash">
     <div class="pi-section">Customer Information</div>
@@ -209,6 +214,7 @@ function buildJobReceiptHTML(j, opts) {
     </div>
     <div class="pi-section">Work Notes</div>
     <div class="pi-notes">${_esc(j.notes||'No additional notes.')}</div>
+    ${inspectionHTML}
     <div class="pi-section">Cost Breakdown</div>
     ${costTableHTML}
     <div class="pi-payment-status"><strong>Payment Status:</strong> ${_esc(paymentStatus)}</div>
@@ -249,7 +255,7 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; -webkit-font-smoothing:none!important; text-rendering:geometricPrecision!important; } body { background:white!important; } }
-#printInvoice { font-family:'Courier New',Courier,monospace; font-size:12px; font-weight:700; width:68mm; margin:0 auto; padding:0 0 12mm; line-height:1.4; letter-spacing:0; background:white; color:#000; -webkit-font-smoothing:none; text-rendering:geometricPrecision; }
+#printInvoice { font-family:'Courier New',Courier,monospace; font-size:12px; font-weight:700; width:100%; max-width:100%; margin:0 auto; padding:3mm 3mm 12mm 3mm; line-height:1.4; letter-spacing:0; box-sizing:border-box; background:white; color:#000; -webkit-font-smoothing:none; text-rendering:geometricPrecision; }
 #printInvoice * { box-sizing:border-box; font-weight:700; color:#000; }
 #printInvoice h2 { text-align:center; font-size:16px; font-weight:900; letter-spacing:0.5px; margin:0 0 2px; }
 #printInvoice p { text-align:center; margin:1px 0; font-size:11px; }
@@ -744,6 +750,228 @@ function buildJobReceiptText(j) {
     return lines.join('\n');
 }
 
+function _jobParseInvoiceItems(j) {
+    if (!j || !j.invoiceItems || j.invoiceItems === '—') return [];
+    try { return JSON.parse(j.invoiceItems); } catch (_) { return []; }
+}
+
+function _jobFmtPhone(p) {
+    if (!p) return '—';
+    const c = String(p).replace(/\D/g, '');
+    return c.length === 7 ? '+501 ' + c.slice(0, 3) + '-' + c.slice(3) : String(p);
+}
+
+function _jobPhoneForSms(p) {
+    const d = String(p || '').replace(/\D/g, '');
+    if (d.length === 7) return '+501' + d;
+    if (d.length === 10 && d.startsWith('501')) return '+' + d;
+    if (d.length === 11 && d.startsWith('501')) return '+' + d.slice(0, 10);
+    return d.length >= 7 ? '+' + d : '';
+}
+
+function _jobFmtStatus(s) {
+    return ({ ordered: 'Parts Ordered', received: 'Received', inqueue: 'In Queue',
+        fixing: 'Being Repaired', testing: 'Testing', ready: 'Ready for Pickup',
+        completed: 'Completed', abandoned: 'Abandoned', unsuccessful: 'Unsuccessful' })[s] || s || '—';
+}
+
+function _jobFmtDate(d) {
+    if (!d || d === '—') return '—';
+    try { return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+    catch (_) { return d; }
+}
+
+function _jobFirstName(name) {
+    const n = String(name || '').trim();
+    if (!n || n.toLowerCase() === 'walk-in') return 'there';
+    return n.split(/\s+/)[0];
+}
+
+function buildJobA4Text(j) {
+    j = j || {};
+    const items = _jobParseInvoiceItems(j);
+    const total = items.reduce(function(s, i) { return s + (parseFloat(i.price || 0) || 0); }, 0);
+    const priorityLabel = (j.priority || 'low').toLowerCase() === 'high' ? 'HIGH — URGENT' : 'LOW — NORMAL';
+    const receivedDate = j.dateReceived ? _jobFmtDate(j.dateReceived) : _jobFmtDate(new Date());
+    const estimatedDate = j.estimatedCompletion || '—';
+    let paymentStatus = 'N/A — Invoice Pending';
+    if (items.length && total > 0) {
+        const p = String(j.payment || 'unpaid').toLowerCase();
+        paymentStatus = p.startsWith('paid') ? 'Paid via ' + (p.includes('card') ? 'Card' : 'Cash') : 'UNPAID';
+    }
+
+    const lines = [
+        'SERVICELL BELIZE',
+        'Job Invoice & Intake Form',
+        '',
+        'JOB #: ' + (j.id || '—'),
+        'DATE RECEIVED: ' + receivedDate,
+        'Job Type: ' + (j.jobType || 'Repair'),
+        'Priority: ' + priorityLabel,
+        'Technician: ' + (j.technician || '—'),
+        '',
+        'CUSTOMER',
+        'Name: ' + (j.customerName || 'Walk-in'),
+        'Phone: ' + _jobFmtPhone(j.customerPhone),
+        '',
+        'DEVICE',
+        'Device: ' + (j.device || '—'),
+        'Issue: ' + (j.issue || '—'),
+        'Status: ' + _jobFmtStatus(j.status),
+        (j.dateCompleted ? 'Completed On: ' : 'Est. Completion: ') + (j.dateCompleted ? _jobFmtDate(j.dateCompleted) : estimatedDate),
+        '',
+        'NOTES',
+        j.notes || 'No additional notes.'
+    ];
+
+    if (j.inspection && j.inspection !== 'No damage noted') {
+        lines.push('', 'INSPECTION', j.inspection.replace(/;/g, '\n'));
+    }
+
+    lines.push('', 'COST BREAKDOWN');
+    if (items.length) {
+        const gst = total * 12.5 / 112.5;
+        const preTax = total - gst;
+        function bz(n) { return 'BZ$' + (parseFloat(n) || 0).toFixed(2); }
+        items.forEach(function(i) {
+            lines.push('• ' + (i.desc || 'Service') + ' — ' + bz(i.price || 0));
+        });
+        lines.push('Subtotal (excl. GST): ' + bz(preTax));
+        lines.push('GST (12.5%): ' + bz(gst));
+        lines.push('TOTAL: ' + bz(total));
+    } else {
+        lines.push('Price To Be Determined');
+        lines.push('Final cost will be provided after diagnostic assessment.');
+    }
+
+    lines.push('Payment Status: ' + paymentStatus);
+    if (j.id) {
+        lines.push('', 'Track your repair:', 'https://servicellbze.github.io/ServiCell/tracker.html?job=' + j.id);
+    }
+    lines.push('', 'Thank you for choosing ServiCell Belize!');
+    lines.push('Prices include GST where applicable.');
+    return lines.join('\n');
+}
+
+function buildJobCustomerMessage(j, opts) {
+    opts = opts || {};
+    j = j || {};
+    const context = opts.context || 'update';
+    const firstName = _jobFirstName(j.customerName);
+    const items = _jobParseInvoiceItems(j);
+    const total = items.reduce(function(s, i) { return s + (parseFloat(i.price || 0) || 0); }, 0);
+    const trackerUrl = j.id ? 'https://servicellbze.github.io/ServiCell/tracker.html?job=' + j.id : '';
+    const statusLabel = _jobFmtStatus(j.status);
+    const estOrDone = j.dateCompleted
+        ? ('Completed: ' + _jobFmtDate(j.dateCompleted))
+        : ('Est. completion: ' + (j.estimatedCompletion || 'To be confirmed'));
+
+    const lines = ['Hi ' + firstName + ',', ''];
+
+    if (context === 'intake') {
+        lines.push(
+            'Your device has been checked in at ServiCell Belize.',
+            '',
+            'Job #: ' + (j.id || '—'),
+            'Device: ' + (j.device || '—'),
+            'Issue: ' + (j.issue || '—'),
+            estOrDone
+        );
+    } else if (j.status === 'ready') {
+        lines.push(
+            'Good news — your device is ready for pickup at ServiCell Belize!',
+            '',
+            'Job #: ' + (j.id || '—'),
+            'Device: ' + (j.device || '—'),
+            'Issue: ' + (j.issue || '—'),
+            'Status: ' + statusLabel
+        );
+    } else {
+        lines.push(
+            'Here is an update from ServiCell Belize on your repair:',
+            '',
+            'Job #: ' + (j.id || '—'),
+            'Device: ' + (j.device || '—'),
+            'Issue: ' + (j.issue || '—'),
+            'Status: ' + statusLabel,
+            estOrDone
+        );
+    }
+
+    if (items.length && total > 0) {
+        lines.push('Total: BZ$' + total.toFixed(2));
+        const p = String(j.payment || 'unpaid').toLowerCase();
+        lines.push('Payment: ' + (p.startsWith('paid') ? ('Paid (' + (p.includes('card') ? 'Card' : 'Cash') + ')') : 'Balance due'));
+    } else if (context !== 'intake') {
+        lines.push('Repair cost: To be confirmed after diagnostic');
+    }
+
+    if (trackerUrl) {
+        lines.push('', 'Track your repair anytime:', trackerUrl);
+    }
+
+    lines.push(
+        '',
+        'Questions? Call us at +501 615-3388.',
+        '',
+        'Thank you!',
+        'ServiCell Belize'
+    );
+
+    return lines.join('\n');
+}
+
+function buildJobDocumentHTML(j, format, opts) {
+    opts = opts || { imgSrc: 'img/logo.png' };
+    if (format === 'a4') return buildJobA4HTML(j, opts);
+    return buildJobReceiptHTML(j, opts);
+}
+
+async function shareJobCustomerMessage(j, opts) {
+    if (!j || !j.id) {
+        _receiptNotify('No job data available', 'err');
+        return false;
+    }
+    const text = buildJobCustomerMessage(j, opts);
+    const smsPhone = _jobPhoneForSms(j.customerPhone);
+
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'ServiCell Job #' + j.id,
+                text: text
+            });
+            _receiptNotify('Message shared!', 'ok');
+            if (typeof haptic === 'function') haptic('success');
+            return true;
+        } catch (e) {
+            if (e && e.name === 'AbortError') return false;
+        }
+    }
+
+    if (smsPhone && /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)) {
+        window.location.href = 'sms:' + smsPhone + '?&body=' + encodeURIComponent(text);
+        _receiptNotify('Opening Messages…', 'ok');
+        return true;
+    }
+
+    return shareReceiptText(text, 'ServiCell Job #' + j.id);
+}
+
+function openJobReceiptPreview(j, format, opts) {
+    format = format || 'receipt';
+    opts = opts || {};
+    const imgOpts = { imgSrc: 'img/logo.png' };
+    const html = buildJobDocumentHTML(j, format, imgOpts);
+    const text = format === 'a4' ? buildJobA4Text(j) : buildJobReceiptText(j);
+    showReceiptPreview(html, text, {
+        title: 'Job #' + j.id + (format === 'a4' ? ' Invoice' : ' Receipt'),
+        format: format,
+        job: j,
+        imgOpts: imgOpts
+    });
+}
+
 function _receiptShareFilename(title) {
     const slug = String(title || 'receipt')
         .toLowerCase()
@@ -916,7 +1144,13 @@ function _ensureReceiptPreviewModal() {
 .receipt-preview-head h3 { margin:0; font-size:1rem; font-weight:800; }
 .receipt-preview-close { width:36px; height:36px; border-radius:50%; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:transparent; cursor:pointer; font-size:1.1rem; }
 .receipt-preview-body { overflow:auto; padding:16px; background:#f3f4f6; flex:1; -webkit-overflow-scrolling:touch; }
-.receipt-preview-paper { background:#fff; color:#000; margin:0 auto; max-width:320px; padding:12px 14px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.12); border-radius:4px; }
+.receipt-preview-format { display:none; gap:8px; padding:0 20px 12px; }
+.receipt-preview-format.is-visible { display:flex; }
+.receipt-preview-format button { flex:1; padding:10px 12px; border-radius:999px; border:1px solid var(--glass-border,rgba(0,0,0,0.12)); background:var(--glass,rgba(0,0,0,0.04)); color:var(--text-main,#111); font-family:inherit; font-size:0.82rem; font-weight:700; cursor:pointer; }
+.receipt-preview-format button.active { background:var(--primary,#2563eb); border-color:var(--primary,#2563eb); color:#fff; }
+.receipt-preview-paper { background:#fff; color:#000; margin:0 auto; max-width:320px; padding:10px 12px 18px; box-shadow:0 2px 12px rgba(0,0,0,0.12); border-radius:4px; box-sizing:border-box; }
+.receipt-preview-paper.receipt-preview-a4 { max-width:100%; padding:0; box-shadow:none; background:transparent; border-radius:0; }
+.receipt-preview-paper.receipt-preview-a4 .a4-invoice { max-width:100%; margin:0; padding:16px 18px 24px; box-shadow:0 2px 12px rgba(0,0,0,0.12); border-radius:4px; }
 .receipt-preview-actions { display:flex; gap:10px; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
 .receipt-preview-actions button { flex:1; padding:14px; border-radius:12px; border:none; font-family:inherit; font-size:0.9rem; font-weight:700; cursor:pointer; }
 .receipt-preview-share { background:var(--primary,#2563eb); color:#fff; }
@@ -937,6 +1171,10 @@ function _ensureReceiptPreviewModal() {
         + '<h3 id="receiptPreviewTitle">Receipt</h3>'
         + '<button type="button" class="receipt-preview-close" aria-label="Close">&times;</button>'
         + '</div>'
+        + '<div class="receipt-preview-format" id="receiptPreviewFormat">'
+        + '<button type="button" data-format="receipt">72mm Receipt</button>'
+        + '<button type="button" data-format="a4">A4 Invoice</button>'
+        + '</div>'
         + '<div class="receipt-preview-body"><div class="receipt-preview-paper" id="receiptPreviewPaper"></div></div>'
         + '<div class="receipt-preview-actions">'
         + '<button type="button" class="receipt-preview-share" id="receiptPreviewShareBtn">Share Image</button>'
@@ -948,6 +1186,37 @@ function _ensureReceiptPreviewModal() {
         if (e.target === modal) closeReceiptPreview();
     });
     modal.querySelector('.receipt-preview-close').addEventListener('click', closeReceiptPreview);
+
+    modal.querySelectorAll('#receiptPreviewFormat button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (!_receiptPreviewState || !_receiptPreviewState.job) return;
+            _applyJobPreviewFormat(btn.getAttribute('data-format') || 'receipt');
+        });
+    });
+}
+
+function _applyJobPreviewFormat(format) {
+    if (!_receiptPreviewState || !_receiptPreviewState.job) return;
+    format = format === 'a4' ? 'a4' : 'receipt';
+    const j = _receiptPreviewState.job;
+    const imgOpts = _receiptPreviewState.imgOpts || { imgSrc: 'img/logo.png' };
+    _receiptPreviewState.format = format;
+    _receiptPreviewState.html = buildJobDocumentHTML(j, format, imgOpts);
+    _receiptPreviewState.text = format === 'a4' ? buildJobA4Text(j) : buildJobReceiptText(j);
+
+    const paper = document.getElementById('receiptPreviewPaper');
+    const titleEl = document.getElementById('receiptPreviewTitle');
+    if (paper) {
+        paper.innerHTML = _receiptPreviewState.html;
+        paper.className = 'receipt-preview-paper' + (format === 'a4' ? ' receipt-preview-a4' : '');
+    }
+    if (titleEl) {
+        titleEl.textContent = 'Job #' + j.id + (format === 'a4' ? ' Invoice' : ' Receipt');
+    }
+
+    document.querySelectorAll('#receiptPreviewFormat button').forEach(function(btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-format') === format);
+    });
 }
 
 let _receiptPreviewState = null;
@@ -955,20 +1224,39 @@ let _receiptPreviewState = null;
 function showReceiptPreview(html, plainText, opts) {
     opts = opts || {};
     _ensureReceiptPreviewModal();
-    _receiptPreviewState = { html: html, text: plainText || '', opts: opts };
+    _receiptPreviewState = {
+        html: html,
+        text: plainText || '',
+        opts: opts,
+        job: opts.job || null,
+        format: opts.format || 'receipt',
+        imgOpts: opts.imgOpts || { imgSrc: 'img/logo.png' }
+    };
 
     const modal = document.getElementById('receiptPreviewModal');
     const titleEl = document.getElementById('receiptPreviewTitle');
     const paper = document.getElementById('receiptPreviewPaper');
-    if (titleEl) titleEl.textContent = opts.title || 'Receipt';
-    if (paper) paper.innerHTML = html;
+    const formatBar = document.getElementById('receiptPreviewFormat');
+
+    if (_receiptPreviewState.job) {
+        if (formatBar) formatBar.classList.add('is-visible');
+        _applyJobPreviewFormat(_receiptPreviewState.format);
+    } else {
+        if (formatBar) formatBar.classList.remove('is-visible');
+        if (titleEl) titleEl.textContent = opts.title || 'Receipt';
+        if (paper) {
+            paper.innerHTML = html;
+            paper.className = 'receipt-preview-paper';
+        }
+    }
 
     document.getElementById('receiptPreviewShareBtn').onclick = function() {
         const state = _receiptPreviewState || {};
+        const suffix = state.format === 'a4' ? '-a4-invoice' : '-receipt';
         shareReceiptImage(state.html, {
             title: (state.opts && state.opts.title) || 'ServiCell Receipt',
             text: state.text,
-            filename: _receiptShareFilename((state.opts && state.opts.title) || 'receipt')
+            filename: _receiptShareFilename(((state.opts && state.opts.title) || 'receipt') + suffix)
         });
     };
     document.getElementById('receiptPreviewPrintBtn').onclick = function() {
@@ -988,6 +1276,11 @@ function closeReceiptPreview() {
     _receiptPreviewState = null;
 }
 
+window.buildJobA4Text = buildJobA4Text;
+window.buildJobCustomerMessage = buildJobCustomerMessage;
+window.buildJobDocumentHTML = buildJobDocumentHTML;
+window.shareJobCustomerMessage = shareJobCustomerMessage;
+window.openJobReceiptPreview = openJobReceiptPreview;
 window.buildSaleReceiptText = buildSaleReceiptText;
 window.buildJobReceiptText = buildJobReceiptText;
 window.shareReceiptText = shareReceiptText;

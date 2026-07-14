@@ -178,7 +178,7 @@ function _mmToPx(mm) {
 }
 
 function _captureWidthPx(html) {
-    if (_isA4Html(html)) return 680;
+    if (_isA4Html(html)) return 720;
     if (/width:\s*72mm/i.test(html)) return _mmToPx(72);
     return _mmToPx(68);
 }
@@ -190,12 +190,18 @@ function _prepareHtmlForSilentPrint(html) {
     if (!/<html[\s>]/i.test(out)) {
         out = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>' + out + '</body></html>';
     }
+    const isA4 = _isA4Html(out);
     const captureWidth = _captureWidthPx(out);
     const captureCss = '<style id="qz-capture-base">'
         + 'html,body{margin:0!important;padding:0!important;background:#fff!important;color:#000!important;'
         + 'width:' + captureWidth + 'px!important;max-width:' + captureWidth + 'px!important;'
         + '-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}'
-        + '#printInvoice,.po-slip,.po-report,.a4-invoice{width:' + captureWidth + 'px!important;max-width:' + captureWidth + 'px!important;margin:0!important;}'
+        + '#printInvoice,.po-slip,.po-report{width:100%!important;max-width:100%!important;margin:0!important;'
+        + 'box-sizing:border-box!important;'
+        + (isA4 ? 'padding:0!important;' : 'padding:10px 12px 18px!important;')
+        + '}'
+        + '.a4-invoice{width:100%!important;max-width:100%!important;margin:0!important;'
+        + 'padding:24px 28px 32px!important;box-sizing:border-box!important;}'
         + 'img{display:block!important;max-width:100%!important;}'
         + '*{color:#000!important;}</style>';
     if (/<head[^>]*>/i.test(out)) {
@@ -236,8 +242,9 @@ function _absolutizeHtmlUrls(html) {
 }
 
 function _isA4Html(html) {
-    return /@page\s*\{[^}]*size:\s*A4/i.test(html)
-        || /max-width:\s*680px/i.test(html) && /pi-qr-a4/i.test(html);
+    return /class=["'][^"']*a4-invoice/i.test(html)
+        || /@page\s*\{[^}]*size:\s*A4/i.test(html)
+        || (/pi-qr-a4/i.test(html) && /max-width:\s*72\dpx/i.test(html));
 }
 
 function _waitForImagesIn(root, maxMs) {
@@ -263,7 +270,7 @@ async function _htmlToPngBase64(html) {
 
     const frame = document.createElement('iframe');
     frame.setAttribute('aria-hidden', 'true');
-    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + captureWidth + 'px;height:800px;border:0;';
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:' + captureWidth + 'px;height:' + (_isA4Html(html) ? 2400 : 1200) + 'px;border:0;';
     document.body.appendChild(frame);
 
     try {
