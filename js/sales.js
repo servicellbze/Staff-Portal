@@ -1434,32 +1434,59 @@ async function settlePartialSale(saleId) {
 }
 
 // -- Reprint Last Receipt -----------------------------------------------------
+function _lastReceiptPayload() {
+    if (!window._lastReceipt) return null;
+    const r = window._lastReceipt;
+    return {
+        items: r.items,
+        total: r.total,
+        amountPaid: r.amountPaid,
+        method: r.method,
+        saleId: r.saleId,
+        customer: r.customer || '',
+        cashier: currentUser || ''
+    };
+}
+
 function reprintLastReceipt() {
-    if (!window._lastReceipt) {
+    const p = _lastReceiptPayload();
+    if (!p) {
         showToast('No receipt to reprint', 'err');
         return;
     }
-    
+
     try {
-        const { items, total, amountPaid, method, saleId, customer } = window._lastReceipt;
-        
-        // Check if required functions exist
         if (typeof buildSaleReceiptHTML !== 'function' || typeof printHTML !== 'function') {
             showToast('Print functions not loaded', 'err');
-            console.error('Receipt functions not found');
+            return;
+        }
+
+        const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+        const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+        if (typeof isMobileReceipt === 'function' && isMobileReceipt()) {
+            openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
             return;
         }
 
         if (typeof kickDrawer === 'function') kickDrawer();
-
-        _printSaleReceipt(items, total, amountPaid, method, saleId, customer, currentUser);
-        
+        _printSaleReceipt(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
         showToast('Printing receipt...', 'ok');
         if (typeof haptic === 'function') haptic('light');
     } catch (error) {
         console.error('Reprint error:', error);
         showToast('Failed to print receipt', 'err');
     }
+}
+
+function shareLastReceipt() {
+    const p = _lastReceiptPayload();
+    if (!p) {
+        showToast('No receipt to share', 'err');
+        return;
+    }
+    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
 }
 
 // -- Job Pickup ----------------------------------------------------------------
@@ -2197,20 +2224,38 @@ function openViewSale(saleId) {
     openModal('viewSaleModal');
 }
 
+function _saleReceiptPayload(s) {
+    const items = tryParseJSON(s.items, []);
+    return {
+        items,
+        total: parseFloat(s.total) || 0,
+        amountPaid: parseFloat(s.amountPaid) || 0,
+        method: s.method || 'cash',
+        saleId: s.saleId || '',
+        customer: s.customer || '',
+        cashier: s.cashier || currentUser || ''
+    };
+}
+
 function printViewedSale() {
     if (!_viewedSale) return;
-    const s     = _viewedSale;
-    const items = tryParseJSON(s.items, []);
+    const p = _saleReceiptPayload(_viewedSale);
+    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    if (typeof isMobileReceipt === 'function' && isMobileReceipt()) {
+        openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
+        return;
+    }
     kickDrawer();
-    _printSaleReceipt(
-        items,
-        parseFloat(s.total) || 0,
-        parseFloat(s.amountPaid) || 0,
-        s.method || 'cash',
-        s.saleId || '',
-        s.customer || '',
-        s.cashier || ''
-    );
+    _printSaleReceipt(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+}
+
+function shareViewedSale() {
+    if (!_viewedSale) return;
+    const p = _saleReceiptPayload(_viewedSale);
+    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
 }
 
 // -- Edit Sale -----------------------------------------------------------------

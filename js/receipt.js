@@ -567,42 +567,300 @@ function _waitForPrintImages(doc, maxMs) {
 }
 
 function _windowPrint(htmlContent, onDone) {
+    function finish(ok) {
+        if (typeof onDone === 'function') onDone(ok !== false);
+    }
+
+    function runPrint(doc, win) {
+        let printed = false;
+        function triggerPrint() {
+            if (printed) return;
+            printed = true;
+            try { win.focus(); } catch (_) {}
+            setTimeout(function() {
+                try { win.print(); } catch (_) { finish(false); return; }
+                setTimeout(function() {
+                    try { if (win !== window && win.close) win.close(); } catch (_) {}
+                    finish(true);
+                }, 600);
+            }, 0);
+        }
+        _waitForPrintImages(doc, 600).then(triggerPrint);
+        setTimeout(triggerPrint, 800);
+    }
+
     const w = window.open('', '_blank', 'width=400,height=600,alwaysRaised=yes');
-    if (!w) {
-        if (typeof onDone === 'function') onDone();
+    if (w) {
+        w.document.open();
+        w.document.write(htmlContent);
+        w.document.close();
+        if (w.document.readyState === 'complete') {
+            runPrint(w.document, w);
+        } else {
+            w.addEventListener('load', function() { runPrint(w.document, w); }, { once: true });
+        }
         return;
     }
 
-    let printed = false;
-    function triggerPrint() {
-        if (printed) return;
-        printed = true;
-        w.focus();
-        setTimeout(function() {
-            w.print();
-            setTimeout(function() {
-                try { w.close(); } catch(_) {}
-                if (typeof onDone === 'function') onDone();
-            }, 600);
-        }, 0);
+    let frame = document.getElementById('_scPrintFrame');
+    if (!frame) {
+        frame = document.createElement('iframe');
+        frame.id = '_scPrintFrame';
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;width:0;height:0;border:none;opacity:0;pointer-events:none;left:-9999px;';
+        document.body.appendChild(frame);
     }
 
-    function startPrint() {
-        _waitForPrintImages(w.document, 600).then(triggerPrint);
-    }
-
-    w.document.open();
-    w.document.write(htmlContent);
-    w.document.close();
-
-    // document.write can finish before the load listener is attached
-    if (w.document.readyState === 'complete') {
-        startPrint();
-    } else {
-        w.addEventListener('load', startPrint, { once: true });
-    }
-    setTimeout(startPrint, 800);
+    const fwin = frame.contentWindow;
+    const fdoc = fwin.document;
+    fdoc.open();
+    fdoc.write(htmlContent);
+    fdoc.close();
+    runPrint(fdoc, fwin);
 }
+
+// ── Mobile preview & text sharing ─────────────────────────────────────────────
+
+function isMobileReceipt() {
+    return window.matchMedia('(max-width: 768px)').matches
+        || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+function _receiptNotify(msg, type) {
+    if (typeof showToast === 'function') showToast(msg, type || 'ok');
+}
+
+function _receiptCashierName(cashier) {
+    const nameMap = {
+        Cashier_Chee: 'Ericson',
+        Cashier_Coleman: 'Kiana',
+        Technician_Bailey: 'Kareem',
+        Technician_Bat: 'Bat',
+        Manager_Chee: 'Eric'
+    };
+    return cashier ? (nameMap[cashier] || cashier.replace(/^(Cashier_|Manager_|Technician_)/i, '')) : 'Staff';
+}
+
+function buildSaleReceiptText(items, total, amountPaid, method, saleId, customer, cashier) {
+    const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
+    const gst = total * 12.5 / 112.5;
+    const preTax = total - gst;
+    function bz(n) { return 'BZ$' + parseFloat(n || 0).toFixed(2); }
+    const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
+    const lines = [
+        'SERVICELL BELIZE',
+        '#7 Douglas Jones, Belize City',
+        'Tel: +501 615-3388',
+        new Date().toLocaleString(),
+        'Served by: ' + _receiptCashierName(cashier),
+        customer ? 'Customer: ' + customer : '',
+        'Receipt #' + (saleId || ''),
+        '--------------------------------',
+        'Item                    Qty  Total'
+    ];
+    (items || []).forEach(function(i) {
+        const qty = i.qty || 1;
+        const lineTotal = bz((i.price || 0) * qty);
+        lines.push(String(i.name || 'Item').slice(0, 24).padEnd(24) + String(qty).padStart(3) + '  ' + lineTotal);
+    });
+    lines.push(
+        '--------------------------------',
+        'Subtotal (excl. GST): ' + bz(preTax),
+        'GST (12.5%): ' + bz(gst),
+        'TOTAL: ' + bz(total),
+        'Paid (' + displayMethod + '): ' + bz(amountPaid)
+    );
+    if (change > 0) lines.push('Change: ' + bz(change));
+    lines.push('', 'Thank you for choosing ServiCell Belize!', 'Prices include GST.');
+    return lines.filter(Boolean).join('\n');
+}
+
+function buildJobReceiptText(j) {
+    j = j || {};
+    function bzDate(d) {
+        if (!d || d === '—') return '—';
+        try { return new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }); }
+        catch (_) { return d; }
+    }
+    function fmtPhone(p) {
+        if (!p) return '—';
+        const c = p.replace(/\D/g, '');
+        return c.length === 7 ? '+501 ' + c.slice(0, 3) + '-' + c.slice(3) : p;
+    }
+    function fmtStatus(s) {
+        return ({ ordered: 'Parts Ordered', received: 'Received', inqueue: 'In Queue',
+            fixing: 'Being Repaired', testing: 'Testing', ready: 'Ready for Pickup' })[s] || s || '—';
+    }
+
+    let items = [];
+    try { items = j.invoiceItems ? JSON.parse(j.invoiceItems) : []; } catch (_) { items = []; }
+    const total = items.reduce(function(s, i) { return s + (parseFloat(i.price || 0) || 0); }, 0);
+    const priorityLabel = (j.priority || 'low').toLowerCase() === 'high' ? 'HIGH — URGENT' : 'LOW — NORMAL';
+    let paymentStatus = 'N/A — Invoice Pending';
+    if (items.length && total > 0) {
+        const p = String(j.payment || 'unpaid').toLowerCase();
+        paymentStatus = p.startsWith('paid') ? 'Paid via ' + (p.includes('card') ? 'Card' : 'Cash') : 'UNPAID';
+    }
+
+    const lines = [
+        'SERVICELL BELIZE',
+        'Device Repair & Services · Belize City',
+        'Tel: +501 615-3388',
+        '',
+        'JOB RECEIPT & INTAKE FORM',
+        'JOB #: ' + (j.id || '—'),
+        'DATE: ' + (j.dateReceived ? bzDate(j.dateReceived) : bzDate(new Date())),
+        'Type: ' + (j.jobType || 'Repair') + ' · Priority: ' + priorityLabel,
+        '',
+        'CUSTOMER',
+        'Name: ' + (j.customerName || 'Walk-in'),
+        'Phone: ' + fmtPhone(j.customerPhone),
+        '',
+        'DEVICE',
+        'Device: ' + (j.device || '—'),
+        'Issue: ' + (j.issue || '—'),
+        'Status: ' + fmtStatus(j.status),
+        (j.dateCompleted ? 'Completed: ' : 'Est. Completion: ') + (j.dateCompleted ? bzDate(j.dateCompleted) : (j.estimatedCompletion || '—')),
+        '',
+        'NOTES',
+        j.notes || 'No additional notes.',
+        '',
+        'COST BREAKDOWN'
+    ];
+    if (items.length) {
+        items.forEach(function(i) {
+            lines.push('• ' + (i.desc || 'Service') + ' — BZ$' + (parseFloat(i.price || 0) || 0).toFixed(2));
+        });
+        lines.push('TOTAL: BZ$' + total.toFixed(2));
+    } else {
+        lines.push('Price To Be Determined');
+        lines.push('Final cost after diagnostic.');
+    }
+    lines.push('Payment Status: ' + paymentStatus);
+    if (j.id) {
+        lines.push('', 'Track your repair:', 'https://servicellbze.github.io/ServiCell/tracker.html?job=' + j.id);
+    }
+    lines.push('', 'Thank you for choosing ServiCell Belize!');
+    return lines.join('\n');
+}
+
+async function shareReceiptText(text, title) {
+    if (!text) {
+        _receiptNotify('Nothing to share', 'err');
+        return false;
+    }
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: title || 'ServiCell Receipt', text: text });
+            _receiptNotify('Shared!', 'ok');
+            if (typeof haptic === 'function') haptic('success');
+            return true;
+        } catch (e) {
+            if (e && e.name === 'AbortError') return false;
+        }
+    }
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            _receiptNotify('Receipt copied — paste into your message app', 'ok');
+            if (typeof haptic === 'function') haptic('light');
+            return true;
+        }
+    } catch (_) {}
+    _receiptNotify('Could not share — try copying manually', 'err');
+    return false;
+}
+
+function _ensureReceiptPreviewModal() {
+    if (document.getElementById('receiptPreviewModal')) return;
+
+    const style = document.createElement('style');
+    style.textContent = `
+.receipt-preview-overlay { display:none; position:fixed; inset:0; z-index:10050; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); align-items:flex-end; justify-content:center; padding:0; }
+.receipt-preview-overlay.open { display:flex; }
+.receipt-preview-sheet { width:100%; max-width:480px; max-height:92vh; background:var(--glass-strong,#fff); border-radius:28px 28px 0 0; box-shadow:0 -8px 40px rgba(0,0,0,0.25); display:flex; flex-direction:column; animation:receiptSlideUp 0.3s ease both; }
+@keyframes receiptSlideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.receipt-preview-head { display:flex; align-items:center; justify-content:space-between; padding:18px 20px 12px; border-bottom:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
+.receipt-preview-head h3 { margin:0; font-size:1rem; font-weight:800; }
+.receipt-preview-close { width:36px; height:36px; border-radius:50%; border:1px solid var(--glass-border,rgba(0,0,0,0.1)); background:transparent; cursor:pointer; font-size:1.1rem; }
+.receipt-preview-body { overflow:auto; padding:16px; background:#f3f4f6; flex:1; -webkit-overflow-scrolling:touch; }
+.receipt-preview-paper { background:#fff; color:#000; margin:0 auto; max-width:320px; padding:12px 14px 20px; box-shadow:0 2px 12px rgba(0,0,0,0.12); border-radius:4px; }
+.receipt-preview-actions { display:flex; gap:10px; padding:14px 20px calc(14px + env(safe-area-inset-bottom)); border-top:1px solid var(--glass-border,rgba(0,0,0,0.08)); }
+.receipt-preview-actions button { flex:1; padding:14px; border-radius:12px; border:none; font-family:inherit; font-size:0.9rem; font-weight:700; cursor:pointer; }
+.receipt-preview-share { background:var(--primary,#2563eb); color:#fff; }
+.receipt-preview-print { background:var(--glass,rgba(0,0,0,0.06)); color:var(--text-main,#111); border:1px solid var(--glass-border,rgba(0,0,0,0.1)) !important; }
+@media (min-width:769px) {
+    .receipt-preview-overlay { align-items:center; padding:24px; }
+    .receipt-preview-sheet { border-radius:20px; max-height:88vh; }
+}`;
+    document.head.appendChild(style);
+
+    const modal = document.createElement('div');
+    modal.id = 'receiptPreviewModal';
+    modal.className = 'receipt-preview-overlay';
+    modal.innerHTML =
+        '<div class="receipt-preview-sheet" role="dialog" aria-labelledby="receiptPreviewTitle">'
+        + '<div class="receipt-preview-head">'
+        + '<h3 id="receiptPreviewTitle">Receipt</h3>'
+        + '<button type="button" class="receipt-preview-close" aria-label="Close">&times;</button>'
+        + '</div>'
+        + '<div class="receipt-preview-body"><div class="receipt-preview-paper" id="receiptPreviewPaper"></div></div>'
+        + '<div class="receipt-preview-actions">'
+        + '<button type="button" class="receipt-preview-share" id="receiptPreviewShareBtn">Share / Copy</button>'
+        + '<button type="button" class="receipt-preview-print" id="receiptPreviewPrintBtn">Print</button>'
+        + '</div></div>';
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) closeReceiptPreview();
+    });
+    modal.querySelector('.receipt-preview-close').addEventListener('click', closeReceiptPreview);
+}
+
+let _receiptPreviewState = null;
+
+function showReceiptPreview(html, plainText, opts) {
+    opts = opts || {};
+    _ensureReceiptPreviewModal();
+    _receiptPreviewState = { html: html, text: plainText || '' };
+
+    const modal = document.getElementById('receiptPreviewModal');
+    const titleEl = document.getElementById('receiptPreviewTitle');
+    const paper = document.getElementById('receiptPreviewPaper');
+    if (titleEl) titleEl.textContent = opts.title || 'Receipt';
+    if (paper) paper.innerHTML = html;
+
+    document.getElementById('receiptPreviewShareBtn').onclick = function() {
+        shareReceiptText(_receiptPreviewState.text, opts.title || 'ServiCell Receipt');
+    };
+    document.getElementById('receiptPreviewPrintBtn').onclick = function() {
+        if (_receiptPreviewState && _receiptPreviewState.html) printHTML(_receiptPreviewState.html);
+    };
+
+    modal.classList.add('open');
+    document.body.classList.add('modal-open');
+}
+
+function closeReceiptPreview() {
+    const modal = document.getElementById('receiptPreviewModal');
+    if (modal) modal.classList.remove('open');
+    if (!document.querySelector('.modal-overlay.open, .paper-modal-overlay.open, .mark-called-modal.open')) {
+        document.body.classList.remove('modal-open');
+    }
+    _receiptPreviewState = null;
+}
+
+function openReceiptPreview(html, plainText, opts) {
+    showReceiptPreview(html, plainText, opts);
+}
+
+window.buildSaleReceiptText = buildSaleReceiptText;
+window.buildJobReceiptText = buildJobReceiptText;
+window.shareReceiptText = shareReceiptText;
+window.showReceiptPreview = showReceiptPreview;
+window.openReceiptPreview = openReceiptPreview;
+window.closeReceiptPreview = closeReceiptPreview;
+window.isMobileReceipt = isMobileReceipt;
 
 // ── A4 / Letter Job Invoice ───────────────────────────────────────────────────
 const A4_STYLES = `
