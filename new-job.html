@@ -44,69 +44,92 @@
         .bg-blob-3 { width:300px;height:300px;background:rgba(245,158,11,0.09);top:50%;left:55%; }
 
         main {
-            max-width: 780px;
+            max-width: 860px;
             margin: 0 auto;
-            padding: calc(56px + var(--space-xl)) var(--space-sm) var(--space-xl);
+            padding: calc(56px + var(--space-lg)) var(--space-sm) var(--space-xl);
             position:relative; z-index:1;
         }
 
         .page-header {
-            margin-bottom: var(--space-lg);
+            margin-bottom: var(--space-md);
             animation: fadeInUp 0.45s ease both;
         }
 
         .page-header h1 {
-            font-size: 1.8rem;
+            font-size: 1.75rem;
             font-weight: var(--font-bold);
-            letter-spacing: -0.5px;
+            letter-spacing: -0.6px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            color: var(--text-main);
         }
 
         .page-header p {
             color: var(--text-dim);
             font-size: 0.92rem;
-            margin-top: 6px;
+            margin-top: 8px;
+            max-width: 60ch;
         }
 
         .card {
             background: var(--glass);
             border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: var(--space-lg);
-            box-shadow: var(--shadow-md);
+            border-radius: 18px;
+            padding: var(--space-md) var(--space-lg);
+            box-shadow: var(--shadow-sm);
             margin-bottom: var(--space-sm);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            position: relative;
+            transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
         }
 
-        .card:nth-child(1) {
-            animation: fadeInUp 0.45s ease 0.05s both;
+        .card:hover {
+            border-color: rgba(var(--primary-rgb), 0.25);
+            box-shadow: var(--shadow-md);
         }
 
-        .card:nth-child(2) {
-            animation: fadeInUp 0.45s ease 0.12s both;
+        .card:focus-within {
+            border-color: rgba(var(--primary-rgb), 0.4);
+            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.08), var(--shadow-md);
         }
 
-        .card:nth-child(3) {
-            animation: fadeInUp 0.45s ease 0.19s both;
-        }
+        .card:nth-child(1) { animation: fadeInUp 0.45s ease 0.05s both; }
+        .card:nth-child(2) { animation: fadeInUp 0.45s ease 0.12s both; }
+        .card:nth-child(3) { animation: fadeInUp 0.45s ease 0.19s both; }
+        .card:nth-child(4) { animation: fadeInUp 0.45s ease 0.26s both; }
 
         .card-header {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             margin-bottom: var(--space-md);
-            padding-bottom: var(--space-xs);
+            padding-bottom: var(--space-sm);
             border-bottom: 1px solid var(--glass-border);
+        }
+
+        .card-step {
+            width: 28px;
+            height: 28px;
+            border-radius: 9px;
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.35);
         }
 
         .card-icon {
             width: 34px;
             height: 34px;
             border-radius: var(--radius-sm);
-            background: rgba(var(--primary-rgb), 0.08);
+            background: rgba(var(--primary-rgb), 0.1);
+            color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -115,16 +138,17 @@
         }
 
         .card-title {
-            font-size: 0.88rem;
+            font-size: 0.98rem;
             font-weight: var(--font-bold);
             color: var(--text-main);
-            letter-spacing: -0.1px;
+            letter-spacing: -0.2px;
         }
 
         .card-subtitle {
             font-size: 0.75rem;
             color: var(--text-light);
             margin-left: auto;
+            text-align: right;
             font-style: italic;
         }
 
@@ -258,7 +282,7 @@
             gap: 6px;
             padding: 8px 16px;
             border-radius: var(--radius-full);
-            border: 1.5px solid rgba(37, 99, 235, 0.15);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.15);
             background: var(--white-alt);
             font-size: 0.83rem;
             font-weight: 600;
@@ -277,43 +301,31 @@
 
         .status-pill input[type="radio"]:checked+label {
             color: #fff;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
             transform: translateY(-1px);
         }
 
-        .status-pill.ordered input:checked+label {
-            background: #7c3aed;
-            border-color: #7c3aed;
-            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
-        }
-
         .status-pill.received input:checked+label {
-            background: #2563eb;
-            border-color: #2563eb;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-        }
-
-        .status-pill.inqueue input:checked+label {
-            background: #0891b2;
-            border-color: #0891b2;
-            box-shadow: 0 4px 14px rgba(8, 145, 178, 0.3);
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
         }
 
         .status-pill.fixing input:checked+label {
-            background: #d97706;
-            border-color: #d97706;
-            box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+            background: var(--danger);
+            border-color: var(--danger);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
         }
 
         .status-pill.testing input:checked+label {
-            background: #059669;
-            border-color: #059669;
-            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+            background: var(--warning);
+            border-color: var(--warning);
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
         }
 
         .status-pill.ready input:checked+label {
-            background: #10b981;
-            border-color: #10b981;
+            background: var(--success);
+            border-color: var(--success);
             box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
         }
 
@@ -326,7 +338,7 @@
 
         .btn-submit {
             width: 100%;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 1.05rem;
             border: none;
@@ -340,12 +352,13 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            box-shadow: 0 8px 22px rgba(var(--primary-rgb), 0.3);
         }
 
         .btn-submit:hover:not(:disabled) {
-            background: var(--primary-dark);
+            filter: brightness(1.05);
             transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 12px 28px rgba(var(--primary-rgb), 0.4);
         }
 
         .btn-submit:active:not(:disabled) {
@@ -536,7 +549,7 @@
             gap: 6px;
             padding: 8px 16px;
             border-radius: var(--radius-full);
-            border: 1.5px solid rgba(124, 58, 237, 0.18);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.18);
             background: var(--white-alt);
             font-size: 0.83rem;
             font-weight: 600;
@@ -547,30 +560,32 @@
         }
 
         .job-type-pill label:hover {
-            border-color: #7c3aed;
-            color: #7c3aed;
-            background: rgba(124, 58, 237, 0.06);
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(var(--primary-rgb), 0.06);
             transform: translateY(-1px);
         }
 
         .job-type-pill input[type="radio"]:checked+label {
-            background: #7c3aed;
-            border-color: #7c3aed;
+            background: var(--primary);
+            border-color: var(--primary);
             color: #fff;
-            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
             transform: translateY(-1px);
         }
 
         /* Priority override styles */
         #pr-low:checked+label {
-            background: #1d4ed8 !important;
-            border-color: #3b82f6 !important;
-            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35) !important;
         }
 
         #pr-high:checked+label {
-            background: #b91c1c !important;
-            border-color: #ef4444 !important;
+            background: var(--danger) !important;
+            border-color: var(--danger) !important;
+            color: #fff !important;
             box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important;
         }
 
@@ -578,7 +593,7 @@
             width: 100%;
             padding: 0.75rem 1rem;
             border-radius: var(--radius-sm);
-            border: 1.5px solid rgba(124, 58, 237, 0.2);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.2);
             background: var(--white-alt);
             font-family: var(--font-family);
             font-size: 0.92rem;
@@ -594,8 +609,8 @@
 
         .other-type-input:focus {
             outline: none;
-            border-color: #7c3aed;
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(var(--primary-rgb), 0.1);
         }
 
         /* ── Print Invoice ── */
@@ -636,8 +651,8 @@
             gap: 6px;
             padding: 10px 22px;
             background: transparent;
-            color: #7c3aed;
-            border: 1.5px solid rgba(124, 58, 237, 0.35);
+            color: var(--primary);
+            border: 1.5px solid rgba(var(--primary-rgb), 0.35);
             border-radius: var(--radius-full);
             font-family: var(--font-family);
             font-weight: 600;
@@ -648,8 +663,8 @@
         }
 
         .btn-print:hover {
-            background: rgba(124, 58, 237, 0.08);
-            border-color: #7c3aed;
+            background: rgba(var(--primary-rgb), 0.08);
+            border-color: var(--primary);
         }
 
         /* Phone Input */
@@ -665,13 +680,13 @@
             left: 10px;
             top: 50%;
             transform: translateY(-40%);
-            background: rgba(37, 99, 235, 0.1);
+            background: rgba(var(--primary-rgb), 0.1);
             color: var(--primary);
             font-weight: 700;
             font-size: 0.82rem;
             padding: 5px 8px;
             border-radius: 8px;
-            border: 1px solid rgba(37, 99, 235, 0.15);
+            border: 1px solid rgba(var(--primary-rgb), 0.15);
             pointer-events: none;
             user-select: none;
             z-index: 5;
@@ -966,6 +981,7 @@
             <!-- Card 1: Repair ID -->
             <div class="card">
                 <div class="card-header">
+                    <div class="card-step">1</div>
                     <div class="card-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
                     </div>
@@ -985,6 +1001,7 @@
             <!-- Card 2: Customer Info -->
             <div class="card">
                 <div class="card-header">
+                    <div class="card-step">2</div>
                     <div class="card-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
@@ -1020,6 +1037,7 @@
             <!-- Card 3: Device & Status -->
             <div class="card">
                 <div class="card-header">
+                    <div class="card-step">3</div>
                     <div class="card-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
                     </div>
@@ -1066,7 +1084,7 @@
                     <div class="job-type-pills">
                         <div class="job-type-pill">
                             <input type="radio" name="priority" id="pr-low" value="low" checked>
-                            <label for="pr-low" style="border-color:rgba(59,130,246,0.2);">Low — Normal</label>
+                            <label for="pr-low" style="border-color:rgba(var(--primary-rgb),0.2);">Low — Normal</label>
                         </div>
                         <div class="job-type-pill">
                             <input type="radio" name="priority" id="pr-high" value="high">
@@ -1120,11 +1138,12 @@
             <!-- Card 4: Device Inspection Checklist -->
             <div class="card">
                 <div class="card-header">
+                    <div class="card-step">4</div>
                     <div class="card-icon">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                     </div>
                     <span class="card-title">Device Inspection</span>
-                    <span class="card-subtitle">Note any accessories the customer brought in · Front &amp; back photos required</span>
+                    <span class="card-subtitle">Accessories &amp; required photos</span>
                 </div>
 
                 <div class="checklist-item">
