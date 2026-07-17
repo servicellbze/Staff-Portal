@@ -191,7 +191,7 @@ function buildJobReceiptHTML(j, opts) {
     <div class="pi-meta-row">
         <strong>Type: ${_esc(j.jobType||'Repair')}</strong>
         <strong>Priority: ${_esc(priorityLabel)}</strong>
-        <strong>Technician: ${_esc(j.technician||'—')}</strong>
+        <strong>Issued By: ${_esc(_jobIssuedByName(j))}</strong>
     </div>
     <hr class="pi-dash">
     <div class="pi-section">Customer Information</div>
@@ -378,9 +378,13 @@ function resolveStaffDisplayName(username) {
         if (sessionName && sessionUser.toLowerCase() === lower) return sessionName;
     } catch (_) {}
     if (STAFF_DISPLAY_NAMES[lower]) return STAFF_DISPLAY_NAMES[lower];
-    return key.replace(/_/g, ' ');
+    return key.replace(/^(Cashier_|Manager_|Technician_)/i, '').replace(/_/g, ' ') || key;
 }
 window.resolveStaffDisplayName = resolveStaffDisplayName;
+
+function _jobIssuedByName(j) {
+    return resolveStaffDisplayName(j && j.technician);
+}
 
 function buildPayoutSlipHTML(p, loggedByUser) {
     const amount     = parseFloat(p.amount) || 0;
@@ -808,7 +812,7 @@ function buildJobA4Text(j) {
         'DATE RECEIVED: ' + receivedDate,
         'Job Type: ' + (j.jobType || 'Repair'),
         'Priority: ' + priorityLabel,
-        'Technician: ' + (j.technician || '—'),
+        'Issued By: ' + _jobIssuedByName(j),
         '',
         'CUSTOMER',
         'Name: ' + (j.customerName || 'Walk-in'),
@@ -1812,7 +1816,7 @@ function buildJobA4HTML(j, opts) {
 <div class="pi-meta-row">
     <span><span class="pi-k">Job Type</span><span class="pi-v">${_esc(j.jobType || 'Repair')}</span></span>
     <span><span class="pi-k">Priority</span><span class="pi-v">${_esc(priorityLabel)}</span></span>
-    <span><span class="pi-k">Technician</span><span class="pi-v">${_esc(j.technician || '—')}</span></span>
+    <span><span class="pi-k">Issued By</span><span class="pi-v">${_esc(_jobIssuedByName(j))}</span></span>
 </div>
 <div class="pi-section">Customer Information</div>
 <div class="pi-grid">
