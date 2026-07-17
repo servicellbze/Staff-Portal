@@ -235,16 +235,7 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
     const preTax  = total - gst;
     function bz(n) { return 'BZ$' + parseFloat(n||0).toFixed(2); }
     
-    // Map technical names to friendly first names
-    const nameMap = {
-        'Cashier_Chee': 'Ericson',
-        'Cashier_Coleman': 'Kiana',
-        'Technician_Bailey': 'Kareem',
-        'Technician_Bat': 'Bat',
-        'Manager_Chee': 'Eric'
-    };
-    
-    const friendlyName = cashier ? (nameMap[cashier] || cashier.replace(/^(Cashier_|Manager_|Technician_)/i, '')) : 'Staff';
+    const friendlyName = resolveStaffDisplayName(cashier) || 'Staff';
     
     // Capitalize payment method for professional display
     const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
@@ -361,26 +352,45 @@ function formatPayoutSlipNo(payoutId) {
 }
 
 const STAFF_DISPLAY_NAMES = {
-    cashier_chee:     'Ericson',
-    cashier_coleman:  'Kiana',
-    manager_chee:     'Eric',
-    technician_bailey:'Kareem',
-    technician_bat:   'Bat'
+    cashier_chee:      'Ericson C.',
+    cashier_coleman:   'Kiana C.',
+    manager_chee:      'Eric C.',
+    technician_bailey: 'Kareem B.',
+    technician_bat:    'Bat'
 };
+
+function formatProfessionalStaffName(name) {
+    if (!name) return '';
+    const trimmed = String(name).trim();
+    if (!trimmed) return '';
+    if (/^[A-Za-z]+\s+[A-Za-z]\.$/.test(trimmed)) return trimmed;
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+        return parts[0] + ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.';
+    }
+    return parts[0];
+}
 
 function resolveStaffDisplayName(username) {
     if (!username) return '—';
     const key = String(username).trim();
     const lower = key.toLowerCase();
+    if (STAFF_DISPLAY_NAMES[lower]) return STAFF_DISPLAY_NAMES[lower];
     try {
         const sessionUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
         const sessionName = localStorage.getItem('scDisplayName') || sessionStorage.getItem('scDisplayName') || '';
-        if (sessionName && sessionUser.toLowerCase() === lower) return sessionName;
+        if (sessionName && sessionUser.toLowerCase() === lower) {
+            return formatProfessionalStaffName(sessionName) || sessionName;
+        }
     } catch (_) {}
-    if (STAFF_DISPLAY_NAMES[lower]) return STAFF_DISPLAY_NAMES[lower];
-    return key.replace(/^(Cashier_|Manager_|Technician_)/i, '').replace(/_/g, ' ') || key;
+    const stripped = key.replace(/^(Cashier_|Manager_|Technician_)/i, '').replace(/_/g, ' ').trim();
+    if (stripped && stripped !== key) {
+        return stripped.charAt(0).toUpperCase() + stripped.slice(1).toLowerCase();
+    }
+    return formatProfessionalStaffName(key) || key;
 }
 window.resolveStaffDisplayName = resolveStaffDisplayName;
+window.formatProfessionalStaffName = formatProfessionalStaffName;
 
 function _jobIssuedByName(j) {
     return resolveStaffDisplayName(j && j.technician);
@@ -641,14 +651,7 @@ function _receiptNotify(msg, type) {
 }
 
 function _receiptCashierName(cashier) {
-    const nameMap = {
-        Cashier_Chee: 'Ericson',
-        Cashier_Coleman: 'Kiana',
-        Technician_Bailey: 'Kareem',
-        Technician_Bat: 'Bat',
-        Manager_Chee: 'Eric'
-    };
-    return cashier ? (nameMap[cashier] || cashier.replace(/^(Cashier_|Manager_|Technician_)/i, '')) : 'Staff';
+    return resolveStaffDisplayName(cashier) || 'Staff';
 }
 
 function buildSaleReceiptText(items, total, amountPaid, method, saleId, customer, cashier) {
