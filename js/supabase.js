@@ -907,6 +907,60 @@ const PushWorker = {
   }
 };
 
+// ── STAFF BROADCASTS ───────────────────────────────────────────────────────────
+const Broadcast = {
+  _map(b) {
+    return {
+      id:        b.id,
+      title:     b.title,
+      message:   b.message || '',
+      variant:   b.variant || 'info',
+      isActive:  b.is_active,
+      createdBy: b.created_by,
+      createdAt: b.created_at
+    };
+  },
+
+  async getActive() {
+    const rows = await sbGet('portal_broadcasts', 'is_active=eq.true&order=created_at.desc&limit=1');
+    if (!rows.length) return { broadcast: null };
+    return { broadcast: Broadcast._map(rows[0]) };
+  },
+
+  async publish(title, message, variant, createdBy) {
+    const t = String(title || '').trim();
+    if (!t) return { success: false, error: 'Title is required' };
+    const v = ['info', 'warning', 'urgent'].includes(variant) ? variant : 'info';
+    await sbPatch('portal_broadcasts', 'is_active=eq.true', { is_active: false }).catch(() => {});
+    const rows = await sbPost('portal_broadcasts', {
+      title:       t,
+      message:     String(message || '').trim(),
+      variant:     v,
+      is_active:   true,
+      created_by:  createdBy || 'Unknown'
+    }, 'return=representation');
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    await Audit.log('BROADCAST_LIVE', `${createdBy || 'Unknown'} | ${t}`);
+    return { success: true, broadcast: Broadcast._map(row) };
+  },
+
+  async deactivate(id) {
+    if (id != null && id !== '') {
+      await sbPatch('portal_broadcasts', `id=eq.${encodeURIComponent(id)}`, { is_active: false });
+    } else {
+      await sbPatch('portal_broadcasts', 'is_active=eq.true', { is_active: false }).catch(() => {});
+    }
+    return { success: true };
+  },
+
+  async list() {
+    const rows = await sbGet('portal_broadcasts', 'order=created_at.desc&limit=25');
+    return { broadcasts: rows.map(Broadcast._map) };
+  }
+};
+
+window.Broadcast = Broadcast;
+
 // ── AUDIT ──────────────────────────────────────────────────────────────────────
 const Audit = {
   async log(event, actor) {

@@ -223,6 +223,10 @@ const ComponentLoader = {
 
         this.attachNavListeners();
         if (typeof initDataIcons === 'function') initDataIcons(placeholder);
+
+        if (username && typeof loadStaffBanner === 'function') {
+            loadStaffBanner();
+        }
     },
 
     async loadFooter() {

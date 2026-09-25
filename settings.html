@@ -1559,6 +1559,45 @@
             </div>
         </div>
 
+        <!-- -- Manager Only: Broadcast -- -->
+        <div class="settings-card" id="broadcastCard" style="display:none;">
+            <div class="card-header">
+                <h2 data-icon="bell">Broadcast to All Staff</h2>
+            </div>
+            <div class="card-body">
+                <p style="font-size:0.82rem;color:var(--text-dim);margin-bottom:14px;">
+                    Publish a short message that appears as a slim banner on every page for all logged-in staff. Only one message can be live at a time.
+                </p>
+                <div id="broadcastStatus" style="font-size:0.78rem;color:var(--text-dim);margin-bottom:12px;padding:10px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(var(--primary-rgb),0.04);">
+                    Checking broadcast status…
+                </div>
+                <div class="input-group" style="margin-bottom:12px;">
+                    <label for="broadcastTitle">Title *</label>
+                    <input type="text" id="broadcastTitle" maxlength="120" placeholder="e.g. System Maintenance Underway">
+                </div>
+                <div class="input-group" style="margin-bottom:12px;">
+                    <label for="broadcastMessage">Message (optional)</label>
+                    <textarea id="broadcastMessage" rows="2" maxlength="500" placeholder="e.g. Expect delays while we update the system." style="resize:vertical;min-height:56px;"></textarea>
+                </div>
+                <div class="input-group" style="margin-bottom:16px;">
+                    <label for="broadcastVariant">Priority</label>
+                    <select id="broadcastVariant" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);font-family:inherit;">
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                    <button type="button" class="change-password-btn" id="broadcastGoLiveBtn" onclick="publishStaffBroadcast()" data-icon="bolt">
+                        Go Live
+                    </button>
+                    <button type="button" class="clear-btn" id="broadcastTurnOffBtn" onclick="deactivateStaffBroadcast()" data-icon="x">
+                        Turn Off
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- -- Manager Only: Staff Access -- -->
         <div class="settings-card" id="staffAccessCard" style="display:none;">
             <div class="card-header">
@@ -1685,6 +1724,7 @@
 
     <div id="footer-placeholder"></div>
     <script src="js/icons.js"></script>
+    <script src="js/staff-banner.js"></script>
 <script src="js/components.js"></script>
 
     <script>
@@ -2325,9 +2365,11 @@
                 document.getElementById('autoPrintToggle').checked = localStorage.getItem('scAutoPrintReceipt') === '1';
             }
 
-            // -- Staff Access (manager only) -----------------------------------
+            // -- Broadcast + Staff Access (manager only) -----------------------
             if (_role === 'manager') {
+                document.getElementById('broadcastCard').style.display = 'block';
                 document.getElementById('staffAccessCard').style.display = 'block';
+                initBroadcastSettings();
                 loadStaffList();
             }
 
@@ -2355,6 +2397,92 @@
     </script>
 
     <script>
+    // -- Staff broadcast (manager) ---------------------------------------------
+    let _activeBroadcastId = null;
+
+    function formatBroadcastWhen(iso) {
+        if (!iso) return '';
+        try {
+            return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+        } catch (e) { return ''; }
+    }
+
+    function renderBroadcastStatus(active) {
+        const el = document.getElementById('broadcastStatus');
+        const offBtn = document.getElementById('broadcastTurnOffBtn');
+        if (!el) return;
+        if (!active) {
+            _activeBroadcastId = null;
+            el.innerHTML = 'No broadcast is live. Fill in the form and click <strong>Go Live</strong>.';
+            if (offBtn) offBtn.disabled = true;
+            return;
+        }
+        _activeBroadcastId = active.id;
+        const when = formatBroadcastWhen(active.createdAt);
+        el.innerHTML = '<strong style="color:var(--text-main);">Live:</strong> ' + escapeHtml(active.title)
+            + (active.message ? ' — ' + escapeHtml(active.message) : '')
+            + '<br><span style="opacity:0.85;">' + escapeHtml(active.variant)
+            + ' · by ' + escapeHtml(active.createdBy || 'manager')
+            + (when ? ' · ' + when : '') + '</span>';
+        if (offBtn) offBtn.disabled = false;
+        document.getElementById('broadcastTitle').value = active.title || '';
+        document.getElementById('broadcastMessage').value = active.message || '';
+        document.getElementById('broadcastVariant').value = active.variant || 'info';
+    }
+
+    async function initBroadcastSettings() {
+        await refreshBroadcastStatus();
+    }
+
+    async function refreshBroadcastStatus() {
+        const el = document.getElementById('broadcastStatus');
+        if (!el || typeof Broadcast === 'undefined') return;
+        try {
+            const res = await Broadcast.getActive();
+            renderBroadcastStatus(res.broadcast);
+        } catch (e) {
+            el.innerHTML = '<span style="color:#ef4444;">Could not load broadcast. Run portal_broadcasts.sql in Supabase if this is the first time.</span>';
+        }
+    }
+
+    async function publishStaffBroadcast() {
+        const title = document.getElementById('broadcastTitle').value.trim();
+        const message = document.getElementById('broadcastMessage').value.trim();
+        const variant = document.getElementById('broadcastVariant').value;
+        const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
+        if (!title) { showStaffToast('Title is required', 'err'); return; }
+        const btn = document.getElementById('broadcastGoLiveBtn');
+        btn.disabled = true;
+        try {
+            const res = await Broadcast.publish(title, message, variant, user);
+            if (!res.success) throw new Error(res.error || 'Publish failed');
+            localStorage.removeItem('sc_broadcast_dismissed');
+            sessionStorage.removeItem('sc_broadcast_toast_shown');
+            renderBroadcastStatus(res.broadcast);
+            if (typeof staffBannerRefresh === 'function') await staffBannerRefresh();
+            showStaffToast('Broadcast is live', 'ok');
+        } catch (e) {
+            showStaffToast(e.message || 'Could not publish', 'err');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function deactivateStaffBroadcast() {
+        const btn = document.getElementById('broadcastTurnOffBtn');
+        btn.disabled = true;
+        try {
+            await Broadcast.deactivate(_activeBroadcastId);
+            renderBroadcastStatus(null);
+            if (typeof staffBannerRefresh === 'function') await staffBannerRefresh();
+            showStaffToast('Broadcast turned off', 'ok');
+        } catch (e) {
+            showStaffToast(e.message || 'Could not turn off', 'err');
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
     // -- Staff Access ----------------------------------------------------------
     // SCRIPT_URL is provided globally by js/api.js
     let _pendingRevoke = null;
