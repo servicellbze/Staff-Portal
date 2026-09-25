@@ -1169,7 +1169,7 @@
                     </div>
                 </div>
 
-                <!-- Sound picker ? shown when sound is on -->
+                <!-- Sound picker — shown when sound is on -->
                 <div id="soundPickerPanel" style="display:none; padding-top:12px; border-top:1px solid var(--glass-border); margin-top:4px;">
                     <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:10px;">Sound Style</div>
                     <div style="display:flex;flex-wrap:wrap;gap:8px;" id="soundPills"></div>
@@ -1200,7 +1200,7 @@
                     </div>
                 </div>
 
-                <!-- Haptics ? Android only, hidden on other platforms -->
+                <!-- Haptics — Android only, hidden on other platforms -->
                 <div class="setting-row" id="hapticsRow" style="display:none;">
                     <div class="setting-info">
                         <div class="setting-label">Haptic Feedback</div>
@@ -1236,28 +1236,28 @@
                         </div>
                         <div class="changelog-date">April 21, 2026</div>
                         <ul class="changelog-changes">
-                            <li>Job claim system ? technicians and managers can claim jobs, locking them to a single owner</li>
-                            <li>Manager override ? managers can reassign or override any claimed job</li>
-                            <li>Claim lock on edit/delete ? only the claimer or a manager can modify a claimed job</li>
+                            <li>Job claim system — technicians and managers can claim jobs, locking them to a single owner</li>
+                            <li>Manager override — managers can reassign or override any claimed job</li>
+                            <li>Claim lock on edit/delete — only the claimer or a manager can modify a claimed job</li>
                             <li>Cashiers restricted to Ready and Picked Up statuses in edit modal</li>
                             <li>Technician performance in statistics now attributed to the claimer, not the logger</li>
-                            <li>Revenue per technician added to statistics ? linked via job claim and sale</li>
-                            <li>Bonus badges (Most Jobs, Top Revenue) ? awarded only to clear solo winners</li>
-                            <li>Unclaimed stale jobs alert ? notification fires after 3 days with no claimer</li>
-                            <li>Inventory accuracy alert ? warns when no stock movements in 7+ days or discrepancies detected</li>
+                            <li>Revenue per technician added to statistics — linked via job claim and sale</li>
+                            <li>Bonus badges (Most Jobs, Top Revenue) — awarded only to clear solo winners</li>
+                            <li>Unclaimed stale jobs alert — notification fires after 3 days with no claimer</li>
+                            <li>Inventory accuracy alert — warns when no stock movements in 7+ days or discrepancies detected</li>
                             <li>Technicians can add photos to existing jobs from the edit modal</li>
-                            <li>Structured photo intake modal ? Front, Back, Accessories slots with required validation</li>
-                            <li>Webcam capture ? live camera stream with multi-camera selector for external webcams</li>
-                            <li>Checklist redefined ? now covers SIM Tray, SIM Card, Case, Charger (accessories only)</li>
-                            <li>Checklist logic inverted ? unchecked = ? present, checked = ? missing/noted</li>
+                            <li>Structured photo intake modal — Front, Back, Accessories slots with required validation</li>
+                            <li>Webcam capture — live camera stream with multi-camera selector for external webcams</li>
+                            <li>Checklist redefined — now covers SIM Tray, SIM Card, Case, Charger (accessories only)</li>
+                            <li>Checklist logic inverted — unchecked = not present, checked = missing/noted</li>
                             <li>Old jobs show gray dash on checklist to avoid confusion</li>
-                            <li>Merlot theme redesigned ? deep burgundy with terracotta accents</li>
-                            <li>Theme transitions ? smooth crossfade when switching themes</li>
-                            <li>Service Policy modal in footer ? loads policy page in-app without leaving</li>
-                            <li>Print report expanded ? includes technician performance, cashier performance, job status breakdown</li>
+                            <li>Merlot theme redesigned — deep burgundy with terracotta accents</li>
+                            <li>Theme transitions — smooth crossfade when switching themes</li>
+                            <li>Service Policy modal in footer — loads policy page in-app without leaving</li>
+                            <li>Print report expanded — includes technician performance, cashier performance, job status breakdown</li>
                             <li>EOD and sale receipts improved for thermal printer visibility</li>
-                            <li>Universal scroll lock guard ? prevents page getting stuck after modal close</li>
-                            <li>Sales page performance ? removed all backdrop-filter, debounced search, lazy job loading</li>
+                            <li>Universal scroll lock guard — prevents page getting stuck after modal close</li>
+                            <li>Sales page performance — removed all backdrop-filter, debounced search, lazy job loading</li>
                         </ul>
                     </div>
 
@@ -1269,19 +1269,19 @@
                         <div class="changelog-date">April 13, 2026</div>
                         <ul class="changelog-changes">
                             <li>Mandatory device inspection checklist on every new job (screen, water damage, body, port, camera + custom)</li>
-                            <li>Inspection photos upload to Google Drive ? organised per job in ServiCell Inspections folder</li>
+                            <li>Inspection photos upload to Supabase Storage — organised per job in the repair-photos bucket</li>
                             <li>Client-side image compression before upload (max 1200px, ~80% quality)</li>
                             <li>Inspection checklist and photos visible in job view modal with full-screen lightbox</li>
                             <li>Swipe between inspection photos on mobile</li>
                             <li>Photos Pending indicator when images are still uploading</li>
                             <li>A4/Letter invoice template restored with IBM Plex Mono styling and inspection section</li>
-                            <li>Login rate limiting ? 3 attempts per user, 20-minute lockout</li>
+                            <li>Login rate limiting — 3 attempts per user, 20-minute lockout</li>
                             <li>GST (12.5%) breakdown on sales receipts and EOD report</li>
                             <li>Print receipt button added to sale view modal</li>
                             <li>All receipt templates centralised in js/receipt.js</li>
-                            <li>QZ Tray cash drawer integration ? kicks on every receipt print</li>
+                            <li>QZ Tray cash drawer integration — kicks on every receipt print</li>
                             <li>Open Drawer button and F9 keybind on sales page (desktop only)</li>
-                            <li>Performance optimisations ? perf.css removes backdrop-filter on low-end devices</li>
+                            <li>Performance optimisations — perf.css removes backdrop-filter on low-end devices</li>
                             <li>Offline banner repositioned to bottom on mobile</li>
                             <li>Pagination always visible regardless of item count</li>
                             <li>Edit modals no longer dismiss on accidental outside tap</li>
@@ -1295,9 +1295,9 @@
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
-                            <li>Fixed missing closing brace in updateAbandonedJobs ? GAS now deploys correctly</li>
-                            <li>Fixed isRev undefined in renderSales ? sale rows now render correctly</li>
-                            <li>Removed cash drawer integration ? receipt printing still works</li>
+                            <li>Fixed missing closing brace in updateAbandonedJobs — GAS now deploys correctly</li>
+                            <li>Fixed isRev undefined in renderSales — sale rows now render correctly</li>
+                            <li>Removed cash drawer integration — receipt printing still works</li>
                             <li>72mm receipt and EOD print layout fixed for thermal printers</li>
                             <li>Settings Sales card now visible without requiring re-login</li>
                         </ul>
@@ -1313,7 +1313,7 @@
                             <li>Settings Sales card now visible for cashier/manager without requiring re-login</li>
                             <li>Technicians added to inventory read-only access</li>
                             <li>Cashiers temporarily granted delete access for inventory cleanup</li>
-                            <li>Changelog entries now collapsible ? legacy versions collapsed by default</li>
+                            <li>Changelog entries now collapsible — legacy versions collapsed by default</li>
                         </ul>
                     </div>
 
@@ -1339,9 +1339,9 @@
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
-                            <li>Sales page (payouts.html) ? full cashier workspace: sales, payouts, bills, end of day</li>
+                            <li>Sales page (payouts.html) — full cashier workspace: sales, payouts, bills, end of day</li>
                             <li>GAS backend: DailySales, Payouts, ActiveBills, DayClose sheets + all CRUD functions</li>
-                            <li>Job pickup payment flow ? links current-jobs to sales</li>
+                            <li>Job pickup payment flow — links current-jobs to sales</li>
                             <li>Shift-aware EOD with drawer variance, short-cashier manager alert, and print report</li>
                             <li>Bill/tab system with partial settlement routed as normal sales</li>
                         </ul>
@@ -1354,8 +1354,8 @@
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
-                            <li>Fixed cross-device notification delivery ? each user now gets their own copy</li>
-                            <li>Fixed bell sync ? SCRIPT_URL now always available on all pages</li>
+                            <li>Fixed cross-device notification delivery — each user now gets their own copy</li>
+                            <li>Fixed bell sync — SCRIPT_URL now always available on all pages</li>
                             <li>Push subscription now uses correct request format (no CORS issues)</li>
                         </ul>
                     </div>
@@ -1367,7 +1367,7 @@
                         </div>
                         <div class="changelog-date">April 8, 2026</div>
                         <ul class="changelog-changes">
-                            <li>Fixed push subscription CORS issue ? subscriptions now save correctly</li>
+                            <li>Fixed push subscription CORS issue — subscriptions now save correctly</li>
                             <li>Background push notifications fully working via Cloudflare Worker</li>
                             <li>Notifications delivered to closed app on all subscribed devices</li>
                         </ul>
@@ -1386,7 +1386,7 @@
                             <li>Prevented zoom-in on mobile across all pages</li>
                             <li>Fixed long-press link preview on nav buttons</li>
                             <li>Inventory scroll performance optimized</li>
-                            <li>Stale job alerts ? notifies all roles after 3 days of inactivity</li>
+                            <li>Stale job alerts — notifies all roles after 3 days of inactivity</li>
                             <li>Nav panels now mutually exclusive (one closes when another opens)</li>
                             <li>Account dropdown fixed on mobile (no longer goes off-screen)</li>
                             <li>Password visibility toggle improved with SVG icons</li>
@@ -1400,7 +1400,7 @@
                         </div>
                         <div class="changelog-date">April 7, 2026</div>
                         <ul class="changelog-changes">
-                            <li>Inventory page fully built ? parts, accessories, consumables</li>
+                            <li>Inventory page fully built — parts, accessories, consumables</li>
                             <li>Barcode scanner support (USB + camera)</li>
                             <li>Stock adjustments with full movement history</li>
                             <li>Low stock and out-of-stock alerts to manager</li>
@@ -1419,7 +1419,7 @@
                         <ul class="changelog-changes">
                             <li>In-app notification bell with unread badge and 7-day auto-cleanup</li>
                             <li>Mobile nav redesigned with icon grid layout</li>
-                            <li>Special Orders: view, edit, delete modals ? manager-only delete</li>
+                            <li>Special Orders: view, edit, delete modals — manager-only delete</li>
                             <li>Special Orders: Show/Hide Closed filter</li>
                             <li>Haptic feedback on Android (Settings toggle)</li>
                             <li>Offline mode with cached data fallback and auto-reload on reconnect</li>
@@ -1535,19 +1535,19 @@
                 </div>
                 <div class="about-row">
                     <span class="about-key">Logged in as</span>
-                    <span class="about-val" id="aboutUser">?</span>
+                    <span class="about-val" id="aboutUser">—</span>
                 </div>
                 <div class="about-row">
                     <span class="about-key">Role</span>
-                    <span class="about-val" id="aboutRole">?</span>
+                    <span class="about-val" id="aboutRole">—</span>
                 </div>
                 <div class="about-row">
                     <span class="about-key">Last data sync</span>
-                    <span class="about-val" id="aboutSync">?</span>
+                    <span class="about-val" id="aboutSync">—</span>
                 </div>
                 <div style="margin-top:20px;padding:14px 16px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(var(--primary-rgb),0.04);font-size:0.75rem;line-height:1.7;color:var(--text-dim);">
-                    <div style="font-weight:800;color:var(--text-main);margin-bottom:6px;font-size:0.8rem;">? 2026 ServiCell Belize</div>
-                    This portal was built with care for the ServiCell team. Please keep it within the family ? don't share your credentials or distribute the app outside of work.<br><br>
+                    <div style="font-weight:800;color:var(--text-main);margin-bottom:6px;font-size:0.8rem;">© 2026 ServiCell Belize</div>
+                    This portal was built with care for the ServiCell team. Please keep it within the family — don't share your credentials or distribute the app outside of work.<br><br>
                     Built for the people who keep the shop running.
                 </div>
                 <button class="clear-btn" onclick="clearCache()" data-icon="trash">
@@ -1630,13 +1630,13 @@
                         </div>
                         <div class="strength-text" id="strengthText"></div>
                         <div class="password-requirements">
-                            <div class="req-item" id="req-length"><span class="req-icon">?</span><span>At least 8
+                            <div class="req-item" id="req-length"><span class="req-icon">○</span><span>At least 8
                                     characters</span></div>
-                            <div class="req-item" id="req-upper"><span class="req-icon">?</span><span>One uppercase
+                            <div class="req-item" id="req-upper"><span class="req-icon">○</span><span>One uppercase
                                     letter</span></div>
-                            <div class="req-item" id="req-lower"><span class="req-icon">?</span><span>One lowercase
+                            <div class="req-item" id="req-lower"><span class="req-icon">○</span><span>One lowercase
                                     letter</span></div>
-                            <div class="req-item" id="req-number"><span class="req-icon">?</span><span>One number</span>
+                            <div class="req-item" id="req-number"><span class="req-icon">○</span><span>One number</span>
                             </div>
                         </div>
                     </div>
@@ -1814,20 +1814,24 @@
 
         function saveCompactMode() {
             const on = document.getElementById('compactToggle').checked;
-            localStorage.setItem('scCompact', on ? '1' : '0');
+            localStorage.setItem('scCompact', on 
+ ? '1' : '0');
             applyCompact(on);
             document.getElementById('compactNote').textContent =
-                on ? 'Compact mode is active across all pages.' : '';
+                on 
+ ? 'Compact mode is active across all pages.' : '';
         }
 
         function saveHapticsPref() {
             const on = document.getElementById('hapticsToggle').checked;
-            localStorage.setItem('scHaptics', on ? '1' : '0');
+            localStorage.setItem('scHaptics', on 
+ ? '1' : '0');
             if (on && typeof haptic === 'function') haptic('medium');
         }
 
         function saveAutoPrintPref() {
-            localStorage.setItem('scAutoPrintReceipt', document.getElementById('autoPrintToggle').checked ? '1' : '0');
+            localStorage.setItem('scAutoPrintReceipt', document.getElementById('autoPrintToggle').checked 
+ ? '1' : '0');
         }
 
         // -- Notifications ---------------------------------------------------
@@ -1858,7 +1862,7 @@
                 }
                 const user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
                 const s = sub.toJSON();
-                // Use URLSearchParams ? GAS accepts form-encoded without CORS preflight
+                // Use URLSearchParams — GAS accepts form-encoded without CORS preflight
                 const params = new URLSearchParams({
                     action: 'subscribe',
                     username: user,
@@ -1892,15 +1896,18 @@
 
         function saveNotifPref() {
             const on = document.getElementById('notifToggle').checked;
-            localStorage.setItem('scNotif', on ? '1' : '0');
+            localStorage.setItem('scNotif', on 
+ ? '1' : '0');
             if (on) subscribeToPush();
             else unsubscribeFromPush();
         }
 
         function saveNotifSoundPref() {
             const on = document.getElementById('notifSoundToggle').checked;
-            localStorage.setItem('scNotifSound', on ? '1' : '0');
-            document.getElementById('soundPickerPanel').style.display = on ? 'block' : 'none';
+            localStorage.setItem('scNotifSound', on 
+ ? '1' : '0');
+            document.getElementById('soundPickerPanel').style.display = on 
+ ? 'block' : 'none';
             if (on && typeof playNotifSound === 'function') playNotifSound();
         }
 
@@ -1964,7 +1971,7 @@
                 version = footer.textContent.trim();
                 const prev = localStorage.getItem('appVersion');
                 if (prev && prev !== version) {
-                    // Version changed ? fire update notification
+                    // Version changed — fire update notification
                     sendNotification('update', 'App Updated to ' + version,
                         'ServiCell Staff Portal has been updated. Check the changelog for what\'s new.');
                 }
@@ -1994,7 +2001,7 @@
             Object.keys(localStorage)
                 .filter(k => !keep.includes(k))
                 .forEach(k => localStorage.removeItem(k));
-            alert('? Cache cleared.');
+            alert('Cache cleared.');
             populateAbout();
         }
 
@@ -2092,9 +2099,12 @@
             if (!input) return;
 
             const [eye, eyeOff] = [btn.querySelector('.eye-icon'), btn.querySelector('.eye-off-icon')];
-            input.type = input.type === 'password' ? 'text' : 'password';
-            if (eye) eye.style.display = input.type === 'password' ? 'block' : 'none';
-            if (eyeOff) eyeOff.style.display = input.type === 'password' ? 'none' : 'block';
+            input.type = input.type === 'password' 
+ ? 'text' : 'password';
+            if (eye) eye.style.display = input.type === 'password' 
+ ? 'block' : 'none';
+            if (eyeOff) eyeOff.style.display = input.type === 'password' 
+ ? 'none' : 'block';
         }
 
         // -- Validation -----------------------------------------------------
@@ -2113,7 +2123,8 @@
                 if (el) {
                     el.classList.toggle('met', reqs[key]);
                     const icon = el.querySelector('.req-icon');
-                    if (icon) icon.textContent = reqs[key] ? '\u2713' : '\u25cb';
+                    if (icon) icon.textContent = reqs[key] 
+ ? '\u2713' : '\u25cb';
                 }
             });
 
@@ -2215,6 +2226,16 @@
                 return;
             }
 
+            const strengthOk =
+                newPassword.length >= 8 &&
+                /[A-Z]/.test(newPassword) &&
+                /[a-z]/.test(newPassword) &&
+                /[0-9]/.test(newPassword);
+            if (!strengthOk) {
+                showFormMessage('Password must be at least 8 characters with upper, lower, and a number.', 'error');
+                return;
+            }
+
             const username = getCurrentUsername();
             if (!username) {
                 showFormMessage('Error: Could not determine username.', 'error');
@@ -2244,7 +2265,7 @@
                 const data = await apiGet(params);
 
                 if (data.success) {
-                    showFormMessage('Password updated! ?', 'success');
+                    showFormMessage('Password updated successfully.', 'success');
                     setTimeout(closeChangePasswordModal, 1500);
                 } else {
                     showFormMessage(data.message || 'Failed to update password.', 'error');
@@ -2275,7 +2296,7 @@
                     'Compact mode is active across all pages.';
             }
 
-            // Haptics ? show row and restore pref on Android only
+            // Haptics — show row and restore pref on Android only
             if (/android/i.test(navigator.userAgent) && navigator.vibrate) {
                 document.getElementById('hapticsRow').style.display = 'flex';
                 document.getElementById('hapticsToggle').checked =
@@ -2287,14 +2308,18 @@
             // Sound settings
             const soundOn = localStorage.getItem('scNotifSound') === '1';
             document.getElementById('notifSoundToggle').checked = soundOn;
-            document.getElementById('soundPickerPanel').style.display = soundOn ? 'block' : 'none';
+            document.getElementById('soundPickerPanel').style.display = soundOn 
+ ? 'block' : 'none';
             buildSoundPills();
 
-            // Sales settings ? only show for cashier/manager
+            // Sales settings — only show for cashier/manager
             const _user = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const _role = typeof getEffectiveRole === 'function' ? getEffectiveRole(_user)
-                        : (_user.toLowerCase().startsWith('manager') ? 'manager'
-                        : _user.toLowerCase().startsWith('cashier') ? 'cashier' : 'technician');
+            const _role = typeof getUserRole === 'function'  ? getUserRole()
+                : (typeof getEffectiveRole === 'function'  ? getEffectiveRole(_user)
+                    : (_user.toLowerCase().startsWith('manager') 
+ ? 'manager'
+                        : _user.toLowerCase().startsWith('cashier') 
+ ? 'cashier' : 'technician'));
             if (_role === 'cashier' || _role === 'manager') {
                 document.getElementById('salesSettingsCard').style.display = 'block';
                 document.getElementById('autoPrintToggle').checked = localStorage.getItem('scAutoPrintReceipt') === '1';
@@ -2343,7 +2368,9 @@
             document.body.appendChild(t);
         }
         t.textContent = msg;
-        t.style.background = type === 'ok' ? '#059669' : type === 'err' ? '#dc2626' : '#1e293b';
+        t.style.background = type === 'ok' 
+ ? '#059669' : type === 'err' 
+ ? '#dc2626' : '#1e293b';
         t.style.color = '#fff';
         t.style.transform = 'translateX(-50%) translateY(0)';
         clearTimeout(t._timer);
@@ -2363,18 +2390,22 @@
                 return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:12px;border:1px solid var(--glass-border);background:var(--glass);gap:10px;">
                     <div style="min-width:0;">
                         <div style="font-size:0.88rem;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(u.displayName || u.username)}</div>
-                        <div style="font-size:0.72rem;color:var(--text-dim);">${escapeHtml(u.username)} &bull; ${escapeHtml(u.role)}${isRevoked ? ' &bull; <span style="color:#ef4444;font-weight:800;">Suspended</span>' : ''}</div>
+                        <div style="font-size:0.72rem;color:var(--text-dim);">${escapeHtml(u.username)} &bull; ${escapeHtml(u.role)}${isRevoked 
+ ? ' &bull; <span style="color:#ef4444;font-weight:800;">Suspended</span>' : ''}</div>
                     </div>
                     <button onclick="confirmRevoke('${escapeHtml(u.username)}', ${!isRevoked})"
                         style="flex-shrink:0;padding:7px 14px;border-radius:99px;border:none;font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;
-                        background:${isRevoked ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
-                        color:${isRevoked ? '#10b981' : '#ef4444'};">
-                        ${isRevoked ? 'Restore' : 'Suspend'}
+                        background:${isRevoked 
+ ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
+                        color:${isRevoked 
+ ? '#10b981' : '#ef4444'};">
+                        ${isRevoked 
+ ? 'Restore' : 'Suspend'}
                     </button>
                 </div>`;
             }).join('');
         } catch(e) {
-            el.innerHTML = '<div style="font-size:0.82rem;color:#ef4444;">Could not load staff list. Make sure GAS is redeployed.</div>';
+            el.innerHTML = '<div style="font-size:0.82rem;color:#ef4444;">Could not load staff list. Check your connection and try again.</div>';
         }
     }
 
@@ -2388,9 +2419,12 @@
         msg.textContent = revoke
             ? `Suspend ${username}? They will be logged out within 60 seconds and cannot log back in until restored.`
             : `Restore ${username}? They will be able to log in again immediately.`;
-        btn.textContent = revoke ? 'Yes, Suspend' : 'Yes, Restore';
-        btn.style.background = revoke ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)';
-        btn.style.color = revoke ? '#ef4444' : '#10b981';
+        btn.textContent = revoke 
+ ? 'Yes, Suspend' : 'Yes, Restore';
+        btn.style.background = revoke 
+ ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.15)';
+        btn.style.color = revoke 
+ ? '#ef4444' : '#10b981';
         modal.style.display = 'flex';
     }
 
@@ -2404,12 +2438,14 @@
         const { username, revoke } = _pendingRevoke;
         closeRevokeModal();
         const currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-        const action = revoke ? 'revokeuser' : 'restoreuser';
+        const action = revoke 
+ ? 'revokeuser' : 'restoreuser';
         try {
             const params = new URLSearchParams({ action, username, by: currentUser });
             const data = await apiPost(params);
             if (data.success) {
-                showStaffToast(revoke ? username + ' suspended' : username + ' restored', revoke ? 'err' : 'ok');
+                showStaffToast(revoke  ? username + ' suspended' : username + ' restored', revoke 
+ ? 'err' : 'ok');
                 loadStaffList();
             } else {
                 showStaffToast('? ' + (data.error || 'Could not update'), 'err');

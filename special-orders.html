@@ -821,9 +821,11 @@
         // ── Init ──────────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             currentUser = getLoggedInUser();
-            isManager = typeof getEffectiveRole === 'function'
-                ? getEffectiveRole(currentUser) === 'manager'
-                : deriveRole(currentUser) === 'manager';
+            isManager = typeof getUserRole === 'function'
+                ? getUserRole() === 'manager'
+                : (typeof getEffectiveRole === 'function'
+                    ? getEffectiveRole(currentUser) === 'manager'
+                    : deriveRole(currentUser) === 'manager');
             loadOrders();
         });
 

@@ -27,7 +27,7 @@
         return 'technician';
     }
 
-    function getEffectiveRole() {
+    function getUserRole() {
         const stored = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
         if (['manager', 'cashier', 'technician'].includes(stored)) return stored;
         return deriveRole(getUser());
@@ -43,7 +43,7 @@
 
     // Role-restricted page → check access
     if (PAGE_ACCESS[page]) {
-        const role = getEffectiveRole();
+        const role = getUserRole();
         if (!PAGE_ACCESS[page].includes(role)) {
             window.location.replace('index.html');
             throw new Error(`Auth guard: role "${role}" cannot access ${page}`);

@@ -2576,7 +2576,6 @@
             cursor: pointer;
         }
     </style>
-    <script src="js/theme-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/api.js"></script>
@@ -3241,7 +3240,7 @@
                 </div>
                 <h2>Are you sure?</h2>
                 <p style="color:var(--text-dim);font-size:0.88rem;">This will permanently remove the record from the
-                    spreadsheet.</p>
+                    database.</p>
                 <div class="delete-info-card">
                     <div class="delete-info-row"><span>Repair ID</span><span id="del-id">—</span></div>
                     <div class="delete-info-row"><span>Customer</span><span id="del-name">—</span></div>
@@ -4009,13 +4008,19 @@
             return 'technician';
         }
 
+        function _isRecentJob(job) {
+            if (!job || !job.dateReceived) return false;
+            const age = Date.now() - new Date(job.dateReceived).getTime();
+            return age >= 0 && age < 10 * 60 * 1000;
+        }
+
         async function claimCurrentJob() {
             const j = getJob(currentViewId);
             if (!j) return;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const role = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
-            // If stored role doesn't match username prefix, trust the prefix
-            const effectiveRole = (role === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : role;
+            const effectiveRole = typeof getUserRole === 'function'
+                ? getUserRole()
+                : (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser));
             const claimBtn = document.getElementById('claimBtn');
 
             // OPTIMISTIC UPDATE: Update UI immediately for instant feedback
@@ -4065,8 +4070,7 @@
 
         async function unclaimCurrentJob() {
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const role = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || deriveRole(scUser)).toLowerCase();
-            const effectiveRole = (role === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : role;
+            const effectiveRole = typeof getUserRole === 'function' ? getUserRole() : deriveRole(scUser);
 
             // Show confirm modal instead of browser confirm()
             openModal('reassignModal');
@@ -4127,10 +4131,7 @@
 
             // ── Claim status ──
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const _stored = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
-            const scRole = (_stored === 'manager' || deriveRole(scUser) === 'manager') ? 'manager'
-                : (_stored === 'technician' || deriveRole(scUser) === 'technician') ? 'technician'
-                    : (_stored || deriveRole(scUser));
+            const scRole = typeof getUserRole === 'function' ? getUserRole() : deriveRole(scUser);
             const canClaim = ['manager', 'technician'].includes(scRole);
             const canUnclaim = scRole === 'manager';
             const claimBtn = document.getElementById('claimBtn');
@@ -4157,8 +4158,7 @@
                     document.getElementById('unclaimBtn').style.display = 'none';
                 } else {
                     editBtn.style.display = '';
-                    const storedRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
-                    const effectiveRole = (storedRole === 'manager' || deriveRole(scUser) === 'manager') ? 'manager' : scRole;
+                    const effectiveRole = typeof getUserRole === 'function' ? getUserRole() : scRole;
                     const locked = j.claimedBy
                         && effectiveRole !== 'manager'
                         && scUser.trim() !== j.claimedBy.trim();
@@ -4257,14 +4257,23 @@
                     const img = document.createElement('img');
                     img.src = url;
                     img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
-                    img.onerror = () => { thumb.style.display = 'none'; };
+                    img.onerror = () => {
+                        img.style.display = 'none';
+                        const err = document.createElement('div');
+                        err.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:var(--danger);background:rgba(239,68,68,0.08);text-align:center;padding:4px;';
+                        err.textContent = 'Load failed';
+                        thumb.appendChild(err);
+                    };
 
                     thumb.appendChild(img);
                     imgsGrid.appendChild(thumb);
                 });
+            } else if (j.inspection && j.inspection !== 'No damage noted' && _isRecentJob(j)) {
+                imgsSection.style.display = '';
+                imgsGrid.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--warning);font-weight:700;padding:6px 0;">Photos uploading… <button type="button" onclick="loadJobs()" style="margin-left:6px;padding:4px 10px;border-radius:99px;border:1px solid var(--glass-border);background:var(--glass);cursor:pointer;font:inherit;font-size:0.72rem;">Refresh</button></div>';
             } else if (j.inspection && j.inspection !== 'No damage noted') {
                 imgsSection.style.display = '';
-                imgsGrid.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--warning);font-weight:700;padding:6px 0;">⚠️ Photos still processing — refresh in a moment if they don\'t appear.</div>';
+                imgsGrid.innerHTML = '<div style="font-size:0.82rem;color:var(--text-dim);padding:6px 0;">No inspection photos on file.</div>';
             } else {
                 imgsSection.style.display = 'none';
             }
@@ -4390,12 +4399,7 @@
         function isLockedFromJob(j) {
             if (!j.claimedBy) return false;
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
-            const storedRole = (localStorage.getItem('scRole') || sessionStorage.getItem('scRole') || '').toLowerCase().trim();
-            const derivedRole = deriveRole(scUser);
-            const scRole = (storedRole === 'manager' || derivedRole === 'manager') ? 'manager'
-                : (storedRole === 'technician' || derivedRole === 'technician') ? 'technician'
-                    : (storedRole || derivedRole);
-            // Managers always bypass, cashiers always bypass (limited to ready/resolved only)
+            const scRole = typeof getUserRole === 'function' ? getUserRole() : deriveRole(scUser);
             if (scRole === 'manager' || scRole === 'cashier') return false;
             return scUser.trim() !== j.claimedBy.trim();
         }
@@ -4540,51 +4544,30 @@
 
         async function uploadEditPhotos(repairId) {
             const images = _editPhotos.filter(Boolean);
-            if (!images.length) return;
+            if (!images.length) return { ok: true, failed: 0 };
             const status = document.getElementById('editPhotoUploadStatus');
-            if (status) { status.style.display = 'block'; status.textContent = `⏳ Uploading ${images.length} photo${images.length > 1 ? 's' : ''}…`; }
-            let uploaded = 0;
+            const job = getJob(repairId);
+            const existingCount = (job && job.inspectionImages) ? job.inspectionImages.length : 0;
+            let failed = 0;
             for (let i = 0; i < images.length; i++) {
+                if (status) {
+                    status.style.display = 'block';
+                    status.textContent = `Uploading photo ${i + 1}/${images.length}…`;
+                }
                 try {
-                    const compressed = await compressImageEdit(images[i], 1200, 0.8);
-                    const blob = await fetch(compressed).then(r => r.blob());
-                    const fileName = `${repairId}/${Date.now()}-${i}.jpg`;
-                    const { error: uploadError } = await supabase.storage
-                        .from('repair-photos')
-                        .upload(fileName, blob, { contentType: 'image/jpeg' });
-                    if (uploadError) {
-                        console.warn('Edit photo upload error:', uploadError.message);
-                        continue;
-                    }
-                    const { data: urlData } = supabase.storage.from('repair-photos').getPublicUrl(fileName);
-                    const result = await apiPost({ action: 'addimage', repairId, imageUrl: urlData.publicUrl });
-                    if (result && result.success !== false) uploaded++;
-                } catch (e) { console.warn('Edit photo upload failed', e); }
-            }
-            if (status) {
-                status.textContent = uploaded
-                    ? `✅ ${uploaded} photo${uploaded > 1 ? 's' : ''} uploaded`
-                    : '⚠️ Upload failed — try again or use Edit Photos';
+                    await uploadAndAttachJobImage(repairId, images[i], existingCount + i + 1);
+                } catch (e) {
+                    failed++;
+                    console.warn('Edit photo upload failed', e);
+                }
             }
             _editPhotos = [];
-        }
-
-        function compressImageEdit(dataUrl, maxPx, quality) {
-            return new Promise(resolve => {
-                const img = new Image();
-                img.onload = () => {
-                    let w = img.width, h = img.height;
-                    if (w > maxPx || h > maxPx) {
-                        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
-                        else { w = Math.round(w * maxPx / h); h = maxPx; }
-                    }
-                    const canvas = document.createElement('canvas');
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    resolve(canvas.toDataURL('image/jpeg', quality));
-                };
-                img.src = dataUrl;
-            });
+            if (status) {
+                status.textContent = failed
+                    ? `${failed} photo${failed > 1 ? 's' : ''} failed — try again`
+                    : `${images.length} photo${images.length > 1 ? 's' : ''} uploaded`;
+            }
+            return { ok: failed === 0, failed };
         }
 
         async function saveEdit() {
@@ -4724,11 +4707,11 @@
                         `#${currentEditId} — ${j?.device || 'Device'} is now: ${status}.`);
                 }
 
-                // Upload any new photos in the background
                 if (_editPhotos.filter(Boolean).length > 0) {
-                    uploadEditPhotos(currentEditId);
+                    const up = await uploadEditPhotos(currentEditId);
+                    if (!up.ok) showToast('Some photos failed to upload.', 'err');
                 }
-                setTimeout(loadJobs, 2000);
+                await loadJobs();
 
             } catch (err) {
                 // REVERT: Network error, restore original state
@@ -5238,106 +5221,47 @@
             btn.disabled = true;
             btn.textContent = 'Saving…';
             status.style.display = 'block';
+            let uploadFailed = 0;
 
-            // Step 1: Remove marked photos
-            // ── Step 1: Remove marked photos (Updated for Supabase) ──
             if (toRemove.length) {
-                status.textContent = `🗑️ Removing ${toRemove.length} photo${toRemove.length > 1 ? 's' : ''}…`;
-
-                try {
-                    // 1. Fetch current comma-separated string from the 'jobs' table
-                    let { data: job } = await supabase
-                        .from('jobs')
-                        .select('inspection_images')
-                        .eq('id', _peJobId)
-                        .single();
-
-                    let currentImages = job.inspection_images
-                        ? String(job.inspection_images).split(',').map(s => s.trim()).filter(Boolean)
-                        : [];
-
-                    // 2. Filter out the marked URLs
-                    currentImages = currentImages.filter(url => !toRemove.includes(url));
-
-                    // 3. Save back as a comma-separated string (matches Jobs._map format)
-                    await supabase
-                        .from('jobs')
-                        .update({ inspection_images: currentImages.join(',') })
-                        .eq('id', _peJobId);
-
-                    // 4. Delete the physical image assets from your Supabase storage bucket
-                    for (const url of toRemove) {
-                        const rawPath = url.split('/storage/v1/object/public/repair-photos/')[1];
-                        const filePath = rawPath ? decodeURIComponent(rawPath) : '';
-                        if (filePath) {
-                            await supabase.storage
-                                .from('repair-photos')
-                                .remove([filePath]);
-                        }
-                    }
-                } catch (e) {
-                    console.warn('Remove photo from Supabase failed', e);
+                status.textContent = `Removing ${toRemove.length} photo${toRemove.length > 1 ? 's' : ''}…`;
+                for (const url of toRemove) {
+                    try {
+                        await apiPost({ action: 'removeimage', repairId: _peJobId, imageUrl: url });
+                    } catch (e) { console.warn('Remove photo failed', e); }
                 }
             }
 
-            // Step 2: Upload new photos
             if (newPhotos.length) {
                 const j = getJob(_peJobId);
-                const existingCount = j && j.inspectionImages ? j.inspectionImages.filter(u => !toRemove.includes(u)).length : 0;
-                status.textContent = `⏳ Uploading ${newPhotos.length} photo${newPhotos.length > 1 ? 's' : ''}…`;
-                // Upload base64 previews (from file picker / webcam) to Supabase Storage
-                for (const dataUrl of newPhotos) {
-                    const compressed = await _peCompress(dataUrl, 1200, 0.8);
-                    const blob = await fetch(compressed).then(r => r.blob());
-                    const fileName = `${_peJobId}/${Date.now()}.jpg`;
-
-                    // 1. Upload file to Supabase bucket
-                    const { error: uploadError } = await supabase.storage
-                        .from('repair-photos')
-                        .upload(fileName, blob, { contentType: 'image/jpeg' });
-
-                    if (uploadError) {
-                        console.error("Upload failed:", uploadError.message);
-                        continue;
+                const existingCount = j && j.inspectionImages
+                    ? j.inspectionImages.filter(u => !toRemove.includes(u)).length
+                    : 0;
+                for (let i = 0; i < newPhotos.length; i++) {
+                    status.textContent = `Uploading photo ${i + 1}/${newPhotos.length}…`;
+                    try {
+                        await uploadAndAttachJobImage(_peJobId, newPhotos[i], existingCount + i + 1);
+                    } catch (e) {
+                        uploadFailed++;
+                        console.warn('Upload photo failed', e);
                     }
-
-                    // 2. Get the public URL of the uploaded image
-                    const { data: urlData } = supabase.storage
-                        .from('repair-photos')
-                        .getPublicUrl(fileName);
-
-                    const publicUrl = urlData.publicUrl;
-
-                    // 3. Update the comma-separated string in the 'jobs' table
-                    // Fetch current images first, then append the new one
-                    let { data: job } = await supabase
-                        .from('jobs')
-                        .select('inspection_images')
-                        .eq('id', _peJobId)
-                        .single();
-
-                    let currentImages = job.inspection_images
-                        ? String(job.inspection_images).split(',').map(s => s.trim()).filter(Boolean)
-                        : [];
-                    currentImages.push(publicUrl);
-
-                    await supabase
-                        .from('jobs')
-                        .update({ inspection_images: currentImages.join(',') })
-                        .eq('id', _peJobId);
                 }
             }
 
-            status.textContent = '✅ Done!';
-            showToast('Photos updated!', 'ok');
-            btn.textContent = '✓ Saved';
+            if (uploadFailed) {
+                status.textContent = `${uploadFailed} photo${uploadFailed > 1 ? 's' : ''} failed to upload`;
+                showToast('Some photos could not be uploaded.', 'err');
+                btn.textContent = 'Retry needed';
+            } else {
+                status.textContent = 'Done!';
+                showToast('Photos updated!', 'ok');
+                btn.textContent = 'Saved';
+            }
 
-            // Refresh job data and reopen view modal
-            setTimeout(async () => {
-                await loadJobs();
-                closePhotoEditor();
-                openViewModal(_peJobId);
-            }, 800);
+            await loadJobs();
+            closePhotoEditor();
+            openViewModal(_peJobId);
+            btn.disabled = false;
         }
 
         function closePhotoEditor() {

@@ -25,6 +25,17 @@ function getEffectiveRole(username) {
     return deriveRole(u);
 }
 
+/** Alias used across pages — DB role first, username prefix fallback */
+function getUserRole() {
+    return getEffectiveRole();
+}
+window.getUserRole = getUserRole;
+
+const SC_PREF_KEYS = [
+    'scTheme', 'scCompact', 'scHaptics', 'scNotif', 'scNotifSound',
+    'scNotifSoundType', 'scAutoPrintReceipt', 'appVersion'
+];
+
 function escH(s) {
     const d = document.createElement('div');
     d.textContent = String(s || '');
@@ -46,10 +57,14 @@ const NAV_LINKS = [
 
 // ── Auth helpers (global) ─────────────────────────────────────────────────────
 function logOut() {
-    ['isLoggedIn', 'scUser', 'scRole', 'scDisplayName'].forEach(key => {
-        localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
+    const prefs = {};
+    SC_PREF_KEYS.forEach(k => {
+        const v = localStorage.getItem(k);
+        if (v !== null) prefs[k] = v;
     });
+    localStorage.clear();
+    sessionStorage.clear();
+    Object.entries(prefs).forEach(([k, v]) => localStorage.setItem(k, v));
     window.location.href = 'index.html';
 }
 
@@ -445,11 +460,11 @@ const InAppNotif = {
         this._updateBadge();
     },
 
-    // Sync pending notifications from GAS — makes bell cross-device
+    // Sync pending notifications from the server — makes bell cross-device
     async syncFromServer() {
         if (!navigator.onLine) return;
         if (localStorage.getItem('scNotif') === '0') return;
-        const role = deriveRole(getLoggedInUser());
+        const role = getUserRole();
         const username = getLoggedInUser();
         try {
             const data = await apiGet({ action: 'getpending', role, username });
@@ -495,7 +510,7 @@ const InAppNotif = {
                 ids: notifs.map(n => n.id).join(',')
             }).catch(() => {});
         } catch (_) {
-            // Silent fail — offline or GAS unavailable
+            // Silent fail — offline or server unavailable
         }
     },
 
@@ -618,7 +633,7 @@ const NOTIF_ROLES = {
 
 function sendNotification(type, title, body) {
     if (localStorage.getItem('scNotif') === '0') return;
-    const role    = deriveRole(getLoggedInUser());
+    const role    = getUserRole();
     const allowed = NOTIF_ROLES[type] || ['technician', 'cashier', 'manager'];
     if (!allowed.includes(role)) return;
     InAppNotif.add(type, title, body);
@@ -746,7 +761,7 @@ if (IS_ANDROID) {
     };
 
     function playNotifSound() {
-        if (localStorage.getItem('scNotifSound') === '0') return;
+        if (localStorage.getItem('scNotifSound') !== '1') return;
         const sound = localStorage.getItem('scNotifSoundType') || 'chime';
         try {
             const ctx = getCtx();
@@ -768,21 +783,47 @@ if (IS_ANDROID) {
 // (localStorage "remember me" sessions are intentionally persistent).
 (function () {
     const TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 hours
-    let _timer = null;
+    const WARN_MS = 5 * 60 * 1000;
+    let _warnTimer = null;
+    let _logoutTimer = null;
+    let _warnShown = false;
+
+    function showSessionWarning() {
+        if (_warnShown) return;
+        _warnShown = true;
+        let toast = document.getElementById('sc-session-warn');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'sc-session-warn';
+            toast.style.cssText = [
+                'position:fixed', 'bottom:24px', 'left:50%', 'transform:translateX(-50%)',
+                'z-index:99998', 'max-width:min(92vw,420px)', 'padding:14px 20px',
+                'border-radius:14px', 'background:#1e293b', 'color:#fff',
+                'font-family:var(--font-family,sans-serif)', 'font-size:0.88rem', 'font-weight:600',
+                'box-shadow:0 16px 40px rgba(0,0,0,0.35)', 'border:1px solid rgba(255,255,255,0.12)',
+                'pointer-events:none', 'text-align:center', 'line-height:1.45'
+            ].join(';');
+            document.body.appendChild(toast);
+        }
+        toast.textContent = 'Your session will expire in 5 minutes due to inactivity.';
+        toast.style.display = 'block';
+    }
 
     function resetTimer() {
-        clearTimeout(_timer);
-        // Only auto-logout if NOT using "remember me" (i.e. stored in sessionStorage)
+        clearTimeout(_warnTimer);
+        clearTimeout(_logoutTimer);
+        _warnShown = false;
+        const warnEl = document.getElementById('sc-session-warn');
+        if (warnEl) warnEl.style.display = 'none';
+
         const inSession = sessionStorage.getItem('isLoggedIn') === 'true';
         if (!inSession) return;
-        _timer = setTimeout(function () {
-            // Warn 5 minutes before
-        }, TIMEOUT_MS - 5 * 60 * 1000);
-        // Hard logout at timeout
-        _timer = setTimeout(function () {
+
+        _warnTimer = setTimeout(showSessionWarning, TIMEOUT_MS - WARN_MS);
+        _logoutTimer = setTimeout(function () {
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                sessionStorage.clear();
-                window.location.href = 'index.html';
+                if (typeof logOut === 'function') logOut();
+                else window.location.href = 'index.html?timeout=1';
             }
         }, TIMEOUT_MS);
     }

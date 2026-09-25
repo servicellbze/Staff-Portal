@@ -825,7 +825,7 @@
         <div class="sync-bar">
             <div style="display:flex;align-items:center;gap:8px;">
                 <div class="sync-dot loading" id="syncDot"></div>
-                <span id="syncText">Connecting to spreadsheet…</span>
+                <span id="syncText">Connecting to database…</span>
             </div>
             <button onclick="loadDashboard()"
                 style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);">↻
@@ -1075,7 +1075,7 @@
         function renderActivity(jobs) {
             const list = document.getElementById('activityList');
             if (!jobs.length) {
-                list.innerHTML = `<div class="activity-empty">No jobs found in the spreadsheet.</div>`;
+                list.innerHTML = `<div class="activity-empty">No jobs found.</div>`;
                 return;
             }
             const recent = jobs.slice(0, 5);
@@ -1209,7 +1209,7 @@
                     const storage = remember ? localStorage : sessionStorage;
                     storage.setItem('isLoggedIn', 'true');
                     storage.setItem('scUser', user);
-                    // Store display name from GAS Users sheet (col D) if provided
+                    // Store display name from the users table if provided
                     if (data.displayName) storage.setItem('scDisplayName', data.displayName);
 
                     // Unlock audio context on iOS — must happen on user gesture

@@ -353,6 +353,7 @@ function formatPayoutSlipNo(payoutId) {
 
 const STAFF_DISPLAY_NAMES = {
     cashier_chee:      'Ericson C.',
+    cashier_nova24:    'Shane N.',
     cashier_coleman:   'Kiana C.',
     manager_chee:      'Eric C.',
     technician_bailey: 'Kareem B.',

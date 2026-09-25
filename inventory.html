@@ -108,7 +108,7 @@
         .qty-cell.ok { color: var(--success); }
         .price-cell { font-size: 0.88rem; font-weight: 600; color: var(--text-main); }
         .stock-bar-wrap { display: flex; align-items: center; gap: 8px; }
-        /* Stock bar ? ensure it fills properly */
+        /* Stock bar — ensure it fills properly */
         .stock-bar { flex: 1; height: 5px; background: var(--glass-border); border-radius: 3px; overflow: hidden; }
         .stock-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
         .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
@@ -250,7 +250,7 @@
             .inv-col-name > div { flex: 1; min-width: 0; }
             .status-badge { white-space: nowrap; flex-shrink: 0; }
 
-            /* Meta strip: category ? qty ? price */
+            /* Meta strip: category · qty · price */
             .inv-col-cat, .inv-col-qty, .inv-col-price { padding: 0 16px 10px; }
             .inv-col-cat::after  { content: '\00b7'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
             .inv-col-qty::after  { content: '\00b7'; margin-left: 8px; color: var(--text-dim); font-size: 0.7rem; }
@@ -260,7 +260,7 @@
             .inv-col-qty  { padding-bottom: 0; }
             .inv-col-price { padding-bottom: 10px; }
 
-            /* Hide status col ? shown in name row instead */
+            /* Hide status col — shown in name row instead */
             .inv-col-status { display: none; }
 
             /* Move status badge into name row */
@@ -333,17 +333,17 @@
 
         <!-- Stats -->
         <div class="stats-row" id="statsRow">
-            <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">?</div><div class="stat-sub">unique SKUs</div></div>
-            <div class="stat-card warning" id="statLowCard"><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">?</div><div class="stat-sub">below minimum</div></div>
-            <div class="stat-card danger" id="statOutCard"><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">?</div><div class="stat-sub">qty = 0</div></div>
-            <div class="stat-card" id="statValueCard"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">?</div><div class="stat-sub">at cost price</div></div>
+            <div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">unique SKUs</div></div>
+            <div class="stat-card warning" id="statLowCard"><div class="stat-label">Low Stock</div><div class="stat-value" id="statLow">—</div><div class="stat-sub">below minimum</div></div>
+            <div class="stat-card danger" id="statOutCard"><div class="stat-label">Out of Stock</div><div class="stat-value" id="statOut">—</div><div class="stat-sub">qty = 0</div></div>
+            <div class="stat-card" id="statValueCard"><div class="stat-label">Stock Value</div><div class="stat-value" id="statValue">—</div><div class="stat-sub">at cost price</div></div>
         </div>
 
         <!-- Toolbar -->
         <div class="toolbar">
             <div class="search-wrap">
                 <span class="search-icon" data-icon="search" data-icon-size="18"></span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search name, SKU, or scan barcode?" oninput="debouncedRender()">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search name, SKU, or scan barcode" oninput="debouncedRender()">
             </div>
             <select class="filter-select" id="filterCategory" onchange="renderInventory()">
                 <option value="">All Categories</option>
@@ -356,7 +356,7 @@
             </select>
             <div class="scan-indicator" id="scanIndicator">
                 <div class="scan-pulse"></div>
-                <span id="scanText">Scanning?</span>
+                <span id="scanText">Ready to scan</span>
             </div>
         </div>
 
@@ -380,7 +380,7 @@
                     <div></div>
                 </div>
                 <div id="invBody">
-                    <div class="state-box"><div class="state-icon">?</div><p>Loading inventory?</p></div>
+                    <div class="state-box"><div class="state-icon" data-icon="loader"></div><p>Loading inventory…</p></div>
                 </div>
             </div>
         </div>
@@ -392,7 +392,7 @@
         <div class="sync-bar">
             <div style="display:flex;align-items:center;gap:8px;">
                 <div class="sync-dot loading" id="syncDot"></div>
-                <span id="syncText">Connecting?</span>
+                <span id="syncText">Connecting…</span>
             </div>
             <button onclick="loadInventory()" style="background:none;border:none;cursor:pointer;font-size:0.75rem;font-weight:700;color:var(--primary);font-family:var(--font-family);" data-icon="refresh">Refresh</button>
         </div>
@@ -472,7 +472,7 @@
                     <input type="text" id="iCompat" placeholder="e.g. iPhone 14 Pro">
                 </div>
             </div>
-            <!-- hidden supplier field ? value preserved for GAS but not shown -->
+            <!-- hidden supplier field — value preserved for API but not shown -->
             <input type="hidden" id="iSupplier" value="">
             <div class="form-group">
                 <label>Notes</label>
@@ -514,7 +514,7 @@
                 </div>
                 <div class="form-group">
                     <label>Linked Job ID</label>
-                    <input type="text" id="adjJobId" placeholder="Optional ? e.g. 1042">
+                    <input type="text" id="adjJobId" placeholder="Optional — e.g. 1042">
                     <div class="form-hint">Link to repair job (optional)</div>
                 </div>
             </div>
@@ -540,7 +540,7 @@
             <div style="margin-top:16px;">
                 <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--primary);opacity:0.7;margin-bottom:10px;">Recent Movements</div>
                 <div class="movement-list" id="movementList">
-                    <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">Loading?</div>
+                    <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:0.85rem;">Loading…</div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -582,7 +582,7 @@
             <div class="form-group">
                 <label>Category</label>
                 <select id="bulkCategory">
-                    <option value="">? No change ?</option>
+                    <option value="">— No change —</option>
                     <option value="Screens">Screens</option>
                     <option value="Batteries">Batteries</option>
                     <option value="Back Glass">Back Glass</option>
@@ -647,7 +647,7 @@
     <div class="camera-overlay" id="cameraOverlay">
         <video id="cameraFeed" autoplay playsinline muted></video>
         <div class="camera-aim"></div>
-        <div class="camera-hint">Point camera at barcode ? hold steady</div>
+        <div class="camera-hint">Point camera at barcode — hold steady</div>
         <button class="camera-close-btn" onclick="closeCameraScanner()" data-icon="x">Cancel</button>
     </div>
 
@@ -829,7 +829,7 @@
         } catch (err) {
             const ci = localStorage.getItem('sc_cache_inventory');
             const cm = localStorage.getItem('sc_cache_movements');
-            if (ci) { allItems = JSON.parse(ci); allMovements = cm ? JSON.parse(cm) : []; populateCategoryFilter(); renderInventory(); renderStats(); setSyncState('error', 'Offline ? cached data'); }
+            if (ci) { allItems = JSON.parse(ci); allMovements = cm ? JSON.parse(cm) : []; populateCategoryFilter(); renderInventory(); renderStats(); setSyncState('error', 'Offline — cached data'); }
             else { setSyncState('error', 'Sync failed'); document.getElementById('invBody').innerHTML = `<div class="state-box"><div class="state-icon" data-icon="warning"></div><p>Could not load inventory.</p></div>`; if (typeof initDataIcons === 'function') initDataIcons(document.getElementById('invBody')); }
             console.error(err);
         }
@@ -942,8 +942,8 @@
         <div class="inv-row ${rowCls}${selected}" onclick="openViewModal('${escH(i.sku)}')">
             ${bulkCol}
             <div class="inv-col-name">
-                <div class="item-name">${escH(i.name || '?')}</div>
-                <div class="item-sku">${escH(i.sku || '?')}${i.compat ? ' ? ' + escH(i.compat) : ''}</div>
+                <div class="item-name">${escH(i.name || '—')}</div>
+                <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
             </div>
             <div class="inv-col-cat"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
             <div class="inv-col-qty"><span class="qty-cell ${qtyCls}">${qty}</span><span class="qty-min"> / ${min}</span></div>
@@ -1018,7 +1018,7 @@
             list.textContent = skus.map(s => {
                 const item = allItems.find(i => i.sku === s);
                 return (item?.name || s) + ' (' + s + ')';
-            }).join(' ? ');
+            }).join(' · ');
         }
         document.getElementById('bulkCategory').value = '';
         document.getElementById('bulkMinQty').value = '';
@@ -1137,7 +1137,7 @@
             qtyField.disabled = false;
             qtyField.style.opacity = '1';
             qtyField.style.cursor = '';
-            if (qtyHint) qtyHint.textContent = 'Starting quantity for this new item (you can adjust later with ?).';
+            if (qtyHint) qtyHint.textContent = 'Starting quantity for this new item (use Adjust Stock later to change it).';
         }
         document.getElementById('iLocation').value  = item?.location   || '';
         document.getElementById('iCost').value      = item?.costPrice  || '';
@@ -1146,7 +1146,7 @@
         document.getElementById('iCompat').value    = item?.compat     || '';
         document.getElementById('iNotes').value     = item?.notes      || '';
 
-        // Cashiers can edit everything except delete ? remove field restrictions
+        // Cashiers can edit everything except delete — remove field restrictions
         const priceFields = ['iCost', 'iSalePrice', 'iMinQty', 'iSupplier'];
         priceFields.forEach(id => {
             document.getElementById(id).readOnly  = false;
@@ -1161,7 +1161,7 @@
             costField.closest('.form-group').style.display = isManager ? '' : 'none';
         }
 
-        // Show cashier warning if editing (no longer applicable ? only managers edit)
+        // Show cashier warning if editing (no longer applicable — only managers edit)
         let warn = document.getElementById('cashierEditWarn');
         if (warn) warn.style.display = 'none';
 
@@ -1272,7 +1272,7 @@
         const selDiv = document.getElementById('adjSelectedItem');
         if (sku) {
             const item = allItems.find(i => i.sku === sku);
-            selDiv.textContent = item ? `${item.name} (${item.sku}) ? ${item.qty} in stock` : sku;
+            selDiv.textContent = item ? `${item.name} (${item.sku}) · ${item.qty} in stock` : sku;
             selDiv.style.display = 'block';
             document.getElementById('adjSearch').value = item?.name || sku;
         } else {
@@ -1294,7 +1294,7 @@
         list.innerHTML = matches.map(i => `
             <div onclick="selectAdjItem('${escH(i.sku)}')" style="padding:9px 12px;cursor:pointer;border-radius:8px;font-size:0.85rem;border:1px solid var(--glass-border);margin-bottom:4px;background:var(--glass);transition:background 0.15s;"
                 onmouseover="this.style.background='rgba(37,99,235,0.08)'" onmouseout="this.style.background='var(--glass)'">
-                <strong>${escH(i.name)}</strong> <span style="color:var(--text-dim);font-size:0.75rem;">${escH(i.sku)} ? ${i.qty} in stock</span>
+                <strong>${escH(i.name)}</strong> <span style="color:var(--text-dim);font-size:0.75rem;">${escH(i.sku)} · ${i.qty} in stock</span>
             </div>`).join('');
     }
 
@@ -1304,7 +1304,7 @@
         document.getElementById('adjSearch').value = item?.name || sku;
         document.getElementById('adjItemList').style.display = 'none';
         const selDiv = document.getElementById('adjSelectedItem');
-        selDiv.textContent = `${item?.name} (${sku}) ? ${item?.qty} in stock`;
+        selDiv.textContent = `${item?.name} (${sku}) · ${item?.qty} in stock`;
         selDiv.style.display = 'block';
         document.getElementById('adjQty').focus();
     }
@@ -1380,20 +1380,20 @@
         const min  = parseInt(i.minQty) || 0;
         const cost = parseFloat(i.costPrice) || 0;
         const sale = parseFloat(i.salePrice) || 0;
-        const margin = cost > 0 ? (((sale - cost) / cost) * 100).toFixed(1) : '?';
+        const margin = cost > 0 ? (((sale - cost) / cost) * 100).toFixed(1) : '—';
         const statusLabel = qty <= 0 ? 'Out of Stock' : qty <= min ? 'Low Stock' : 'In Stock';
 
         document.getElementById('viewBody').innerHTML = `
             <div class="view-grid">
-                <div class="view-field full"><div class="view-label">Item</div><div class="view-value" style="font-size:1.05rem;">${escH(i.name || '?')}</div></div>
+                <div class="view-field full"><div class="view-label">Item</div><div class="view-value" style="font-size:1.05rem;">${escH(i.name || '—')}</div></div>
                 <div class="view-field"><div class="view-label">SKU</div><div class="view-value" style="font-family:monospace;">${escH(i.sku)}</div></div>
-                <div class="view-field"><div class="view-label">Category</div><div class="view-value">${escH(i.category || '?')}</div></div>
+                <div class="view-field"><div class="view-label">Category</div><div class="view-value">${escH(i.category || '—')}</div></div>
                 <div class="view-field"><div class="view-label">Stock</div><div class="view-value">${qty} units &nbsp;${statusLabel}</div></div>
                 <div class="view-field"><div class="view-label">Min Qty</div><div class="view-value">${min}</div></div>
                 ${isManager ? `<div class="view-field"><div class="view-label">Cost Price</div><div class="view-value">BZ$${cost.toFixed(2)}</div></div>` : ''}
                 <div class="view-field"><div class="view-label">Sale Price</div><div class="view-value">BZ$${sale.toFixed(2)} ${isManager ? `<span style="font-size:0.75rem;color:var(--text-dim);">(${margin}% margin)</span>` : ''}</div></div>
-                <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '?')}</div></div>
-                <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '?')}</div></div>
+                <div class="view-field"><div class="view-label">Location</div><div class="view-value">${escH(i.location || '—')}</div></div>
+                <div class="view-field"><div class="view-label">Compatible With</div><div class="view-value">${escH(i.compat || '—')}</div></div>
                 ${i.notes ? `<div class="view-field full"><div class="view-label">Notes</div><div class="view-value">${escH(i.notes)}</div></div>` : ''}
             </div>`;
 
@@ -1410,12 +1410,12 @@
                         ? (typeof scIcon === 'function' ? scIcon('clipboard', 14) : '=')
                         : (typeof scIcon === 'function' ? scIcon('upload', 14) : '-');
                 const qSign = m.type === 'remove' ? '-' : '+';
-                const ts    = m.timestamp ? new Date(m.timestamp).toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '?';
+                const ts    = m.timestamp ? new Date(m.timestamp).toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
                 return `<div class="movement-item">
                     <div class="movement-icon">${icon}</div>
                     <div class="movement-body">
                         <div class="movement-desc">${escH(m.reason || m.type)}</div>
-                        <div class="movement-meta">${ts} ? ${escH(m.updatedBy || '?')}${m.jobId ? ' ? Job #' + escH(m.jobId) : ''}</div>
+                        <div class="movement-meta">${ts} · ${escH(m.updatedBy || 'Unknown')}${m.jobId ? ' · Job #' + escH(m.jobId) : ''}</div>
                     </div>
                     <div class="movement-qty ${isIn ? 'in' : 'out'}">${qSign}${m.qty}</div>
                 </div>`;
@@ -1434,7 +1434,7 @@
         const i = allItems.find(x => x.sku === sku);
         if (!i) return;
         pendingDeleteSku = sku;
-        document.getElementById('deleteInfo').innerHTML = `<strong>${escH(i.name)}</strong><br><span style="color:var(--text-dim);">SKU: ${escH(i.sku)} ? ${i.qty} units in stock</span>`;
+        document.getElementById('deleteInfo').innerHTML = `<strong>${escH(i.name)}</strong><br><span style="color:var(--text-dim);">SKU: ${escH(i.sku)} · ${i.qty} units in stock</span>`;
         document.getElementById('deleteConfirmBtn').disabled    = false;
         document.getElementById('deleteConfirmBtn').textContent = 'Delete Item';
         openModal('deleteModal');
@@ -1674,7 +1674,7 @@
             return '<div>'
                 + '<label style="display:block;font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--primary);margin-bottom:5px;">' + f.label + (f.key === 'sku' || f.key === 'name' ? ' *' : '') + '</label>'
                 + '<select id="map_' + f.key + '" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;outline:none;">'
-                + '<option value="">? Skip ?</option>' + opts
+                + '<option value="">— Skip —</option>' + opts
                 + '</select></div>';
         }).join('');
     }

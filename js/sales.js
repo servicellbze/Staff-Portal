@@ -1515,12 +1515,17 @@ function openJobPickupModal() {
     setTimeout(() => document.getElementById('jobSearch').focus(), 300);
 }
 
+function isJobUnpaid(payStatus) {
+    const p = String(payStatus || 'unpaid').toLowerCase();
+    return !p.startsWith('paid');
+}
+
 function searchJobs() {
     const q = document.getElementById('jobSearch').value.trim().toLowerCase();
     const results = document.getElementById('jobSearchResults');
     if (!q) { results.innerHTML = ''; return; }
     const matches = allJobs.filter(j =>
-        (j.payStatus || '').toLowerCase() !== 'paid' &&
+        isJobUnpaid(j.payStatus) &&
         (String(j.id || '').includes(q) || (j.customerName || '').toLowerCase().includes(q))
     ).slice(0, 6);
     if (!matches.length) { results.innerHTML = '<div style="font-size:0.8rem;color:var(--text-dim);padding:8px 0;">No unpaid jobs found.</div>'; return; }
@@ -1738,7 +1743,9 @@ async function submitJobPickup() {
         });
         if (data.success) {
             const fullyPaid = remainingAfter <= 0.01;
-            const payStatus = fullyPaid ? 'paid' : 'partial';
+            const payStatus = fullyPaid
+                ? (method === 'card' ? 'paid-card' : 'paid-cash')
+                : 'partial';
             const updateParams = { action: 'update', id: selectedJobId, payStatus, username: currentUser };
             if (fullyPaid) {
                 updateParams.status = 'resolved';
@@ -1767,11 +1774,26 @@ async function submitJobPickup() {
                 showToast('Payment collected!', 'ok');
             }
 
-            // Print receipt for the amount collected now (itemized on first payment, single balance line after)
             const receiptItems = paidToDate > 0.009
                 ? [{ name: saleLabel, qty: 1, price: due, total: due }]
                 : invoiceItems.map(i => ({ name: i.desc, qty: 1, price: i.price, total: i.price }));
-            printReceipt(receiptItems, due, amountPaid, method, data.saleId, j.customerName || '');
+
+            if (fullyPaid) {
+                window._lastReceipt = {
+                    items: receiptItems,
+                    total: due,
+                    amountPaid,
+                    method,
+                    saleId: data.saleId,
+                    customer: j.customerName || ''
+                };
+                const printed = printReceipt(
+                    receiptItems, due, amountPaid, method, data.saleId, j.customerName || '', true
+                );
+                if (!printed) {
+                    showToast('Receipt saved — use Reprint Last if auto-print is off.', 'ok');
+                }
+            }
 
             await loadAll();
         } else { btn.disabled = false; btn.textContent = '\u2713 Collect Payment'; showToast(data.error || 'Error', 'err'); }
@@ -2416,10 +2438,11 @@ function printPayoutSlip(payoutId) {
 }
 
 // -- Receipt Printing ----------------------------------------------------------
-function printReceipt(items, total, amountPaid, method, saleId, customer) {
-    if (localStorage.getItem('scAutoPrintReceipt') !== '1') return;
+function printReceipt(items, total, amountPaid, method, saleId, customer, forcePrint) {
+    if (!forcePrint && localStorage.getItem('scAutoPrintReceipt') !== '1') return false;
     kickDrawer();
     _printSaleReceipt(items, total, amountPaid, method, saleId, customer, currentUser);
+    return true;
 }
 
 // -- Modal Helpers -------------------------------------------------------------
@@ -2458,9 +2481,11 @@ function showToast(msg, type) {
 // -- Init ----------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', function () {
     currentUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Cashier';
-    isManager   = typeof getEffectiveRole === 'function'
-        ? getEffectiveRole(currentUser) === 'manager'
-        : currentUser.toLowerCase().startsWith('manager');
+    isManager   = typeof getUserRole === 'function'
+        ? getUserRole() === 'manager'
+        : (typeof getEffectiveRole === 'function'
+            ? getEffectiveRole(currentUser) === 'manager'
+            : currentUser.toLowerCase().startsWith('manager'));
     
     // Apply manager class to body for CSS-based role visibility
     if (isManager) {
