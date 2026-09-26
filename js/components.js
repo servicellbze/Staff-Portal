@@ -670,7 +670,6 @@ window.isOffline = () => !navigator.onLine;
             above = updateEl.offsetHeight + 10;
         }
         document.documentElement.style.setProperty('--sc-notice-stack-above-broadcast', above + 'px');
-        window.dispatchEvent(new Event('sc-bottom-chrome-change'));
     }
     window.scSyncNoticeStack = syncNoticeStack;
 
@@ -749,14 +748,25 @@ window.isOffline = () => !navigator.onLine;
         }
     });
 
+    let lastSwUpdateCheck = 0;
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && registrationRef) {
-            registrationRef.update().catch(() => {});
-        }
+        if (document.visibilityState !== 'visible' || !registrationRef) return;
+        const now = Date.now();
+        if (now - lastSwUpdateCheck < 45000) return;
+        lastSwUpdateCheck = now;
+        registrationRef.update().catch(() => {});
     });
 
-    window.addEventListener('resize', () => syncNoticeStack(), { passive: true });
-    window.addEventListener('sc-bottom-chrome-change', () => syncNoticeStack());
+    let noticeStackRaf = 0;
+    function scheduleNoticeStack() {
+        if (noticeStackRaf) return;
+        noticeStackRaf = requestAnimationFrame(() => {
+            noticeStackRaf = 0;
+            syncNoticeStack();
+        });
+    }
+    window.addEventListener('resize', scheduleNoticeStack, { passive: true });
+    window.addEventListener('sc-bottom-chrome-change', scheduleNoticeStack);
 
     if (document.readyState === 'complete') {
         registerServiceWorker();

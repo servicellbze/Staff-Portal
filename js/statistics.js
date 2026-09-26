@@ -221,14 +221,37 @@ function collectedOnJob(jobId, sales) {
     return total;
 }
 
+const TECH_AUDIT_LABELS = {
+    ring: {
+        title: 'Cashier ≠ person credited',
+        hint: 'Payment was rung up by one staff member; repair credit goes to whoever claimed the job.'
+    },
+    unclaimed: {
+        title: 'Finished but never claimed',
+        hint: 'Job marked complete without a Claim on file — confirm who did the work.'
+    },
+    claim: {
+        title: 'Claim vs stats name mismatch',
+        hint: 'Someone else claimed this job, but this row is credited under a different name — check job history.'
+    },
+    assign: {
+        title: 'Listed tech ≠ claimer',
+        hint: 'Job was assigned to one name on the ticket; another person claimed it. Credit follows the claimer (usually OK).'
+    },
+    nopay: {
+        title: 'Complete, no payment logged',
+        hint: 'Job marked done but the system shows $0 collected — add sale or fix payment status.'
+    }
+};
+
 function buildTechFraudFlags(name, completedJobs, revRows, allJobs) {
     const flags = [];
     const seen = new Set();
-    function add(type, msg) {
-        const key = type + '|' + msg;
+    function add(type, jobId, line) {
+        const key = type + '|' + jobId;
         if (seen.has(key)) return;
         seen.add(key);
-        flags.push({ type, msg });
+        flags.push({ type, jobId: String(jobId), line });
     }
     (revRows || []).forEach(r => {
         const sale = (window._allSales || []).find(s =>
@@ -236,7 +259,7 @@ function buildTechFraudFlags(name, completedJobs, revRows, allJobs) {
         );
         const cashier = sale ? String(sale.cashier || '').trim() : '';
         if (cashier && cashier !== name) {
-            add('ring', 'Job #' + r.jobId + ' — ' + bz(r.amount) + ' collected; sale rung by ' + cashier + ' (credited to claimer).');
+            add('ring', r.jobId, 'Job #' + r.jobId + ': ' + cashier + ' rang ' + bz(r.amount) + '; credit stays with claimer (' + name + ').');
         }
     });
     (completedJobs || []).forEach(job => {
@@ -245,78 +268,121 @@ function buildTechFraudFlags(name, completedJobs, revRows, allJobs) {
         const claimer = String(full.claimedBy || '').trim();
         const assignee = String(full.technician || '').trim();
         if (!claimer) {
-            add('unclaimed', 'Job #' + job.id + ' completed with no claim on file — verify who did the repair.');
+            add('unclaimed', job.id, 'Job #' + job.id + ': completed — no Claim on file.');
         } else if (claimer !== name) {
-            add('claim', 'Job #' + job.id + ' claimed by ' + claimer + ' but credited to ' + name + '.');
-        } else if (assignee && assignee !== name && assignee.toLowerCase() !== 'unassigned') {
-            add('assign', 'Job #' + job.id + ' assigned to ' + assignee + ' but claimed by ' + name + '.');
+            add('claim', job.id, 'Job #' + job.id + ': claimed by ' + claimer + ', but this stats row is for ' + name + '.');
+        } else if (assignee && assignee !== name && !['unassigned', 'unknown'].includes(assignee.toLowerCase())) {
+            add('assign', job.id, 'Job #' + job.id + ': ticket listed ' + assignee + '; ' + name + ' claimed it (credit follows claimer).');
         }
         const collected = collectedOnJob(job.id, window._allSales);
         if (collected <= 0.009) {
-            add('nopay', 'Job #' + job.id + ' marked complete with no collected payment on file.');
+            add('nopay', job.id, 'Job #' + job.id + ': marked complete — $0 collected in system.');
         }
     });
     return flags;
 }
 
+function renderTechAuditFlags(flags) {
+    if (!flags.length) return '';
+    const groups = {};
+    flags.forEach(f => {
+        if (!groups[f.type]) groups[f.type] = [];
+        groups[f.type].push(f);
+    });
+    let html = '<div class="tech-audit-panel">';
+    html += '<div class="tech-audit-head">' + statIcon('warning', 14) + ' '
+        + flags.length + ' item' + (flags.length === 1 ? '' : 's') + ' to review</div>';
+    Object.entries(groups).forEach(([type, items]) => {
+        const meta = TECH_AUDIT_LABELS[type] || { title: type, hint: '' };
+        html += '<div class="tech-audit-group">';
+        html += '<div class="tech-audit-group-title">' + escH(meta.title) + ' <span class="tech-audit-count">(' + items.length + ')</span></div>';
+        if (meta.hint) html += '<div class="tech-audit-hint">' + escH(meta.hint) + '</div>';
+        html += '<ul class="tech-audit-lines">';
+        items.forEach(it => { html += '<li>' + escH(it.line) + '</li>'; });
+        html += '</ul></div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function renderTechJobTable(rows, emptyText) {
+    if (!rows.length) {
+        return '<div class="tech-perf-empty">' + escH(emptyText) + '</div>';
+    }
+    let html = '<div class="tech-job-table">';
+    rows.forEach(r => {
+        html += '<div class="tech-job-row">';
+        html += '<span class="tech-perf-job-id">' + escH(r.primary) + '</span>';
+        html += '<span class="tech-job-mid">' + escH(r.mid) + '</span>';
+        if (r.right) html += '<span class="tech-job-right">' + r.right + '</span>';
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
 function renderTechBreakdownBody(name, d, from, to, revRows, claimedJobs, allJobs) {
     const flags = buildTechFraudFlags(name, d.completedJobs, revRows, allJobs);
-    let html = '';
-    if (flags.length) {
-        html += '<div class="tech-perf-flags">';
-        flags.forEach(f => {
-            html += '<div class="tech-perf-flag tech-perf-flag-' + escH(f.type) + '">' + statIcon('warning', 12) + ' ' + escH(f.msg) + '</div>';
-        });
-        html += '</div>';
-    }
+    let html = renderTechAuditFlags(flags);
     const fmtDate = (str) => {
         const d0 = parsePortalDate(str);
         if (!d0) return '—';
         return new Date(d0 + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     };
 
-    html += '<div class="tech-perf-block-title">Claimed this period (' + claimedJobs.length + ')</div>';
-    if (!claimedJobs.length) {
-        html += '<div class="tech-perf-empty">No new claims in this date range.</div>';
-    } else {
-        html += '<ul class="tech-perf-list">';
-        claimedJobs.sort((a, b) => String(b.claimedAt || '').localeCompare(String(a.claimedAt || ''))).forEach(j => {
+    html += '<div class="tech-perf-block-title">Claimed this period <span class="tech-perf-count">' + claimedJobs.length + '</span></div>';
+    html += renderTechJobTable(
+        claimedJobs.sort((a, b) => String(b.claimedAt || '').localeCompare(String(a.claimedAt || ''))).map(j => {
             const st = STATUS_LABELS[(j.status || '').toLowerCase()] || j.status || '—';
-            html += '<li><span class="tech-perf-job-id">#' + escH(j.id) + '</span> '
-                + escH(j.device || 'Device') + ' · ' + escH(st)
-                + ' · claimed ' + escH(fmtDate(j.claimedAt)) + '</li>';
-        });
-        html += '</ul>';
-    }
+            return {
+                primary: '#' + j.id,
+                mid: (j.device || 'Device') + ' · ' + st,
+                right: 'Claimed ' + fmtDate(j.claimedAt)
+            };
+        }),
+        'No new claims in this date range.'
+    );
 
-    html += '<div class="tech-perf-block-title">Completed this period (' + d.completedJobs.length + ')</div>';
-    if (!d.completedJobs.length) {
-        html += '<div class="tech-perf-empty">No completions in this date range.</div>';
-    } else {
-        html += '<ul class="tech-perf-list">';
-        d.completedJobs.slice().sort((a, b) => String(b.dateCompleted || '').localeCompare(String(a.dateCompleted || ''))).forEach(j => {
+    html += '<div class="tech-perf-block-title">Completed this period <span class="tech-perf-count">' + d.completedJobs.length + '</span></div>';
+    html += renderTechJobTable(
+        d.completedJobs.slice().sort((a, b) => String(b.dateCompleted || '').localeCompare(String(a.dateCompleted || ''))).map(j => {
             const coll = collectedOnJob(j.id, window._allSales);
-            html += '<li><span class="tech-perf-job-id">#' + escH(j.id) + '</span> '
-                + escH(j.device || 'Device') + ' · done ' + escH(fmtDate(j.dateCompleted))
-                + ' · <span class="tech-perf-amt">' + bz(coll) + '</span> collected (all time on job)</li>';
-        });
-        html += '</ul>';
-    }
+            return {
+                primary: '#' + j.id,
+                mid: (j.device || 'Device') + ' · Done ' + fmtDate(j.dateCompleted),
+                right: '<span class="tech-perf-amt">' + bz(coll) + '</span> on job'
+            };
+        }),
+        'No completions in this date range.'
+    );
 
     const revTotal = (revRows || []).reduce((t, r) => t + r.amount, 0);
-    html += '<div class="tech-perf-block-title">Revenue collected in period (' + bz(revTotal) + ')</div>';
-    if (!revRows || !revRows.length) {
-        html += '<div class="tech-perf-empty">No job-linked payments in this date range.</div>';
-    } else {
-        html += '<ul class="tech-perf-list">';
-        revRows.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).forEach(r => {
-            html += '<li><span class="tech-perf-job-id">Job #' + escH(r.jobId) + '</span> '
-                + escH(r.date || '') + ' · ' + bz(r.amount)
-                + (r.saleId ? ' · sale ' + escH(r.saleId) : '') + '</li>';
-        });
-        html += '</ul>';
-    }
+    html += '<div class="tech-perf-block-title">Payments this period <span class="tech-perf-count">' + bz(revTotal) + '</span></div>';
+    html += renderTechJobTable(
+        (revRows || []).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).map(r => ({
+            primary: 'Job #' + r.jobId,
+            mid: (r.date || '') + (r.saleId ? ' · Sale ' + r.saleId : ''),
+            right: '<span class="tech-perf-amt">' + bz(r.amount) + '</span>'
+        })),
+        'No job-linked payments in this date range.'
+    );
     return html;
+}
+
+function renderTechPerfMeta(d) {
+    const avgDays = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
+    let chips = ''
+        + '<span class="tech-chip"><span class="tech-chip-n">' + d.assigned + '</span> received</span>'
+        + '<span class="tech-chip"><span class="tech-chip-n">' + d.claimedInPeriod + '</span> claimed</span>'
+        + '<span class="tech-chip"><span class="tech-chip-n">' + d.completed + '</span> completed</span>'
+        + '<span class="tech-chip"><span class="tech-chip-n">' + avgDays + '</span> avg days</span>';
+    if (d.stale) {
+        chips += '<span class="tech-chip warn"><span class="tech-chip-n">' + d.stale + '</span> stale</span>';
+    }
+    if (d.unclaimed) {
+        chips += '<span class="tech-chip bad"><span class="tech-chip-n">' + d.unclaimed + '</span> unclaimed</span>';
+    }
+    return '<div class="tech-perf-chips">' + chips + '</div>';
 }
 
 function formatPeriodLabel(from, to) {
@@ -851,10 +917,9 @@ function renderTechPerf(jobs, from, to) {
     const soloJobsWinner   = completedWinners.length === 1 ? completedWinners[0][0] : null;
     const soloRevWinner    = revenueWinners.length === 1 ? revenueWinners[0][0] : null;
 
-    let html = '<p class="tech-perf-note">Technicians and managers only. Revenue is credited to the job claimer. Expand a row for job IDs, claims, and audit flags.</p>';
+    let html = '<p class="tech-perf-note">Technicians and managers only. Money collected is credited to whoever <strong>claimed</strong> the job. Tap <strong>Full breakdown</strong> for job lists and review items.</p>';
 
     html += sorted.map(([name, d]) => {
-        const avgDays = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
         const revenue = techRevenue[name] || 0;
         const isUnassigned = name === 'Unassigned';
         const topJobs = name === soloJobsWinner;
@@ -875,13 +940,7 @@ function renderTechPerf(jobs, from, to) {
             +     (topJobs ? ' ' + statBadge('Most Jobs', 'success') : '')
             +     (topRev ? ' ' + statBadge('Top Revenue', 'primary') : '')
             +   '</div>'
-            +   '<div class="person-meta">' + d.assigned + ' received in period'
-            +     ' &bull; ' + d.claimedInPeriod + ' claimed in period'
-            +     ' &bull; ' + d.completed + ' completed in period'
-            +     ' &bull; avg ' + avgDays + ' days'
-            +     (d.stale ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
-            +     (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
-            +   '</div>'
+            +   renderTechPerfMeta(d)
             + '</div>'
             + '<div class="tech-perf-metrics">'
             +   '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'

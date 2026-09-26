@@ -137,12 +137,33 @@
         .tech-perf-job-id{font-weight:800;color:var(--text-main);}
         .tech-perf-amt{color:var(--success);font-weight:700;}
         .tech-perf-empty{font-size:0.7rem;color:var(--text-dim);font-style:italic;}
-        .tech-perf-flags{margin-bottom:8px;}
-        .tech-perf-flag{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:8px;margin-bottom:4px;font-size:0.68rem;line-height:1.35;border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.08);color:var(--text-main);}
         .tech-perf-excluded{margin-top:14px;padding:10px 12px;border-radius:10px;font-size:0.68rem;line-height:1.45;color:var(--text-dim);border:1px solid var(--glass-border);background:rgba(var(--primary-rgb,37,99,235),0.04);display:flex;align-items:flex-start;gap:8px;}
         .tech-perf-metrics{display:flex;gap:16px;flex-shrink:0;text-align:right;margin-left:auto;}
         .tech-perf-revenue{font-size:0.95rem;color:var(--success);}
         .tech-perf-summary{flex-wrap:wrap;align-items:flex-start;}
+        .tech-perf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+        .tech-chip{display:inline-flex;align-items:baseline;gap:4px;padding:4px 8px;border-radius:8px;font-size:0.68rem;font-weight:600;color:var(--text-dim);background:var(--glass);border:1px solid var(--glass-border);}
+        .tech-chip-n{font-weight:800;color:var(--text-main);font-size:0.78rem;}
+        .tech-chip.warn{border-color:rgba(245,158,11,0.35);background:rgba(245,158,11,0.08);}
+        .tech-chip.warn .tech-chip-n{color:var(--warning);}
+        .tech-chip.bad{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.08);}
+        .tech-chip.bad .tech-chip-n{color:var(--danger);}
+        .tech-perf-count{font-weight:800;color:var(--primary);margin-left:4px;}
+        .tech-audit-panel{margin-bottom:12px;padding:10px;border-radius:10px;border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.06);}
+        .tech-audit-head{display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:800;color:var(--text-main);margin-bottom:8px;}
+        .tech-audit-group{margin-top:8px;padding-top:8px;border-top:1px dashed var(--glass-border);}
+        .tech-audit-group:first-of-type{margin-top:0;padding-top:0;border-top:none;}
+        .tech-audit-group-title{font-size:0.7rem;font-weight:800;color:var(--text-main);}
+        .tech-audit-count{color:var(--warning);font-weight:800;}
+        .tech-audit-hint{font-size:0.65rem;color:var(--text-dim);line-height:1.4;margin:4px 0 6px;}
+        .tech-audit-lines{margin:0;padding:0 0 0 14px;font-size:0.68rem;line-height:1.45;}
+        .tech-audit-lines li{margin-bottom:3px;}
+        .tech-job-table{display:flex;flex-direction:column;gap:6px;margin-bottom:4px;}
+        .tech-job-row{display:grid;grid-template-columns:minmax(52px,0.7fr) 1fr auto;gap:8px;align-items:start;padding:8px 10px;border-radius:8px;background:var(--glass);border:1px solid var(--glass-border);font-size:0.68rem;line-height:1.35;}
+        .tech-job-mid{color:var(--text-dim);overflow-wrap:anywhere;}
+        .tech-job-right{text-align:right;font-weight:700;color:var(--text-main);white-space:nowrap;}
+        .stat-section-body-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+        .page-header-actions{display:flex;gap:8px;flex-wrap:wrap;}
         .person-stats{margin-left:auto;text-align:right;}
         .person-stat-main{font-size:0.88rem;font-weight:800;color:var(--text-main);}
         .person-stat-sub{font-size:0.7rem;color:var(--text-dim);}
@@ -185,22 +206,43 @@
 
         /* ── Responsive ── */
         @media(max-width:768px){
+            main{padding:118px var(--space-sm) var(--space-lg);}
+            .page-header h1{font-size:1.45rem;}
+            .page-header-actions{width:100%;}
+            .page-header-actions .stat-action-btn{flex:1 1 calc(50% - 4px);justify-content:center;min-height:44px;}
             .kpi-grid{grid-template-columns:repeat(2,1fr);}
             .two-col{grid-template-columns:1fr;}
+            .stat-section-head{padding:14px 16px;}
+            .stat-section-body{padding:14px 16px;}
+            .bar-chart{min-width:520px;}
+            .stat-section-body-scroll{margin:0 -16px;padding:0 16px;}
+            .person-row{flex-wrap:wrap;align-items:flex-start;}
+            .person-stats{margin-left:0;width:100%;display:flex;justify-content:flex-start;gap:20px;text-align:left;padding-left:44px;}
+            .stat-row{flex-wrap:wrap;gap:6px;}
+            .stat-row-val{margin-left:auto;}
+            .sync-bar{flex-direction:column;align-items:flex-start;gap:8px;border-radius:var(--radius-md);}
         }
         @media(max-width:480px){
             main{padding:110px var(--space-sm) calc(var(--space-md) + env(safe-area-inset-bottom));}
-            .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
-            .kpi-value{font-size:1.4rem;}
+            .kpi-grid{grid-template-columns:1fr;gap:8px;}
+            .kpi-card{padding:14px 16px;}
+            .kpi-value{font-size:1.55rem;}
             .date-bar{gap:6px;}
+            .range-btn{flex:1 1 calc(50% - 3px);min-height:44px;text-align:center;}
             .date-custom{width:100%;margin-left:0;flex-wrap:wrap;}
-            .date-custom input{flex:1;min-width:0;}
+            .date-custom input{flex:1;min-width:0;min-height:44px;}
             .modal-overlay{align-items:flex-end;padding:0;}
             .modal-card{border-radius:20px 20px 0 0;max-width:100%;max-height:min(92vh,720px);padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+            .tech-perf-card{padding-bottom:12px;}
             .tech-perf-details{margin-left:0;}
-            .tech-perf-summary .tech-perf-metrics{width:100%;margin-left:44px;margin-top:6px;justify-content:flex-start;text-align:left;}
+            .tech-perf-summary{flex-direction:column;gap:8px;}
+            .tech-perf-summary .person-avatar{align-self:flex-start;}
+            .tech-perf-summary .tech-perf-metrics{width:100%;margin-left:0;padding-left:0;border-top:1px solid var(--glass-border);padding-top:10px;justify-content:space-around;}
+            .tech-job-row{grid-template-columns:1fr;gap:4px;}
+            .tech-job-right{text-align:left;white-space:normal;}
             .person-row.drill-row{min-height:44px;}
             .tech-perf-details summary{min-height:44px;align-items:center;}
+            .page-header-actions .stat-action-btn{flex:1 1 100%;}
         }
     </style>
 </head>
@@ -214,7 +256,7 @@
             <h1 data-icon="chart" data-icon-size="22">Statistics</h1>
             <p>Shop performance, revenue, and staff metrics.</p>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div class="page-header-actions">
             <button class="stat-action-btn" onclick="openStatsPartialSales()" data-icon="bolt">Partial Owed</button>
             <button class="stat-action-btn" onclick="exportCSV()" data-icon="file">Export CSV</button>
             <button class="stat-action-btn" onclick="exportPDF()" data-icon="print">Print Report</button>
@@ -295,7 +337,7 @@
     <!-- Revenue by Day -->
     <div class="stat-section">
         <div class="stat-section-head" data-icon="calendar">Revenue by Day</div>
-        <div class="stat-section-body">
+        <div class="stat-section-body stat-section-body-scroll">
             <div class="bar-chart" id="revenueChart">
                 <div class="empty-state" style="width:100%;">Loading&hellip;</div>
             </div>
