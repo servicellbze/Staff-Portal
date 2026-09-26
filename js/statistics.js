@@ -193,6 +193,13 @@ function staffRoleFor(username) {
 }
 
 /** Technicians and managers only — cashiers belong under Cashier Performance. */
+function isCashierAccount(username) {
+    const key = String(username || '').trim();
+    if (!key) return false;
+    if (staffRoleFor(key) === 'cashier') return true;
+    return /^cashier_/i.test(key);
+}
+
 function isTechPerformanceEligible(username) {
     const key = String(username || '').trim();
     if (key === 'Unassigned') return true;
@@ -235,8 +242,8 @@ const TECH_AUDIT_LABELS = {
         hint: 'Someone else claimed this job, but this row is credited under a different name — check job history.'
     },
     assign: {
-        title: 'Listed tech ≠ claimer',
-        hint: 'Job was assigned to one name on the ticket; another person claimed it. Credit follows the claimer (usually OK).'
+        title: 'Different tech on ticket vs claimer',
+        hint: 'Ticket shows one technician; another technician or manager claimed it. Credit follows whoever claimed (often normal).'
     },
     nopay: {
         title: 'Complete, no payment logged',
@@ -271,7 +278,12 @@ function buildTechFraudFlags(name, completedJobs, revRows, allJobs) {
             add('unclaimed', job.id, 'Job #' + job.id + ': completed — no Claim on file.');
         } else if (claimer !== name) {
             add('claim', job.id, 'Job #' + job.id + ': claimed by ' + claimer + ', but this stats row is for ' + name + '.');
-        } else if (assignee && assignee !== name && !['unassigned', 'unknown'].includes(assignee.toLowerCase())) {
+        } else if (
+            assignee && assignee !== name
+            && !['unassigned', 'unknown'].includes(assignee.toLowerCase())
+            && !isCashierAccount(assignee)
+            && (isTechPerformanceEligible(assignee) || /^technician_/i.test(assignee) || /^manager_/i.test(assignee))
+        ) {
             add('assign', job.id, 'Job #' + job.id + ': ticket listed ' + assignee + '; ' + name + ' claimed it (credit follows claimer).');
         }
         const collected = collectedOnJob(job.id, window._allSales);

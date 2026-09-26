@@ -57,6 +57,37 @@
   transform: scale(0.98);
 }
 
+#sc-app-update-card .sc-update-timer {
+  height: 3px;
+  width: 100%;
+  background: rgba(var(--primary-rgb, 37, 99, 235), 0.12);
+  flex-shrink: 0;
+}
+
+#sc-app-update-card .sc-update-timer-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--primary, #2563eb);
+  transform: scaleX(1);
+  transform-origin: left center;
+  animation: sc-update-timer-shrink var(--sc-update-dismiss-ms, 14s) linear forwards;
+  will-change: transform;
+}
+
+#sc-app-update-card.is-paused .sc-update-timer-fill {
+  animation-play-state: paused;
+}
+
+@keyframes sc-update-timer-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 #staff-broadcast-card.is-expanded {
   max-height: min(72vh, 520px);
   overflow-y: auto;
@@ -194,11 +225,16 @@
 }
 
 @media (min-width: 768px) {
+  /* Team notice sits under the update card; slides up when update auto-hides */
   #staff-broadcast-card {
     top: calc(88px + var(--sc-notice-stack-above-broadcast, 0px));
     right: max(16px, env(safe-area-inset-right));
     left: auto;
     bottom: auto;
+    transition:
+      opacity 0.28s ease,
+      transform 0.28s ease,
+      top 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   #sc-app-update-card {
@@ -234,9 +270,20 @@
     z-index: calc(var(--z-nav, 1000) + 5);
   }
 
+  /* Mobile: update anchors bottom; team notice stacks above it, then drops into its slot when update hides */
   #staff-broadcast-card {
     bottom: calc(var(--scb-stack-offset, 0px) + var(--sc-notice-stack-above-broadcast, 0px));
     z-index: calc(var(--z-nav, 1000) + 4);
+    transition:
+      opacity 0.28s ease,
+      transform 0.28s ease,
+      bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #sc-app-update-card {
+    transition:
+      opacity 0.28s ease,
+      transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   #staff-broadcast-card.is-visible,
@@ -305,5 +352,17 @@
   #staff-broadcast-card,
   #sc-app-update-card {
     transition: opacity 0.2s ease;
+  }
+
+  @media (min-width: 768px) {
+    #staff-broadcast-card {
+      transition: opacity 0.2s ease;
+    }
+  }
+
+  @media (max-width: 767px) {
+    #staff-broadcast-card {
+      transition: opacity 0.2s ease;
+    }
   }
 }

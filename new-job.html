@@ -1501,8 +1501,10 @@
                 }
             }
 
-            // Get technician username
-            const technician = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Unknown';
+            // Technician on ticket = who will do the repair (not who logged it at the desk)
+            const loggedIn = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || 'Unknown';
+            const role = typeof getUserRole === 'function' ? getUserRole() : '';
+            const technician = (role === 'technician' || role === 'manager') ? loggedIn : 'Unassigned';
 
             // Build inspection checklist string — always save all 4 items with their state
             const ACCESSORY_ITEMS = [

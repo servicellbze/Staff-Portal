@@ -653,6 +653,7 @@ window.isOffline = () => !navigator.onLine;
     const SW_SCOPE = '/Staff-Portal/';
     let registrationRef = null;
     let pendingWorker = null;
+    const UPDATE_DISMISS_MS = 14000;
 
     function ensureNoticeStyles() {
         if (document.getElementById('staff-banner-css')) return;
@@ -667,11 +668,52 @@ window.isOffline = () => !navigator.onLine;
         const updateEl = document.getElementById('sc-app-update-card');
         let above = 0;
         if (updateEl && updateEl.classList.contains('is-visible')) {
-            above = updateEl.offsetHeight + 10;
+            above = Math.ceil(updateEl.getBoundingClientRect().height) + 10;
         }
         document.documentElement.style.setProperty('--sc-notice-stack-above-broadcast', above + 'px');
     }
     window.scSyncNoticeStack = syncNoticeStack;
+
+    function clearUpdateDismissTimer(card) {
+        if (!card) return;
+        if (card._dismissTimer) {
+            clearTimeout(card._dismissTimer);
+            card._dismissTimer = null;
+        }
+        const fill = card.querySelector('.sc-update-timer-fill');
+        if (fill && card._onTimerEnd) {
+            fill.removeEventListener('animationend', card._onTimerEnd);
+            card._onTimerEnd = null;
+        }
+    }
+
+    function dismissUpdateNotice() {
+        const card = document.getElementById('sc-app-update-card');
+        if (!card || !card.classList.contains('is-visible')) return;
+        clearUpdateDismissTimer(card);
+        card.classList.remove('is-visible', 'is-paused');
+        syncNoticeStack();
+        window.dispatchEvent(new Event('sc-bottom-chrome-change'));
+        const onSettled = (e) => {
+            if (e.propertyName && e.propertyName !== 'transform' && e.propertyName !== 'opacity') return;
+            syncNoticeStack();
+            card.removeEventListener('transitionend', onSettled);
+        };
+        card.addEventListener('transitionend', onSettled);
+    }
+
+    function restartUpdateDismissTimer(card) {
+        clearUpdateDismissTimer(card);
+        card.style.setProperty('--sc-update-dismiss-ms', (UPDATE_DISMISS_MS / 1000) + 's');
+        const fill = card.querySelector('.sc-update-timer-fill');
+        if (!fill) return;
+        fill.style.animation = 'none';
+        void fill.offsetWidth;
+        fill.style.animation = '';
+        card._onTimerEnd = () => dismissUpdateNotice();
+        fill.addEventListener('animationend', card._onTimerEnd);
+        card._dismissTimer = setTimeout(() => dismissUpdateNotice(), UPDATE_DISMISS_MS + 120);
+    }
 
     function showUpdateNotice(worker) {
         if (worker) pendingWorker = worker;
@@ -691,10 +733,12 @@ window.isOffline = () => !navigator.onLine;
                 + '<div class="scb-content">'
                 + '<div class="scb-label">App update</div>'
                 + '<div class="scb-title">Update ready</div>'
-                + '<div class="scb-message">Reload to load the latest portal version.</div>'
+                + '<div class="scb-message">Tap Reload when you are ready. This hides automatically — the update stays available until you reload.</div>'
                 + '<button type="button" class="scb-reload-btn">Reload</button>'
-                + '</div></div>';
+                + '</div></div>'
+                + '<div class="sc-update-timer" aria-hidden="true"><span class="sc-update-timer-fill"></span></div>';
             card.querySelector('.scb-reload-btn').addEventListener('click', () => {
+                clearUpdateDismissTimer(card);
                 if (pendingWorker && pendingWorker.state === 'installed') {
                     pendingWorker.postMessage({ type: 'SKIP_WAITING' });
                 }
@@ -703,10 +747,13 @@ window.isOffline = () => !navigator.onLine;
             document.body.appendChild(card);
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 card.classList.add('is-visible');
+                restartUpdateDismissTimer(card);
                 syncNoticeStack();
             }));
         } else {
             card.classList.add('is-visible');
+            card.classList.remove('is-paused');
+            restartUpdateDismissTimer(card);
             syncNoticeStack();
         }
     }
@@ -750,6 +797,10 @@ window.isOffline = () => !navigator.onLine;
 
     let lastSwUpdateCheck = 0;
     document.addEventListener('visibilitychange', () => {
+        const card = document.getElementById('sc-app-update-card');
+        if (card && card.classList.contains('is-visible')) {
+            card.classList.toggle('is-paused', document.visibilityState !== 'visible');
+        }
         if (document.visibilityState !== 'visible' || !registrationRef) return;
         const now = Date.now();
         if (now - lastSwUpdateCheck < 45000) return;
@@ -773,6 +824,12 @@ window.isOffline = () => !navigator.onLine;
     } else {
         window.addEventListener('load', registerServiceWorker);
     }
+
+    /** Dev / QA: preview the update card without a new service worker. */
+    window.scTestUpdateNotice = function () {
+        showUpdateNotice(null);
+    };
+    window.scDismissUpdateNotice = dismissUpdateNotice;
 })();
 
 // ── sendNotification — role-aware in-app bell ────────────────────────────────
