@@ -64,6 +64,53 @@ function saleOutstanding(s) {
     return Math.max(0, (parseFloat(s.total) || 0) - (parseFloat(s.amountPaid) || 0));
 }
 
+function _invoiceItemsForReceipt(invoiceItems) {
+    return (invoiceItems || []).map(function(i) {
+        const price = parseFloat(i.price) || 0;
+        return { name: i.desc || i.name || 'Item', qty: 1, price: price, total: price };
+    });
+}
+
+function _receiptOptsForCounterPartial(total, amountPaid) {
+    const invoiceTotal = parseFloat(total) || 0;
+    const paidThisVisit = parseFloat(amountPaid) || 0;
+    return {
+        paidThisVisit: paidThisVisit,
+        priorPaid: 0,
+        totalPaid: paidThisVisit,
+        balanceDue: Math.max(0, invoiceTotal - paidThisVisit)
+    };
+}
+
+/** Job pickups: full invoice on receipt with prior / this visit / balance when reprinting from history. */
+function _receiptOptsForJobSale(s) {
+    if (!s || !s.jobId) return null;
+    const job = allJobs.find(function(x) { return String(x.id) === String(s.jobId); });
+    if (!job) return null;
+    const inv = tryParseJSON(job.invoiceItems, []);
+    const invoiceTotal = inv.reduce(function(t, i) { return t + (parseFloat(i.price) || 0); }, 0);
+    if (invoiceTotal <= 0) return null;
+    const jobSales = allSales
+        .filter(function(x) { return x.status !== 'reversed' && String(x.jobId) === String(s.jobId); })
+        .sort(function(a, b) { return String(a.saleId).localeCompare(String(b.saleId)); });
+    var paidBefore = 0;
+    for (var i = 0; i < jobSales.length; i++) {
+        if (String(jobSales[i].saleId) === String(s.saleId)) break;
+        paidBefore += saleCollectedAmount(jobSales[i]);
+    }
+    const paidThis = saleCollectedAmount(s);
+    const totalPaid = paidBefore + paidThis;
+    const balanceDue = Math.max(0, invoiceTotal - totalPaid);
+    if (balanceDue <= 0.009 && paidBefore <= 0.009) return null;
+    return {
+        priorPaid: paidBefore,
+        paidThisVisit: paidThis,
+        totalPaid: totalPaid,
+        balanceDue: balanceDue,
+        invoiceTotal: invoiceTotal
+    };
+}
+
 function sumCollectedSales(sales) {
     return sales.filter(s => s.status !== 'reversed').reduce((t, s) => t + saleCollectedAmount(s), 0);
 }
@@ -809,8 +856,8 @@ function _openAndPrint(html) {
     setTimeout(_doPrint, 300);
 }
 
-function _printSaleReceipt(items, total, amountPaid, method, saleId, customer, cashier) {
-    printHTML(buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier));
+function _printSaleReceipt(items, total, amountPaid, method, saleId, customer, cashier, receiptOpts) {
+    printHTML(buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier, receiptOpts));
 }
 
 function printEOD() {
@@ -1291,6 +1338,7 @@ async function submitSale() {
     if (method === 'partial') {
         amountPaid = parseFloat(document.getElementById('salePartialAmount').value) || 0;
         if (amountPaid <= 0) { showToast('Enter the partial amount paid.', 'err'); return; }
+        if (amountPaid > total + 0.009) { showToast('Partial payment cannot exceed invoice total.', 'err'); return; }
     } else if (method === 'cash') {
         // For cash: amountPaid is the tendered amount (what customer gave)
         amountPaid = parseFloat(document.getElementById('saleCashTendered').value) || total;
@@ -1309,8 +1357,9 @@ async function submitSale() {
         if (data.success) {
             closeModal('saleModal');
             if (typeof haptic === 'function') haptic('success');
-            // Show sale confirmation modal — use tendered for change display, not amountPaid
-            const tendered = method === 'cash' ? (parseFloat(document.getElementById('saleCashTendered').value) || total) : total;
+            const tendered = method === 'cash'
+                ? (parseFloat(document.getElementById('saleCashTendered').value) || total)
+                : (method === 'partial' ? amountPaid : total);
             const change = method === 'cash' ? Math.max(0, tendered - total) : 0;
             document.getElementById('scTotal').textContent = bz(total);
             document.getElementById('scPaid').textContent  = bz(tendered);
@@ -1322,9 +1371,9 @@ async function submitSale() {
                 changeRow.style.display = 'none';
             }
             openModal('saleConfirmModal');
-            printReceipt(items, total, amountPaid, method, data.saleId, '');
-            // Store last receipt data for reprinting
-            window._lastReceipt = { items, total, amountPaid, method, saleId: data.saleId, customer: '' };
+            const receiptOpts = method === 'partial' ? _receiptOptsForCounterPartial(total, amountPaid) : null;
+            printReceipt(items, total, amountPaid, method, data.saleId, '', false, receiptOpts);
+            window._lastReceipt = { items, total, amountPaid, method, saleId: data.saleId, customer: '', receiptOpts };
             await loadAll();
         } else { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast(data.error || 'Could not save.', 'err'); }
     } catch (e) { btn.disabled = false; btn.textContent = 'Complete Sale'; showToast('Connection error.', 'err'); }
@@ -1485,6 +1534,26 @@ async function submitAddPartialPayment() {
         parent.amountPaid = newPaid;
 
         if (typeof haptic === 'function') haptic('success');
+        const invoiceTotal = parseFloat(parent.total) || 0;
+        const balanceLeft = Math.max(0, invoiceTotal - newPaid);
+        const receiptItems = tryParseJSON(parent.items, []);
+        const receiptOpts = {
+            priorPaid: prevPaid,
+            paidThisVisit: amount,
+            totalPaid: newPaid,
+            balanceDue: balanceLeft
+        };
+        const receiptMethod = balanceLeft > 0.009 ? 'partial' : method;
+        window._lastReceipt = {
+            items: receiptItems,
+            total: invoiceTotal,
+            amountPaid: amount,
+            method: receiptMethod,
+            saleId: createRes.saleId,
+            customer: parent.customer || '',
+            receiptOpts
+        };
+        printReceipt(receiptItems, invoiceTotal, amount, receiptMethod, createRes.saleId, parent.customer || '', false, receiptOpts);
         showToast('Payment recorded — receipt ' + (createRes.saleId || ''), 'ok');
         closeModal('addPartialPaymentModal');
         _addPaymentParentSale = null;
@@ -1536,7 +1605,8 @@ function _lastReceiptPayload() {
         method: r.method,
         saleId: r.saleId,
         customer: r.customer || '',
-        cashier: currentUser || ''
+        cashier: currentUser || '',
+        receiptOpts: r.receiptOpts || null
     };
 }
 
@@ -1553,15 +1623,15 @@ function reprintLastReceipt() {
             return;
         }
 
-        const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
-        const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+        const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
+        const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
         if (typeof isMobileReceipt === 'function' && isMobileReceipt()) {
             openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
             return;
         }
 
         if (typeof kickDrawer === 'function') kickDrawer();
-        _printSaleReceipt(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+        _printSaleReceipt(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
         showToast('Printing receipt...', 'ok');
         if (typeof haptic === 'function') haptic('light');
     } catch (error) {
@@ -1576,8 +1646,8 @@ function shareLastReceipt() {
         showToast('No receipt to share', 'err');
         return;
     }
-    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
-    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
+    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
     openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
 }
 
@@ -1805,6 +1875,16 @@ async function submitJobPickup() {
     if (method === 'partial') {
         amountPaid = parseFloat(document.getElementById('jobPartialAmount').value) || 0;
         collectedNow = amountPaid;
+        if (amountPaid <= 0) {
+            btn.disabled = false; btn.textContent = '\u2713 Collect Payment';
+            showToast('Enter the partial amount paid.', 'err');
+            return;
+        }
+        if (amountPaid > due + 0.009) {
+            btn.disabled = false; btn.textContent = '\u2713 Collect Payment';
+            showToast('Partial payment cannot exceed balance due.', 'err');
+            return;
+        }
     } else if (method === 'cash') {
         // For cash: amountPaid is the tendered amount (what customer gave); collected = the balance
         amountPaid = parseFloat(document.getElementById('jobCashTendered').value) || due;
@@ -1868,25 +1948,36 @@ async function submitJobPickup() {
                 showToast('Payment collected!', 'ok');
             }
 
-            const receiptItems = paidToDate > 0.009
-                ? [{ name: saleLabel, qty: 1, price: due, total: due }]
-                : invoiceItems.map(i => ({ name: i.desc, qty: 1, price: i.price, total: i.price }));
-
-            if (fullyPaid) {
-                window._lastReceipt = {
-                    items: receiptItems,
-                    total: due,
-                    amountPaid,
-                    method,
-                    saleId: data.saleId,
-                    customer: j.customerName || ''
-                };
-                const printed = printReceipt(
-                    receiptItems, due, amountPaid, method, data.saleId, j.customerName || '', true
-                );
-                if (!printed) {
-                    showToast('Receipt saved — use Reprint Last if auto-print is off.', 'ok');
+            const receiptItems = invoiceItems.length
+                ? _invoiceItemsForReceipt(invoiceItems)
+                : [{ name: saleLabel, qty: 1, price: due, total: due }];
+            const receiptTotal = invoiceTotal > 0 ? invoiceTotal : due;
+            const receiptOpts = (remainingAfter > 0.009 || paidToDate > 0.009)
+                ? {
+                    priorPaid: paidToDate,
+                    paidThisVisit: collectedNow,
+                    totalPaid: paidToDate + collectedNow,
+                    balanceDue: remainingAfter
                 }
+                : null;
+            const receiptMethod = remainingAfter > 0.009 ? 'partial' : method;
+            const receiptPaid = collectedNow;
+
+            window._lastReceipt = {
+                items: receiptItems,
+                total: receiptTotal,
+                amountPaid: receiptPaid,
+                method: receiptMethod,
+                saleId: data.saleId,
+                customer: j.customerName || '',
+                receiptOpts
+            };
+            const printed = printReceipt(
+                receiptItems, receiptTotal, receiptPaid, receiptMethod,
+                data.saleId, j.customerName || '', true, receiptOpts
+            );
+            if (!printed) {
+                showToast('Receipt saved — use Reprint Last if auto-print is off.', 'ok');
             }
 
             await loadAll();
@@ -2342,35 +2433,55 @@ function openViewSale(saleId) {
 
 function _saleReceiptPayload(s) {
     const items = tryParseJSON(s.items, []);
+    let total = parseFloat(s.total) || 0;
+    let amountPaid = parseFloat(s.amountPaid) || 0;
+    let method = s.method || 'cash';
+    let receiptItems = items;
+    let receiptOpts = _receiptOptsForJobSale(s);
+    if (receiptOpts && receiptOpts.invoiceTotal != null) {
+        const job = allJobs.find(function(x) { return String(x.id) === String(s.jobId); });
+        if (job) receiptItems = _invoiceItemsForReceipt(tryParseJSON(job.invoiceItems, []));
+        total = receiptOpts.invoiceTotal;
+        amountPaid = receiptOpts.paidThisVisit;
+        if (receiptOpts.balanceDue > 0.009) method = 'partial';
+        const opts = Object.assign({}, receiptOpts);
+        delete opts.invoiceTotal;
+        receiptOpts = opts;
+    } else if (method === 'partial') {
+        receiptOpts = _receiptOptsForCounterPartial(total, amountPaid);
+    } else {
+        receiptOpts = null;
+    }
     return {
-        items,
-        total: parseFloat(s.total) || 0,
-        amountPaid: parseFloat(s.amountPaid) || 0,
-        method: s.method || 'cash',
+        items: receiptItems,
+        total,
+        amountPaid,
+        method,
         saleId: s.saleId || '',
         customer: s.customer || '',
-        cashier: s.cashier || currentUser || ''
+        cashier: s.cashier || currentUser || '',
+        receiptOpts
     };
 }
 
 function printViewedSale() {
     if (!_viewedSale) return;
     const p = _saleReceiptPayload(_viewedSale);
-    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
-    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
+    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
     if (typeof isMobileReceipt === 'function' && isMobileReceipt()) {
         openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
         return;
     }
     kickDrawer();
-    _printSaleReceipt(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    _printSaleReceipt(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
 }
 
 function shareViewedSale() {
     if (!_viewedSale) return;
     const p = _saleReceiptPayload(_viewedSale);
-    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
-    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier);
+    const html = buildSaleReceiptHTML(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
+    const text = buildSaleReceiptText(p.items, p.total, p.amountPaid, p.method, p.saleId, p.customer, p.cashier, p.receiptOpts);
     openReceiptPreview(html, text, { title: 'Sale Receipt #' + p.saleId });
 }
 
@@ -2532,10 +2643,10 @@ function printPayoutSlip(payoutId) {
 }
 
 // -- Receipt Printing ----------------------------------------------------------
-function printReceipt(items, total, amountPaid, method, saleId, customer, forcePrint) {
+function printReceipt(items, total, amountPaid, method, saleId, customer, forcePrint, receiptOpts) {
     if (!forcePrint && localStorage.getItem('scAutoPrintReceipt') !== '1') return false;
     kickDrawer();
-    _printSaleReceipt(items, total, amountPaid, method, saleId, customer, currentUser);
+    _printSaleReceipt(items, total, amountPaid, method, saleId, customer, currentUser, receiptOpts);
     return true;
 }
 

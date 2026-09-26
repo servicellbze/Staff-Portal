@@ -228,21 +228,68 @@ function buildJobReceiptHTML(j, opts) {
 }
 
 // ── Sale Receipt (sales.js) ───────────────────────────────────────────────────
-function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier) {
-    const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
-    // GST is included in the price (12.5% of pre-tax = total × 12.5/112.5)
-    const gst     = total * 12.5 / 112.5;
-    const preTax  = total - gst;
+function _receiptPaymentSummary(total, amountPaid, method, receiptOpts) {
+    const opts = receiptOpts || {};
+    const invoiceTotal = parseFloat(total) || 0;
+    const paidThisVisit = opts.paidThisVisit != null
+        ? parseFloat(opts.paidThisVisit) || 0
+        : parseFloat(amountPaid) || 0;
+    const priorPaid = parseFloat(opts.priorPaid) || 0;
+    const totalPaid = opts.totalPaid != null
+        ? parseFloat(opts.totalPaid) || 0
+        : priorPaid + paidThisVisit;
+    const balanceDue = opts.balanceDue != null
+        ? Math.max(0, parseFloat(opts.balanceDue) || 0)
+        : Math.max(0, invoiceTotal - totalPaid);
+    const isPartial = method === 'partial'
+        || balanceDue > 0.009
+        || (totalPaid + 0.009 < invoiceTotal);
+    const displayMethod = method === 'partial'
+        ? 'Partial payment'
+        : (method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash');
+    const change = !isPartial && method === 'cash'
+        ? Math.max(0, paidThisVisit - invoiceTotal)
+        : 0;
+    return {
+        invoiceTotal, paidThisVisit, priorPaid, totalPaid, balanceDue, isPartial, displayMethod, change
+    };
+}
+
+function _receiptPaymentRowsHTML(summary, bz, esc) {
+    const s = summary;
+    if (!s.isPartial) {
+        let html = `<tr class="divider"><td colspan="3">TOTAL</td><td style="text-align:right">${bz(s.invoiceTotal)}</td></tr>`
+            + `<tr><td colspan="3">Paid (${esc(s.displayMethod)})</td><td style="text-align:right">${bz(s.paidThisVisit)}</td></tr>`;
+        if (s.change > 0.009) {
+            html += `<tr><td colspan="3">Change</td><td style="text-align:right">${bz(s.change)}</td></tr>`;
+        }
+        return html;
+    }
+    let html = `<tr class="divider"><td colspan="3">INVOICE TOTAL</td><td style="text-align:right">${bz(s.invoiceTotal)}</td></tr>`;
+    if (s.priorPaid > 0.009) {
+        html += `<tr><td colspan="3">Paid previously</td><td style="text-align:right">${bz(s.priorPaid)}</td></tr>`;
+    }
+    html += `<tr class="partial-paid"><td colspan="3">Paid this visit (${esc(s.displayMethod)})</td><td style="text-align:right">${bz(s.paidThisVisit)}</td></tr>`;
+    html += `<tr><td colspan="3">Total paid to date</td><td style="text-align:right">${bz(s.totalPaid)}</td></tr>`;
+    html += `<tr class="partial-due"><td colspan="3">BALANCE DUE</td><td style="text-align:right">${bz(s.balanceDue)}</td></tr>`;
+    return html;
+}
+
+function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer, cashier, receiptOpts) {
+    const pay = _receiptPaymentSummary(total, amountPaid, method, receiptOpts);
+    const gst     = pay.invoiceTotal * 12.5 / 112.5;
+    const preTax  = pay.invoiceTotal - gst;
     function bz(n) { return 'BZ$' + parseFloat(n||0).toFixed(2); }
     
     const friendlyName = resolveStaffDisplayName(cashier) || 'Staff';
-    
-    // Capitalize payment method for professional display
-    const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
 
     const rows = items.map(i =>
-        `<tr><td>${_esc(i.name)}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${bz(i.price)}</td><td style="text-align:right">${bz(i.total)}</td></tr>`
+        `<tr><td>${_esc(i.name)}</td><td style="text-align:center">${i.qty}</td><td style="text-align:right">${bz(i.price)}</td><td style="text-align:right">${bz(i.total != null ? i.total : (i.price || 0) * (i.qty || 1))}</td></tr>`
     ).join('');
+
+    const partialFooter = pay.isPartial
+        ? '<br>Partial payment — remaining balance due is shown above.'
+        : '';
 
     return `<style>
 @media print { @page { size: 72mm auto; margin: 0; } * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; color:#000!important; background:transparent!important; -webkit-font-smoothing:none!important; text-rendering:geometricPrecision!important; } body { background:white!important; } }
@@ -259,6 +306,8 @@ function buildSaleReceiptHTML(items, total, amountPaid, method, saleId, customer
 #printInvoice td { padding:3px 0; border-bottom:1px solid #000; }
 #printInvoice .divider td { border-top:2px solid #000; border-bottom:none; font-size:13px; font-weight:900; padding-top:4px; }
 #printInvoice .gst-row td { border-bottom:1px solid #000; font-size:11px; }
+#printInvoice .partial-paid td { font-weight:900; }
+#printInvoice .partial-due td { border-top:2px double #000; border-bottom:2px double #000; font-size:13px; font-weight:900; padding:4px 0; }
 #printInvoice .footer { text-align:center; font-size:11px; margin-top:5px; border-top:1px solid #000; padding-top:4px; line-height:1.4; }
 </style>
 <div id="printInvoice">
@@ -275,12 +324,10 @@ ${customer ? `<p>Customer: ${_esc(customer)}</p>` : ''}
     <tr><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr>
     ${rows}
     <tr class="divider"><td colspan="3">Subtotal (excl. GST)</td><td style="text-align:right">${bz(preTax)}</td></tr>
-    <tr class="gst-row"><td colspan="3">GST (12.5%)</td><td style="text-align:right">${bz(gst)}</td></tr>
-    <tr class="divider"><td colspan="3">TOTAL</td><td style="text-align:right">${bz(total)}</td></tr>
-    <tr><td colspan="3">Paid (${_esc(displayMethod)})</td><td style="text-align:right">${bz(amountPaid)}</td></tr>
-    ${change > 0 ? `<tr><td colspan="3">Change</td><td style="text-align:right">${bz(change)}</td></tr>` : ''}
+    <tr class="gst-row"><td colspan="3">GST (12.5% incl.)</td><td style="text-align:right">${bz(gst)}</td></tr>
+    ${_receiptPaymentRowsHTML(pay, bz, _esc)}
 </table>
-<div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.</div>
+<div class="footer">Thank you for choosing Servicell Belize!<br>Prices include GST.${partialFooter}</div>
 </div>`;
 }
 
@@ -655,12 +702,11 @@ function _receiptCashierName(cashier) {
     return resolveStaffDisplayName(cashier) || 'Staff';
 }
 
-function buildSaleReceiptText(items, total, amountPaid, method, saleId, customer, cashier) {
-    const change = method === 'cash' ? Math.max(0, amountPaid - total) : 0;
-    const gst = total * 12.5 / 112.5;
-    const preTax = total - gst;
+function buildSaleReceiptText(items, total, amountPaid, method, saleId, customer, cashier, receiptOpts) {
+    const pay = _receiptPaymentSummary(total, amountPaid, method, receiptOpts);
+    const gst = pay.invoiceTotal * 12.5 / 112.5;
+    const preTax = pay.invoiceTotal - gst;
     function bz(n) { return 'BZ$' + parseFloat(n || 0).toFixed(2); }
-    const displayMethod = method ? method.charAt(0).toUpperCase() + method.slice(1) : 'Cash';
     const lines = [
         'SERVICELL BELIZE',
         '#7 Douglas Jones, Belize City',
@@ -680,12 +726,21 @@ function buildSaleReceiptText(items, total, amountPaid, method, saleId, customer
     lines.push(
         '--------------------------------',
         'Subtotal (excl. GST): ' + bz(preTax),
-        'GST (12.5%): ' + bz(gst),
-        'TOTAL: ' + bz(total),
-        'Paid (' + displayMethod + '): ' + bz(amountPaid)
+        'GST (12.5% incl.): ' + bz(gst)
     );
-    if (change > 0) lines.push('Change: ' + bz(change));
-    lines.push('', 'Thank you for choosing ServiCell Belize!', 'Prices include GST.');
+    if (pay.isPartial) {
+        lines.push('INVOICE TOTAL: ' + bz(pay.invoiceTotal));
+        if (pay.priorPaid > 0.009) lines.push('Paid previously: ' + bz(pay.priorPaid));
+        lines.push('Paid this visit (' + pay.displayMethod + '): ' + bz(pay.paidThisVisit));
+        lines.push('Total paid to date: ' + bz(pay.totalPaid));
+        lines.push('*** BALANCE DUE: ' + bz(pay.balanceDue) + ' ***');
+        lines.push('', 'Partial payment — remaining balance due is shown above.');
+    } else {
+        lines.push('TOTAL: ' + bz(pay.invoiceTotal));
+        lines.push('Paid (' + pay.displayMethod + '): ' + bz(pay.paidThisVisit));
+        if (pay.change > 0.009) lines.push('Change: ' + bz(pay.change));
+    }
+    lines.push('', 'Thank you for choosing Servicell Belize!', 'Prices include GST.');
     return lines.filter(Boolean).join('\n');
 }
 
