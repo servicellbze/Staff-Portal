@@ -167,6 +167,158 @@ function techBucketForJob(j) {
     return 'Unassigned';
 }
 
+function buildStaffRoleMap(users) {
+    const map = {};
+    (users || []).forEach(u => {
+        const name = String(u.username || '').trim();
+        if (name) map[name] = String(u.role || '').toLowerCase();
+    });
+    return map;
+}
+
+function inferStaffRoleFromUsername(username) {
+    const u = String(username || '');
+    if (/^cashier_/i.test(u)) return 'cashier';
+    if (/^technician_/i.test(u)) return 'technician';
+    if (/^manager_/i.test(u)) return 'manager';
+    return '';
+}
+
+function staffRoleFor(username) {
+    const key = String(username || '').trim();
+    if (!key) return '';
+    const map = window._staffRoles || {};
+    if (map[key]) return map[key];
+    return inferStaffRoleFromUsername(key);
+}
+
+/** Technicians and managers only — cashiers belong under Cashier Performance. */
+function isTechPerformanceEligible(username) {
+    const key = String(username || '').trim();
+    if (key === 'Unassigned') return true;
+    if (!key) return false;
+    const role = staffRoleFor(key);
+    if (role === 'manager' || role === 'technician') return true;
+    if (role === 'cashier') return false;
+    if (/^cashier_/i.test(key)) return false;
+    if (/^technician_/i.test(key) || /^manager_/i.test(key)) return true;
+    return false;
+}
+
+function jobClaimedInDateRange(j, from, to) {
+    const claimer = String(j.claimedBy || '').trim();
+    if (!claimer) return false;
+    return dateInRange(j.claimedAt, from, to);
+}
+
+function collectedOnJob(jobId, sales) {
+    let total = 0;
+    (sales || []).forEach(s => {
+        if (!s || s.status === 'reversed') return;
+        if (String(s.jobId) !== String(jobId)) return;
+        total += saleCollectedAmount(s);
+    });
+    return total;
+}
+
+function buildTechFraudFlags(name, completedJobs, revRows, allJobs) {
+    const flags = [];
+    const seen = new Set();
+    function add(type, msg) {
+        const key = type + '|' + msg;
+        if (seen.has(key)) return;
+        seen.add(key);
+        flags.push({ type, msg });
+    }
+    (revRows || []).forEach(r => {
+        const sale = (window._allSales || []).find(s =>
+            String(s.saleId) === String(r.saleId) || (r.date && saleShiftDate(s) === r.date && String(s.jobId) === String(r.jobId))
+        );
+        const cashier = sale ? String(sale.cashier || '').trim() : '';
+        if (cashier && cashier !== name) {
+            add('ring', 'Job #' + r.jobId + ' — ' + bz(r.amount) + ' collected; sale rung by ' + cashier + ' (credited to claimer).');
+        }
+    });
+    (completedJobs || []).forEach(job => {
+        const full = (allJobs || []).find(j => String(j.id) === String(job.id));
+        if (!full) return;
+        const claimer = String(full.claimedBy || '').trim();
+        const assignee = String(full.technician || '').trim();
+        if (!claimer) {
+            add('unclaimed', 'Job #' + job.id + ' completed with no claim on file — verify who did the repair.');
+        } else if (claimer !== name) {
+            add('claim', 'Job #' + job.id + ' claimed by ' + claimer + ' but credited to ' + name + '.');
+        } else if (assignee && assignee !== name && assignee.toLowerCase() !== 'unassigned') {
+            add('assign', 'Job #' + job.id + ' assigned to ' + assignee + ' but claimed by ' + name + '.');
+        }
+        const collected = collectedOnJob(job.id, window._allSales);
+        if (collected <= 0.009) {
+            add('nopay', 'Job #' + job.id + ' marked complete with no collected payment on file.');
+        }
+    });
+    return flags;
+}
+
+function renderTechBreakdownBody(name, d, from, to, revRows, claimedJobs, allJobs) {
+    const flags = buildTechFraudFlags(name, d.completedJobs, revRows, allJobs);
+    let html = '';
+    if (flags.length) {
+        html += '<div class="tech-perf-flags">';
+        flags.forEach(f => {
+            html += '<div class="tech-perf-flag tech-perf-flag-' + escH(f.type) + '">' + statIcon('warning', 12) + ' ' + escH(f.msg) + '</div>';
+        });
+        html += '</div>';
+    }
+    const fmtDate = (str) => {
+        const d0 = parsePortalDate(str);
+        if (!d0) return '—';
+        return new Date(d0 + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    html += '<div class="tech-perf-block-title">Claimed this period (' + claimedJobs.length + ')</div>';
+    if (!claimedJobs.length) {
+        html += '<div class="tech-perf-empty">No new claims in this date range.</div>';
+    } else {
+        html += '<ul class="tech-perf-list">';
+        claimedJobs.sort((a, b) => String(b.claimedAt || '').localeCompare(String(a.claimedAt || ''))).forEach(j => {
+            const st = STATUS_LABELS[(j.status || '').toLowerCase()] || j.status || '—';
+            html += '<li><span class="tech-perf-job-id">#' + escH(j.id) + '</span> '
+                + escH(j.device || 'Device') + ' · ' + escH(st)
+                + ' · claimed ' + escH(fmtDate(j.claimedAt)) + '</li>';
+        });
+        html += '</ul>';
+    }
+
+    html += '<div class="tech-perf-block-title">Completed this period (' + d.completedJobs.length + ')</div>';
+    if (!d.completedJobs.length) {
+        html += '<div class="tech-perf-empty">No completions in this date range.</div>';
+    } else {
+        html += '<ul class="tech-perf-list">';
+        d.completedJobs.slice().sort((a, b) => String(b.dateCompleted || '').localeCompare(String(a.dateCompleted || ''))).forEach(j => {
+            const coll = collectedOnJob(j.id, window._allSales);
+            html += '<li><span class="tech-perf-job-id">#' + escH(j.id) + '</span> '
+                + escH(j.device || 'Device') + ' · done ' + escH(fmtDate(j.dateCompleted))
+                + ' · <span class="tech-perf-amt">' + bz(coll) + '</span> collected (all time on job)</li>';
+        });
+        html += '</ul>';
+    }
+
+    const revTotal = (revRows || []).reduce((t, r) => t + r.amount, 0);
+    html += '<div class="tech-perf-block-title">Revenue collected in period (' + bz(revTotal) + ')</div>';
+    if (!revRows || !revRows.length) {
+        html += '<div class="tech-perf-empty">No job-linked payments in this date range.</div>';
+    } else {
+        html += '<ul class="tech-perf-list">';
+        revRows.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).forEach(r => {
+            html += '<li><span class="tech-perf-job-id">Job #' + escH(r.jobId) + '</span> '
+                + escH(r.date || '') + ' · ' + bz(r.amount)
+                + (r.saleId ? ' · sale ' + escH(r.saleId) : '') + '</li>';
+        });
+        html += '</ul>';
+    }
+    return html;
+}
+
 function formatPeriodLabel(from, to) {
     const fmt = (d) => new Date(d + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     return from === to ? fmt(from) : fmt(from) + ' – ' + fmt(to);
@@ -324,7 +476,7 @@ async function loadStats() {
 
     const prev = getPreviousPeriod(from, to);
 
-    const [salesData, prevSalesData, payoutsData, prevPayoutsData, jobsData, invData, movData, closesData, billsData, custData] = await Promise.all([
+    const [salesData, prevSalesData, payoutsData, prevPayoutsData, jobsData, invData, movData, closesData, billsData, custData, usersData] = await Promise.all([
         apiGet({ action: 'listsales', from, to, includeReversed: '1' }).catch(() => ({})),
         apiGet({ action: 'listsales', from: prev.from, to: prev.to, includeReversed: '1' }).catch(() => ({})),
         apiGet({ action: 'listpayouts', from, to }).catch(() => ({})),
@@ -334,7 +486,8 @@ async function loadStats() {
         apiGet({ action: 'listmovements', limit: 1000 }).catch(() => ({})),
         apiGet({ action: 'listdaycloses', from, to }).catch(() => ({})),
         apiGet({ action: 'listbills' }).catch(() => ({})),
-        apiGet({ action: 'listcustomers' }).catch(() => ({}))
+        apiGet({ action: 'listcustomers' }).catch(() => ({})),
+        apiGet({ action: 'listusers' }).catch(() => ({}))
     ]);
 
     const allSalesRaw = salesData.sales || [];
@@ -361,6 +514,7 @@ async function loadStats() {
         jobInDateRange(j, prev.from, prev.to) && ['resolved', 'ready'].includes((j.status || '').toLowerCase())
     ).length;
     window._allCloses    = closes;
+    window._staffRoles   = buildStaffRoleMap((usersData.users || []));
 
     renderKPIs(sales, reversed, payouts, jobs, bills, closes, window._prevSales);
     renderRevenueChart(sales, from, to);
@@ -606,22 +760,39 @@ function renderTechPerf(jobs, from, to) {
     const el = document.getElementById('techPerf');
     const allJobs = window._allJobs || [];
     const techs = {};
+    const excludedCashierRev = {};
 
     function ensureTech(name) {
         if (!techs[name]) {
             techs[name] = {
                 assigned: 0, completed: 0, completedJobs: [],
-                stale: 0, unclaimed: 0, totalMs: 0, countMs: 0
+                stale: 0, unclaimed: 0, totalMs: 0, countMs: 0,
+                claimedInPeriod: 0
             };
         }
     }
 
+    function bucketEligible(t) {
+        return t === 'Unassigned' || isTechPerformanceEligible(t);
+    }
+
     const salesInRange = (window._allSales || []).filter(s => s.status !== 'reversed' && saleInDateRange(s, from, to));
-    const techRevenueDetail = buildTechRevenueDetail(salesInRange);
-    const techRevenue = buildTechRevenue(salesInRange);
+    const techRevenueDetailRaw = buildTechRevenueDetail(salesInRange);
+    const techRevenueDetail = {};
+    const techRevenue = {};
+    Object.entries(techRevenueDetailRaw).forEach(([credit, rows]) => {
+        if (!bucketEligible(credit)) {
+            const amt = rows.reduce((t, r) => t + r.amount, 0);
+            excludedCashierRev[credit] = (excludedCashierRev[credit] || 0) + amt;
+            return;
+        }
+        techRevenueDetail[credit] = rows;
+        techRevenue[credit] = rows.reduce((t, r) => t + r.amount, 0);
+    });
 
     jobs.forEach(j => {
         const t = techBucketForJob(j);
+        if (!bucketEligible(t)) return;
         ensureTech(t);
         techs[t].assigned++;
         const status = (j.status || '').toLowerCase();
@@ -639,11 +810,24 @@ function renderTechPerf(jobs, from, to) {
     });
 
     allJobs.forEach(j => {
+        const claimer = String(j.claimedBy || '').trim();
+        if (claimer && bucketEligible(claimer) && jobClaimedInDateRange(j, from, to)) {
+            ensureTech(claimer);
+            techs[claimer].claimedInPeriod++;
+        }
+    });
+
+    allJobs.forEach(j => {
         if (!jobCompletedInDateRange(j, from, to)) return;
         const t = techBucketForJob(j);
+        if (!bucketEligible(t)) return;
         ensureTech(t);
         techs[t].completed++;
-        techs[t].completedJobs.push({ id: j.id, device: j.device || '' });
+        techs[t].completedJobs.push({
+            id: j.id,
+            device: j.device || '',
+            dateCompleted: j.dateCompleted || ''
+        });
         const recvMs = j.dateReceived ? Date.parse(j.dateReceived) : NaN;
         const compMs = j.dateCompleted ? Date.parse(j.dateCompleted) : NaN;
         if (!Number.isNaN(recvMs) && !Number.isNaN(compMs) && compMs > recvMs) {
@@ -654,52 +838,78 @@ function renderTechPerf(jobs, from, to) {
 
     Object.keys(techRevenue).forEach(name => ensureTech(name));
 
-    const sorted = Object.entries(techs).sort((a, b) => b[1].completed - a[1].completed);
+    const sorted = Object.entries(techs)
+        .filter(([name]) => bucketEligible(name))
+        .sort((a, b) => b[1].completed - a[1].completed);
     if (!sorted.length) { el.innerHTML = '<div class="empty-state">No technician data.</div>'; return; }
 
-    const maxCompleted = Math.max(...sorted.map(([, d]) => d.completed));
-    const maxRevenue   = Math.max(...sorted.map(([name]) => techRevenue[name] || 0));
-    const completedWinners = sorted.filter(([name, d]) => name !== 'Unassigned' && d.completed === maxCompleted && maxCompleted > 0);
-    const revenueWinners   = sorted.filter(([name]) => name !== 'Unassigned' && (techRevenue[name] || 0) === maxRevenue && maxRevenue > 0);
+    const eligibleSorted = sorted.filter(([name]) => name !== 'Unassigned');
+    const maxCompleted = Math.max(...eligibleSorted.map(([, d]) => d.completed), 0);
+    const maxRevenue   = Math.max(...eligibleSorted.map(([name]) => techRevenue[name] || 0), 0);
+    const completedWinners = eligibleSorted.filter(([, d]) => d.completed === maxCompleted && maxCompleted > 0);
+    const revenueWinners   = eligibleSorted.filter(([name]) => (techRevenue[name] || 0) === maxRevenue && maxRevenue > 0);
     const soloJobsWinner   = completedWinners.length === 1 ? completedWinners[0][0] : null;
     const soloRevWinner    = revenueWinners.length === 1 ? revenueWinners[0][0] : null;
 
-    el.innerHTML = sorted.map(([name, d]) => {
+    let html = '<p class="tech-perf-note">Technicians and managers only. Revenue is credited to the job claimer. Expand a row for job IDs, claims, and audit flags.</p>';
+
+    html += sorted.map(([name, d]) => {
         const avgDays = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
         const revenue = techRevenue[name] || 0;
         const isUnassigned = name === 'Unassigned';
         const topJobs = name === soloJobsWinner;
         const topRev = name === soloRevWinner;
-        const jobsDetail = topJobs ? formatTechJobsDetail(d.completedJobs) : '';
-        const revDetail = topRev ? formatTechRevenueDetail(techRevenueDetail[name]) : '';
-        let badgeNotes = '';
-        if (topJobs && jobsDetail) {
-            badgeNotes += '<div class="tech-badge-detail"><strong>Most Jobs:</strong> ' + escH(jobsDetail) + '</div>';
-        }
-        if (topRev && revDetail) {
-            badgeNotes += '<div class="tech-badge-detail"><strong>Top Revenue:</strong> ' + escH(revDetail) + '</div>';
-        }
-        return '<div class="person-row">'
+        const revRows = techRevenueDetail[name] || [];
+        const claimedJobs = isUnassigned ? [] : allJobs.filter(j =>
+            String(j.claimedBy || '').trim() === name && jobClaimedInDateRange(j, from, to)
+        );
+        const roleLabel = isUnassigned ? '' : staffRoleFor(name);
+        const roleBadge = roleLabel === 'manager'
+            ? ' <span class="tech-role-chip">Manager</span>' : '';
+
+        return '<div class="tech-perf-card">'
+            + '<div class="person-row tech-perf-summary">'
             + '<div class="person-avatar">' + statIcon(isUnassigned ? 'info' : 'wrench', 16) + '</div>'
             + '<div style="flex:1;min-width:0;">'
-            +   '<div class="person-name">' + escH(name)
+            +   '<div class="person-name">' + escH(name) + roleBadge
             +     (topJobs ? ' ' + statBadge('Most Jobs', 'success') : '')
             +     (topRev ? ' ' + statBadge('Top Revenue', 'primary') : '')
             +   '</div>'
             +   '<div class="person-meta">' + d.assigned + ' received in period'
+            +     ' &bull; ' + d.claimedInPeriod + ' claimed in period'
             +     ' &bull; ' + d.completed + ' completed in period'
             +     ' &bull; avg ' + avgDays + ' days'
             +     (d.stale ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
             +     (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
             +   '</div>'
-            +   badgeNotes
             + '</div>'
             + '<div style="display:flex;gap:16px;flex-shrink:0;text-align:right;">'
             +   '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'
             +   (revenue > 0 ? '<div class="person-stats"><div class="person-stat-main" style="font-size:0.95rem;color:var(--success);">' + bz(revenue) + '</div><div class="person-stat-sub">collected</div></div>' : '')
             + '</div>'
+            + '</div>'
+            + (isUnassigned ? '' : (
+                '<details class="tech-perf-details">'
+                + '<summary>Full breakdown</summary>'
+                + '<div class="tech-perf-details-body">'
+                + renderTechBreakdownBody(name, d, from, to, revRows, claimedJobs, allJobs)
+                + '</div></details>'
+            ))
             + '</div>';
     }).join('');
+
+    const excludedEntries = Object.entries(excludedCashierRev).filter(([, amt]) => amt > 0);
+    if (excludedEntries.length) {
+        const exTotal = excludedEntries.reduce((t, [, a]) => t + a, 0);
+        html += '<div class="tech-perf-excluded">'
+            + statIcon('info', 14) + ' '
+            + bz(exTotal) + ' job-linked revenue in this period is attributed to cashier accounts (shown under Cashier Performance, not here): '
+            + excludedEntries.map(([n, a]) => escH(n) + ' ' + bz(a)).join(' · ')
+            + '</div>';
+    }
+
+    el.innerHTML = html;
+    if (typeof initDataIcons === 'function') initDataIcons(el);
 }
 
 // ── Short Cashier History ─────────────────────────────────────────────────────
@@ -896,17 +1106,23 @@ function exportPDF() {
     sales.forEach(s => { tryParseJSON(s.items, []).forEach(i => { if (i.name) itemCounts[i.name] = (itemCounts[i.name]||0) + (i.qty||1); }); });
     const topItems = Object.entries(itemCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
 
-    const techRevenue = buildTechRevenue(sales.filter(s => saleInDateRange(s, from, to)));
+    const techRevenueAll = buildTechRevenue(sales.filter(s => saleInDateRange(s, from, to)));
+    const techRevenue = {};
+    Object.entries(techRevenueAll).forEach(([name, amt]) => {
+        if (name === 'Unassigned' || isTechPerformanceEligible(name)) techRevenue[name] = amt;
+    });
     const techs = {};
     jobs.forEach(j => {
-        const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
+        const t = techBucketForJob(j);
+        if (t !== 'Unassigned' && !isTechPerformanceEligible(t)) return;
         if (!techs[t]) techs[t] = { completed: 0, assigned: 0 };
         techs[t].assigned++;
-        if (['resolved','ready'].includes((j.status||'').toLowerCase())) techs[t].completed++;
+        if (jobCompletedInDateRange(j, from, to)) techs[t].completed++;
     });
-    // Include techs who earned revenue from earlier jobs so they still show / can win Top Revenue.
     Object.keys(techRevenue).forEach(name => { if (!techs[name]) techs[name] = { completed: 0, assigned: 0 }; });
-    const techSorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
+    const techSorted = Object.entries(techs)
+        .filter(([name]) => name === 'Unassigned' || isTechPerformanceEligible(name))
+        .sort((a,b) => b[1].completed - a[1].completed);
     const maxCompleted = Math.max(...techSorted.map(([,d]) => d.completed), 0);
     const maxRevenue   = Math.max(...techSorted.map(([n]) => techRevenue[n]||0), 0);
     const soloJobsWinner = techSorted.filter(([n,d]) => n !== 'Unassigned' && d.completed === maxCompleted && maxCompleted > 0).length === 1

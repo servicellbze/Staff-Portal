@@ -119,6 +119,27 @@
         .person-meta{font-size:0.72rem;color:var(--text-dim);margin-top:2px;}
         .tech-badge-detail{font-size:0.68rem;color:var(--text-dim);margin-top:6px;line-height:1.45;padding:6px 8px;border-radius:8px;background:rgba(var(--primary-rgb,37,99,235),0.06);border:1px solid var(--glass-border);}
         .tech-badge-detail strong{color:var(--text-main);font-weight:800;}
+        .tech-perf-note{font-size:0.72rem;color:var(--text-dim);margin:0 0 12px;line-height:1.45;}
+        .tech-perf-card{border-bottom:1px solid var(--glass-border);padding-bottom:10px;margin-bottom:4px;}
+        .tech-perf-card:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0;}
+        .tech-perf-card .person-row{border-bottom:none;padding-bottom:6px;}
+        .tech-role-chip{font-size:0.62rem;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;padding:2px 6px;border-radius:6px;background:rgba(var(--primary-rgb,37,99,235),0.12);color:var(--primary);vertical-align:middle;}
+        .tech-perf-details{margin:0 0 4px 44px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);overflow:hidden;}
+        .tech-perf-details summary{cursor:pointer;font-size:0.72rem;font-weight:800;color:var(--primary);padding:8px 12px;list-style:none;display:flex;align-items:center;gap:6px;}
+        .tech-perf-details summary::-webkit-details-marker{display:none;}
+        .tech-perf-details summary::before{content:'';width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:5px solid var(--primary);transition:transform 0.2s ease;}
+        .tech-perf-details[open] summary::before{transform:rotate(90deg);}
+        .tech-perf-details-body{padding:0 12px 12px;font-size:0.72rem;color:var(--text-dim);line-height:1.45;}
+        .tech-perf-block-title{font-size:0.68rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-main);margin:10px 0 6px;}
+        .tech-perf-block-title:first-child{margin-top:4px;}
+        .tech-perf-list{margin:0;padding:0 0 0 14px;}
+        .tech-perf-list li{margin-bottom:4px;}
+        .tech-perf-job-id{font-weight:800;color:var(--text-main);}
+        .tech-perf-amt{color:var(--success);font-weight:700;}
+        .tech-perf-empty{font-size:0.7rem;color:var(--text-dim);font-style:italic;}
+        .tech-perf-flags{margin-bottom:8px;}
+        .tech-perf-flag{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:8px;margin-bottom:4px;font-size:0.68rem;line-height:1.35;border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.08);color:var(--text-main);}
+        .tech-perf-excluded{margin-top:14px;padding:10px 12px;border-radius:10px;font-size:0.68rem;line-height:1.45;color:var(--text-dim);border:1px solid var(--glass-border);background:rgba(var(--primary-rgb,37,99,235),0.04);display:flex;align-items:flex-start;gap:8px;}
         .person-stats{margin-left:auto;text-align:right;}
         .person-stat-main{font-size:0.88rem;font-weight:800;color:var(--text-main);}
         .person-stat-sub{font-size:0.7rem;color:var(--text-dim);}
