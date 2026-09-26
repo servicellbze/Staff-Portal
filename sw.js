@@ -3,7 +3,7 @@
 // Network-first strategy for fast security updates
 // ─────────────────────────────────────────────────────────────────────────────
 
-const CACHE_DATE = '2026-09-25g'; // ← change this to today's date on each deploy
+const CACHE_DATE = '2026-09-25j'; // ← change this to today's date on each deploy
 const CACHE_NAME = 'servicell-' + CACHE_DATE;
 const BASE = '/Staff-Portal';
 
@@ -38,6 +38,13 @@ const PRECACHE_URLS = [
     BASE + '/img/logo.png',
     BASE + '/manifest.json'
 ];
+
+// ── Allow clients to activate a waiting worker (update bar "Reload") ───────
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+});
 
 // ── Install: pre-cache the app shell ─────────────────────────────────────────
 self.addEventListener('install', event => {

@@ -140,6 +140,9 @@
         .tech-perf-flags{margin-bottom:8px;}
         .tech-perf-flag{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;border-radius:8px;margin-bottom:4px;font-size:0.68rem;line-height:1.35;border:1px solid rgba(245,158,11,0.35);background:rgba(245,158,11,0.08);color:var(--text-main);}
         .tech-perf-excluded{margin-top:14px;padding:10px 12px;border-radius:10px;font-size:0.68rem;line-height:1.45;color:var(--text-dim);border:1px solid var(--glass-border);background:rgba(var(--primary-rgb,37,99,235),0.04);display:flex;align-items:flex-start;gap:8px;}
+        .tech-perf-metrics{display:flex;gap:16px;flex-shrink:0;text-align:right;margin-left:auto;}
+        .tech-perf-revenue{font-size:0.95rem;color:var(--success);}
+        .tech-perf-summary{flex-wrap:wrap;align-items:flex-start;}
         .person-stats{margin-left:auto;text-align:right;}
         .person-stat-main{font-size:0.88rem;font-weight:800;color:var(--text-main);}
         .person-stat-sub{font-size:0.7rem;color:var(--text-dim);}
@@ -186,9 +189,18 @@
             .two-col{grid-template-columns:1fr;}
         }
         @media(max-width:480px){
-            main{padding:110px var(--space-sm) var(--space-md);}
+            main{padding:110px var(--space-sm) calc(var(--space-md) + env(safe-area-inset-bottom));}
             .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
             .kpi-value{font-size:1.4rem;}
+            .date-bar{gap:6px;}
+            .date-custom{width:100%;margin-left:0;flex-wrap:wrap;}
+            .date-custom input{flex:1;min-width:0;}
+            .modal-overlay{align-items:flex-end;padding:0;}
+            .modal-card{border-radius:20px 20px 0 0;max-width:100%;max-height:min(92vh,720px);padding-bottom:calc(16px + env(safe-area-inset-bottom));}
+            .tech-perf-details{margin-left:0;}
+            .tech-perf-summary .tech-perf-metrics{width:100%;margin-left:44px;margin-top:6px;justify-content:flex-start;text-align:left;}
+            .person-row.drill-row{min-height:44px;}
+            .tech-perf-details summary{min-height:44px;align-items:center;}
         }
     </style>
 </head>

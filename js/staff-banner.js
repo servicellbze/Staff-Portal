@@ -30,6 +30,7 @@
     card.setAttribute('aria-live', 'polite');
     card.innerHTML = `
       <div class="scb-card-inner">
+        <span class="scb-sheet-handle" aria-hidden="true"></span>
         <span class="scb-accent" aria-hidden="true"></span>
         <div class="scb-content">
           <div class="scb-label">Team notice</div>
@@ -112,12 +113,26 @@
     });
   }
 
+  function syncBottomStack() {
+    let offset = 0;
+    const offline = document.getElementById('sc-offline-banner');
+    if (offline && offline.classList.contains('sc-visible')) {
+      offset = offline.offsetHeight || 0;
+    }
+    document.documentElement.style.setProperty('--scb-stack-offset', offset + 'px');
+  }
+
   function hideCard() {
     const el = document.getElementById('staff-broadcast-card');
     if (el) {
       el.classList.remove('is-visible', 'is-expanded');
       setMoreButtonVisible(el, false);
     }
+  }
+
+  function applyVariantClass(el, variant) {
+    el.classList.remove('scb-info', 'scb-warning', 'scb-urgent');
+    el.classList.add('scb-' + variant);
   }
 
   function showCard(b) {
@@ -136,7 +151,7 @@
     }
 
     const variant = ['info', 'warning', 'urgent'].includes(b.variant) ? b.variant : 'info';
-    el.className = 'scb-' + variant;
+    applyVariantClass(el, variant);
 
     const title = (b.title || 'Announcement').trim();
     const message = (b.message || '').trim();
@@ -154,7 +169,9 @@
     }
 
     updateTruncateUi(el, title, message);
+    syncBottomStack();
     el.classList.add('is-visible');
+    if (typeof window.scSyncNoticeStack === 'function') window.scSyncNoticeStack();
   }
 
   async function fetchActive() {
@@ -209,12 +226,18 @@
     await refresh();
     startPoll();
 
-    window.addEventListener('resize', () => {
+    const onLayoutChange = () => {
+      syncBottomStack();
+      if (typeof window.scSyncNoticeStack === 'function') window.scSyncNoticeStack();
       const el = document.getElementById('staff-broadcast-card');
       if (!el || !el.classList.contains('is-visible') || !_current) return;
       if (el.classList.contains('is-expanded')) return;
       updateTruncateUi(el, (_current.title || '').trim(), (_current.message || '').trim());
-    }, { passive: true });
+    };
+
+    window.addEventListener('resize', onLayoutChange, { passive: true });
+    window.addEventListener('sc-bottom-chrome-change', onLayoutChange);
+    syncBottomStack();
   }
 
   window.loadStaffBanner = loadStaffBanner;

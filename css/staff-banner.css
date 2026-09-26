@@ -1,6 +1,7 @@
-/* Staff broadcast — sticky glass card (no full-width bar) */
+/* Sticky notices — manager broadcast + app update (desktop card / mobile bottom sheet) */
 
-#staff-broadcast-card {
+#staff-broadcast-card,
+#sc-app-update-card {
   position: fixed;
   z-index: calc(var(--z-nav, 1000) + 4);
   max-width: min(360px, calc(100vw - 24px));
@@ -8,6 +9,8 @@
   border-radius: 14px;
   border: 1px solid var(--glass-border, rgba(148, 163, 184, 0.22));
   background: var(--glass-strong, rgba(255, 255, 255, 0.96));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   box-shadow: var(--shadow-lg, 0 16px 48px rgba(15, 23, 42, 0.22));
   font-size: 0.82rem;
   line-height: 1.45;
@@ -16,12 +19,42 @@
   transform: translateY(-8px) scale(0.98);
   transition: opacity 0.28s ease, transform 0.28s ease;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-#staff-broadcast-card.is-visible {
+#staff-broadcast-card.is-visible,
+#sc-app-update-card.is-visible {
   opacity: 1;
   pointer-events: auto;
   transform: translateY(0) scale(1);
+}
+
+#sc-app-update-card {
+  z-index: calc(var(--z-nav, 1000) + 5);
+}
+
+#sc-app-update-card .scb-accent {
+  background: var(--primary, #2563eb);
+}
+
+#sc-app-update-card .scb-reload-btn {
+  margin-top: 10px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary, #2563eb);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+}
+
+#sc-app-update-card .scb-reload-btn:active {
+  transform: scale(0.98);
 }
 
 #staff-broadcast-card.is-expanded {
@@ -30,11 +63,13 @@
   -webkit-overflow-scrolling: touch;
 }
 
-#staff-broadcast-card .scb-card-inner {
+#staff-broadcast-card .scb-card-inner,
+#sc-app-update-card .scb-card-inner {
   display: flex;
   gap: 10px;
   padding: 12px 12px 12px 14px;
   align-items: flex-start;
+  position: relative;
 }
 
 #staff-broadcast-card .scb-accent {
@@ -54,13 +89,15 @@
   background: #dc2626;
 }
 
-#staff-broadcast-card .scb-content {
+#staff-broadcast-card .scb-content,
+#sc-app-update-card .scb-content {
   flex: 1;
   min-width: 0;
   padding-right: 4px;
 }
 
-#staff-broadcast-card .scb-label {
+#staff-broadcast-card .scb-label,
+#sc-app-update-card .scb-label {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -69,7 +106,8 @@
   margin-bottom: 4px;
 }
 
-#staff-broadcast-card .scb-title {
+#staff-broadcast-card .scb-title,
+#sc-app-update-card .scb-title {
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-main, #0f172a);
@@ -78,7 +116,8 @@
   overflow-wrap: anywhere;
 }
 
-#staff-broadcast-card .scb-message {
+#staff-broadcast-card .scb-message,
+#sc-app-update-card .scb-message {
   margin-top: 6px;
   color: var(--text-dim, #64748b);
   font-size: 0.78rem;
@@ -104,21 +143,24 @@
 #staff-broadcast-card .scb-more-btn {
   display: none;
   margin-top: 8px;
-  padding: 0;
+  padding: 10px 0;
+  min-height: 44px;
   border: none;
   background: none;
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: var(--primary, #2563eb);
   cursor: pointer;
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 2px;
+  touch-action: manipulation;
 }
 
 #staff-broadcast-card .scb-more-btn.is-visible {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 #staff-broadcast-card .scb-more-btn:hover {
@@ -130,17 +172,20 @@
   border: none;
   background: transparent;
   color: var(--text-dim, #64748b);
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   cursor: pointer;
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s, color 0.15s;
-  margin: -2px -4px 0 0;
+  margin: -8px -8px 0 0;
+  touch-action: manipulation;
 }
 
 #staff-broadcast-card .scb-dismiss:hover {
@@ -150,6 +195,13 @@
 
 @media (min-width: 768px) {
   #staff-broadcast-card {
+    top: calc(88px + var(--sc-notice-stack-above-broadcast, 0px));
+    right: max(16px, env(safe-area-inset-right));
+    left: auto;
+    bottom: auto;
+  }
+
+  #sc-app-update-card {
     top: 88px;
     right: max(16px, env(safe-area-inset-right));
     left: auto;
@@ -162,12 +214,75 @@
 }
 
 @media (max-width: 767px) {
-  #staff-broadcast-card {
-    left: 12px;
-    right: 12px;
-    bottom: max(16px, env(safe-area-inset-bottom));
+  #staff-broadcast-card,
+  #sc-app-update-card {
+    left: 0;
+    right: 0;
     top: auto;
     max-width: none;
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.35);
+    transform: translateY(100%);
+  }
+
+  #sc-app-update-card {
+    bottom: var(--scb-stack-offset, 0px);
+    z-index: calc(var(--z-nav, 1000) + 5);
+  }
+
+  #staff-broadcast-card {
+    bottom: calc(var(--scb-stack-offset, 0px) + var(--sc-notice-stack-above-broadcast, 0px));
+    z-index: calc(var(--z-nav, 1000) + 4);
+  }
+
+  #staff-broadcast-card.is-visible,
+  #sc-app-update-card.is-visible {
+    transform: translateY(0);
+  }
+
+  #staff-broadcast-card.is-expanded {
+    max-height: min(78vh, 560px);
+  }
+
+  #staff-broadcast-card .scb-sheet-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--glass-border, rgba(148, 163, 184, 0.45));
+    margin: 0 auto 8px;
+    flex-shrink: 0;
+  }
+
+  #staff-broadcast-card .scb-card-inner,
+  #sc-app-update-card .scb-card-inner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px max(16px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+
+  #staff-broadcast-card .scb-card-inner > .scb-sheet-handle,
+  #sc-app-update-card .scb-card-inner > .scb-sheet-handle {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  #sc-app-update-card .scb-sheet-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--glass-border, rgba(148, 163, 184, 0.45));
+    margin: 0 auto 8px;
+    flex-shrink: 0;
+  }
+
+  #staff-broadcast-card .scb-accent {
+    align-self: stretch;
   }
 
   #staff-broadcast-card:not(.is-expanded) .scb-title.scb-clamp {
@@ -176,5 +291,19 @@
 
   #staff-broadcast-card:not(.is-expanded) .scb-message.scb-clamp {
     -webkit-line-clamp: 2;
+  }
+}
+
+@media (min-width: 768px) {
+  #staff-broadcast-card .scb-sheet-handle,
+  #sc-app-update-card .scb-sheet-handle {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #staff-broadcast-card,
+  #sc-app-update-card {
+    transition: opacity 0.2s ease;
   }
 }

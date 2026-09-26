@@ -570,11 +570,29 @@ const InAppNotif = {
 };
 window.InAppNotif = InAppNotif;
 
+// ── Viewport safe areas (notched / home-indicator devices) ───────────────────
+(function () {
+    const vp = document.querySelector('meta[name="viewport"]');
+    if (vp && vp.content.indexOf('viewport-fit') === -1) {
+        vp.content = vp.content.replace(/\s*$/, '') + ', viewport-fit=cover';
+    }
+})();
+
 // ── Offline banner ────────────────────────────────────────────────────────────
 (function () {
+    function notifyBottomChrome() {
+        window.dispatchEvent(new Event('sc-bottom-chrome-change'));
+    }
+
     // Inject mobile repositioning style once
     const style = document.createElement('style');
-    style.textContent = '@media (max-width: 768px) { #sc-offline-banner { top: auto !important; bottom: 0 !important; transform: translateY(100%) !important; } #sc-offline-banner.sc-visible { transform: translateY(0) !important; } }';
+    style.textContent = [
+        '@media (max-width: 768px) {',
+        '  #sc-offline-banner { top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important;',
+        '    transform: translateY(100%) !important; padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important; }',
+        '  #sc-offline-banner.sc-visible { transform: translateY(0) !important; }',
+        '}'
+    ].join(' ');
     document.head.appendChild(style);
 
     function createBanner() {
@@ -593,6 +611,8 @@ window.InAppNotif = InAppNotif;
         requestAnimationFrame(() => requestAnimationFrame(() => {
             b.style.transform = 'translateY(0)';
             b.classList.add('sc-visible');
+            document.body.classList.add('sc-offline-visible');
+            notifyBottomChrome();
         }));
     }
 
@@ -600,6 +620,8 @@ window.InAppNotif = InAppNotif;
         const b = document.getElementById('sc-offline-banner');
         if (!b) return;
         b.style.transform = 'translateY(-100%)';
+        document.body.classList.remove('sc-offline-visible');
+        notifyBottomChrome();
         setTimeout(() => b.remove(), 350);
     }
 
@@ -622,6 +644,126 @@ window.InAppNotif = InAppNotif;
     });
 })();
 window.isOffline = () => !navigator.onLine;
+
+// ── App update notice (service worker — all pages, PC + mobile) ─────────────
+(function () {
+    if (!('serviceWorker' in navigator)) return;
+
+    const SW_PATH = '/Staff-Portal/sw.js';
+    const SW_SCOPE = '/Staff-Portal/';
+    let registrationRef = null;
+    let pendingWorker = null;
+
+    function ensureNoticeStyles() {
+        if (document.getElementById('staff-banner-css')) return;
+        const link = document.createElement('link');
+        link.id = 'staff-banner-css';
+        link.rel = 'stylesheet';
+        link.href = 'css/staff-banner.css';
+        document.head.appendChild(link);
+    }
+
+    function syncNoticeStack() {
+        const updateEl = document.getElementById('sc-app-update-card');
+        let above = 0;
+        if (updateEl && updateEl.classList.contains('is-visible')) {
+            above = updateEl.offsetHeight + 10;
+        }
+        document.documentElement.style.setProperty('--sc-notice-stack-above-broadcast', above + 'px');
+        window.dispatchEvent(new Event('sc-bottom-chrome-change'));
+    }
+    window.scSyncNoticeStack = syncNoticeStack;
+
+    function showUpdateNotice(worker) {
+        if (worker) pendingWorker = worker;
+        ensureNoticeStyles();
+
+        let card = document.getElementById('sc-app-update-card');
+        if (!card) {
+            card = document.createElement('div');
+            card.id = 'sc-app-update-card';
+            card.className = 'scb-info';
+            card.setAttribute('role', 'status');
+            card.setAttribute('aria-live', 'polite');
+            card.innerHTML = ''
+                + '<div class="scb-card-inner">'
+                + '<span class="scb-sheet-handle" aria-hidden="true"></span>'
+                + '<span class="scb-accent" aria-hidden="true"></span>'
+                + '<div class="scb-content">'
+                + '<div class="scb-label">App update</div>'
+                + '<div class="scb-title">Update ready</div>'
+                + '<div class="scb-message">Reload to load the latest portal version.</div>'
+                + '<button type="button" class="scb-reload-btn">Reload</button>'
+                + '</div></div>';
+            card.querySelector('.scb-reload-btn').addEventListener('click', () => {
+                if (pendingWorker && pendingWorker.state === 'installed') {
+                    pendingWorker.postMessage({ type: 'SKIP_WAITING' });
+                }
+                window.location.reload();
+            });
+            document.body.appendChild(card);
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                card.classList.add('is-visible');
+                syncNoticeStack();
+            }));
+        } else {
+            card.classList.add('is-visible');
+            syncNoticeStack();
+        }
+    }
+
+    function watchInstallingWorker(reg, worker) {
+        if (!worker) return;
+        const onState = () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateNotice(worker);
+            }
+        };
+        worker.addEventListener('statechange', onState);
+        onState();
+    }
+
+    function bindRegistration(reg) {
+        registrationRef = reg;
+        if (reg.waiting) showUpdateNotice(reg.waiting);
+        if (reg.installing) watchInstallingWorker(reg, reg.installing);
+        reg.addEventListener('updatefound', () => watchInstallingWorker(reg, reg.installing));
+    }
+
+    async function registerServiceWorker() {
+        try {
+            const reg = await navigator.serviceWorker.register(SW_PATH, { scope: SW_SCOPE });
+            console.log('[SW] Registered, scope:', reg.scope);
+            bindRegistration(reg);
+            await reg.update();
+        } catch (err) {
+            console.warn('[SW] Registration failed:', err);
+        }
+    }
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!navigator.serviceWorker.controller) return;
+        const card = document.getElementById('sc-app-update-card');
+        if (!card || !card.classList.contains('is-visible')) {
+            showUpdateNotice(null);
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && registrationRef) {
+            registrationRef.update().catch(() => {});
+        }
+    });
+
+    window.addEventListener('resize', () => syncNoticeStack(), { passive: true });
+    window.addEventListener('sc-bottom-chrome-change', () => syncNoticeStack());
+
+    if (document.readyState === 'complete') {
+        registerServiceWorker();
+    } else {
+        window.addEventListener('load', registerServiceWorker);
+    }
+})();
 
 // ── sendNotification — role-aware in-app bell ────────────────────────────────
 // type: 'received'|'ready'|'abandoned'|'jobstatus'|'specialorder'|'update'

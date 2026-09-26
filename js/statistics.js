@@ -883,9 +883,9 @@ function renderTechPerf(jobs, from, to) {
             +     (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
             +   '</div>'
             + '</div>'
-            + '<div style="display:flex;gap:16px;flex-shrink:0;text-align:right;">'
+            + '<div class="tech-perf-metrics">'
             +   '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'
-            +   (revenue > 0 ? '<div class="person-stats"><div class="person-stat-main" style="font-size:0.95rem;color:var(--success);">' + bz(revenue) + '</div><div class="person-stat-sub">collected</div></div>' : '')
+            +   (revenue > 0 ? '<div class="person-stats"><div class="person-stat-main tech-perf-revenue">' + bz(revenue) + '</div><div class="person-stat-sub">collected</div></div>' : '')
             + '</div>'
             + '</div>'
             + (isUnassigned ? '' : (

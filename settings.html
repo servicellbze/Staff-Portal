@@ -837,6 +837,13 @@
             color: var(--text-main);
         }
 
+        #broadcastCard .change-password-btn,
+        #broadcastCard .clear-btn {
+            min-height: 44px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
         .password-wrap {
             position: relative;
         }
@@ -1122,10 +1129,17 @@
 
         /* Responsive */
         @media (max-width: 480px) {
+            .modal-overlay {
+                align-items: flex-end;
+                padding: 0;
+            }
+
             .modal-container {
                 max-width: 100%;
-                max-height: 95vh;
-                border-radius: var(--radius-lg);
+                width: 100%;
+                max-height: min(92vh, 720px);
+                border-radius: 20px 20px 0 0;
+                padding-bottom: calc(12px + env(safe-area-inset-bottom));
             }
 
             .modal-header,

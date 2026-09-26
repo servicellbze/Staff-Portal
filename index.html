@@ -1315,33 +1315,6 @@
         })();
     </script>
 
-    <script>
-        // ── Service Worker Registration ──────────────────────────────────────
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/Staff-Portal/sw.js', { scope: '/Staff-Portal/' })
-                    .then(reg => {
-                        console.log('[SW] Registered, scope:', reg.scope);
-                        reg.update();
-
-                        // Notify when a new version is waiting to activate
-                        reg.addEventListener('updatefound', () => {
-                            const newWorker = reg.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    if (typeof sendNotification === 'function') {
-                                        sendNotification('update', 'Update Available',
-                                            'A new version of ServiCell Portal is ready. Refresh to update.');
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch(err => console.warn('[SW] Registration failed:', err));
-            });
-        }
-    </script>
-
 </body>
 
 </html>
