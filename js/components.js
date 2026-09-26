@@ -825,12 +825,23 @@ window.isOffline = () => !navigator.onLine;
         window.addEventListener('load', registerServiceWorker);
     }
 
-    /** Dev / QA: preview the update card without a new service worker. */
-    window.scTestUpdateNotice = function () {
-        showUpdateNotice(null);
-    };
-    window.scDismissUpdateNotice = dismissUpdateNotice;
+    window.__scShowUpdateNotice = showUpdateNotice;
+    window.__scDismissUpdateNotice = dismissUpdateNotice;
 })();
+
+/** Dev / QA — always on window (calls live handler when components.js is current). */
+window.scTestUpdateNotice = function () {
+    if (typeof window.__scShowUpdateNotice === 'function') {
+        window.__scShowUpdateNotice(null);
+        return;
+    }
+    console.warn('[Portal] Update preview needs a hard refresh to load the latest js/components.js (Ctrl+Shift+R).');
+};
+window.scDismissUpdateNotice = function () {
+    if (typeof window.__scDismissUpdateNotice === 'function') {
+        window.__scDismissUpdateNotice();
+    }
+};
 
 // ── sendNotification — role-aware in-app bell ────────────────────────────────
 // type: 'received'|'ready'|'abandoned'|'jobstatus'|'specialorder'|'update'
