@@ -54,10 +54,28 @@ function saleInDateRange(s, from, to) {
     return d && d >= from && d <= to;
 }
 
+function parsePortalDate(str) {
+    if (!str) return null;
+    const s = String(str).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const ms = Date.parse(s);
+    if (!Number.isNaN(ms)) return new Date(ms).toISOString().slice(0, 10);
+    return null;
+}
+
+function dateInRange(dateStr, from, to) {
+    const d = parsePortalDate(dateStr);
+    return !!(d && d >= from && d <= to);
+}
+
 function jobInDateRange(j, from, to) {
-    if (!j.dateReceived) return false;
-    const d = j.dateReceived.slice(0, 10);
-    return d >= from && d <= to;
+    return dateInRange(j.dateReceived, from, to);
+}
+
+function jobCompletedInDateRange(j, from, to) {
+    const status = (j.status || '').toLowerCase();
+    if (!['resolved', 'ready'].includes(status)) return false;
+    return dateInRange(j.dateCompleted, from, to);
 }
 
 /**
@@ -82,21 +100,71 @@ function techCreditFor(job) {
  * This keeps technician revenue reconciled with the shop's collected (job-linked) revenue.
  */
 function buildTechRevenue(salesInRange) {
+    const detail = buildTechRevenueDetail(salesInRange);
+    const rev = {};
+    Object.entries(detail).forEach(([tech, rows]) => {
+        rev[tech] = rows.reduce((t, r) => t + r.amount, 0);
+    });
+    return rev;
+}
+
+/** Per-tech revenue lines for badge drill-down (job # + collected on that sale). */
+function buildTechRevenueDetail(salesInRange) {
     const allJobs = window._allJobs || [];
     const creditByJob = {};
     allJobs.forEach(j => {
         const credit = techCreditFor(j);
         if (credit && j.id != null) creditByJob[String(j.id)] = credit;
     });
-    const rev = {};
+    const detail = {};
     (salesInRange || []).forEach(s => {
         if (!s || s.status === 'reversed') return;
         if (!s.jobId || String(s.jobId).trim() === '') return;
         const credit = creditByJob[String(s.jobId)];
         if (!credit) return;
-        rev[credit] = (rev[credit] || 0) + saleCollectedAmount(s);
+        const amount = saleCollectedAmount(s);
+        if (amount <= 0) return;
+        if (!detail[credit]) detail[credit] = [];
+        detail[credit].push({
+            jobId: String(s.jobId),
+            saleId: s.saleId || '',
+            amount,
+            date: saleShiftDate(s)
+        });
     });
-    return rev;
+    return detail;
+}
+
+function formatTechJobsDetail(jobs) {
+    if (!jobs || !jobs.length) return '';
+    const parts = jobs.slice(0, 6).map(j => '#' + j.id + (j.device ? ' (' + j.device + ')' : ''));
+    return parts.join(' · ') + (jobs.length > 6 ? ' · …' : '');
+}
+
+function formatTechRevenueDetail(rows) {
+    if (!rows || !rows.length) return '';
+    const byJob = {};
+    rows.forEach(r => {
+        byJob[r.jobId] = (byJob[r.jobId] || 0) + r.amount;
+    });
+    return Object.entries(byJob)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([id, amt]) => 'Job #' + id + ' ' + bz(amt))
+        .join(' · ')
+        + (Object.keys(byJob).length > 6 ? ' · …' : '');
+}
+
+function techBucketForJob(j) {
+    const status = (j.status || '').toLowerCase();
+    const credit = techCreditFor(j);
+    if (credit) return credit;
+    if (j.claimedBy) return String(j.claimedBy).trim();
+    if (['resolved', 'ready'].includes(status)) {
+        const tech = String(j.technician || '').trim();
+        if (tech && !['unknown', 'unassigned'].includes(tech.toLowerCase())) return tech;
+    }
+    return 'Unassigned';
 }
 
 function formatPeriodLabel(from, to) {
@@ -536,31 +604,33 @@ function renderCashierPerf(sales, reversed, payouts, closes) {
 // ── Technician Performance ────────────────────────────────────────────────────
 function renderTechPerf(jobs, from, to) {
     const el = document.getElementById('techPerf');
+    const allJobs = window._allJobs || [];
     const techs = {};
 
-    // Attribute revenue from ALL sales in the period to each job's technician (claimed → assigned).
+    function ensureTech(name) {
+        if (!techs[name]) {
+            techs[name] = {
+                assigned: 0, completed: 0, completedJobs: [],
+                stale: 0, unclaimed: 0, totalMs: 0, countMs: 0
+            };
+        }
+    }
+
     const salesInRange = (window._allSales || []).filter(s => s.status !== 'reversed' && saleInDateRange(s, from, to));
+    const techRevenueDetail = buildTechRevenueDetail(salesInRange);
     const techRevenue = buildTechRevenue(salesInRange);
 
     jobs.forEach(j => {
-        const t = j.claimedBy || ((['resolved','ready'].includes((j.status||'').toLowerCase())) ? (j.technician || 'Unassigned') : 'Unassigned');
-        if (!techs[t]) techs[t] = { assigned: 0, completed: 0, stale: 0, unclaimed: 0, totalMs: 0, countMs: 0 };
+        const t = techBucketForJob(j);
+        ensureTech(t);
         techs[t].assigned++;
         const status = (j.status || '').toLowerCase();
-        if (['resolved','ready'].includes(status)) {
-            techs[t].completed++;
-            if (j.dateReceived && j.dateCompleted) {
-                const ms = new Date(j.dateCompleted).getTime() - new Date(j.dateReceived).getTime();
-                if (ms > 0) { techs[t].totalMs += ms; techs[t].countMs++; }
-            }
-        }
         const STALE = 3 * 24 * 60 * 60 * 1000;
-        const skip  = ['abandoned','unsuccessful','resolved','ready'];
+        const skip  = ['abandoned', 'unsuccessful', 'resolved', 'ready'];
         if (!skip.includes(status)) {
-            const last = Math.max(
-                j.dateReceived  ? new Date(j.dateReceived).getTime()  : 0,
-                j.dateCompleted ? new Date(j.dateCompleted).getTime() : 0
-            );
+            const recvMs = j.dateReceived ? Date.parse(j.dateReceived) : 0;
+            const compMs = j.dateCompleted ? Date.parse(j.dateCompleted) : 0;
+            const last = Math.max(recvMs || 0, compMs || 0);
             if (last && (Date.now() - last) > STALE) {
                 techs[t].stale++;
                 if (!j.claimedBy && status === 'received') techs[t].unclaimed++;
@@ -568,44 +638,65 @@ function renderTechPerf(jobs, from, to) {
         }
     });
 
-    // A tech may have earned revenue this period from a job received earlier (so it isn't in
-    // the job-count loop above). Make sure they still appear and can win "Top Revenue".
-    Object.keys(techRevenue).forEach(name => {
-        if (!techs[name]) techs[name] = { assigned: 0, completed: 0, stale: 0, unclaimed: 0, totalMs: 0, countMs: 0 };
+    allJobs.forEach(j => {
+        if (!jobCompletedInDateRange(j, from, to)) return;
+        const t = techBucketForJob(j);
+        ensureTech(t);
+        techs[t].completed++;
+        techs[t].completedJobs.push({ id: j.id, device: j.device || '' });
+        const recvMs = j.dateReceived ? Date.parse(j.dateReceived) : NaN;
+        const compMs = j.dateCompleted ? Date.parse(j.dateCompleted) : NaN;
+        if (!Number.isNaN(recvMs) && !Number.isNaN(compMs) && compMs > recvMs) {
+            techs[t].totalMs += compMs - recvMs;
+            techs[t].countMs++;
+        }
     });
 
-    const sorted = Object.entries(techs).sort((a,b) => b[1].completed - a[1].completed);
+    Object.keys(techRevenue).forEach(name => ensureTech(name));
+
+    const sorted = Object.entries(techs).sort((a, b) => b[1].completed - a[1].completed);
     if (!sorted.length) { el.innerHTML = '<div class="empty-state">No technician data.</div>'; return; }
 
-    // Find top values for bonus highlighting — only award if there's a clear single winner
-    const maxCompleted = Math.max(...sorted.map(([,d]) => d.completed));
+    const maxCompleted = Math.max(...sorted.map(([, d]) => d.completed));
     const maxRevenue   = Math.max(...sorted.map(([name]) => techRevenue[name] || 0));
-    const completedWinners = sorted.filter(([name, d]) => !name.includes('Unassigned') && d.completed === maxCompleted && maxCompleted > 0);
-    const revenueWinners   = sorted.filter(([name])    => !name.includes('Unassigned') && (techRevenue[name] || 0) === maxRevenue && maxRevenue > 0);
+    const completedWinners = sorted.filter(([name, d]) => name !== 'Unassigned' && d.completed === maxCompleted && maxCompleted > 0);
+    const revenueWinners   = sorted.filter(([name]) => name !== 'Unassigned' && (techRevenue[name] || 0) === maxRevenue && maxRevenue > 0);
     const soloJobsWinner   = completedWinners.length === 1 ? completedWinners[0][0] : null;
-    const soloRevWinner    = revenueWinners.length   === 1 ? revenueWinners[0][0]   : null;
+    const soloRevWinner    = revenueWinners.length === 1 ? revenueWinners[0][0] : null;
 
     el.innerHTML = sorted.map(([name, d]) => {
-        const avgDays    = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
-        const revenue    = techRevenue[name] || 0;
+        const avgDays = d.countMs ? (d.totalMs / d.countMs / 86400000).toFixed(1) : '—';
+        const revenue = techRevenue[name] || 0;
         const isUnassigned = name === 'Unassigned';
-        const topJobs    = name === soloJobsWinner;
-        const topRev     = name === soloRevWinner;
+        const topJobs = name === soloJobsWinner;
+        const topRev = name === soloRevWinner;
+        const jobsDetail = topJobs ? formatTechJobsDetail(d.completedJobs) : '';
+        const revDetail = topRev ? formatTechRevenueDetail(techRevenueDetail[name]) : '';
+        let badgeNotes = '';
+        if (topJobs && jobsDetail) {
+            badgeNotes += '<div class="tech-badge-detail"><strong>Most Jobs:</strong> ' + escH(jobsDetail) + '</div>';
+        }
+        if (topRev && revDetail) {
+            badgeNotes += '<div class="tech-badge-detail"><strong>Top Revenue:</strong> ' + escH(revDetail) + '</div>';
+        }
         return '<div class="person-row">'
             + '<div class="person-avatar">' + statIcon(isUnassigned ? 'info' : 'wrench', 16) + '</div>'
             + '<div style="flex:1;min-width:0;">'
             +   '<div class="person-name">' + escH(name)
             +     (topJobs ? ' ' + statBadge('Most Jobs', 'success') : '')
-            + (topRev  ? ' ' + statBadge('Top Revenue', 'primary') : '')
+            +     (topRev ? ' ' + statBadge('Top Revenue', 'primary') : '')
             +   '</div>'
-            +   '<div class="person-meta">' + d.assigned + (isUnassigned ? ' unassigned' : ' assigned') + ' &bull; avg ' + avgDays + ' days'
-            +     (d.stale    ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
+            +   '<div class="person-meta">' + d.assigned + ' received in period'
+            +     ' &bull; ' + d.completed + ' completed in period'
+            +     ' &bull; avg ' + avgDays + ' days'
+            +     (d.stale ? ' &bull; <span style="color:var(--warning);">' + d.stale + ' stale</span>' : '')
             +     (d.unclaimed ? ' &bull; <span style="color:var(--danger);">' + d.unclaimed + ' unclaimed</span>' : '')
             +   '</div>'
+            +   badgeNotes
             + '</div>'
             + '<div style="display:flex;gap:16px;flex-shrink:0;text-align:right;">'
             +   '<div class="person-stats"><div class="person-stat-main">' + d.completed + '</div><div class="person-stat-sub">completed</div></div>'
-            +   (revenue > 0 ? '<div class="person-stats"><div class="person-stat-main" style="font-size:0.95rem;color:var(--success);">' + bz(revenue) + '</div><div class="person-stat-sub">revenue</div></div>' : '')
+            +   (revenue > 0 ? '<div class="person-stats"><div class="person-stat-main" style="font-size:0.95rem;color:var(--success);">' + bz(revenue) + '</div><div class="person-stat-sub">collected</div></div>' : '')
             + '</div>'
             + '</div>';
     }).join('');

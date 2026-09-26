@@ -1381,8 +1381,11 @@ let _partialSalesCache = [];
 const _partialModalOpts = {
     onRowClick: 'openPartialSalesRow',
     onSettle: 'settlePartialSale',
+    onAddPayment: 'openAddPartialPayment',
     emptyText: 'No partial sales with balance due in this view.'
 };
+
+let _addPaymentParentSale = null;
 
 async function openSalesPartialSales() {
     // Open immediately with what we have, then upgrade to the full all-dates set.
@@ -1407,6 +1410,95 @@ function openPartialSalesRow(saleId) {
 
 // Mark an individual partial sale's balance as fulfilled so it drops off the
 // outstanding list. Non-destructive — the sale stays in the books.
+function openAddPartialPayment(saleId) {
+    const s = _partialSalesCache.find(x => String(x.saleId) === String(saleId))
+        || allSales.find(x => String(x.saleId) === String(saleId));
+    if (!s) return;
+    const owed = saleOutstanding(s);
+    if (owed <= 0.009) {
+        showToast('Nothing left to collect on this sale.', '');
+        return;
+    }
+    _addPaymentParentSale = s;
+    const info = document.getElementById('addPaymentInfo');
+    const items = tryParseJSON(s.items, []);
+    const desc = items.map(i => i.name).slice(0, 2).join(', ') || s.customer || 'Partial sale';
+    if (info) {
+        info.innerHTML = '<strong>' + escH(desc) + '</strong><br>'
+            + 'Receipt <strong>' + escH(s.saleId) + '</strong> · '
+            + bz(parseFloat(s.amountPaid) || 0) + ' paid of ' + bz(parseFloat(s.total) || 0)
+            + '<br>Balance due: <strong style="color:var(--warning);">' + bz(owed) + '</strong>';
+    }
+    const amt = document.getElementById('addPaymentAmount');
+    if (amt) {
+        amt.value = owed.toFixed(2);
+        amt.max = owed.toFixed(2);
+    }
+    document.getElementById('apm-cash').checked = true;
+    closePartialSalesModal();
+    openModal('addPartialPaymentModal');
+}
+
+async function submitAddPartialPayment() {
+    const parent = _addPaymentParentSale;
+    if (!parent) return;
+    const owed = saleOutstanding(parent);
+    let amount = parseFloat(document.getElementById('addPaymentAmount').value) || 0;
+    if (amount <= 0) { showToast('Enter a payment amount.', 'err'); return; }
+    if (amount > owed + 0.009) {
+        showToast('Amount cannot exceed balance due (' + bz(owed) + ').', 'err');
+        return;
+    }
+    const method = (document.querySelector('input[name="addPaymentMethod"]:checked') || {}).value || 'cash';
+    const btn = document.getElementById('addPaymentSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    const prevPaid = parseFloat(parent.amountPaid) || 0;
+    const newPaid = prevPaid + amount;
+    const lineLabel = 'Payment on ' + parent.saleId + (parent.jobId ? ' · Job #' + parent.jobId : '');
+    try {
+        const createRes = await apiPost({
+            action: 'createsale',
+            customer: parent.customer || '',
+            items: JSON.stringify([{ name: lineLabel, qty: 1, price: amount, total: amount }]),
+            total: amount,
+            method,
+            amountPaid: amount,
+            jobId: parent.jobId || '',
+            shiftDate: getShiftDate(),
+            shift: getCurrentShift() ? getCurrentShift().label : 'Unknown',
+            cashier: currentUser
+        });
+        if (!createRes || !createRes.success) throw new Error((createRes && createRes.error) || 'Could not record payment');
+
+        const upd = await apiPost({
+            action: 'updatesale',
+            saleId: parent.saleId,
+            amountPaid: newPaid
+        });
+        if (!upd || !upd.success) throw new Error((upd && upd.error) || 'Payment recorded but balance not updated');
+
+        if (newPaid >= (parseFloat(parent.total) || 0) - 0.009) {
+            await apiPost({ action: 'settlesale', saleId: parent.saleId, cashier: currentUser });
+            parent.status = 'settled';
+        }
+        parent.amountPaid = newPaid;
+
+        if (typeof haptic === 'function') haptic('success');
+        showToast('Payment recorded — receipt ' + (createRes.saleId || ''), 'ok');
+        closeModal('addPartialPaymentModal');
+        _addPaymentParentSale = null;
+        await loadAll();
+        _partialSalesCache = allSales;
+        openPartialSalesModal(_partialSalesCache, _partialModalOpts);
+    } catch (e) {
+        showToast(e.message || 'Could not add payment.', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Record Payment';
+    }
+}
+
 async function settlePartialSale(saleId) {
     const s = _partialSalesCache.find(x => String(x.saleId) === String(saleId))
         || allSales.find(x => String(x.saleId) === String(saleId));
@@ -1682,8 +1774,10 @@ function calcJobBalance() {
         disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(16,185,129,0.1);color:var(--success);border:1px solid rgba(16,185,129,0.2);';
         disp.textContent = 'Fully paid — device can be released';
     } else {
-        disp.style.cssText = 'display:block;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.2);';
-        disp.textContent = 'Partial  —  ' + bz(balance) + ' remaining. Device stays until fully paid.';
+        disp.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:0.85rem;font-weight:800;margin-bottom:14px;background:rgba(245,158,11,0.12);color:#d97706;border:1px dashed rgba(245,158,11,0.45);text-align:center;';
+        disp.innerHTML = '<div style="font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px;opacity:0.9;">Partial pickup</div>'
+            + '<div>Balance Due: <span style="font-size:1.05rem;">' + bz(balance) + '</span></div>'
+            + '<div style="font-size:0.72rem;font-weight:600;margin-top:6px;opacity:0.9;">Device stays until fully paid.</div>';
     }
 }
 

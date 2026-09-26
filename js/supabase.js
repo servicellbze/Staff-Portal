@@ -626,6 +626,7 @@ const Sales = {
     if (data.customer !== undefined) patch.customer = data.customer;
     if (data.items    !== undefined) patch.items    = JSON.parse(data.items);
     if (data.total    !== undefined) patch.total    = Number(data.total);
+    if (data.amountPaid !== undefined) patch.amount_paid = Number(data.amountPaid);
     await sbPatch('sales', `sale_id=eq.${encodeURIComponent(data.saleId)}`, patch);
     return { success: true };
   }

@@ -152,6 +152,14 @@
                     + 'border-radius:99px;font-family:inherit;font-size:0.68rem;font-weight:800;cursor:pointer;">'
                     + '&#10003; Mark Paid</button>'
                 : '';
+            const addPayBtn = opts.onAddPayment
+                ? '<button type="button" title="Record another payment (new sale receipt)"'
+                    + ' onclick="event.stopPropagation();' + opts.onAddPayment + '(\'' + safeId + '\')"'
+                    + ' style="margin-top:6px;margin-right:6px;display:inline-flex;align-items:center;gap:4px;padding:4px 10px;'
+                    + 'border:1px solid var(--primary);background:rgba(var(--primary-rgb,37,99,235),0.1);color:var(--primary);'
+                    + 'border-radius:99px;font-family:inherit;font-size:0.68rem;font-weight:800;cursor:pointer;">'
+                    + '+ Add Payment</button>'
+                : '';
             return '<div class="partial-sale-row"' + rowClick + '>'
                 + '<div style="flex:1;min-width:0;">'
                 + '<div style="font-size:0.85rem;font-weight:700;">' + escH(desc) + '</div>'
@@ -164,7 +172,7 @@
                 + '<div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;">'
                 + '<div style="font-size:0.95rem;font-weight:800;color:var(--warning);">' + bz(owed) + '</div>'
                 + '<div style="font-size:0.65rem;color:var(--text-dim);font-weight:700;">OWED</div>'
-                + settleBtn
+                + '<div style="display:flex;flex-wrap:wrap;justify-content:flex-end;margin-top:4px;">' + addPayBtn + settleBtn + '</div>'
                 + '</div></div>';
         }).join('');
     }

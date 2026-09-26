@@ -1910,6 +1910,12 @@
             border: 1px solid rgba(5, 150, 105, 0.35);
         }
 
+        .payment-badge.partial {
+            background: rgba(245, 158, 11, 0.15);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.35);
+        }
+
         .payment-badge.unpaid {
             background: rgba(239, 68, 68, 0.15);
             color: #f87171;
@@ -3378,6 +3384,31 @@
             });
         }
 
+        async function refreshViewJobPaymentBadge(jobId, invoiceTotal, el) {
+            if (!el || !jobId || invoiceTotal <= 0) return;
+            try {
+                const res = await apiGet({ action: 'listsales', jobId: jobId });
+                const sales = (res && res.sales) || [];
+                const paid = sales.filter(s => s.status !== 'reversed').reduce((t, s) => {
+                    const total = parseFloat(s.total) || 0;
+                    const ap = parseFloat(s.amountPaid) || 0;
+                    if (s.method === 'partial') return t + ap;
+                    return t + total;
+                }, 0);
+                const balance = Math.max(0, invoiceTotal - paid);
+                if (paid > 0.009 && balance > 0.009) {
+                    el.innerHTML = '<span class="payment-badge partial">Balance Due: BZ$' + balance.toFixed(2) + '</span>'
+                        + '<div style="font-size:0.75rem;color:var(--text-dim);margin-top:6px;">Paid BZ$' + paid.toFixed(2) + ' of BZ$' + invoiceTotal.toFixed(2) + '</div>';
+                } else if (paid > 0.009 && balance <= 0.009) {
+                    el.innerHTML = '<span class="payment-badge paid">✅ Paid in full</span>';
+                } else if (balance > 0.009) {
+                    el.innerHTML = '<span class="payment-badge unpaid">🔴 Unpaid · BZ$' + invoiceTotal.toFixed(2) + ' due</span>';
+                }
+            } catch (e) {
+                console.warn('[view] job payment badge', e);
+            }
+        }
+
         function formatTimeAgo(dateStr) {
             if (!dateStr) return '';
             const now = new Date();
@@ -4337,10 +4368,16 @@
 
                 if (isPaid) {
                     paymentBadgeEl.innerHTML = `<span class="payment-badge paid">✅ Paid · ${method}</span>`;
+                    paymentBadgeEl.style.display = '';
+                } else if (payment === 'partial') {
+                    paymentBadgeEl.innerHTML = `<span class="payment-badge partial">Balance due — loading…</span>`;
+                    paymentBadgeEl.style.display = '';
+                    refreshViewJobPaymentBadge(j.id, total, paymentBadgeEl);
                 } else {
                     paymentBadgeEl.innerHTML = `<span class="payment-badge unpaid">🔴 Unpaid</span>`;
+                    paymentBadgeEl.style.display = '';
+                    refreshViewJobPaymentBadge(j.id, total, paymentBadgeEl);
                 }
-                paymentBadgeEl.style.display = '';
             } else {
                 invoiceSection.style.display = 'none';
                 paymentBadgeEl.style.display = 'none';
