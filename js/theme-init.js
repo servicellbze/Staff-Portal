@@ -20,6 +20,8 @@
             '--primary-dark': '#1d4ed8',
             '--accent': '#60a5fa',
             '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.1)',
+            '--login-scrim': 'rgba(248, 250, 252, 0.78)',
+            '--login-field-bg': 'rgba(255, 255, 255, 0.96)',
         },
         dark: {
             '--bg-gradient': 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
@@ -36,6 +38,8 @@
             '--primary-dark': '#3b82f6',
             '--accent': '#93c5fd',
             '--shadow-md': '0 10px 30px rgba(0, 0, 0, 0.4)',
+            '--login-scrim': 'rgba(0, 0, 0, 0.58)',
+            '--login-field-bg': '#1e293b',
         },
         scblue: {
             '--bg-gradient': 'linear-gradient(135deg, #0a1628 0%, #0f2044 100%)',
@@ -52,6 +56,8 @@
             '--primary-dark': '#2563eb',
             '--accent': '#60a5fa',
             '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
+            '--login-scrim': 'rgba(4, 10, 22, 0.72)',
+            '--login-field-bg': '#132038',
         },
         merlot: {
             '--bg-gradient': 'linear-gradient(135deg, #1a0a0e 0%, #2d1018 100%)',
@@ -68,6 +74,8 @@
             '--primary-dark': '#c9533c',
             '--accent': '#c9a86c',
             '--shadow-md': '0 10px 30px rgba(232, 115, 90, 0.25)',
+            '--login-scrim': 'rgba(12, 4, 6, 0.74)',
+            '--login-field-bg': '#2a1018',
         }
     };
 
