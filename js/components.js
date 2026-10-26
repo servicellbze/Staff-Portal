@@ -7,7 +7,7 @@
 // GitHub Pages caches HTML for ~10 minutes. If this script is newer than the page,
 // reload once onto a cache-busting URL so staff actually see the latest UI.
 (function () {
-    var BUILD = '20261002n';
+    var BUILD = '20261025a';
     var onPage = document.documentElement.getAttribute('data-sc-build') || '';
     if (onPage === BUILD) return;
     try {
@@ -45,6 +45,13 @@ function getUserRole() {
     return getEffectiveRole();
 }
 window.getUserRole = getUserRole;
+
+/** True if the logged-in user holds any of the given roles as primary or secondary */
+function hasRole(...roles) {
+    const secondary = (localStorage.getItem('scSecondaryRole') || sessionStorage.getItem('scSecondaryRole') || '').toLowerCase().trim();
+    return roles.includes(getUserRole()) || roles.includes(secondary);
+}
+window.hasRole = hasRole;
 
 const SC_PREF_KEYS = [
     'scTheme', 'scCompact', 'scHaptics', 'scNotif', 'scNotifSound',

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261002m">
+<html lang="en" data-sc-build="20261025a">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -4830,7 +4830,7 @@
                 resetClaimButton();
                 const refreshed = getJob(currentViewId);
                 const scRole = typeof getUserRole === 'function' ? getUserRole() : deriveRole(scUser);
-                const canClaim = ['manager', 'technician'].includes(scRole);
+                const canClaim = hasRole('manager', 'technician');
                 if (claimBtn && refreshed) {
                     if (refreshed.claimedBy) {
                         claimBtn.style.display = 'none';
@@ -4906,7 +4906,7 @@
             // ── Claim status ──
             const scUser = localStorage.getItem('scUser') || sessionStorage.getItem('scUser') || '';
             const scRole = typeof getUserRole === 'function' ? getUserRole() : deriveRole(scUser);
-            const canClaim = ['manager', 'technician'].includes(scRole);
+            const canClaim = hasRole('manager', 'technician');
             const canUnclaim = scRole === 'manager';
             const claimBtn = document.getElementById('claimBtn');
             const unclaimBtn = document.getElementById('unclaimBtn');

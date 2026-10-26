@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261002k">
+<html lang="en" data-sc-build="20261025a">
 
 <head>
     <link rel="manifest" href="manifest.json">
@@ -1387,7 +1387,7 @@
             let reason = params.get('signedout') || (params.get('revoked') === '1' ? 'revoked' : '');
             const flagged = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true';
             if (flagged && !scIsLoggedIn()) {
-                ['isLoggedIn', 'scUser', 'scRole', 'scDisplayName'].forEach(k => {
+                ['isLoggedIn', 'scUser', 'scRole', 'scSecondaryRole', 'scDisplayName'].forEach(k => {
                     localStorage.removeItem(k);
                     sessionStorage.removeItem(k);
                 });
@@ -1520,7 +1520,7 @@
                 const data = await apiPost({ action: 'login', username: user, password: pass, remember: remember ? '1' : '0' });
 
                 if (data.success && data.token) {
-                    ['isLoggedIn', 'scUser', 'scRole', 'scDisplayName', 'scSession', 'scSignedOutReason'].forEach(k => {
+                    ['isLoggedIn', 'scUser', 'scRole', 'scSecondaryRole', 'scDisplayName', 'scSession', 'scSignedOutReason'].forEach(k => {
                         localStorage.removeItem(k);
                         sessionStorage.removeItem(k);
                     });
@@ -1542,6 +1542,7 @@
 
                     const userRole = data.role || (typeof deriveRole === 'function' ? deriveRole(user) : 'staff');
                     storage.setItem('scRole', userRole);
+                    if (data.secondaryRole) storage.setItem('scSecondaryRole', data.secondaryRole);
 
                     if (window.ComponentLoader) {
                         window.ComponentLoader.loadNav();
