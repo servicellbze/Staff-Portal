@@ -56,7 +56,7 @@ window.hasRole = hasRole;
 const SC_PREF_KEYS = [
     'scTheme', 'scCompact', 'scHaptics', 'scNotif', 'scNotifSound',
     'scNotifSoundType', 'scAutoPrintReceipt', 'appVersion', 'scSidebarCollapsed', 'scToursSeen', 'scV5Welcome', 'scV5Welcome2',
-    'scJobsView', 'scSplash'
+    'scJobsView', 'scSplash', 'scPermsSeen'
 ];
 
 // "Splash screen" setting: off by default, saved per person on this device.

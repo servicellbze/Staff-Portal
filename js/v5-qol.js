@@ -1721,16 +1721,102 @@
         playIntro(function (go) { if (go) beginTour(true); });
     }
 
+    // ── Permissions updated: one card the first time an account signs in with new or changed roles ─
+    // Role sets already shown are kept per user in scPermsSeen. A single-role account seen for the
+    // first time is recorded quietly, so only staff whose access actually changed get the card.
+    var PERMS_KEY = 'scPermsSeen';
+    var ROLE_PERMS = {
+        manager: { label: 'Manager', icon: 'crown', perms: ['Full access to every page, including Statistics', 'Staff accounts and broadcasts', 'Override or release any job claim'] },
+        cashier: { label: 'Cashier', icon: 'cash', perms: ['Sales, payouts, bills and day close', 'Add and edit inventory', 'Mark repairs Ready or Picked Up'] },
+        technician: { label: 'Technician', icon: 'wrench', perms: ['Claim jobs on the repair board', 'Eligible for Most Jobs and Top Revenue bonuses'] }
+    };
+
+    function accountRoles() {
+        var roles = [userRole()];
+        var extra = '';
+        try { extra = (localStorage.getItem('scSecondaryRole') || sessionStorage.getItem('scSecondaryRole') || '').toLowerCase().trim(); } catch (_) {}
+        if (ROLE_PERMS[extra] && roles.indexOf(extra) === -1) roles.push(extra);
+        return roles;
+    }
+
+    function permsSeen() {
+        try { return JSON.parse(localStorage.getItem(PERMS_KEY) || '{}') || {}; } catch (_) { return {}; }
+    }
+
+    function markPermsSeen(user, sig) {
+        var all = permsSeen();
+        all[user] = sig;
+        try { localStorage.setItem(PERMS_KEY, JSON.stringify(all)); } catch (_) {}
+    }
+
+    function checkPermissions() {
+        var user = currentUser();
+        if (!user) return;
+        var roles = accountRoles();
+        var sig = roles.join('+');
+        var prev = permsSeen()[user];
+        if (prev === sig) return;
+        if (prev === undefined && roles.length < 2) { markPermsSeen(user, sig); return; }
+        var before = prev === undefined ? [roles[0]] : prev.split('+');
+        whenIdle(function () {
+            if (currentUser() !== user || permsSeen()[user] === sig) return;
+            showPermissions(roles, before, function () { markPermsSeen(user, sig); });
+        });
+    }
+
+    function showPermissions(roles, before, onDone) {
+        var known = roles.filter(function (r) { return ROLE_PERMS[r]; });
+        var names = known.map(function (r) { return ROLE_PERMS[r].label; });
+        var layer = doc.createElement('div');
+        layer.className = 'sc-tour-layer is-chapter sc-perms';
+        layer.innerHTML =
+            '<div class="sc-tour-block"></div>' +
+            '<div class="sc-tour-chapter is-finish" role="dialog" aria-modal="true" aria-labelledby="scPermsTitle" aria-describedby="scPermsSub">' +
+            '<div class="sc-tour-done-mark" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="23"/><path d="M15 27l7 7 15-16"/></svg></div>' +
+            '<div class="sc-tour-chapter-title" id="scPermsTitle">Permissions Updated!</div>' +
+            '<p class="sc-tour-chapter-blurb" id="scPermsSub">Your account now has ' + esc(names.join(' + ')) + ' access.</p>' +
+            '<ul class="sc-tour-done-list">' + known.map(function (r) {
+                var p = ROLE_PERMS[r];
+                var isNew = before.indexOf(r) === -1;
+                return '<li><span class="sc-tour-done-ic" aria-hidden="true">' + icon(p.icon, 16) + '</span>' +
+                    '<span><b>' + esc(p.label) + (isNew ? '<span class="sc-perms-new">New</span>' : '') + '</b>' +
+                    '<span>' + p.perms.map(esc).join(' · ') + '</span></span></li>';
+            }).join('') + '</ul>' +
+            '<div class="sc-tour-done-actions"><button type="button" class="sc-tour-done-go">Got it</button></div>' +
+            '</div>';
+        doc.body.appendChild(layer);
+        var ch = layer.querySelector('.sc-tour-chapter');
+        var goBtn = ch.querySelector('.sc-tour-done-go');
+        void layer.offsetWidth;
+        layer.classList.add('show');
+        ch.classList.add('in');
+        tap('success');
+
+        function close() {
+            doc.removeEventListener('keydown', onKey, true);
+            if (typeof onDone === 'function') onDone();
+            removeLayer(layer);
+        }
+        function onKey(e) {
+            if (e.key === 'Escape' || e.key === 'Tab') e.preventDefault();
+            if (e.key === 'Escape') close();
+        }
+        doc.addEventListener('keydown', onKey, true);
+        goBtn.addEventListener('click', close);
+        setTimeout(function () { try { goBtn.focus({ preventScroll: true }); } catch (_) {} }, 500);
+    }
+
     // ── Boot ─────────────────────────────────────────────────────────────────────
     function boot() {
         initScrollLock();
         initAppFeel();
-        if (isLoggedIn()) { startWelcome(); return; }
+        if (isLoggedIn()) { startWelcome(); checkPermissions(); return; }
         // Signing in on the dashboard doesn't reload the page; the shell re-renders and marks the body
         var obs = new MutationObserver(function () {
             if (!isLoggedIn() || !doc.body.classList.contains('sc-logged-in')) return;
             obs.disconnect();
             startWelcome();
+            checkPermissions();
         });
         obs.observe(doc.body, { attributes: true, attributeFilter: ['class'] });
     }
