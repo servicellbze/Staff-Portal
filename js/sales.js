@@ -1516,15 +1516,22 @@ async function openSalesPartialSales() {
     _partialSalesCache = allSales;
     openPartialSalesModal(allSales, _partialModalOpts);
     try {
-        const data = await apiGet({ action: 'listsales' }); // no date → every sale, all dates
-        if (data && Array.isArray(data.sales)) {
-            _partialSalesCache = data.sales;
-            // Re-render the (already open) modal with the complete dataset.
-            openPartialSalesModal(data.sales, _partialModalOpts);
+        const open = await fetchOpenPartialSales();
+        if (open) {
+            _partialSalesCache = open;
+            // Re-render the (already open) modal with every open balance, all dates.
+            openPartialSalesModal(open, _partialModalOpts);
         }
     } catch (e) {
         console.warn('[partial-sales] all-time fetch failed, showing loaded day only', e);
     }
+}
+
+// Every partial sale (counter or job) that still has a balance, across all dates.
+// The server filters to open balances, so this is never cut off by the row cap.
+async function fetchOpenPartialSales() {
+    const data = await apiGet({ action: 'listsales', openBalances: '1' });
+    return data && Array.isArray(data.sales) ? data.sales : null;
 }
 
 function openPartialSalesRow(saleId) {
@@ -1633,7 +1640,7 @@ async function submitAddPartialPayment() {
         closeModal('addPartialPaymentModal');
         _addPaymentParentSale = null;
         await loadAll();
-        _partialSalesCache = allSales;
+        _partialSalesCache = (await fetchOpenPartialSales().catch(() => null)) || allSales;
         openPartialSalesModal(_partialSalesCache, _partialModalOpts);
     } catch (e) {
         showToast(e.message || 'Could not add payment.', 'err');
