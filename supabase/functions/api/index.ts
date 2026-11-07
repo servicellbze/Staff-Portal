@@ -865,8 +865,17 @@ const Sales = {
     if (!data.jobId && me.role === 'technician') deny();
     let query = 'order=timestamp.desc' + dateRange(data, 'shift_date');
     if (data.jobId) query += `&job_id=eq.${enc(str(data.jobId, 60))}`;
-    if (!flag(data.includeReversed)) query += '&status=neq.reversed';
-    const rows = await sbGet('sales', query);
+    const openBalances = flag(data.openBalances);
+    if (openBalances) {
+      // Only partial sales (counter and job payments) that still have money owing.
+      // Asking the database for just these keeps the result well under the
+      // 1,000-row response cap, so old balances are never cut off.
+      query += '&method=eq.partial&status=not.in.(reversed,settled)';
+    } else if (!flag(data.includeReversed)) {
+      query += '&status=neq.reversed';
+    }
+    let rows = await sbGet('sales', query);
+    if (openBalances) rows = rows.filter((s) => (num(s.total) - num(s.amount_paid)) > 0.009);
     return {
       sales: rows.map((s) => ({
         saleId: s.sale_id,
