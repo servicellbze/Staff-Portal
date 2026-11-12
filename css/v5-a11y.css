@@ -86,3 +86,96 @@ html .nj-label .opt { color: var(--text-dim); }
     html select,
     html textarea { font-size: 16px !important; }
 }
+
+/* ── Minimum text sizes ───────────────────────
+   Labels and captions are at least 12px; compact badges and chips at least
+   11px. (Some were 8.8–10.4px on phones.) These win over page rules on
+   purpose, including the phone-specific ones that shrank them further. */
+html .stat-label,
+html .sum-label,
+html .kpi-label,
+html .kpi-sub,
+html .kpi-delta,
+html .qty-min,
+html .nj-mode-sub,
+html .tech-audit-hint,
+html .tech-perf-block-title,
+html .tech-perf-count,
+html .tech-perf-job-id,
+html .tech-job-mid,
+html .tech-job-right,
+html .tech-perf-amt,
+html .changelog-toggle { font-size: 0.75rem !important; }
+
+html .sc-tab-label,
+html .bar-label,
+html .status-badge,
+html .priority-badge,
+html .job-type-badge,
+html .category-badge,
+html .claimed-chip,
+html .call-status-badge,
+html .activity-badge,
+html .badge,
+html .stat-badge,
+html .changelog-badge,
+html .recent-tab-count,
+html .tech-chip,
+html .nj-step-btn .n { font-size: 0.6875rem !important; }
+
+html .notif-badge {
+    font-size: 0.6875rem;
+    min-width: 18px;
+    height: 18px;
+}
+
+/* ── Targets with a mouse: at least 24px (WCAG 2.5.8) ── */
+html .row-btn { flex-shrink: 0; }
+html .util-link,
+html .sync-bar button,
+html #recentViewAll { min-height: 24px; }
+
+/* ── Touch targets on touch screens ───────────
+   Small controls get at least a 44×44 tap area. Text links keep their look
+   and gain height; icon buttons grow to 44px. */
+@media (hover: none) and (pointer: coarse) {
+    html .page-btn,
+    html .row-btn,
+    html .item-btn,
+    html .view-toggle-btn,
+    html .modal-close,
+    html .hint-close,
+    html .inv-check-dismiss,
+    html .pass-vis-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    html .per-page-select,
+    html .pagination input,
+    html .status-select { min-height: 44px; }
+
+    /* Text links and the "Refresh" buttons in each page's sync bar */
+    html .util-link,
+    html .sync-bar button,
+    html #recentViewAll,
+    html .notif-clear-btn,
+    html .meta-tag.tag-phone {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+    }
+
+    /* Pagination in two tidy rows: count + page size, then the page controls */
+    html .pagination { row-gap: 8px; }
+    html .pagination .pagination-info { order: 1; }
+    html .pagination .per-page-select { order: 2; }
+    html .pagination .pagination-controls { order: 3; flex-basis: 100%; justify-content: center; gap: 12px; }
+
+    /* Checkboxes: the whole row (or a 44px box) is tappable */
+    html .inv-col-bulk { min-width: 44px; min-height: 44px; }
+    html .inv-col-bulk input { width: 22px; height: 22px; }
+    html .user-access-btn { min-height: 44px; }
+    html label:has(> input[type="checkbox"]),
+    html label:has(> input[type="radio"]) { min-height: 44px; }
+}
