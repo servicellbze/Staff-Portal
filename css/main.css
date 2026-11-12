@@ -61,7 +61,7 @@
 
 .btn-submit {
     width: 100%;
-    background: var(--primary);
+    background: var(--primary-fill);
     color: white;
     padding: 1rem;
     border: none;
@@ -120,7 +120,7 @@
 
 .btn-submit {
     width: 100%;
-    background: var(--primary);
+    background: var(--primary-fill);
     color: white;
     border: none;
     padding: 1rem;

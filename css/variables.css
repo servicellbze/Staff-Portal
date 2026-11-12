@@ -8,6 +8,10 @@
     --primary: #2563eb;
     --primary-light: #3b82f6;
     --primary-dark: #1d4ed8;
+    /* Solid fills behind white text (buttons, active chips). Kept separate from
+       --primary so dark themes can keep a light blue for text and links. */
+    --primary-fill: #2563eb;
+    --primary-fill-hover: #1d4ed8;
 
     --bg: var(--bg-gradient);
     --surface: var(--glass);
@@ -21,6 +25,10 @@
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
+    /* Solid status fills behind white text (darker than the text shades above) */
+    --success-fill: #047857;
+    --warning-fill: #b45309;
+    --danger-fill: #dc2626;
 
     /* Background System */
     --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -31,7 +39,7 @@
 
     /* Text Hierarchy */
     --text-main: #0f172a;
-    --text-dim: #64748b;
+    --text-dim: #475569;
     --text-light: #94a3b8;
     --text-white: #ffffff;
 

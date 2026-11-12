@@ -122,7 +122,7 @@ body:not(.sc-v5) nav.scrolled {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--primary-fill);
   color: white;
   font-size: 0.85rem;
   font-weight: 800;
@@ -398,7 +398,7 @@ body:not(.sc-v5) nav.scrolled {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--primary);
+  background: var(--primary-fill);
   color: white;
   font-size: 1rem;
   display: flex;
@@ -554,7 +554,7 @@ a {
   right: -4px;
   min-width: 16px;
   height: 16px;
-  background: #ef4444;
+  background: #dc2626;
   color: white;
   font-size: 0.6rem;
   font-weight: 800;
@@ -684,7 +684,7 @@ a {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--primary);
+  background: var(--primary-fill);
   border-radius: 0 2px 2px 0;
 }
 

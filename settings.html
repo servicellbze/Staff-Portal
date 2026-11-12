@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261025a">
+<html lang="en" data-sc-build="20261112a">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="css/v5-shell.css">
     <link rel="stylesheet" href="css/v5-qol.css">
+    <link rel="stylesheet" href="css/v5-contrast.css">
     <link rel="stylesheet" href="css/footer.css">
     <link rel="stylesheet" href="css/splash.css">
 
@@ -216,7 +217,7 @@
         }
 
         .toggle input:checked+.toggle-track {
-            background: var(--primary);
+            background: var(--primary-fill);
         }
 
         .toggle-thumb {
@@ -269,7 +270,7 @@
             font-size: 0.7rem;
             font-weight: 800;
             color: white;
-            background: var(--primary);
+            background: var(--primary-fill);
             width: 18px;
             height: 18px;
             border-radius: 50%;
@@ -571,7 +572,7 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--primary);
+            background: var(--primary-fill);
             border: 2px solid var(--glass);
         }
 
@@ -954,7 +955,7 @@
 
         .strength-bar.good {
             width: 75%;
-            background: var(--primary);
+            background: var(--primary-fill);
         }
 
         .strength-bar.strong {
@@ -1102,14 +1103,14 @@
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: var(--primary-fill);
             border: none;
             color: white;
             box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: var(--primary-dark);
+            background: var(--primary-fill-hover);
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
         }
@@ -1162,7 +1163,7 @@
         }
 
         .change-password-btn:hover {
-            background: var(--primary);
+            background: var(--primary-fill);
             color: white;
             box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);
         }
@@ -1756,12 +1757,17 @@
                 '--glass-strong': 'rgba(255, 255, 255, 0.95)',
                 '--white-alt': '#e2e8f0',
                 '--text-main': '#0f172a',
-                '--text-dim': '#64748b',
+                '--text-dim': '#475569',
                 '--text-light': '#94a3b8',
-                '--primary': '#2563eb',
-                '--primary-rgb': '37, 99, 235',
+                '--primary': '#1d4ed8',
+                '--primary-rgb': '29, 78, 216',
                 '--primary-light': '#3b82f6',
                 '--primary-dark': '#1d4ed8',
+                '--primary-fill': '#2563eb',
+                '--primary-fill-hover': '#1d4ed8',
+                '--success': '#047857',
+                '--warning': '#b45309',
+                '--danger': '#b91c1c',
                 '--accent': '#60a5fa',
                 '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.1)',
                 '--login-scrim': 'rgba(248, 250, 252, 0.78)',
@@ -1780,6 +1786,11 @@
                 '--primary-rgb': '96, 165, 250',
                 '--primary-light': '#93c5fd',
                 '--primary-dark': '#3b82f6',
+                '--primary-fill': '#2563eb',
+                '--primary-fill-hover': '#1d4ed8',
+                '--success': '#10b981',
+                '--warning': '#f59e0b',
+                '--danger': '#ef4444',
                 '--accent': '#93c5fd',
                 '--shadow-md': '0 10px 30px rgba(0, 0, 0, 0.4)',
                 '--login-scrim': 'rgba(0, 0, 0, 0.58)',
@@ -1794,10 +1805,15 @@
                 '--text-main': '#e0eeff',
                 '--text-dim': '#7eaee8',
                 '--text-light': '#4d7db8',
-                '--primary': '#3b82f6',
-                '--primary-rgb': '59, 130, 246',
-                '--primary-light': '#60a5fa',
-                '--primary-dark': '#2563eb',
+                '--primary': '#60a5fa',
+                '--primary-rgb': '96, 165, 250',
+                '--primary-light': '#93c5fd',
+                '--primary-dark': '#3b82f6',
+                '--primary-fill': '#2563eb',
+                '--primary-fill-hover': '#1d4ed8',
+                '--success': '#10b981',
+                '--warning': '#f59e0b',
+                '--danger': '#ef4444',
                 '--accent': '#60a5fa',
                 '--shadow-md': '0 10px 30px rgba(37, 99, 235, 0.25)',
                 '--login-scrim': 'rgba(4, 10, 22, 0.72)',
@@ -1816,6 +1832,11 @@
                 '--primary-rgb': '232, 115, 90',
                 '--primary-light': '#f0957e',
                 '--primary-dark': '#c9533c',
+                '--primary-fill': '#b8442e',
+                '--primary-fill-hover': '#a83c28',
+                '--success': '#10b981',
+                '--warning': '#f59e0b',
+                '--danger': '#ef4444',
                 '--accent': '#c9a86c',
                 '--shadow-md': '0 10px 30px rgba(232, 115, 90, 0.25)',
                 '--login-scrim': 'rgba(12, 4, 6, 0.74)',
@@ -2564,14 +2585,14 @@
                     <div style="min-width:0;">
                         <div style="font-size:0.88rem;font-weight:700;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(u.displayName || u.username)}</div>
                         <div style="font-size:0.72rem;color:var(--text-dim);">${escapeHtml(u.username)} &bull; ${escapeHtml(u.role)}${isRevoked 
- ? ' &bull; <span style="color:#ef4444;font-weight:800;">Suspended</span>' : ''}</div>
+ ? ' &bull; <span style="color:var(--danger);font-weight:800;">Suspended</span>' : ''}</div>
                     </div>
                     <button onclick="confirmRevoke('${escapeHtml(u.username)}', ${!isRevoked})"
                         style="flex-shrink:0;padding:7px 14px;border-radius:99px;border:none;font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;
                         background:${isRevoked 
  ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
                         color:${isRevoked 
- ? '#10b981' : '#ef4444'};">
+ ? 'var(--success)' : 'var(--danger-text, var(--danger))'};">
                         ${isRevoked 
  ? 'Restore' : 'Suspend'}
                     </button>

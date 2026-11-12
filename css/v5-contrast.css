@@ -1,0 +1,78 @@
+/* ============================================
+   SERVICELL — BADGE & TEXT CONTRAST
+   Status pills and small coloured text use fixed shades in each page's own
+   styles. Those shades suit one background but not the other, so this sheet
+   picks a readable shade per theme (WCAG AA, 4.5:1 for small text).
+   Light theme: darker 700 shades. Dark themes (dark, ServiCell Blue, Merlot):
+   lighter 300/400 shades.
+   ============================================ */
+
+/* ── Light theme ───────────────────────────── */
+html[data-theme="light"] .priority-badge.low,
+html[data-theme="light"] .badge-cash,
+html[data-theme="light"] .category-badge { color: #1d4ed8; }
+
+html[data-theme="light"] .status-badge.fixing,
+html[data-theme="light"] .activity-badge.badge-fixing,
+html[data-theme="light"] .status-badge.badge-out,
+html[data-theme="light"] .clear-btn { color: #b91c1c; }
+
+html[data-theme="light"] .status-badge.ready,
+html[data-theme="light"] .status-badge.resolved,
+html[data-theme="light"] .activity-badge.badge-ready,
+html[data-theme="light"] .badge.badge-paid,
+html[data-theme="light"] .changelog-badge.badge-current { color: #065f46; }
+
+html[data-theme="light"] .badge.badge-partial,
+html[data-theme="light"] .meta-tag.tag-qty { color: #92400e; }
+
+html[data-theme="light"] .job-type-badge,
+html[data-theme="light"] .badge.badge-card,
+html[data-theme="light"] .kpi-card.purple .kpi-value { color: #6d28d9; }
+
+html[data-theme="light"] .priority-badge.high,
+html[data-theme="light"] .call-status-badge.not-called { color: #991b1b; }
+
+html[data-theme="light"] .kpi-card.teal .kpi-value { color: #0f766e; }
+
+html[data-theme="light"] .claimed-chip { color: #155e75; }
+
+html[data-theme="light"] .changelog-badge.badge-legacy { color: #475569; }
+
+/* ── Dark themes ───────────────────────────── */
+html:not([data-theme="light"]) { --danger-text: #f87171; }
+
+html:not([data-theme="light"]) .priority-badge.high,
+html:not([data-theme="light"]) .call-status-badge.not-called { color: #fca5a5; }
+
+html:not([data-theme="light"]) .qty-cell.out,
+html:not([data-theme="light"]) .stat-row-val.red,
+html:not([data-theme="light"]) .kpi-card.red .kpi-value,
+html:not([data-theme="light"]) .inv-qty { color: #f87171; }
+
+html:not([data-theme="light"]) .status-badge.fixing,
+html:not([data-theme="light"]) .activity-badge.badge-fixing,
+html:not([data-theme="light"]) .status-badge.badge-out,
+html:not([data-theme="light"]) .clear-btn { color: #f87171; }
+
+html:not([data-theme="light"]) .status-badge.ready,
+html:not([data-theme="light"]) .status-badge.resolved,
+html:not([data-theme="light"]) .activity-badge.badge-ready,
+html:not([data-theme="light"]) .badge.badge-paid,
+html:not([data-theme="light"]) .changelog-badge.badge-current { color: #34d399; }
+
+html:not([data-theme="light"]) .badge.badge-partial,
+html:not([data-theme="light"]) .meta-tag.tag-qty { color: #fbbf24; }
+
+html:not([data-theme="light"]) .badge.badge-card,
+html:not([data-theme="light"]) .kpi-card.purple .kpi-value { color: #a78bfa; }
+
+html:not([data-theme="light"]) .claimed-chip { color: #22d3ee; }
+
+html:not([data-theme="light"]) .kpi-card.teal .kpi-value { color: #2dd4bf; }
+
+html:not([data-theme="light"]) .changelog-badge.badge-legacy { color: #94a3b8; }
+
+/* ── Both themes: secondary hints read as dim text, not the faintest grey ── */
+html .nj-hint,
+html .nj-label .opt { color: var(--text-dim); }
