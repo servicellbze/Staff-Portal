@@ -365,7 +365,9 @@ body.sc-v5.sc-sidebar-collapsed .sc-sidebar .account-chip {
     padding: env(safe-area-inset-top, 0px) 8px 0;
     align-items: center;
     gap: 6px;
-    background: var(--sc-v5-glass);
+    /* Solid backing: perf.css turns the blur off on phones, and page content
+       should not show through behind the title. */
+    background: linear-gradient(var(--sc-v5-glass), var(--sc-v5-glass)), var(--sc-v5-panel-solid);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--sc-v5-glass-border);
@@ -466,7 +468,7 @@ body.sc-v5.sc-sidebar-collapsed .sc-sidebar .account-chip {
     bottom: 0;
     min-height: calc(var(--sc-tabbar-h) + env(safe-area-inset-bottom, 0px));
     padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
-    background: var(--sc-v5-glass);
+    background: linear-gradient(var(--sc-v5-glass), var(--sc-v5-glass)), var(--sc-v5-panel-solid);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-top: 1px solid var(--sc-v5-glass-border);

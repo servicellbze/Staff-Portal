@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112b">
+<html lang="en" data-sc-build="20261112c">
 
 <head>
     <link rel="manifest" href="manifest.json">
@@ -395,6 +395,11 @@
         }
 
         .recent-tabs::-webkit-scrollbar { display: none; }
+
+        /* Fade the edge that has more tabs past it, so the row reads as scrollable. */
+        .recent-tabs.fade-end   { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent); }
+        .recent-tabs.fade-start { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent); }
+        .recent-tabs.fade-start.fade-end { -webkit-mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); mask-image: linear-gradient(to right, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
 
         .recent-tab {
             flex-shrink: 0;
@@ -1349,6 +1354,8 @@
                 if (typeof haptic === 'function') haptic('light');
                 renderActivity();
                 if (focus) bar.querySelector(`[data-tab="${tab}"]`).focus();
+                const active = bar.querySelector(`[data-tab="${tab}"]`);
+                if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
             }
             bar.addEventListener('click', e => {
                 const btn = e.target.closest('.recent-tab');
@@ -1362,6 +1369,16 @@
                 select(all[(i + (e.key === 'ArrowRight' ? 1 : -1) + all.length) % all.length], true);
             });
             renderActivity();
+            function updateFade() {
+                const left = bar.scrollLeft;
+                bar.classList.toggle('fade-start', left > 4);
+                bar.classList.toggle('fade-end', bar.scrollWidth - bar.clientWidth - left > 4);
+            }
+            bar.addEventListener('scroll', updateFade, { passive: true });
+            window.addEventListener('resize', updateFade);
+            // Tab counts arrive after the first draw and change the tab widths.
+            if ('ResizeObserver' in window) { const ro = new ResizeObserver(updateFade); tabs().forEach(t => ro.observe(t)); }
+            updateFade();
         })();
 
         if (window.SCQol) SCQol.pullToRefresh(loadDashboard);
