@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112g">
+<html lang="en" data-sc-build="20261112h">
 <head>
     <script src="js/theme-init.js"></script>
     <script src="js/supabase.js"></script>
@@ -995,7 +995,7 @@
                 <div class="item-sku">${escH(i.sku || '—')}${i.compat ? ' · ' + escH(i.compat) : ''}</div>
             </div>
             <div class="inv-col-cat"><span class="category-badge">${escH(i.category || 'Other')}</span></div>
-            <div class="inv-col-qty"><span class="qty-cell ${qtyCls}">${qty}</span><span class="qty-min"> / ${min}</span></div>
+            <div class="inv-col-qty" title="${qty} in stock · alert at ${min}"><span class="qty-cell ${qtyCls}">${qty}</span><span class="qty-min"> / min ${min}</span></div>
             <div class="inv-col-price"><span class="price-cell">BZ$${sale.toFixed(2)}</span></div>
             <div class="inv-col-status">
                 <span class="status-badge ${statusCls}">${statusLabel}</span>

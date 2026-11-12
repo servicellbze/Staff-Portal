@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112g">
+<html lang="en" data-sc-build="20261112h">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -1138,6 +1138,12 @@
         /* Change Password Button (in About section) */
         .change-password-btn.tips-btn { margin-top: 0; flex-shrink: 0; white-space: nowrap; }
         .tips-actions { display: flex; flex-direction: column; align-items: stretch; gap: 4px; flex-shrink: 0; }
+        /* Phones: the description gets the full width and the buttons sit below it */
+        @media (max-width: 600px) {
+            #tipsRow { flex-wrap: wrap; }
+            #tipsRow .setting-info { flex: 1 1 100%; }
+            #tipsRow .tips-actions { flex: 1 1 100%; flex-direction: row; flex-wrap: wrap; align-items: center; }
+        }
         .tips-link-btn {
             min-height: 32px; padding: 0 10px; border: none; background: none; cursor: pointer;
             color: var(--primary); font-family: var(--font-family); font-size: 0.78rem; font-weight: 700;

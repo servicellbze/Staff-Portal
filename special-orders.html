@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112g">
+<html lang="en" data-sc-build="20261112h">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -284,6 +284,11 @@
             font-weight: 700;
             padding: 3px 8px;
             border-radius: var(--radius-full);
+        }
+
+        .tag-customer {
+            background: rgba(148, 163, 184, 0.12);
+            color: var(--text-main);
         }
 
         .tag-user {
@@ -982,10 +987,12 @@
             const updatedStr = o.dateUpdated ? `Updated ${new Date(o.dateUpdated).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : '';
 
             const notesHTML = o.notes ? `<div class="order-notes">${escHtml(String(o.notes))}</div>` : '';
-            const customerTag = o.customer ? `<span class="meta-tag tag-qty">${escHtml(String(o.customer))}</span>` : '';
+            // Each chip carries an icon (or a word) so it reads without relying on its colour
+            const tagIcon = (name) => (typeof scIcon === 'function' ? scIcon(name, 12) : '');
+            const customerTag = o.customer ? `<span class="meta-tag tag-customer" title="Customer">${tagIcon('users')}${escHtml(String(o.customer))}</span>` : '';
             const phoneDigits = String(o.phone || '').replace(/\D/g, '');
             const phoneTag = phoneDigits.length >= 7
-                ? `<a class="meta-tag tag-phone" href="tel:${phoneDigits.length === 7 ? '+501' + phoneDigits : '+' + phoneDigits}" aria-label="Call ${escHtml(String(o.customer || 'customer'))}">${escHtml(String(o.phone))}</a>`
+                ? `<a class="meta-tag tag-phone" href="tel:${phoneDigits.length === 7 ? '+501' + phoneDigits : '+' + phoneDigits}" aria-label="Call ${escHtml(String(o.customer || 'customer'))}">${tagIcon('phone')}${escHtml(String(o.phone))}</a>`
                 : '';
 
             const itemName = String(o.item || o.part || 'Unnamed item');
@@ -1005,9 +1012,9 @@
         <div class="order-body">
             <div class="order-title">${escHtml(itemName)}</div>
             <div class="order-meta">
-                <span class="meta-tag tag-user">${escHtml(requestedBy)}</span>
-                <span class="meta-tag tag-qty">×${escHtml(quantity)}</span>
-                <span class="meta-tag tag-date">${dateStr}</span>
+                <span class="meta-tag tag-user" title="Requested by">By ${escHtml(requestedBy)}</span>
+                <span class="meta-tag tag-qty" title="Quantity">${tagIcon('package')}×${escHtml(quantity)}</span>
+                <span class="meta-tag tag-date" title="Date requested">${tagIcon('calendar')}${dateStr}</span>
                 ${customerTag}
                 ${phoneTag}
                 ${updatedStr ? `<span class="meta-tag tag-date">${updatedStr}</span>` : ''}

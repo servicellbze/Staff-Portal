@@ -119,8 +119,15 @@ body.sc-v5 main {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .sum-card:nth-child(n+4) {
+    /* Four tiles fill the 2×2 grid; Reversed stays desktop-only */
+    .sum-card:nth-child(n+5) {
         display: none;
+    }
+
+    /* The date filter wraps to its own row; let it span it instead of hugging the right edge */
+    .pos-tools #salesDateFilter {
+        flex: 1 1 100%;
+        margin-left: 0 !important;
     }
 
     .tabs {
@@ -236,4 +243,27 @@ body.sc-v5 main {
     .pos-hero {
         grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     }
+}
+
+/* Sales rows on phones: the item names get a full-width line, the amount sits
+   beside the time and badges, and the actions move to their own line. */
+@media (max-width: 600px) {
+    #salesList .list-item {
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr) auto;
+        column-gap: 10px;
+        row-gap: 4px;
+        align-items: start;
+    }
+
+    #salesList .list-item-body,
+    #salesList .list-item-right { display: contents; }
+
+    #salesList .list-item-icon { grid-column: 1; grid-row: 1; padding-top: 2px; }
+    #salesList .list-item-title { grid-column: 2 / 4; grid-row: 1; }
+    #salesList .list-item-meta { grid-column: 2; grid-row: 2; margin-top: 0; }
+    #salesList .list-item-body > div:last-child { grid-column: 2; grid-row: 3; flex-wrap: wrap; }
+    #salesList .list-item-amount { grid-column: 3; grid-row: 2 / 4; }
+    #salesList .list-item-actions { grid-column: 2 / 4; grid-row: 4; justify-content: flex-end; margin-top: 4px; }
+    #salesList .badge { white-space: nowrap; }
 }
