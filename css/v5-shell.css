@@ -911,3 +911,10 @@ body.sc-v5 .toast.sc-toast.is-error { border-color: rgba(239, 68, 68, 0.5); }
 @media (prefers-reduced-motion: reduce) {
     body.sc-v5 .toast.sc-toast { transition: opacity 0.2s ease, visibility 0.2s; }
 }
+
+/* One dialog backdrop on every page (they ranged from a 15% blue tint to 75% black) */
+body.sc-v5 .modal-overlay {
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}

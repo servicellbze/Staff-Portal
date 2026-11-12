@@ -21,9 +21,12 @@ html[data-theme="light"] .status-badge.ready,
 html[data-theme="light"] .status-badge.resolved,
 html[data-theme="light"] .activity-badge.badge-ready,
 html[data-theme="light"] .badge.badge-paid,
-html[data-theme="light"] .changelog-badge.badge-current { color: #065f46; }
+html[data-theme="light"] .changelog-badge.badge-current,
+html[data-theme="light"] .activity-badge.badge-resolved { color: #065f46; }
 
 html[data-theme="light"] .badge.badge-partial,
+html[data-theme="light"] .status-badge.testing,
+html[data-theme="light"] .activity-badge.badge-testing,
 html[data-theme="light"] .meta-tag.tag-qty { color: #92400e; }
 
 html[data-theme="light"] .job-type-badge,
@@ -43,7 +46,8 @@ html[data-theme="light"] .changelog-badge.badge-legacy { color: #475569; }
 html:not([data-theme="light"]) { --danger-text: #f87171; }
 
 html:not([data-theme="light"]) .priority-badge.high,
-html:not([data-theme="light"]) .call-status-badge.not-called { color: #fca5a5; }
+html:not([data-theme="light"]) .call-status-badge.not-called,
+html:not([data-theme="light"]) .tech-chip.bad .tech-chip-n { color: #fca5a5; }
 
 html:not([data-theme="light"]) .qty-cell.out,
 html:not([data-theme="light"]) .stat-row-val.red,
@@ -59,9 +63,12 @@ html:not([data-theme="light"]) .status-badge.ready,
 html:not([data-theme="light"]) .status-badge.resolved,
 html:not([data-theme="light"]) .activity-badge.badge-ready,
 html:not([data-theme="light"]) .badge.badge-paid,
-html:not([data-theme="light"]) .changelog-badge.badge-current { color: #34d399; }
+html:not([data-theme="light"]) .changelog-badge.badge-current,
+html:not([data-theme="light"]) .activity-badge.badge-resolved { color: #34d399; }
 
 html:not([data-theme="light"]) .badge.badge-partial,
+html:not([data-theme="light"]) .status-badge.testing,
+html:not([data-theme="light"]) .activity-badge.badge-testing,
 html:not([data-theme="light"]) .meta-tag.tag-qty { color: #fbbf24; }
 
 html:not([data-theme="light"]) .badge.badge-card,
