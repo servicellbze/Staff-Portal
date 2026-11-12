@@ -179,3 +179,57 @@ html #recentViewAll { min-height: 24px; }
     html label:has(> input[type="checkbox"]),
     html label:has(> input[type="radio"]) { min-height: 44px; }
 }
+
+/* ── Keyboard focus ───────────────────────────
+   Every control shows a ring when reached with the keyboard. Only the outline
+   is forced; components keep their own offsets. Text fields get the ring too,
+   because several only changed their border by a hair. */
+html a:focus-visible,
+html button:focus-visible,
+html summary:focus-visible,
+html [role="button"]:focus-visible,
+html [role="tab"]:focus-visible,
+html [tabindex]:not([tabindex="-1"]):focus-visible,
+html input:focus-visible,
+html select:focus-visible,
+html textarea:focus-visible,
+html input[type="date"]:focus,
+html input[type="datetime-local"]:focus { outline: 2px solid var(--primary) !important; }
+
+html a:focus-visible,
+html button:focus-visible,
+html summary:focus-visible { outline-offset: 2px; }
+
+/* Settings switches: the real checkbox is invisible, so ring the track */
+html .toggle input:focus-visible + .toggle-track { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ── Closed panels leave the Tab order ────────
+   Menus, panels and dialogs fade out with opacity, which left their buttons
+   reachable by keyboard while invisible. visibility switches off once the
+   fade has finished, so the fade-out is unchanged. */
+html .account-dropdown,
+html .notif-panel {
+    visibility: hidden;
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+}
+html .account-dropdown.open,
+html .notif-panel.open {
+    visibility: visible;
+    transition-delay: 0s;
+}
+
+html .modal-overlay:not(.open) {
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+}
+
+html #staff-broadcast-card,
+html #sc-app-update-card {
+    visibility: hidden;
+    transition: opacity 0.28s ease, transform 0.28s ease, top 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.28s;
+}
+html #staff-broadcast-card.is-visible,
+html #sc-app-update-card.is-visible {
+    visibility: visible;
+    transition-delay: 0s;
+}

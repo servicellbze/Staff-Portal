@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112d">
+<html lang="en" data-sc-build="20261112e">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -1647,7 +1647,7 @@
                             <input type="password" id="currentPassword" placeholder="Enter your current password"
                                 required>
                             <button type="button" class="toggle-password"
-                                onclick="togglePasswordVisibility('currentPassword', this)">
+                                onclick="togglePasswordVisibility('currentPassword', this)" aria-label="Show or hide password">
                                 <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -1671,7 +1671,7 @@
                             <input type="password" id="newPassword" placeholder="Enter your new password" required
                                 minlength="8" oninput="validatePasswordStrength(this.value)">
                             <button type="button" class="toggle-password"
-                                onclick="togglePasswordVisibility('newPassword', this)">
+                                onclick="togglePasswordVisibility('newPassword', this)" aria-label="Show or hide password">
                                 <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>
@@ -1705,7 +1705,7 @@
                             <input type="password" id="confirmPassword" placeholder="Re-enter your new password"
                                 required oninput="checkPasswordMatch()">
                             <button type="button" class="toggle-password"
-                                onclick="togglePasswordVisibility('confirmPassword', this)">
+                                onclick="togglePasswordVisibility('confirmPassword', this)" aria-label="Show or hide password">
                                 <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                     <circle cx="12" cy="12" r="3"></circle>

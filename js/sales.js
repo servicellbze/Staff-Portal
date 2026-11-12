@@ -296,10 +296,10 @@ function renderPagination(containerId, total, page, perPage, onPage, onPerPage) 
         '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
         + '<div class="pagination-controls">'
         + '<button class="page-btn" id="' + containerId + '_prev" ' + (page <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
-        + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._cb(p);" style="width:44px;"><span>of ' + totalPages + '</span></div>'
+        + '<div class="page-jump"><span>Page</span><input type="number" aria-label="Page number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._cb(p);" style="width:44px;"><span>of ' + totalPages + '</span></div>'
         + '<button class="page-btn" id="' + containerId + '_next" ' + (page >= totalPages ? 'disabled' : '') + '>&#x203A;</button>'
         + '</div>'
-        + '<select class="per-page-select" onchange="document.getElementById(\'' + containerId + '\')._pp(parseInt(this.value));">'
+        + '<select class="per-page-select" aria-label="Rows per page" onchange="document.getElementById(\'' + containerId + '\')._pp(parseInt(this.value));">'
         + [10,20,50,100].map(n => '<option value="' + n + '"' + (n === perPage ? ' selected' : '') + '>' + n + ' per page</option>').join('')
         + '</select>';
     container._cb = onPage;
