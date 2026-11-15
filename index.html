@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112f">
+<html lang="en" data-sc-build="20261112g">
 
 <head>
     <link rel="manifest" href="manifest.json">
@@ -590,6 +590,15 @@
 
         .login-overlay.show .login-card { transform: translateY(0); }
 
+        /* Signed out: nothing of the dashboard shows behind the sign-in card */
+        body.sc-login-gate main,
+        body.sc-login-gate #nav-placeholder,
+        body.sc-login-gate .sc-ptr { visibility: hidden; }
+
+        @media (min-width: 768px) {
+            .login-card { max-width: 420px; padding: 44px 40px; }
+        }
+
         .lock-circle {
             width: 64px;
             height: 64px;
@@ -648,7 +657,7 @@
             border: 1.5px solid var(--glass-border);
             background: var(--login-field-bg, var(--glass));
             margin-top: 20px;
-            font-size: 15px;
+            font-size: 16px;
             font-family: var(--font-family);
             outline: none;
             color: var(--text-main);
@@ -683,7 +692,7 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            font-size: 0.82rem;
+            font-size: 0.875rem;
             color: var(--text-dim);
             margin: 18px 0;
             cursor: pointer;
@@ -731,6 +740,7 @@
             color: var(--text-main);
         }
 
+        .install-hint:not(.show) { visibility: hidden; transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), visibility 0s linear 0.6s; }
         .install-hint.show { transform: translateX(-50%) translateY(0); }
 
         .hint-content {
@@ -1494,6 +1504,8 @@
         // Only pre-load dashboard data if the user is already logged in
         // (prevents job data appearing in the DOM before authentication)
         if (scIsLoggedIn()) scStartDashboardRefresh();
+        // Signed out: keep the dashboard hidden behind the sign-in card (see .sc-login-gate).
+        else document.body.classList.add('sc-login-gate');
 
         function togglePassVis() {
             const input = document.getElementById('passInput');
@@ -1563,6 +1575,7 @@
                     document.body.style.overflow = 'auto';
                     if (mainContent) mainContent.style.pointerEvents = 'auto';
 
+                    document.body.classList.remove('sc-login-gate');
                     loginOverlay.classList.remove('show');
                     setTimeout(() => {
                         loginOverlay.style.display = 'none';
