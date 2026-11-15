@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261025a">
+<html lang="en" data-sc-build="20261112a">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="css/nav.css">
     <link rel="stylesheet" href="css/v5-shell.css">
     <link rel="stylesheet" href="css/v5-qol.css">
+    <link rel="stylesheet" href="css/v5-contrast.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/splash.css">
     <link rel="stylesheet" href="css/footer.css">
@@ -444,7 +445,7 @@
         }
 
         .action-btn:hover {
-            background: var(--primary);
+            background: var(--primary-fill);
             border-color: var(--primary);
             color: white;
             transform: translateY(-2px);
@@ -952,12 +953,12 @@
         }
 
         .mf-save {
-            background: var(--primary);
+            background: var(--primary-fill);
             color: #fff;
         }
 
         .mf-save:hover {
-            background: var(--primary-dark);
+            background: var(--primary-fill-hover);
             transform: translateY(-1px);
             box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
         }
@@ -1186,7 +1187,7 @@
         }
 
         .mark-called-confirm {
-            background: var(--success);
+            background: var(--success-fill);
             color: white;
         }
 
@@ -2352,7 +2353,7 @@
         }
 
         .view-toggle-btn.active {
-            background: var(--primary);
+            background: var(--primary-fill);
             color: white;
             box-shadow: 0 2px 8px rgba(var(--primary-rgb), 0.35);
         }
@@ -2511,7 +2512,7 @@
         }
 
         .job-crow-btn:hover { border-color: rgba(var(--primary-rgb), 0.4); color: var(--primary); }
-        .job-crow-btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .job-crow-btn.primary { background: var(--primary-fill); border-color: var(--primary-fill); color: #fff; }
         .job-crow-btn.primary:hover { color: #fff; filter: brightness(1.06); }
         .job-crow-btn.danger { padding: 0 11px; color: var(--danger); }
         .job-crow-btn.danger:hover { border-color: rgba(239, 68, 68, 0.45); color: var(--danger); background: rgba(239, 68, 68, 0.08); }
@@ -2598,8 +2599,8 @@
             height: 44px;
         }
         .estimate-actions .action-btn.approve:hover {
-            background: var(--success);
-            border-color: var(--success);
+            background: var(--success-fill);
+            border-color: var(--success-fill);
             color: #fff;
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
         }
@@ -2879,7 +2880,7 @@
         }
 
         .page-btn:hover:not(:disabled) {
-            background: var(--primary);
+            background: var(--primary-fill);
             border-color: var(--primary);
             color: white;
         }
@@ -3416,7 +3417,7 @@
         </div>
         <div style="display:flex;gap:12px;">
             <button onclick="photoEditorWebcamSnap()"
-                style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">Snap</button>
+                style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary-fill);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">Snap</button>
             <button onclick="photoEditorWebcamClose()"
                 style="padding:14px 24px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
         </div>
@@ -4502,14 +4503,14 @@
                 btn.style.background = 'rgba(var(--primary-rgb),0.15)';
                 btn.style.borderColor = 'var(--primary)';
                 btn.style.color = 'var(--primary)';
-                btn.innerHTML = 'Archives <span style="font-size:0.65rem;background:var(--primary);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
+                btn.innerHTML = 'Archives <span style="font-size:0.65rem;background:var(--primary-fill);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
                 if (banner) banner.style.display = 'flex';
                 if (!archivedJobs.length) {
                     btn.textContent = 'Loading...';
                     try {
                         const data = await apiGet({ action: 'listarchived' });
                         archivedJobs = data.jobs || [];
-                        btn.innerHTML = 'Archives <span style="font-size:0.65rem;background:var(--primary);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
+                        btn.innerHTML = 'Archives <span style="font-size:0.65rem;background:var(--primary-fill);color:#fff;padding:2px 6px;border-radius:99px;margin-left:4px;">ON</span>';
                         if (!archivedJobs.length) showToast('No archived jobs found.', '');
                     } catch (e) {
                         console.error('toggleArchiveView error:', e);
@@ -5993,7 +5994,7 @@
         </div>
         <div style="display:flex;gap:12px;">
             <button onclick="editWebcamSnap()"
-                style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">Snap</button>
+                style="padding:14px 32px;border-radius:99px;border:none;background:var(--primary-fill);color:#fff;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;">Snap</button>
             <button onclick="editWebcamClose()"
                 style="padding:14px 24px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:0.88rem;font-weight:700;cursor:pointer;">Cancel</button>
         </div>

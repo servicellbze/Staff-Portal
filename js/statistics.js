@@ -794,7 +794,7 @@ function renderInvHealth(inv) {
             return '<div class="inv-item">'
                 + '<div class="inv-dot ' + (isOut ? 'red' : 'yellow') + '"></div>'
                 + '<span class="inv-name">' + escH(i.name) + '</span>'
-                + '<span class="inv-qty" style="color:' + (isOut ? 'var(--danger)' : 'var(--warning)') + ';">' + i.qty + ' left</span>'
+                + '<span class="inv-qty" style="color:' + (isOut ? 'var(--danger-text, var(--danger))' : 'var(--warning)') + ';">' + i.qty + ' left</span>'
                 + '</div>';
         }).join('');
         html += '</div>';
