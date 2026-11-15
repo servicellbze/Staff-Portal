@@ -456,7 +456,7 @@
         }, { passive: false });
     }
 
-    // ── App feel: no page-style selection, callouts, drags, zoom or native tooltips ─
+    // ── App feel: no page-style selection, callouts, drags or native tooltips ─
     var SELECTABLE_SEL = 'input, textarea, [contenteditable]:not([contenteditable="false"]), .sc-selectable, .view-field-value, .view-value';
 
     function initAppFeel() {
@@ -469,10 +469,7 @@
             var t = e.target;
             if (t && t.nodeType === 1 && (t.tagName === 'IMG' || t.tagName === 'A') && t.getAttribute('draggable') !== 'true') e.preventDefault();
         });
-        // iOS ignores user-scalable=no; photo lightboxes keep pinch so staff can inspect damage
-        doc.addEventListener('gesturestart', function (e) {
-            if (!(e.target.closest && e.target.closest('#photoLightbox, .lightbox'))) e.preventDefault();
-        });
+        // Pinch-zoom is left to the browser on every page so staff can enlarge small text.
         initTooltips();
     }
 
