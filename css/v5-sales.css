@@ -267,3 +267,11 @@ body.sc-v5 main {
     #salesList .list-item-actions { grid-column: 2 / 4; grid-row: 4; justify-content: flex-end; margin-top: 4px; }
     #salesList .badge { white-space: nowrap; }
 }
+
+/* Desktop: the till dialogs are wider so line items and cash buttons have room */
+@media (min-width: 900px) {
+    #saleModal .modal-card,
+    #jobPickupModal .modal-card {
+        max-width: 680px;
+    }
+}
