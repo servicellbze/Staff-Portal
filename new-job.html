@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112d">
+<html lang="en" data-sc-build="20261112e">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -1492,7 +1492,7 @@
     <!-- ── Webcam Capture Overlay ── -->
     <div id="webcamOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
         <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);" id="webcamSlotLabel">Taking photo…</div>
-        <select id="webcamDeviceSelect" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="webcamSwitchDevice()"></select>
+        <select id="webcamDeviceSelect" aria-label="Camera" style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;" onchange="webcamSwitchDevice()"></select>
         <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);" id="webcamVideoWrap">
             <video id="webcamVideo" autoplay playsinline style="width:min(90vw,360px);height:min(80vw,480px);object-fit:cover;display:block;transition:width 0.2s,height 0.2s;"></video>
             <canvas id="webcamCanvas" style="display:none;"></canvas>

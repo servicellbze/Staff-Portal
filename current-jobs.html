@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112d">
+<html lang="en" data-sc-build="20261112e">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -3407,7 +3407,7 @@
     <div id="photoEditorWebcamOverlay"
         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10001;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
         <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">Take a Photo</div>
-        <select id="photoEditorWebcamSelect"
+        <select id="photoEditorWebcamSelect" aria-label="Camera"
             style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;"
             onchange="photoEditorWebcamSwitch()"></select>
         <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">
@@ -3483,16 +3483,16 @@
                 </div>
 
                 <span class="edit-label">Estimated Completion Date</span>
-                <input type="datetime-local" id="edit-estimated-completion" class="edit-date-input"
+                <input type="datetime-local" id="edit-estimated-completion" aria-label="Estimated completion date" class="edit-date-input"
                     style="margin-bottom:20px;">
 
                 <span class="edit-label">Date Completed <span
                         style="font-weight:400;opacity:0.5;text-transform:none;letter-spacing:0;">— leave blank if still
                         in progress</span></span>
-                <input type="date" id="edit-date-completed" class="edit-date-input">
+                <input type="date" id="edit-date-completed" aria-label="Date completed (leave blank if still in progress)" class="edit-date-input">
 
                 <span class="edit-label">Notes</span>
-                <textarea id="edit-notes" class="edit-textarea" placeholder="Internal notes…"></textarea>
+                <textarea id="edit-notes" aria-label="Notes" class="edit-textarea" placeholder="Internal notes…"></textarea>
 
                 <span class="edit-label" style="margin-top:20px;">Invoice / Pricing <span
                         style="font-weight:400;opacity:0.5;text-transform:none;letter-spacing:0;">— BZD</span></span>
@@ -3682,7 +3682,7 @@
                     id="mcDevice">—</span>
             </div>
             <div class="mark-called-notes">
-                <label>Call Notes (Optional)</label>
+                <label for="callNotesInput">Call Notes (Optional)</label>
                 <textarea id="callNotesInput"
                     placeholder="e.g., Left voicemail, Customer will pick up tomorrow at 2 PM, Spoke to customer..."></textarea>
             </div>
@@ -4014,10 +4014,10 @@
                 '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
                 + '<div class="pagination-controls">'
                 + '<button class="page-btn" id="jobsPrev" ' + (_jobsPage <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
-                + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + _jobsPage + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;_jobsPage=p;renderJobs(_filteredJobs);" style="width:44px;"><span>of ' + totalPages + '</span></div>'
+                + '<div class="page-jump"><span>Page</span><input type="number" aria-label="Page number" min="1" max="' + totalPages + '" value="' + _jobsPage + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;_jobsPage=p;renderJobs(_filteredJobs);" style="width:44px;"><span>of ' + totalPages + '</span></div>'
                 + '<button class="page-btn" id="jobsNext" ' + (_jobsPage >= totalPages ? 'disabled' : '') + '>&#x203A;</button>'
                 + '</div>'
-                + '<select class="per-page-select" onchange="_jobsPerPage=parseInt(this.value);_jobsPage=1;renderJobs(_filteredJobs);">'
+                + '<select class="per-page-select" aria-label="Rows per page" onchange="_jobsPerPage=parseInt(this.value);_jobsPage=1;renderJobs(_filteredJobs);">'
                 + [10, 20, 50, 100].map(n => '<option value="' + n + '"' + (n === _jobsPerPage ? ' selected' : '') + '>' + n + ' per page</option>').join('')
                 + '</select>';
             document.getElementById('jobsPrev').onclick = () => { if (_jobsPage > 1) { _jobsPage--; renderJobs(_filteredJobs); } };
@@ -5983,7 +5983,7 @@
     <div id="editWebcamOverlay"
         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:10000;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
         <div style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.7);">Take a Photo</div>
-        <select id="editWebcamDeviceSelect"
+        <select id="editWebcamDeviceSelect" aria-label="Camera"
             style="display:none;padding:8px 14px;border-radius:99px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-family:inherit;font-size:0.82rem;font-weight:700;cursor:pointer;outline:none;"
             onchange="editWebcamSwitchDevice()"></select>
         <div style="position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--primary);">

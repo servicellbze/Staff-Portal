@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112d">
+<html lang="en" data-sc-build="20261112e">
 <head>
     <script src="js/theme-init.js"></script>
     <script src="js/supabase.js"></script>
@@ -287,9 +287,9 @@
         <button class="range-btn active" id="btn-month" onclick="setRange('month')">This Month</button>
         <button class="range-btn" onclick="setRange('custom')">Custom</button>
         <div class="date-custom" id="customRange" style="display:none;">
-            <input type="date" id="dateFrom" onchange="loadStats()">
+            <input type="date" id="dateFrom" aria-label="From date" onchange="loadStats()">
             <span style="color:var(--text-dim);font-size:0.8rem;">to</span>
-            <input type="date" id="dateTo" onchange="loadStats()">
+            <input type="date" id="dateTo" aria-label="To date" onchange="loadStats()">
         </div>
     </div>
 
@@ -433,7 +433,7 @@
     <div class="stat-section">
         <div class="stat-section-head" data-icon="users">Customer Lookup</div>
         <div class="stat-section-body">
-            <input type="text" id="customerSearch" placeholder="Search by name or phone..." oninput="searchCustomers()"
+            <input type="text" id="customerSearch" aria-label="Search customers" placeholder="Search by name or phone..." oninput="searchCustomers()"
                 style="width:100%;padding:10px 14px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;margin-bottom:10px;">
             <label style="display:flex;align-items:center;gap:8px;font-size:0.78rem;font-weight:600;color:var(--text-dim);margin-bottom:12px;cursor:pointer;">
                 <input type="checkbox" id="customerPeriodToggle" onchange="searchCustomers()" style="width:16px;height:16px;cursor:pointer;">

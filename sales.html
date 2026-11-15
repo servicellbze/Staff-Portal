@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112d">
+<html lang="en" data-sc-build="20261112e">
 <head>
     <script src="js/theme-init.js"></script>
     <script src="js/auth-guard.js"></script>
@@ -770,7 +770,7 @@
         <button class="tab-btn" onclick="switchTab('bills')" data-icon="clipboard">Bills</button>
         <button class="tab-btn" onclick="switchTab('eod')" data-icon="chart">End of Day</button>
     </div>
-    <select id="tabSelect" onchange="switchTab(this.value)" class="tab-select-mobile">
+    <select id="tabSelect" aria-label="Section" onchange="switchTab(this.value)" class="tab-select-mobile">
         <option value="sales">Sales</option>
         <option value="payouts">Payouts</option>
         <option value="bills">Bills</option>
@@ -808,9 +808,9 @@
         <div class="action-bar pos-tools">
             <button class="btn-secondary" onclick="openSalesPartialSales()" data-icon="bolt">Partials</button>
             <button class="btn-secondary" onclick="printSalesReport()" data-icon="print">Print Report</button>
-            <input type="date" id="salesDateFilter" style="padding:10px 13px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;outline:none;cursor:pointer;margin-left:auto;" onchange="onSalesDateChange()">
+            <input type="date" id="salesDateFilter" aria-label="Shift date" style="padding:10px 13px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.82rem;font-weight:700;outline:none;cursor:pointer;margin-left:auto;" onchange="onSalesDateChange()">
         </div>
-        <input type="text" id="salesSearch" placeholder="Search by item, amount, cashier..." oninput="onSalesSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="salesSearch" aria-label="Search sales" placeholder="Search by item, amount, cashier..." oninput="onSalesSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="salesList">
             <div class="empty-state">
                 <div class="empty-icon" data-icon="cart"></div>
@@ -861,7 +861,7 @@
             <button class="btn-secondary" onclick="printBillsReport()" data-icon="print">Print Report</button>
             <button class="btn-secondary" id="showSettledBtn" onclick="toggleShowSettled()" style="margin-left:auto;" data-icon="clipboard">Show Settled</button>
         </div>
-        <input type="text" id="billsSearch" placeholder="Search by name or item..." oninput="onBillsSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
+        <input type="text" id="billsSearch" aria-label="Search bills" placeholder="Search by name or item..." oninput="onBillsSearch()" style="width:100%;padding:10px 16px;border-radius:var(--radius-full);border:1px solid var(--glass-border);background:var(--glass);color:var(--text-main);font-family:var(--font-family);font-size:0.85rem;outline:none;backdrop-filter:blur(10px);margin-bottom:12px;">
         <div class="list-card" id="billsList">
             <div class="empty-state">
                 <div class="empty-icon" data-icon="clipboard"></div>
@@ -900,14 +900,14 @@
                     <label style="display:block;font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-dim);margin-bottom:6px;">Float Left in Drawer <span style="color:var(--danger);">*</span></label>
                     <div class="drawer-input-wrap" style="margin-top:0;">
                         <span>BZ$</span>
-                        <input type="number" class="drawer-input" id="floatAmount" placeholder="0.00" min="0" step="0.01" oninput="calcVariance()">
+                        <input type="number" class="drawer-input" id="floatAmount" aria-label="Float left in drawer (BZ$)" placeholder="0.00" min="0" step="0.01" oninput="calcVariance()">
                     </div>
                 </div>
                 <div>
                     <label style="display:block;font-size:0.65rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-dim);margin-bottom:6px;">Actual Drawer Total</label>
                     <div class="drawer-input-wrap" style="margin-top:0;">
                         <span>BZ$</span>
-                        <input type="number" class="drawer-input" id="drawerCount" placeholder="0.00" min="0" step="0.01" oninput="calcVariance()">
+                        <input type="number" class="drawer-input" id="drawerCount" aria-label="Actual drawer total (BZ$)" placeholder="0.00" min="0" step="0.01" oninput="calcVariance()">
                     </div>
                 </div>
             </div>
@@ -948,7 +948,7 @@
             <button class="modal-close" onclick="closeModal('saleModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group" style="position:relative;">
-            <label>Scan or Search Item</label>
+            <label for="saleScanner">Scan or Search Item</label>
             <input type="text" id="saleScanner" placeholder="Scan barcode or type item name..."
                 autocomplete="off" oninput="onScannerInput()" onkeydown="onScannerKey(event)">
             <div class="form-hint" style="margin-top:6px;">
@@ -988,12 +988,12 @@
             </div>
         </div>
         <div class="form-group" id="partialAmountGroup" style="display:none;">
-            <label>Amount Paid Now (BZ$)</label>
+            <label for="salePartialAmount">Amount Paid Now (BZ$)</label>
             <input type="number" id="salePartialAmount" placeholder="0.00" min="0" step="0.01">
             <div class="form-hint">Remaining balance will be tracked as a partial payment.</div>
         </div>
         <div class="form-group" id="cashTenderedGroup" style="display:none;">
-            <label>Cash Tendered (BZ$)</label>
+            <label for="saleCashTendered">Cash Tendered (BZ$)</label>
             <input type="number" id="saleCashTendered" placeholder="0.00" min="0" step="0.01" oninput="calcSaleChange()">
             <div class="pos-cash-chips" id="saleCashChips"></div>
             <div id="saleChangeDisplay" style="display:none;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;"></div>
@@ -1014,7 +1014,7 @@
             <button class="modal-close" onclick="closeModal('jobPickupModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
-            <label>Search Job by ID or Customer Name</label>
+            <label for="jobSearch">Search Job by ID or Customer Name</label>
             <input type="text" id="jobSearch" placeholder="e.g. 1042 or John Doe..." oninput="searchJobs()">
             <div id="jobSearchResults" style="margin-top:8px;"></div>
             <div id="jobSelected" style="display:none;margin-top:8px;padding:12px 14px;background:rgba(37,99,235,0.08);border:1px solid rgba(37,99,235,0.2);border-radius:10px;font-size:0.85rem;"></div>
@@ -1047,12 +1047,12 @@
                 </div>
             </div>
             <div class="form-group" id="jobCashTenderedGroup" style="display:block;">
-                <label>Cash Tendered (BZ$)</label>
+                <label for="jobCashTendered">Cash Tendered (BZ$)</label>
                 <input type="number" id="jobCashTendered" placeholder="0.00" min="0" step="0.01" oninput="calcJobChange()">
                 <div id="jobChangeDisplay" style="display:none;margin-top:8px;padding:10px 14px;border-radius:10px;font-size:0.95rem;font-weight:800;text-align:center;"></div>
             </div>
             <div class="form-group" id="jobPartialGroup" style="display:none;">
-                <label>Amount Paid Now (BZ$)</label>
+                <label for="jobPartialAmount">Amount Paid Now (BZ$)</label>
                 <input type="number" id="jobPartialAmount" placeholder="0.00" min="0" step="0.01" oninput="calcJobBalance()">
             </div>
             <div id="jobBalanceDisplay" style="display:none;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:14px;"></div>
@@ -1073,16 +1073,16 @@
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label>Amount (BZ$) *</label>
+                <label for="payoutAmount">Amount (BZ$) *</label>
                 <input type="number" id="payoutAmount" placeholder="0.00" min="0.01" step="0.01">
             </div>
             <div class="form-group">
-                <label>Taken By</label>
+                <label for="payoutTakenBy">Taken By</label>
                 <input type="text" id="payoutTakenBy" placeholder="e.g. Eric, Ericson...">
             </div>
         </div>
         <div class="form-group">
-            <label>Reason *</label>
+            <label for="payoutReason">Reason *</label>
             <input type="text" id="payoutReason" placeholder="e.g. Bought screen from supplier, petty cash...">
         </div>
         <div class="modal-footer">
@@ -1100,7 +1100,7 @@
             <button class="modal-close" onclick="closeModal('billModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
-            <label>Person Name *</label>
+            <label for="billPerson">Person Name *</label>
             <input type="text" id="billPerson" placeholder="e.g. Kareem, Bat, walk-in customer...">
             <div class="form-hint" style="margin-top:6px;">
                 <strong>Enter</strong> = Add top match  •  <strong>Shift+Enter</strong> = Add as custom item
@@ -1137,7 +1137,7 @@
         </div>
         <div id="settleBillInfo" style="padding:12px 14px;background:rgba(37,99,235,0.06);border:1px solid rgba(37,99,235,0.15);border-radius:10px;font-size:0.85rem;margin-bottom:16px;"></div>
         <div class="form-group">
-            <label>Amount Paying Now (BZ$) *</label>
+            <label for="settleAmount">Amount Paying Now (BZ$) *</label>
             <input type="number" id="settleAmount" placeholder="0.00" min="0.01" step="0.01" oninput="calcSettleBalance()">
         </div>
         <div class="form-group">
@@ -1169,7 +1169,7 @@
             <button class="modal-close" onclick="closeModal('editBillModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
-            <label>Person Name *</label>
+            <label for="editBillPerson">Person Name *</label>
             <input type="text" id="editBillPerson" placeholder="e.g. Kareem, Bat...">
             <div class="form-hint" style="margin-top:6px;">
                 <strong>Enter</strong> = Add top match  •  <strong>Shift+Enter</strong> = Add as custom item
@@ -1209,7 +1209,7 @@
             <strong>Warning:</strong> This action cannot be undone. The sale will be marked as reversed and inventory will be restored.
         </div>
         <div class="form-group">
-            <label>Reason for Reversal *</label>
+            <label for="reverseReason">Reason for Reversal *</label>
             <input type="text" id="reverseReason" placeholder="e.g. Customer returned item, Wrong item scanned...">
             <div class="form-hint">This is recorded in the audit log.</div>
         </div>
@@ -1250,7 +1250,7 @@
             <button class="modal-close" onclick="closeModal('editSaleModal')" data-icon="x" aria-label="Close"></button>
         </div>
         <div class="form-group">
-            <label>Customer / Reference</label>
+            <label for="editSaleCustomer">Customer / Reference</label>
             <input type="text" id="editSaleCustomer">
         </div>
         <div class="form-group">
@@ -1284,7 +1284,7 @@
         </div>
         <div id="addPaymentInfo" style="font-size:0.82rem;color:var(--text-dim);margin-bottom:14px;padding:12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(var(--primary-rgb,37,99,235),0.05);line-height:1.5;"></div>
         <div class="form-group">
-            <label>Amount collected now (BZ$)</label>
+            <label for="addPaymentAmount">Amount collected now (BZ$)</label>
             <input type="number" id="addPaymentAmount" min="0.01" step="0.01" placeholder="0.00">
             <div class="form-hint">Creates a separate receipt for this payment and updates the original partial sale.</div>
         </div>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112d">
+<html lang="en" data-sc-build="20261112e">
 <head>
     <script src="js/theme-init.js"></script>
     <script src="js/supabase.js"></script>
@@ -359,12 +359,12 @@
         <div class="toolbar">
             <div class="search-wrap">
                 <span class="search-icon" data-icon="search" data-icon-size="18"></span>
-                <input type="text" class="search-input" id="searchInput" placeholder="Search name, SKU, or scan barcode" oninput="debouncedRender()">
+                <input type="text" class="search-input" id="searchInput" aria-label="Search inventory" placeholder="Search name, SKU, or scan barcode" oninput="debouncedRender()">
             </div>
-            <select class="filter-select" id="filterCategory" onchange="renderInventory()">
+            <select class="filter-select" id="filterCategory" aria-label="Filter by category" onchange="renderInventory()">
                 <option value="">All Categories</option>
             </select>
-            <select class="filter-select" id="filterStock" onchange="renderInventory()">
+            <select class="filter-select" id="filterStock" aria-label="Filter by stock level" onchange="renderInventory()">
                 <option value="">All Stock</option>
                 <option value="low">Low Stock</option>
                 <option value="out">Out of Stock</option>
@@ -428,20 +428,20 @@
                 <button class="modal-close" onclick="closeModal('itemModal')" data-icon="x" aria-label="Close"></button>
             </div>
             <div class="form-group">
-                <label>Item Name *</label>
+                <label for="iName">Item Name *</label>
                 <input type="text" id="iName" placeholder="e.g. iPhone 14 Pro Screen (Black)">
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>SKU / Barcode *</label>
                     <div class="sku-wrap">
-                        <input type="text" id="iSku" placeholder="e.g. SCR-IP14P-BLK or A0123456" style="padding-right:44px;">
+                        <input type="text" id="iSku" aria-label="SKU / Barcode" placeholder="e.g. SCR-IP14P-BLK or A0123456" style="padding-right:44px;">
                         <button class="sku-scan-btn" onclick="openCameraScanner('iSku')" title="Scan barcode" data-icon="camera" data-icon-size="16" aria-label="Scan"></button>
                     </div>
                     <div class="form-hint">Avoid barcodes starting with '0' (use A0123456 instead of 0123456)</div>
                 </div>
                 <div class="form-group">
-                    <label>Category</label>
+                    <label for="iCategory">Category</label>
                     <select id="iCategory">
                         <option value="Screens">Screens</option>
                         <option value="Batteries">Batteries</option>
@@ -462,42 +462,42 @@
             </div>
             <div class="form-row-3">
                 <div class="form-group">
-                    <label id="iQtyLabel">Quantity (Qty)</label>
+                    <label id="iQtyLabel" for="iQty">Quantity (Qty)</label>
                     <input type="number" id="iQty" min="0" value="0">
                     <div class="form-hint">Starting quantity for new items; use Adjust Stock after saving.</div>
                 </div>
                 <div class="form-group">
-                    <label>Min Qty (Alert)</label>
+                    <label for="iMinQty">Min Qty (Alert)</label>
                     <input type="number" id="iMinQty" min="0" value="1" placeholder="1">
                     <div class="form-hint">Alert when stock falls below this</div>
                 </div>
                 <div class="form-group">
-                    <label>Location</label>
+                    <label for="iLocation">Location</label>
                     <input type="text" id="iLocation" placeholder="e.g. Shelf A2">
                 </div>
             </div>
             <div class="form-row" id="costPriceRow">
                 <div class="form-group">
-                    <label>Cost Price (BZ$)</label>
+                    <label for="iCost">Cost Price (BZ$)</label>
                     <input type="number" id="iCost" min="0" step="0.01" placeholder="0.00">
                     <div class="form-hint">What you paid for this item</div>
                 </div>
                 <div class="form-group">
-                    <label>Sale Price (BZ$)</label>
+                    <label for="iSalePrice">Sale Price (BZ$)</label>
                     <input type="number" id="iSalePrice" min="0" step="0.01" placeholder="0.00">
                     <div class="form-hint">What customers pay</div>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Compatible With</label>
+                    <label for="iCompat">Compatible With</label>
                     <input type="text" id="iCompat" placeholder="e.g. iPhone 14 Pro">
                 </div>
             </div>
             <!-- hidden supplier field — value preserved for API but not shown -->
             <input type="hidden" id="iSupplier" value="">
             <div class="form-group">
-                <label>Notes</label>
+                <label for="iNotes">Notes</label>
                 <input type="text" id="iNotes" placeholder="Any extra details?">
             </div>
             <div class="modal-footer">
@@ -517,7 +517,7 @@
             <div class="form-group">
                 <label>Item *</label>
                 <div class="sku-wrap">
-                    <input type="text" id="adjSearch" placeholder="Search name or scan SKU" oninput="filterAdjItems()" style="padding-right:44px;">
+                    <input type="text" id="adjSearch" aria-label="Item" placeholder="Search name or scan SKU" oninput="filterAdjItems()" style="padding-right:44px;">
                     <button class="sku-scan-btn" onclick="focusScanToField('adjSearch')" title="Scan barcode" data-icon="camera" data-icon-size="16" aria-label="Scan"></button>
                 </div>
                 <div id="adjItemList" style="margin-top:8px;display:none;"></div>
@@ -530,18 +530,18 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Quantity (Qty) *</label>
+                    <label for="adjQty">Quantity (Qty) *</label>
                     <input type="text" id="adjQty" min="1" value="1" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onblur="if(!this.value||this.value==='0')this.value='1'" onkeydown="if(event.key==='Enter'){this.blur();}">
                     <div class="form-hint">Number of units to add/remove/set</div>
                 </div>
                 <div class="form-group">
-                    <label>Linked Job ID</label>
+                    <label for="adjJobId">Linked Job ID</label>
                     <input type="text" id="adjJobId" placeholder="Optional — e.g. 1042">
                     <div class="form-hint">Link to repair job (optional)</div>
                 </div>
             </div>
             <div class="form-group">
-                <label>Reason / Notes</label>
+                <label for="adjReason">Reason / Notes</label>
                 <input type="text" id="adjReason" placeholder="e.g. Delivery from iFixit, Used in repair, Damaged">
             </div>
             <div class="modal-footer">
@@ -602,7 +602,7 @@
             <p class="bulk-hint">Leave a field blank to leave it unchanged on selected items. Stock adjustments apply to every selected item.</p>
             <div class="bulk-selected-list" id="bulkSelectedList"></div>
             <div class="form-group">
-                <label>Category</label>
+                <label for="bulkCategory">Category</label>
                 <select id="bulkCategory">
                     <option value="">— No change —</option>
                     <option value="Screens">Screens</option>
@@ -623,21 +623,21 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Min Qty (Alert)</label>
+                    <label for="bulkMinQty">Min Qty (Alert)</label>
                     <input type="number" id="bulkMinQty" min="0" placeholder="Leave blank">
                 </div>
                 <div class="form-group">
-                    <label>Location</label>
+                    <label for="bulkLocation">Location</label>
                     <input type="text" id="bulkLocation" placeholder="Leave blank">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group" id="bulkCostGroup">
-                    <label>Cost Price (BZ$)</label>
+                    <label for="bulkCost">Cost Price (BZ$)</label>
                     <input type="number" id="bulkCost" min="0" step="0.01" placeholder="Leave blank">
                 </div>
                 <div class="form-group">
-                    <label>Sale Price (BZ$)</label>
+                    <label for="bulkSalePrice">Sale Price (BZ$)</label>
                     <input type="number" id="bulkSalePrice" min="0" step="0.01" placeholder="Leave blank">
                 </div>
             </div>
@@ -650,11 +650,11 @@
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Quantity</label>
+                    <label for="bulkAdjQty">Quantity</label>
                     <input type="number" id="bulkAdjQty" min="0" placeholder="0">
                 </div>
                 <div class="form-group">
-                    <label>Reason</label>
+                    <label for="bulkAdjReason">Reason</label>
                     <input type="text" id="bulkAdjReason" placeholder="Bulk adjustment">
                 </div>
             </div>
@@ -952,10 +952,10 @@
             '<span class="pagination-info">Showing ' + start + '\u2013' + end + ' of ' + total + '</span>'
             + '<div class="pagination-controls">'
             + '<button class="page-btn" onclick="' + onPage.toString().replace(/"/g,"'") + '" id="' + containerId + '_prev" ' + (page <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
-            + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._onPage(p);" style="width:44px;"></input><span>of ' + totalPages + '</span></div>'
+            + '<div class="page-jump"><span>Page</span><input type="number" aria-label="Page number" min="1" max="' + totalPages + '" value="' + page + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;document.getElementById(\'' + containerId + '\')._onPage(p);" style="width:44px;"></input><span>of ' + totalPages + '</span></div>'
             + '<button class="page-btn" id="' + containerId + '_next" ' + (page >= totalPages ? 'disabled' : '') + '>&#x203A;</button>'
             + '</div>'
-            + '<select class="per-page-select" onchange="document.getElementById(\'' + containerId + '\')._onPerPage(parseInt(this.value));">'
+            + '<select class="per-page-select" aria-label="Rows per page" onchange="document.getElementById(\'' + containerId + '\')._onPerPage(parseInt(this.value));">'
             + [10,20,50,100].map(n => '<option value="' + n + '"' + (n === perPage ? ' selected' : '') + '>' + n + ' per page</option>').join('')
             + '</select>';
         // Store callbacks on the element
