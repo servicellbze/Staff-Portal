@@ -1328,6 +1328,11 @@ function updateSaleTotal() {
         total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
     });
     document.getElementById('saleTotalDisplay').textContent = bz(total);
+    // Nothing to sell yet: Complete Sale stays disabled until a line is added.
+    const submitBtn = document.getElementById('saleSubmitBtn');
+    if (submitBtn && submitBtn.textContent !== 'Processing...') {
+        submitBtn.disabled = !document.querySelector('#saleLineItems .line-item-row');
+    }
     // Keep tendered in sync with total for cash
     const method = document.querySelector('input[name="saleMethod"]:checked')?.value || 'cash';
     if (method === 'cash') {

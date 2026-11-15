@@ -175,6 +175,9 @@ html #recentViewAll { min-height: 24px; }
     /* Checkboxes: the whole row (or a 44px box) is tappable */
     html .inv-col-bulk { min-width: 44px; min-height: 44px; }
     html .inv-col-bulk input { width: 22px; height: 22px; }
+    /* Inventory phone cards in bulk mode: keep the larger tap box in the card corner */
+    html .inv-table-wrap.bulk-mode .inv-col-bulk { top: 4px; left: 4px; }
+    html .inv-table-wrap.bulk-mode .inv-col-name { padding-left: 52px !important; }
     html .user-access-btn { min-height: 44px; }
     html label:has(> input[type="checkbox"]),
     html label:has(> input[type="radio"]) { min-height: 44px; }
