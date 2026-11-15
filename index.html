@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112e">
+<html lang="en" data-sc-build="20261112f">
 
 <head>
     <link rel="manifest" href="manifest.json">
@@ -867,23 +867,23 @@
         </div>
 
         <div class="stats">
-            <a href="current-jobs.html" class="stat-card total" aria-label="View all active jobs">
+            <a href="current-jobs.html" class="stat-card total" aria-label="View all jobs">
                 <div class="stat-header">
                     <div class="stat-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     </div>
                 </div>
                 <div class="stat-value" id="statTotal"><div class="stat-loading"></div></div>
-                <div class="stat-label">Total Active Jobs</div>
+                <div class="stat-label">Total Jobs</div>
             </a>
-            <a href="current-jobs.html?filter=inprogress" class="stat-card progress" aria-label="View jobs in progress">
+            <a href="current-jobs.html?filter=inprogress" class="stat-card progress" aria-label="View open repairs">
                 <div class="stat-header">
                     <div class="stat-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                     </div>
                 </div>
                 <div class="stat-value" id="statProgress"><div class="stat-loading"></div></div>
-                <div class="stat-label">In Progress</div>
+                <div class="stat-label">Open Repairs</div>
             </a>
             <a href="current-jobs.html?filter=ready" class="stat-card ready" aria-label="View jobs ready for pickup">
                 <div class="stat-header">
@@ -971,6 +971,7 @@
 <script src="js/staff-banner.js"></script>
 <script src="js/v5-shell.js"></script>
 <script src="js/components.js"></script>
+<script src="js/job-status.js"></script>
 <script src="js/v5-qol.js"></script>
     <script>
         // ── HARD PWA WALL ENFORCEMENT ──────────────────────────────────────
@@ -1106,26 +1107,10 @@
             }
         })();
 
-        function classifyStatus(job) {
-            const s = String(job.status || '').toLowerCase();
-            if (s.includes('abandoned')) return 'abandoned';
-            if (['fixing', 'repairing', 'work'].some(w => s.includes(w))) return 'fixing';
-            if (['testing', 'qc', 'checking'].some(w => s.includes(w))) return 'testing';
-            if (['completed', 'ready', 'pickup'].some(w => s.includes(w))) return 'ready';
-            if (['unsuccessful', 'no fix'].some(w => s.includes(w))) return 'unsuccessful';
-            if (['resolved', 'handed over'].some(w => s.includes(w))) return 'resolved';
-            return 'received';
-        }
+        // Status names and matching live in js/job-status.js (shared by every page).
+        function classifyStatus(job) { return SCJobStatus.key(job); }
 
-        const statusLabel = {
-            received: 'Received',
-            fixing: 'Repairing',
-            testing: 'Testing',
-            ready: 'Ready',
-            unsuccessful: 'No Fix',
-            abandoned: 'Abandoned',
-            resolved: 'Resolved'
-        };
+        const statusLabel = SCJobStatus.LABELS;
 
         const statusIcon = {
             received:     { svg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>', bg: 'rgba(var(--primary-rgb),0.1)',    color: 'var(--primary)' },

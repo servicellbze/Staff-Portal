@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112e">
+<html lang="en" data-sc-build="20261112f">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -2960,10 +2960,10 @@
                 <select id="statusFilter" class="cj-filter-native" aria-hidden="true" tabindex="-1">
                     <option value="all">All Shop Activity</option>
                     <option value="mine">My Jobs</option>
-                    <option value="inprogress">All In Progress</option>
-                    <option value="received">Received / Ordered</option>
-                    <option value="fixing">Repair In Progress</option>
-                    <option value="testing">Finalizing / Testing</option>
+                    <option value="inprogress">All Open Repairs</option>
+                    <option value="received">Received</option>
+                    <option value="fixing">In Progress</option>
+                    <option value="testing">Testing</option>
                     <option value="ready">Ready for Pickup</option>
                     <option value="resolved">Picked Up</option>
                     <option value="unsuccessful">Unsuccessful</option>
@@ -3055,7 +3055,7 @@
                     </div>
                 </div>
                 <div class="stat-value" id="statFixing">0</div>
-                <div class="stat-label">Repairing</div>
+                <div class="stat-label">In Progress</div>
             </div>
             <div class="stat-card" data-filter="testing" style="color:var(--warning)">
                 <div class="stat-card-inner">
@@ -3450,7 +3450,7 @@
                     </div>
                     <div class="edit-pill ep-fixing">
                         <input type="radio" name="editStatus" id="es-fixing" value="fixing">
-                        <label for="es-fixing">Fixing</label>
+                        <label for="es-fixing">In Progress</label>
                     </div>
                     <div class="edit-pill ep-testing">
                         <input type="radio" name="editStatus" id="es-testing" value="testing">
@@ -3458,7 +3458,7 @@
                     </div>
                     <div class="edit-pill ep-ready">
                         <input type="radio" name="editStatus" id="es-ready" value="ready">
-                        <label for="es-ready">Ready</label>
+                        <label for="es-ready">Ready for Pickup</label>
                     </div>
                     <div class="edit-pill ep-resolved">
                         <input type="radio" name="editStatus" id="es-resolved" value="resolved">
@@ -3704,6 +3704,7 @@
 <script src="js/staff-banner.js"></script>
 <script src="js/v5-shell.js"></script>
 <script src="js/components.js"></script>
+<script src="js/job-status.js"></script>
 <script src="js/v5-qol.js"></script>
     <script src="js/qz-drawer.js"></script>
     <script src="js/receipt.js"></script>
@@ -3799,42 +3800,10 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
+        // Status names and matching live in js/job-status.js (shared by every page).
         function classifyStatus(job) {
-            const s = String(job.status).toLowerCase();
-
-            // 1. TOP PRIORITY: If it's Picked Up or Abandoned, return immediately
-            if (s.includes("resolved") || s.includes("picked up")) {
-                return { class: 'resolved', label: 'Picked Up' };
-            }
-            if (s.includes("abandoned")) {
-                return { class: 'abandoned', label: 'Declared Abandoned' };
-            }
-
-            // 2. GENERAL STATUSES
-            let res = { class: 'received', label: 'Received' };
-            if (["received", "diagnosing", "ordered", "in queue"].some(w => s.includes(w))) {
-                res = { class: 'received', label: 'Received' };
-            }
-            else if (["fixing", "repairing", "work"].some(w => s.includes(w))) {
-                res = { class: 'fixing', label: 'Repair In Progress' };
-            }
-            else if (["testing", "qc", "checking"].some(w => s.includes(w))) {
-                res = { class: 'testing', label: 'Testing / QC' };
-            }
-            else if (["completed", "ready", "pickup"].some(w => s.includes(w))) {
-                res = { class: 'ready', label: 'Ready For Pickup' };
-            }
-            else if (["unsuccessful", "no fix"].some(w => s.includes(w))) {
-                res = { class: 'unsuccessful', label: 'Unsuccessful' };
-            }
-
-            // 3. DATE CHECK: Only check for abandonment if it's Ready or Unsuccessful
-            if (['ready', 'unsuccessful'].includes(res.class) && job.dateCompleted) {
-                const diff = Math.floor((new Date() - new Date(job.dateCompleted)) / 86400000);
-                if (90 - diff <= 0) return { class: 'abandoned', label: 'Declared Abandoned' };
-            }
-
-            return res;
+            const key = SCJobStatus.key(job);
+            return { class: key, label: SCJobStatus.label(key) };
         }
 
         // Same rule as the dashboard's "Expiring Soon" card: ready/unsuccessful, 0–7 days before the 90-day abandon date

@@ -629,20 +629,11 @@
         orders: null, ordersLoading: null
     };
 
-    var JOB_STATUS_LABEL = {
-        received: 'Received', fixing: 'Repairing', testing: 'Testing', ready: 'Ready',
-        unsuccessful: 'No Fix', abandoned: 'Abandoned', resolved: 'Picked Up'
-    };
+    // Status names and matching live in js/job-status.js (shared by every page).
+    var JOB_STATUS_LABEL = global.SCJobStatus ? global.SCJobStatus.LABELS : {};
 
     function jobStatusKey(j) {
-        var s = String(j.status || '').toLowerCase();
-        if (s.indexOf('abandoned') !== -1) return 'abandoned';
-        if (/fixing|repairing|work/.test(s)) return 'fixing';
-        if (/testing|qc|checking/.test(s)) return 'testing';
-        if (/completed|ready|pickup/.test(s)) return 'ready';
-        if (/unsuccessful|no fix/.test(s)) return 'unsuccessful';
-        if (/resolved|handed over/.test(s)) return 'resolved';
-        return 'received';
+        return global.SCJobStatus ? global.SCJobStatus.key(j) : 'received';
     }
 
     function cachedJobs() {
@@ -983,7 +974,7 @@
         'current-jobs.html': [
             { badge: 'NEW', sel: '#statusFilterWrap', title: 'Quotes (pending)', body: 'Customers who only needed a price show here until you approve or remove the quote. The printer reprints the quotation. Checkmark approves it. X removes it with 30 seconds to undo.' },
             { sel: '#searchInput', title: 'Search this board', body: 'Type a job number, name, phone, device or technician to narrow the list instantly.' },
-            { tour: true, sel: '.stats-row', title: 'Tap a number to filter', body: 'Tap Ready, Repairing or any card to show just those jobs; tap it again to see everything. The menu above has the rest — your own jobs, expiring soon and stale repairs.' },
+            { tour: true, sel: '.stats-row', title: 'Tap a number to filter', body: 'Tap Ready, In Progress or any card to show just those jobs; tap it again to see everything. The menu above has the rest — your own jobs, expiring soon and stale repairs.' },
             { tour: true, sel: '#jobsBoard', maxH: 0.34, picker: 'jobsView', title: 'Make the board yours', body: 'Pick how jobs look — you can change it any time with the buttons above the board.' },
             { tour: true, sel: '#jobsList .job-row, #jobsList .job-crow, #photoGrid .photo-card', title: 'Open a job', body: function () {
                 var layout = global.SCJobsView ? global.SCJobsView.get().layout : 'list';

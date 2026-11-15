@@ -415,7 +415,8 @@ function statBadge(text, type) {
 }
 
 const METHOD_LABELS = { cash: 'Cash', card: 'Card', partial: 'Partial' };
-const STATUS_LABELS = { resolved: 'Resolved', ready: 'Ready', fixing: 'Fixing', testing: 'Testing', received: 'Received', abandoned: 'Abandoned', unsuccessful: 'Unsuccessful' };
+// Status names live in js/job-status.js (shared by every page).
+const STATUS_LABELS = SCJobStatus.LABELS;
 
 function saleOutstanding(s) {
     if (!s || s.status === 'reversed' || s.status === 'settled' || s.method !== 'partial') return 0;
