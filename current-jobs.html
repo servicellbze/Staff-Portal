@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112c">
+<html lang="en" data-sc-build="20261112d">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -3951,7 +3951,7 @@
                 const priorityLabel = priorityClass === 'high' ? 'Urgent' : 'Normal';
                 const claimedChip = j.claimedBy
                     ? `<span class="claimed-chip">${escH(j.claimedBy)}</span>`
-                    : (stat.class === 'received' ? `<div style="font-size:0.65rem;opacity:0.4;margin-top:2px;">Unclaimed</div>` : '');
+                    : (stat.class === 'received' ? `<div style="font-size:0.75rem;color:var(--text-dim);margin-top:2px;">Unclaimed</div>` : '');
 
                 // Call status badge for ready jobs
                 let callBadge = '';
@@ -4014,8 +4014,7 @@
                 '<span class="pagination-info">Showing ' + start + '–' + end + ' of ' + total + '</span>'
                 + '<div class="pagination-controls">'
                 + '<button class="page-btn" id="jobsPrev" ' + (_jobsPage <= 1 ? 'disabled' : '') + '>&#x2039;</button>'
-                + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + _jobsPage + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;_jobsPage=p;renderJobs(_filteredJobs);" style="width:44px;"></div><span>of ' + totalPages + '</span>'
-                + '</div>'
+                + '<div class="page-jump"><span>Page</span><input type="number" min="1" max="' + totalPages + '" value="' + _jobsPage + '" onchange="var p=Math.max(1,Math.min(' + totalPages + ',parseInt(this.value)||1));this.value=p;_jobsPage=p;renderJobs(_filteredJobs);" style="width:44px;"><span>of ' + totalPages + '</span></div>'
                 + '<button class="page-btn" id="jobsNext" ' + (_jobsPage >= totalPages ? 'disabled' : '') + '>&#x203A;</button>'
                 + '</div>'
                 + '<select class="per-page-select" onchange="_jobsPerPage=parseInt(this.value);_jobsPage=1;renderJobs(_filteredJobs);">'

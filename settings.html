@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-sc-build="20261112c">
+<html lang="en" data-sc-build="20261112d">
 
 <head>
     <script src="js/theme-init.js"></script>
@@ -2589,7 +2589,7 @@
                         <div style="font-size:0.72rem;color:var(--text-dim);">${escapeHtml(u.username)} &bull; ${escapeHtml(u.role)}${isRevoked 
  ? ' &bull; <span style="color:var(--danger);font-weight:800;">Suspended</span>' : ''}</div>
                     </div>
-                    <button onclick="confirmRevoke('${escapeHtml(u.username)}', ${!isRevoked})"
+                    <button class="user-access-btn" onclick="confirmRevoke('${escapeHtml(u.username)}', ${!isRevoked})"
                         style="flex-shrink:0;padding:7px 14px;border-radius:99px;border:none;font-family:inherit;font-size:0.78rem;font-weight:700;cursor:pointer;
                         background:${isRevoked 
  ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)'};
