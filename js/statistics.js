@@ -700,11 +700,25 @@ function renderRevenueChart(sales, from, to) {
     el.innerHTML = entries.map(([day, val]) => {
         const pct  = Math.round((val / max) * 100);
         const lbl  = new Date(day + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        return '<div class="bar-wrap drillable" onclick="openStatDrill(\'day\',\'' + day + '\')" title="' + escH(lbl) + ': ' + bz(val) + ' — click for details">'
+        return '<div class="bar-wrap drillable" data-day="' + day + '" onclick="openStatDrill(\'day\',\'' + day + '\')" title="' + escH(lbl) + ': ' + bz(val) + ' — click for details">'
             + '<div class="bar" style="height:' + Math.max(pct, 2) + '%;background:' + (val > 0 ? 'var(--primary)' : 'var(--glass-border)') + ';"></div>'
             + '<div class="bar-label">' + escH(lbl) + '</div>'
             + '</div>';
     }).join('');
+    scrollChartToToday(el);
+}
+
+// On a phone the chart scrolls sideways; open it with today (or the last day
+// shown) at the right edge instead of at the start of the period.
+function scrollChartToToday(chart) {
+    const box = chart.parentElement;
+    if (!box || box.scrollWidth <= box.clientWidth) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const bars = [...chart.querySelectorAll('.bar-wrap[data-day]')];
+    const target = bars.filter(b => b.dataset.day <= today).pop() || bars[bars.length - 1];
+    if (!target) return;
+    const right = target.getBoundingClientRect().right - box.getBoundingClientRect().left + box.scrollLeft;
+    box.scrollLeft = Math.max(0, right - box.clientWidth + 24);
 }
 
 // ── Payment Methods ───────────────────────────────────────────────────────────

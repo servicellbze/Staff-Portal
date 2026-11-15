@@ -203,9 +203,11 @@ body.sc-v5 main {
         padding: 12px;
     }
 
-    .sum-value {
-        font-size: 1.15rem;
-        overflow-wrap: anywhere;
+    /* Amounts never break mid-number; they shrink with the screen instead. */
+    body.sc-v5 .sum-value {
+        font-size: clamp(0.95rem, 5vw, 1.15rem);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
     }
 
     #saleModal .pay-pills,
