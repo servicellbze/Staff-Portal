@@ -769,6 +769,13 @@ const Inventory = {
     const sku = str(data.sku, 100);
     if (!sku) return { success: false, error: 'SKU required' };
     const patch: Record<string, unknown> = { last_updated: new Date().toISOString(), updated_by: me.username };
+    if (data.newSku !== undefined && str(data.newSku, 100) !== sku) {
+      const next = str(data.newSku, 100);
+      if (!next) return { success: false, error: 'New SKU required' };
+      const taken = await sbGet('inventory', `sku=eq.${enc(next)}&select=sku`);
+      if (taken.length) return { success: false, error: `SKU ${next} already exists` };
+      patch.sku = next;
+    }
     if (data.name !== undefined) patch.name = str(data.name, 300);
     if (data.category !== undefined) patch.category = str(data.category, 80);
     if (data.minQty !== undefined) patch.min_qty = Math.floor(num(data.minQty));
