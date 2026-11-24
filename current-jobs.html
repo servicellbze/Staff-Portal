@@ -3825,10 +3825,10 @@
             return { class: key, label: SCJobStatus.label(key) };
         }
 
-        // Same rule as the dashboard's "Expiring Soon" card: ready/unsuccessful, 0–7 days before the 90-day abandon date
+        // Same rule as the dashboard's "Expiring Soon" card: ready/unsuccessful, 0–7 days before the 30-day abandon date
         function isExpiringSoon(job, cls) {
             if (!['ready', 'unsuccessful'].includes(cls) || !job.dateCompleted) return false;
-            const daysLeft = 90 - Math.floor((new Date() - new Date(job.dateCompleted)) / 86400000);
+            const daysLeft = 30 - Math.floor((new Date() - new Date(job.dateCompleted)) / 86400000);
             return daysLeft <= 7 && daysLeft >= 0;
         }
 
@@ -3903,7 +3903,7 @@
                     const compDateStr = j.dateCompleted || j.dateAbandoned;
                     if (compDateStr) {
                         const compDate = new Date(compDateStr);
-                        const deadlineDate = new Date(compDate.getTime() + (90 * 24 * 60 * 60 * 1000));
+                        const deadlineDate = new Date(compDate.getTime() + (30 * 24 * 60 * 60 * 1000));
                         const abandonedStr = deadlineDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                         // Archive warning: 180 days from dateCompleted
                         const archiveDaysLeft = j.dateCompleted
@@ -3930,7 +3930,7 @@
                     if (j.dateCompleted) {
                         const msElapsed = new Date() - new Date(j.dateCompleted);
                         const daysPassed = Math.floor(msElapsed / 86400000);
-                        const daysLeft = 90 - daysPassed;
+                        const daysLeft = 30 - daysPassed;
                         const alertStyle = daysLeft <= 7 ? 'color:#f87171;font-weight:800;' : 'opacity:0.8;';
                         storage = `<span style="${alertStyle}">${Math.max(0, daysLeft)}d left</span>`;
                     }
@@ -5062,7 +5062,7 @@
             if (statusClass === 'abandoned') {
                 if (j.dateCompleted) {
                     const completedDate = new Date(j.dateCompleted);
-                    const abandonedDate = new Date(completedDate.getTime() + 90 * 24 * 60 * 60 * 1000);
+                    const abandonedDate = new Date(completedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
                     const abandonedStr = abandonedDate.toLocaleDateString('en-US', {
                         month: 'long', day: 'numeric', year: 'numeric'
                     });

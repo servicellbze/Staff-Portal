@@ -1179,7 +1179,7 @@
                 const c = classifyStatus(j);
                 if (!['ready', 'unsuccessful'].includes(c)) return false;
                 if (!j.dateCompleted) return false;
-                const daysLeft = 90 - Math.floor((new Date() - new Date(j.dateCompleted)) / 86400000);
+                const daysLeft = 30 - Math.floor((new Date() - new Date(j.dateCompleted)) / 86400000);
                 return daysLeft <= 7 && daysLeft >= 0;
             }).length;
 
@@ -1211,7 +1211,7 @@
             latest: 'No jobs yet.',
             mine: 'Nothing claimed by you right now. Claim a job from Current Jobs and it shows up here.',
             ready: 'No devices waiting for pickup.',
-            expiring: 'Nothing is close to its 90-day pickup deadline.',
+            expiring: 'Nothing is close to its 30-day pickup deadline.',
             stale: 'No repairs have been sitting for ' + STALE_DAYS + '+ days. Nice work!'
         };
         let _recentTab = sessionStorage.getItem('scDashTab') || 'latest';
@@ -1224,7 +1224,7 @@
 
         function pickupDaysLeft(j) {
             const since = daysSince(j.dateCompleted);
-            return since === null ? null : 90 - since;
+            return since === null ? null : 30 - since;
         }
 
         function isMine(j, me) {
