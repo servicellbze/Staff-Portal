@@ -4,12 +4,12 @@
  * Jobs store a status value (received, fixing, testing, ready, resolved,
  * unsuccessful). Every page shows the same name for each one, taken from here.
  * "abandoned" is not stored: a Ready or Unsuccessful job becomes Abandoned
- * 90 days after it was completed.
+ * 30 days after it was completed.
  *
  *   SCJobStatus.key(job)     → 'received' | 'fixing' | 'testing' | 'ready' |
  *                              'resolved' | 'unsuccessful' | 'abandoned'
  *   SCJobStatus.label(key)   → the name staff see, e.g. 'In Progress'
- *   SCJobStatus.ABANDON_DAYS → 90
+ *   SCJobStatus.ABANDON_DAYS → 30
  */
 (function (global) {
     'use strict';
@@ -24,7 +24,7 @@
         abandoned: 'Abandoned'
     };
 
-    var ABANDON_DAYS = 90;
+    var ABANDON_DAYS = 30;
 
     /** The stored status text → its key, without the abandonment rule. */
     function keyOfStatus(status) {
@@ -38,7 +38,7 @@
         return 'received';
     }
 
-    /** A job → its key, including Abandoned 90 days after completion. */
+    /** A job → its key, including Abandoned 30 days after completion. */
     function key(job) {
         var k = keyOfStatus(job && job.status);
         if ((k === 'ready' || k === 'unsuccessful') && job && job.dateCompleted) {

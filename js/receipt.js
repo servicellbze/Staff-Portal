@@ -225,7 +225,7 @@ function buildJobReceiptHTML(j, opts) {
     <div class="pi-section">Cost Breakdown</div>
     ${costTableHTML}
     ${isEstimate ? '' : `<div class="pi-payment-status"><strong>Payment Status:</strong> ${_esc(paymentStatus)}</div>`}
-    <div class="pi-footer">Thank you for choosing Servicell Belize!<br>${isEstimate ? 'Quotation only — approve in store to start repair.<br>' : 'Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>'}We are not responsible for data loss. Please back up your device.</div>
+    <div class="pi-footer">Thank you for choosing Servicell Belize!<br>${isEstimate ? 'Quotation only — approve in store to start repair.<br>' : 'Devices not collected within <strong>30 days of completion</strong> may be considered <strong>abandoned</strong>.<br>'}We are not responsible for data loss. Please back up your device.</div>
     ${isEstimate ? '' : `<hr class="pi-dash">
     <div class="pi-qr">
         <img src="${qrCodeUrl}" alt="Track Your Repair">
@@ -1946,6 +1946,6 @@ ${isEstimate ? '' : `<div class="pi-payment-status"><strong>Payment Status:</str
     <div class="pi-sig">Staff Signature &amp; Date</div>
 </div>
 ${qrBlock}
-<div class="pi-footer">Thank you for choosing Servicell Belize!<br>${isEstimate ? 'This is a quotation only. Approve the repair in store before work begins.<br>' : 'Devices not collected within <strong>90 days of completion</strong> may be considered <strong>abandoned</strong>.<br>'}We are not responsible for data loss. Please back up your device.<br>Prices include GST where applicable.</div>
+<div class="pi-footer">Thank you for choosing Servicell Belize!<br>${isEstimate ? 'This is a quotation only. Approve the repair in store before work begins.<br>' : 'Devices not collected within <strong>30 days of completion</strong> may be considered <strong>abandoned</strong>.<br>'}We are not responsible for data loss. Please back up your device.<br>Prices include GST where applicable.</div>
 </div></body></html>`;
 }
