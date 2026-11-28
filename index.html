@@ -717,6 +717,11 @@
         #loginBtn:hover { background: var(--primary-fill-hover); transform: translateY(-1px); }
         #loginBtn:active { transform: scale(0.98); }
 
+        .code-toggle { display: block; margin: 14px auto 0; background: none; border: 0; color: var(--text-dim); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+        #codePanel { display: flex; gap: 8px; margin-top: 10px; }
+        #codePanel[hidden] { display: none; }
+        #codePanel input { flex: 1; min-width: 0; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border, rgba(127,127,127,.3)); background: var(--login-field-bg, var(--glass)); color: inherit; font: inherit; letter-spacing: 4px; }
+        .code-go { padding: 0 18px; border-radius: 12px; border: 0; background: var(--primary-fill, #2563eb); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
         #loginBtn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -842,6 +847,15 @@
             </label>
 
             <button onclick="checkLogin()" id="loginBtn">Unlock System</button>
+
+            <!-- Temp cashier signs in with a code only; it is Temp_Cashier's password, so the server's 5-try lockout still applies. -->
+            <button type="button" class="code-toggle" onclick="toggleCodeLogin()">Log In With Code</button>
+            <div id="codePanel" hidden>
+                <input type="password" id="codeInput" inputmode="numeric" autocomplete="one-time-code"
+                    aria-label="Login code" placeholder="Enter code"
+                    onkeydown="if(event.key==='Enter') checkLogin(true)">
+                <button type="button" onclick="checkLogin(true)" class="code-go">Log In</button>
+            </div>
         </div>
     </div>
 
@@ -1517,9 +1531,15 @@
             eyeOff.style.display = show ? 'block' : 'none';
         }
 
-        async function checkLogin() {
-            const user = document.getElementById('userInput').value.trim();
-            const pass = document.getElementById('passInput').value;
+        function toggleCodeLogin() {
+            const p = document.getElementById('codePanel');
+            p.hidden = !p.hidden;
+            if (!p.hidden) document.getElementById('codeInput').focus();
+        }
+
+        async function checkLogin(byCode) {
+            const user = byCode ? 'Temp_Cashier' : document.getElementById('userInput').value.trim();
+            const pass = document.getElementById(byCode ? 'codeInput' : 'passInput').value;
             const remember = document.getElementById('rememberMe').checked;
             const btn = document.getElementById('loginBtn');
             const loginOverlay = document.getElementById('loginOverlay');
@@ -1595,6 +1615,7 @@
                     } else {
                         showLoginNotice('Incorrect username or password', 'Check both and try again.', true);
                     }
+                    if (byCode) document.getElementById('codeInput').value = '';
                     const passInput = document.getElementById('passInput');
                     if (passInput) { passInput.value = ''; passInput.focus(); }
                     btn.textContent = "Unlock System";
